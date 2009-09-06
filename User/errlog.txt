@@ -1,0 +1,110 @@
+
+
+Cli:TableTurtle
+0.1.0
+Traceback (most recent call last):
+
+  File "_ctypes/callbacks.c", line 295, in 'calling callback function'
+
+  File "Platform\Win32\KeyboardManager.py", line 490, in _hookProc
+    result = self.callCB(self, evt, key)
+
+  File "Platform\Win32\KeyboardManager.py", line 505, in callCB
+    return self._cb(inst, evt, arg)
+
+  File "Cli.py", line 74, in onKeyboardManager
+    xxxx
+
+type: global name 'xxxx' is not defined
+
+Cli:TableTurtle
+version: 0.1.0
+Traceback (most recent call last):
+
+  File "_ctypes/callbacks.c", line 295, in 'calling callback function'
+
+  File "Platform\Win32\KeyboardManager.py", line 490, in _hookProc
+    result = self.callCB(self, evt, key)
+
+  File "Platform\Win32\KeyboardManager.py", line 505, in callCB
+    return self._cb(inst, evt, arg)
+
+  File "Cli.py", line 74, in onKeyboardManager
+    xxxx
+
+type: global name 'xxxx' is not defined
+
+Cli:TableTurtle
+Version: 0.1.0
+Traceback (most recent call last):
+
+  File "_ctypes/callbacks.c", line 295, in 'calling callback function'
+
+  File "Platform\Win32\KeyboardManager.py", line 490, in _hookProc
+    result = self.callCB(self, evt, key)
+
+  File "Platform\Win32\KeyboardManager.py", line 505, in callCB
+    return self._cb(inst, evt, arg)
+
+  File "Cli.py", line 74, in onKeyboardManager
+    xxxx
+
+type: global name 'xxxx' is not defined
+
+Cli:TableTurtle
+Version: 0.1.0
+Traceback (most recent call last):
+
+  File "_ctypes/callbacks.c", line 295, in 'calling callback function'
+
+  File "Platform\Win32\KeyboardManager.py", line 490, in _hookProc
+    result = self.callCB(self, evt, key)
+
+  File "Platform\Win32\KeyboardManager.py", line 505, in callCB
+    return self._cb(inst, evt, arg)
+
+  File "Cli.py", line 78, in onKeyboardManager
+    if key == self.config['cli']['report-keyboard']:
+
+type: 'report-keyboard'
+
+Cli:TableTurtle
+Version: 0.1.0
+Traceback (most recent call last):
+
+  File "_ctypes/callbacks.c", line 295, in 'calling callback function'
+
+  File "Platform\Win32\KeyboardManager.py", line 490, in _hookProc
+    result = self.callCB(self, evt, key)
+
+  File "Platform\Win32\KeyboardManager.py", line 505, in callCB
+    return self._cb(inst, evt, arg)
+
+  File "Cli.py", line 107, in onKeyboardManager
+    return handler.handleKeyPressed(self, key)
+
+  File "WindowHandlers\PokerStarsTable.py", line 164, in handleKeyPressed
+    elif key == self.cli.config['table']['key-plus-one-bb']:
+
+type: 'key-plus-one-bb'
+
+Cli:TableTurtle
+Version: 0.1.0
+Traceback (most recent call last):
+
+  File "_ctypes/callbacks.c", line 295, in 'calling callback function'
+
+  File "Platform\Win32\KeyboardManager.py", line 490, in _hookProc
+    result = self.callCB(self, evt, key)
+
+  File "Platform\Win32\KeyboardManager.py", line 505, in callCB
+    return self._cb(inst, evt, arg)
+
+  File "Cli.py", line 107, in onKeyboardManager
+    return handler.handleKeyPressed(self, key)
+
+  File "WindowHandlers\PokerStarsTable.py", line 164, in handleKeyPressed
+    elif key == self.cli.config['table']['key-plus-one-bb']:
+
+type: 'key-plus-one-bb'
+
