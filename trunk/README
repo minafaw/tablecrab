@@ -1,0 +1,35 @@
+additional hotkeys for PokerStars and more
+
+WARNING: this thingy is pretty alpha - so use at your own risk
+
+
+features:
+--------------------------
+
+- hotkeys for table actions like fold, check, raise, alter bet amount, show replayer
+
+
+usage:
+---------------------------
+- you must have python installed on your os. if not download and install python from [python.org]
+- run Cli.py from commandline passing your config file
+     >> python Clip.py my.cfg
+	 or
+	 >> python.exe Cli.py my.cfg
+	 
+	 if no config file is specified, the default.cfg in the <User> directory is taken.
+	 read User/default.cfg for more information
+ 
+
+notes:
+--------------------------
+
+
+
+version history:
+-------------------------
+
+0.1.0 initial release
+news:
+fixes:
+
