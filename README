@@ -11,7 +11,7 @@ features:
 
 usage:
 ---------------------------
-- you must have python installed on your os. if not download and install python from [python.org]
+- you must have python  (>= 2.6) installed on your os. if not download and install python from [python.org]
 - run Cli.py from commandline passing your config file
      >> python Clip.py my.cfg
 	 or
@@ -19,7 +19,8 @@ usage:
 	 
 	 if no config file is specified, the default.cfg in the <User> directory is taken.
 	 read User/default.cfg for more information
- 
+	 
+	  
 
 notes:
 --------------------------
