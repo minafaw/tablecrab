@@ -141,6 +141,7 @@ class PokerStarsTable(Registry.WindowHandlerBase):
 						self.cli.config['global']['log'](self, 'fold')
 						return True
 				else:
+					pt = table['point-checkbox-fold']
 					if pt is not None:
 						pt = table['point-checkbox-fold']
 						pt = self.cli.application.windowManager.windowClientPointToScreenPoint(self.hWindow, pt)
@@ -153,7 +154,7 @@ class PokerStarsTable(Registry.WindowHandlerBase):
 		size = self.cli.application.windowManager.windowGetClientSize(self.hWindow)
 		for table in self.cli.config['pokerstars-tables']:
 			if table['size'] == size:
-				table['point-button-raise']
+				pt = table['point-button-raise']
 				if pt is not None:
 					pt = self.cli.application.windowManager.windowClientPointToScreenPoint(self.hWindow, pt)
 					self.cli.application.mouseManager.mouseClickLeft(pt)
