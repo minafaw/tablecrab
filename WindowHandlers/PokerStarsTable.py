@@ -84,7 +84,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		if betAmount is not None:
 			blinds = self.getBlinds()
 			self.setBetAmount(betAmount + blinds['bigBlind'])
-			self.cli.config['global']['log'](self, 'add one BB')
+			self.cli.log(self, 'add one BB')
 			return True
 		
 	def doSubtractOneBB(self):
@@ -92,7 +92,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		if betAmount is not None:
 			blinds = self.getBlinds()
 			self.setBetAmount(betAmount - blinds['bigBlind'])
-			self.cli.config['global']['log'](self, 'subtract one BB')
+			self.cli.log(self, 'subtract one BB')
 			return True
 	
 	def doAddOneSB(self):
@@ -100,7 +100,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		if betAmount is not None:
 			blinds = self.getBlinds()
 			self.setBetAmount(betAmount + blinds['smallBlind'])
-			self.cli.config['global']['log'](self, 'add one SB')
+			self.cli.log(self, 'add one SB')
 			return True
 		
 	def doSubtractOneSB(self):
@@ -108,7 +108,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		if betAmount is not None:
 			blinds = self.getBlinds()
 			self.setBetAmount(betAmount + blinds['smallBlind'])
-			self.cli.config['global']['log'](self, 'subtract one SB')
+			self.cli.log(self, 'subtract one SB')
 			return True
 	
 	
@@ -120,7 +120,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 				if pt is not None:
 					pt = self.cli.application.windowManager.windowClientPointToScreenPoint(self.hWindow, pt)
 					self.cli.application.mouseManager.mouseClickLeft(pt)
-					self.cli.config['global']['log'](self, 'check')
+					self.cli.log(self, 'check')
 					return True
 		return False
 				
@@ -133,7 +133,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 					if pt is not None:
 						pt = self.cli.application.windowManager.windowClientPointToScreenPoint(self.hWindow, pt)
 						self.cli.application.mouseManager.mouseClickLeft(pt)
-						self.cli.config['global']['log'](self, 'fold')
+						self.cli.log(self, 'fold')
 						return True
 				else:
 					pt = table['point-checkbox-fold']
@@ -141,7 +141,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 						pt = table['point-checkbox-fold']
 						pt = self.cli.application.windowManager.windowClientPointToScreenPoint(self.hWindow, pt)
 						self.cli.application.mouseManager.mouseClickLeft(pt)
-						self.cli.config['global']['log'](self, 'fold')
+						self.cli.log(self, 'fold')
 						return True
 		return False
 		
@@ -153,7 +153,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 				if pt is not None:
 					pt = self.cli.application.windowManager.windowClientPointToScreenPoint(self.hWindow, pt)
 					self.cli.application.mouseManager.mouseClickLeft(pt)
-					self.cli.config['global']['log'](self, 'raise')
+					self.cli.log(self, 'raise')
 					return True
 		return False
 		
@@ -169,7 +169,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 					if pt is not None:
 						pt = self.cli.application.windowManager.windowClientPointToScreenPoint(self.hWindow, pt)
 						self.cli.application.mouseManager.mouseClickLeft(pt)
-					self.cli.config['global']['log'](self, 'show/update replayer')
+					self.cli.log(self, 'show/update replayer')
 					return True
 		return False
 		
@@ -178,7 +178,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		if hWindow:
 			rc = self.cli.application.windowManager.windowGetRect(hWindow)
 			self.cli.application.mouseManager.mouseClickLeftDouble( (rc[0] +3, rc[1] +3) )
-			self.cli.config['global']['log'](self, 'hilight bet amount box')
+			self.cli.log(self, 'hilight bet amount box')
 			return True
 	
 	
@@ -194,7 +194,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 	def handleKeyPressed(self, cli, key):
 		for table in self.cli.config['pokerstars-tables']:
 			if key == table['key']:
-				self.cli.config['global']['log'](self, 'handle table as:%s' % table['name'])
+				self.cli.log(self, 'handle table as:%s' % table['name'])
 				hwnd = self.cli.application.windowManager.windowForeground()
 				self.cli.application.windowManager.windowSetClientSize(hwnd, size=table['size'])
 				return True
