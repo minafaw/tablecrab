@@ -5,28 +5,23 @@ if __name__ == '__main__':	# see --> http://bugs.python.org/issue1510172 . works
 
 import re
 
-from . import Registry
+from . import PokerStarsWindowBase
 
 #********************************************************************************************
-class PokerStarsTable(Registry.WindowHandlerBase):
+class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 	"""fallback window handler if no handler is present for a window"""
-	Type = Registry.WindowHandlerType
-	Site = 'PokerStars'
 	Window = 'Table'
 	
-	PsClassTable = 'PokerStarsTableFrameClass'
 	PsClassTableBetAmountBox = 'PokerStarsSliderEditorClass'
 	PatAmountSB = re.compile('.*(?: [^0-9\.]|\s)   ( (?: 0\.[0-9]{2})   |    (?: [0-9]+))/.*', re.X|re.I)
 	PatAmountBB = re.compile('.*/[^0-9\.]?(   (?: 0\.[0-9]{2})   |    (?: [0-9]+)).*', re.X|re.I)
 	
 	@classmethod
 	def handleWindowCreated(klass, cli, hWindow):
-		if cli.application.windowManager.windowGetClassName(hWindow) == klass.PsClassTable:
+		if klass.psIsTable(cli, hWindow):
 			return klass(cli, hWindow)
 		return None
-		
-		return klass(cli, hWindow)
-		
+			
 	def __init__(self, cli, hWindow):
 		self.cli = cli
 		self.hWindow = hWindow

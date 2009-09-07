@@ -6,26 +6,17 @@ if __name__ == '__main__':	# see --> http://bugs.python.org/issue1510172 . works
 
 import re
 
-from . import Registry
+from . import PokerStarsWindowBase
 
 #********************************************************************************************
-class PokerStarsPopupNews(Registry.WindowHandlerBase):
-	"""fallback window handler if no handler is present for a window"""
-	Type = Registry.WindowHandlerType
-	Site = 'PokerStars'
+class PokerStarsPopupNews(PokerStarsWindowBase.PokerStarsWindowBase):
+	""""""
 	Window = 'PopupNews'
-	
-	PsTitleLobby = 'PokerStars Lobby'
-	PsClassNews = '#32770'
-	PsTitleNews = 'News'
-	
+		
 	@classmethod
 	def handleWindowCreated(klass, cli, hWindow):
-		if cli.application.windowManager.windowGetClassName(hWindow) == klass.PsClassNews and \
-							cli.application.windowManager.windowGetText(hWindow) == klass.PsTitleNews:
-			hWindowParent = cli.application.windowManager.windowGetParent(hWindow)
-			if hWindowParent and cli.application.windowManager.windowGetText(hWindowParent).startswith(klass.PsTitleLobby):
-				return klass(cli, hWindow)
+		if klass.psIsPopupNews(cli, hWindow):
+			return klass(cli, hWindow)
 		return None
 	
 	def __init__(self, cli, hWindow):
