@@ -36,7 +36,8 @@ notes:
 
 - wine specific: if "Allow the window manager to control the windows" is set to False, the foreground 
    window may or may not be the window you see in the foreground. with this setting turned off, 
-   hotkeys may or may not work  as expected. 
+   hotkeys may or may not work  as expected. i have not found a way yet to reliably set foreground
+   status to an uncontrolled window. anyone any ideas?
  
  - wine specific: on my ubuntu box wine took the first keyboard layout it could get a hold on. had
     to remove US keyboard layout to get wine to use the desired german one.
