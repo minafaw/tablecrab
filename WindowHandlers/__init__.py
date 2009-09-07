@@ -8,5 +8,6 @@ from .Registry import WindowHandlerType
 from . import WindowHandlerDefault
 
 from . import PokerStarsTable
+from . import PokerStarsPopupNews
 
 
