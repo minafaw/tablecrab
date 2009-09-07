@@ -522,7 +522,7 @@ class KeyboardManager(object):
 			if not self._hHook:
 				self._hHook = None
 				raise WindowsError(GetLastError())
-		self.callCB(self, self.EvtStart, '<keyboard="%s">' % self.keyboardLayoutName())
+		self.callCB(self, self.EvtStart, self.keyboardLayoutName() )
 		
 	def stop(self):
 		if self._hHook is not None:
