@@ -212,9 +212,8 @@ class MouseManager(object):
 		"""moves the mouse pointer to the specified position
 		@param pt: (tuple) point containing the coordiantes to move the mouse pointer to (in screen coordiantes)
 		"""
-		#NOTE: either i'm doing something wrong here or PS dislikes jumping mouse pointers. so the mouse ponier
-		#            is moved stepwise to its destination
-		#NOTE: for some reason MOUSEEVENTF_MOVE does not work as expected, so we use SetCursorPos() instead
+		#NOTE: for some reason neither user32.mouse_event() not user32.SendInput() have any effect here (linux/wine).
+		#           the only way i can get this to work is to move the cursor stepwise to its destination?!?
 		step = 4
 		ptX, ptY = pt
 		curX, curY = self.mouseGetPos()
@@ -234,6 +233,5 @@ class MouseManager(object):
 			else: 
 				curY -= step
 				if curY < ptY: curY = ptY
-			#user32.mouse_event(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE, ptCur.x, ptCur.y, 0, None)
 			pt.x, pt.y = curX, curY
 			if not user32.SetCursorPos(pt): raise WinError(GetLastError()) 
