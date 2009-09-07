@@ -309,5 +309,5 @@ class WindowManager(object):
 		return hwnd if hwnd else None
 	
 	def windowGetParent(self, hwnd):
-		hwnd = user32.GetParent(myHwnd)
+		hwnd = user32.GetParent(hwnd)
 		return hwnd if hwnd else None
