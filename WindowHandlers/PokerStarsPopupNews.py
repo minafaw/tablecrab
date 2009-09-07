@@ -4,11 +4,14 @@ from __future__ import absolute_import
 if __name__ == '__main__':	# see --> http://bugs.python.org/issue1510172 . works only current dir and below
 	import os; __path__ = [os.path.dirname(__file__)]
 
+from . import Registry
 from . import PokerStarsWindowBase
 
 #********************************************************************************************
 class PokerStarsPopupNews(PokerStarsWindowBase.PokerStarsWindowBase):
 	""""""
+	Type = Registry.WindowHandlerType
+	Site = 'PokerStars'
 	Window = 'PopupNews'
 		
 	@classmethod

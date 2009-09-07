@@ -5,6 +5,7 @@ if __name__ == '__main__':	# see --> http://bugs.python.org/issue1510172 . works
 
 import re
 
+from . import Registry
 from . import PokerStarsWindowBase
 
 #TODO:
@@ -68,6 +69,8 @@ class PokerStarsTableTitle(object):
 #************************************************************************************************
 class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 	"""fallback window handler if no handler is present for a window"""
+	Type = Registry.WindowHandlerType
+	Site = 'PokerStars'
 	Window = 'Table'
 	
 	PsClassTableBetAmountBox = 'PokerStarsSliderEditorClass'

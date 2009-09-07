@@ -11,8 +11,8 @@ from . import Registry
 class PokerStarsWindowBase(Registry.WindowHandlerBase):
 	"""base class for PokerStars windows"""
 	
-	Type = Registry.WindowHandlerType
-	Site = 'PokerStars'
+	Type = None
+	Site = None
 	Window = None
 	
 	PsTitleLobby = 'PokerStars Lobby'
