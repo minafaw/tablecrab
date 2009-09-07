@@ -7,7 +7,65 @@ import re
 
 from . import PokerStarsWindowBase
 
+#TODO:
+#    - check if BB/SB as reflected in title may change while a hand is running (tourneys). cant remember right now
+#
 #********************************************************************************************
+class PokerStarsTableTitle(object):
+	PatAmountSB = re.compile('.*(?: [^0-9\.]|\s)   ( (?: 0\.[0-9]{2})   |    (?: [0-9]+))/.*', re.X|re.I)
+	PatAmountBB = re.compile('.*/[^0-9\.]?(   (?: 0\.[0-9]{2})   |    (?: [0-9]+)).*', re.X|re.I)
+	def __init__(self, string):
+		self.smallBlind = 0.0
+		self.bigBlind = 0.0
+		
+		match = self.PatAmountSB.match(string)
+		if match is None:
+			raise ValueError('could not determine smallBlind: %s' % string)
+		self.smallBlind = float(match.group(1))
+		match = self.PatAmountBB.match(string)
+		if match is None:
+			raise ValueError('could not determine smallBlind: %s' % string)
+		self.bigBlind = float(match.group(1))
+	
+	# throw in method for on the fly testing
+	@classmethod
+	def test(klass):
+		TestTitles = (
+				{
+					'title': "$3.40 No Limit Hold'em - Tournament 189152637 Table 1 - Blinds $200/$400 Ante $25",
+					'smallBlind': 200.0,
+					'bigBlind': 400.0,
+				},
+				{
+					'title': "Lepus II - 5/10 Play Money - No Limit Hold'em - Logged In as playerNameHere",
+					'smallBlind': 5.0,
+					'bigBlind': 10.0,
+				},
+				{
+					'title': "Pele fast - $0.01/$0.02 - No Limit Hold'em",
+					'smallBlind': 0.01,
+					'bigBlind': 0.02,
+				},
+				{
+					'title': "Siri III fast - $2/$4 - No Limit Hold'em",
+					'smallBlind': 2.0,
+					'bigBlind': 4.0,
+				},
+				{
+					'title': "Hugo V 50BB min - $2/$4 - No Limit Hold'em",
+					'smallBlind': 2.0,
+					'bigBlind': 4.0,
+				},
+			)
+				
+		for p in TestTitles:
+			t = klass(p['title'])
+			assert t.smallBlind == p['smallBlind'], 'expectedSmallBlind: %s, got: %s, %s' % (p['smallBlind'], t.smallBlind, p['title'])
+			assert t.bigBlind == p['bigBlind'], 'expectedBigBlind: %s, got: %s, "%s"' % (p['bigBlind'], t.bigBlind, p['title'])
+		
+#PokerStarsTableTitle.test()
+
+#************************************************************************************************
 class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 	"""fallback window handler if no handler is present for a window"""
 	Window = 'Table'
@@ -27,17 +85,9 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		self.hWindow = hWindow
 		
 	def getBlinds(self):
-		blinds = {'smallBlind': 0.0, 'bigBlind': 0.0}
 		title = self.cli.application.windowManager.windowGetText(self.hWindow)
-		match = self.PatAmountSB.match(title)
-		if match is None:
-			raise ValueError('could not determine smallBlind: %s' % title)
-		blinds['smallBlind'] = float(match.group(1))
-		match = self.PatAmountBB.match(title)
-		if match is None:
-			raise ValueError('could not determine smallBlind: %s' % title)
-		blinds['bigBlind'] = float(match.group(1))
-		return blinds
+		title = PokerStarsTableTitle(title)
+		return {'smallBlind': title.smallBlind, 'bigBlind': title.bigBlind}
 		
 	def canBet(self):
 		"""checks if the player currently can bet
@@ -74,8 +124,8 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		if hWindow:
 			if int(value) == value:
 				value = int(value)
+			value = 0 if value <= 0 else value
 			value = str(value)
-			value = 0 if value < 0 else value
 			self.cli.application.windowManager.windowSetText(hWindow, text=value)
 	
 	
@@ -83,7 +133,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		betAmount = self.getBetAmount()
 		if betAmount is not None:
 			blinds = self.getBlinds()
-			self.setBetAmount(betAmount + blinds['bigBlind'])
+			self.setBetAmount(value=betAmount + blinds['bigBlind'])
 			self.cli.log(self, 'add one BB')
 			return True
 		
@@ -91,7 +141,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		betAmount = self.getBetAmount()
 		if betAmount is not None:
 			blinds = self.getBlinds()
-			self.setBetAmount(betAmount - blinds['bigBlind'])
+			self.setBetAmount(value=betAmount - blinds['bigBlind'])
 			self.cli.log(self, 'subtract one BB')
 			return True
 	
@@ -99,7 +149,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		betAmount = self.getBetAmount()
 		if betAmount is not None:
 			blinds = self.getBlinds()
-			self.setBetAmount(betAmount + blinds['smallBlind'])
+			self.setBetAmount(value=betAmount + blinds['smallBlind'])
 			self.cli.log(self, 'add one SB')
 			return True
 		
@@ -107,7 +157,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		betAmount = self.getBetAmount()
 		if betAmount is not None:
 			blinds = self.getBlinds()
-			self.setBetAmount(betAmount + blinds['smallBlind'])
+			self.setBetAmount(value=betAmount - blinds['smallBlind'])
 			self.cli.log(self, 'subtract one SB')
 			return True
 	
@@ -209,8 +259,8 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 			if self.doShowReplayer(): return True
 		elif key == self.cli.config['table']['key-hilight-bet-amount']:
 			if self.doHilightBetAmount(): return True
-			elif key == self.cli.config['table']['key-add-one-bb']:
-				if self.doAddOneBB(): return True
+		elif key == self.cli.config['table']['key-add-one-bb']:
+			if self.doAddOneBB(): return True
 		elif key == self.cli.config['table']['key-subtract-one-bb']:
 			if self.doSubtractOneBB(): return True
 		elif key == self.cli.config['table']['key-add-one-sb']:
