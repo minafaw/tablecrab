@@ -2,31 +2,43 @@ additional hotkeys for PokerStars and more
 
 WARNING: this thingy is pretty alpha - so use at your own risk
 
-
+--------------------------
 features:
 --------------------------
 
 - hotkeys for table actions like fold, check, raise, alter bet amount, show replayer
 
-
+---------------------------
 usage:
 ---------------------------
-- you must have python  (>= 2.6) installed on your os. if not download and install python from [python.org]
-- run Cli.py from commandline passing your config file
-     >> python Clip.py my.cfg
-	 or
-	 >> python.exe Cli.py my.cfg
-	 
-	 if no config file is specified, the default.cfg in the <User> directory is taken.
-	 read User/default.cfg for more information
-	 
-	  
 
+linux:
+- install wine
+- install the windows version of python (>= 2.6) from [http://python.org/download/]
+- run from commandline: 
+    >> wine pathTo/python.exe pathTo/Cli.py pathTo/my.cfg
+	
+	where "pathTo/my.cfg" is the path to your configuration file. if omitted the default config
+	from User/default.cfg is taken. for details see User/default.cfg
+	
+	in case an error occurs a report should be written to User/errlog.txt. please include
+	this file in any failure reports
+	
+
+win32:
+- not tested but may work as expected
+
+
+--------------------------
 notes:
 --------------------------
 
+- when running in wine, if "Allow the window manager to control the windows" is set to False, the
+   doreground window may or may not be the window you see in the foregrond. therefore hotkeys
+    may or may not work   
+ 
 
-
+-------------------------
 version history:
 -------------------------
 
