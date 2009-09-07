@@ -63,19 +63,29 @@ class Cli(object):
 	
 	def onApplication(self, application, evt, arg):
 		if evt in (application.EvtStart, application.EvtStop):
-			self.log(application, '%s %s' % (evt, arg) )
+			if arg:
+				self.log(application, '%s arg="%s"' % (evt, arg) )
+			else:
+				self.log(application, evt)
 			return False
 		return False
 	
 	def onMouseManager(self, mouseManager, evt, arg):
 		if evt in (mouseManager.EvtStart, mouseManager.EvtStop):
-			self.log(mouseManager, '%s %s' % (evt, arg) )
+			if arg:
+				self.log(mouseManager, '%s arg="%s"' % (evt, arg) )
+			else:
+				self.log(mouseManager, evt)
 			return False
 		return False
 	
 	def onKeyboardManager(self, keyboardManager, evt, arg):
 		if evt in (keyboardManager.EvtStart, keyboardManager.EvtStop):
-			self.log(keyboardManager, '%s %s' % (evt, arg) )
+			if arg:
+				keyboardLayout = arg
+				self.log(keyboardManager, '%s keyboard="%s"' % (evt, keyboardLayout) )
+			else:
+				self.log(keyboardManager, evt)
 			return False
 		
 		key = arg
@@ -85,15 +95,15 @@ class Cli(object):
 		if key == self.config['cli']['key-report-keyboard']:	
 			if evt == keyboardManager.EvtKeyReleased:
 				flag = self.keyboardReportSetPaused(not self.keyboardReportIsPaused())
-				self.log(self, 'keyboard report paused' if flag else 'keyboard report resumed')
+				self.log(self, 'keyboardReport="%s"' % ('of' if flag else 'on') )
 		if evt == keyboardManager.EvtKeyPressed:	
 			if not self.keyboardReportIsPaused():
-				self.log(self, '%s "%s"' % (evt, key.value) )
+				self.log(self, '%s key="%s"' % (evt, key.value) )
 		
 		elif key == self.config['cli']['key-pause-keyboard']:
 			if evt == keyboardManager.EvtKeyReleased:
 				flag = self.keyboardSetPaused(not self.keyboardIsPaused())
-				self.log(self, 'keyboard paused' if flag else 'keyboard resumed')
+				self.log(self, 'keyboard="%s"' % ('of' if flag else 'on') )
 			return True
 		if self.keyboardIsPaused():
 			return False
@@ -101,7 +111,7 @@ class Cli(object):
 		elif key == self.config['cli']['key-report-windows']:
 			if evt == keyboardManager.EvtKeyReleased:
 				flag = self.windowReportSetPaused(not self.windowReportIsPaused())
-				self.log(self, 'window report paused' if flag else 'window report resumed')
+				self.log(self, 'windowReport="%s"' % ('of' if flag else 'on') )
 			return True
 
 		elif key == self.config['cli']['key-info-window']:
@@ -127,7 +137,10 @@ class Cli(object):
 	
 	def onWindowManager(self, windowManager, evt, arg):
 		if evt in (windowManager.EvtStart, windowManager.EvtStop):
-			self.log(windowManager, '%s %s' % (evt, arg) )
+			if arg:
+				self.log(windowManager, '%s arg="%s"' % (evt, arg) )
+			else:
+				self.log(windowManager, evt)
 			return False
 	
 		hWindow = arg
@@ -153,27 +166,39 @@ class Cli(object):
 					if handler is not None:
 						self.windows[hWindow] = handler
 						if not self.windowReportIsPaused():
-							self.log(handler, '%s %s' % (evt, hWindow) )
+							self.log(handler, '%s className="%s" title="%s"' % (
+												evt, 
+												windowManager.windowGetClassName(hWindow), 
+												windowManager.windowGetText(hWindow)) 
+												)
 		
 		elif evt == windowManager.EvtWindowDestroyed:
 			handler = self.windows.get(hWindow, None)
 			if handler is not None:
 				del self.windows[hWindow]
 				if not self.windowReportIsPaused():
-					self.log(handler, '%s %s' % (evt, hWindow) )
+					self.log(handler, '%s className="" title=""' % (evt, ) )
 				result = handler.handleWindowDestroyed(self, hWindow)
 		elif evt == windowManager.EvtWindowGainForeground:
 			handler = self.windows.get(hWindow, None)
 			if handler is not None:
 				result = handler.handleWindowGainForeground(self, hWindow)
 				if not self.windowReportIsPaused():
-					self.log(handler, '%s %s' % (evt, hWindow) )
+					self.log(handler, '%s className="%s" title="%s"' % (
+												evt, 
+												windowManager.windowGetClassName(hWindow), 
+												windowManager.windowGetText(hWindow)) 
+												)
 		elif evt == windowManager.EvtWindowLooseForeground:
 			handler = self.windows.get(hWindow, None)
 			if handler is not None:
 				result = handler.handleWindowLooseForeground(self, hWindow)
 				if not self.windowReportIsPaused():
-					self.log(handler, '%s %s' % (evt, hWindow) )
+					self.log(handler, '%s className="%s" title="%s"' % (
+												evt, 
+												windowManager.windowGetClassName(hWindow), 
+												windowManager.windowGetText(hWindow)) 
+												)
 		
 	def windowInfo(self, hwnd, header=None, nIndent=0):
 		"""prints out window info 
