@@ -1,4 +1,6 @@
 
+import time
+
 from ctypes import *
 from ctypes.wintypes import *
 LRESULT = c_ulong
