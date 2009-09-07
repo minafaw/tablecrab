@@ -509,7 +509,7 @@ class KeyboardManager(object):
 	def isStarted(self): return self._isStarted
 	
 	def keyboardLayoutName(self):
-		return self.Win32Consts.KEYBOARD_LAYOUT_NAMES.get(kernel32.GetOEMCP(), '')
+		return self.Win32Consts.KEYBOARD_LAYOUT_NAMES.get(kernel32.GetOEMCP(), 'unknown')
 	
 	def start(self):
 		if self._hHook is None:
@@ -522,7 +522,7 @@ class KeyboardManager(object):
 			if not self._hHook:
 				self._hHook = None
 				raise WindowsError(GetLastError())
-		self.callCB(self, self.EvtStart, '')
+		self.callCB(self, self.EvtStart, '<keyboard="%s">' % self.keyboardLayoutName())
 		
 	def stop(self):
 		if self._hHook is not None:
