@@ -96,18 +96,21 @@ class Cli(object):
 		if self.keyboardIsPaused():
 			return False
 		
-		elif key == self.config['cli']['key-window-info']:
-			hWindow = self.application.windowManager.windowForeground()
-			if hWindow:
-				self.windowInfo(hWindow, header='window info')
-			return True
-			
 		elif key == self.config['cli']['key-report-windows']:
 			if evt == keyboardManager.EvtKeyReleased:
 				flag = self.windowReportSetPaused(not self.windowReportIsPaused())
 				self.config['global']['log'](self, 'window report paused' if flag else 'window report resumed')
-			return True		
+			return True
+
+		elif key == self.config['cli']['key-info-window']:
+			hWindow = self.application.windowManager.windowForeground()
+			if hWindow:
+				self.windowInfo(hWindow, header='window info')
+			return True
 		
+		elif key == self.config['cli']['key-info-window-under-mouse']:
+			self.windowInfoUnderMouse()
+			return True
 		
 		# pass key to window handler
 		hWindow = self.application.windowManager.windowForeground()
@@ -196,10 +199,10 @@ class Cli(object):
 		"""prints out a report (size, mousePos, child windows (...)) of the window under the mouse pointer. see L{infoWindow}
 		"""
 		nIndent = 0
-		pt = self.config['mouseHandler'].mouseGetPos()
+		pt = self.application.mouseManager.mouseGetPos()
 		hwndCurrent = self.application.windowManager.windowFromPoint(pt)
 		if hwndCurrent:
-			self.infoWindow(hwndCurrent, header='WINDOW UNDER MOUSE', nIndent=nIndent)
+			self.windowInfo(hwndCurrent, header='WINDOW UNDER MOUSE', nIndent=nIndent)
 								
 			# print info of all parent windows (not including desktop)
 			myHwndCurrent = hwndCurrent
@@ -207,7 +210,7 @@ class Cli(object):
 				nIndent += 1
 				hwndParent = self.application.windowManager.windowGetParent(myHwndCurrent)
 				if not hwndParent: break
-				self.infoWindow(hwndParent, header='WINDOW PARENT(%s)' % nIndent, nIndent=nIndent)
+				self.windowInfo(hwndParent, header='WINDOW PARENT(%s)' % nIndent, nIndent=nIndent)
 				myHwndCurrent = hwndParent
 		else:
 			self.config['global']['log'](self, None)
@@ -217,7 +220,7 @@ class Cli(object):
 		self.config['global']['log'](self, '')
 		for nIndent, hwnd in self.application.windowManager.windowWalkChildren(hwndCurrent, report=True):
 			header = 'WINDOW' if hwnd == hwndCurrent else 'CHILD WINDOW(%s)' % nIndent
-			self.infoWindow(hwnd, header=header, nIndent=nIndent)	
+			self.windowInfo(hwnd, header=header, nIndent=nIndent)	
 
 
 #********************************************************************************************

@@ -78,10 +78,11 @@ class Config(object):
 				},
 			
 			'cli': {
-				'key-pause-keyboard':  TypeKey(None),					# Key: pauses/resume non keyboard shortcuts (except reportKeyboard)
-				'key-report-keyboard': TypeKey(None),				# Key: pause/resume report of key presses
-				'key-window-info': TypeKey(None),						# Key: prints information about the current foreground window
+				'key-pause-keyboard':  TypeKey(None),
+				'key-report-keyboard': TypeKey(None),
 				'key-report-windows': TypeKey(None),
+				'key-info-window': TypeKey(None),
+				'key-info-window-under-mouse': TypeKey(None),
 				},
 			
 			
