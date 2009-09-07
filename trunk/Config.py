@@ -41,6 +41,22 @@ class TypeString(ConfigValue):
 	def toConfig(self, key, value):
 		return value
 
+class TypeBool(ConfigValue):
+	def __init__(self, default=None):
+		self.default = default
+	def fromConfig(self, key, value):
+		value = value.lower().strip()
+		if value == 'true':
+			value = True
+		elif value == 'false':
+			value = False
+		else:
+			raise ConfigError('invalid bool, key: %s=%s' % (key, value) )
+		return value
+	def toConfig(self, key, value):
+		return str(value).lower()
+		
+
 class TypeKey(ConfigValue):
 	def __init__(self, default=None):
 		self.default = default
@@ -98,6 +114,9 @@ class Config(object):
 				'key-subtract-one-sb': TypeKey(None),
 				},
 			
+			'pokerstars': {
+					'bool-close-popup-news': TypeBool(False),
+					},
 			'pokerstars-tables': [],		#
 		}
 			
