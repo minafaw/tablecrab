@@ -7,6 +7,7 @@ features:
 --------------------------
 
 - hotkeys for table actions like fold, check, raise, alter bet amount, show replayer
+- auto-close popup news if desired
 
 ---------------------------
 usage:
@@ -34,9 +35,11 @@ notes:
 --------------------------
 
 - when running in wine, if "Allow the window manager to control the windows" is set to False, the
-   doreground window may or may not be the window you see in the foregrond. therefore hotkeys
+   foreground window may or may not be the window you see in the foregrond. therefore hotkeys
     may or may not work   
  
+ - another wine specific: on my ubuntu box wine took the first keyboard layout it could get a hold on. had
+    to remove US keyboard layout to get wine to use the desired german one.
 
 -------------------------
 version history:
