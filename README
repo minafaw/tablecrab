@@ -34,12 +34,16 @@ win32:
 notes:
 --------------------------
 
-- when running in wine, if "Allow the window manager to control the windows" is set to False, the
-   foreground window may or may not be the window you see in the foregrond. therefore hotkeys
-    may or may not work   
+- wine specific: if "Allow the window manager to control the windows" is set to False, the foreground 
+   window may or may not be the window you see in the foreground. with this setting turned off, 
+   hotkeys may or may not work  as expected. 
  
- - another wine specific: on my ubuntu box wine took the first keyboard layout it could get a hold on. had
+ - wine specific: on my ubuntu box wine took the first keyboard layout it could get a hold on. had
     to remove US keyboard layout to get wine to use the desired german one.
+
+- wine specific: wine does not record all keyboard keys systemwide. there is no way to know
+   the state of CAPITAL, NUMLOCK and SCROLLOCK keys. for compatibility these keys are always 
+   ignored - on wine and on native win32.
 
 -------------------------
 version history:
