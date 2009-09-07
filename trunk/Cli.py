@@ -25,6 +25,8 @@ class Cli(object):
 		self.application.mouseManager.setCB(self.onMouseManager)
 		self.application.keyboardManager.setCB(self.onKeyboardManager)
 		self.application.windowManager.setCB(self.onWindowManager)
+		self.log = lambda obj, msg: Config.logger.debug('%s:%s' % (obj.Type, msg))
+		self.logException = lambda obj, msg: Config.logger.critical('%s:%s' % (obj.Type, msg))
 				
 		self.windows = {}		# hWindow --> WindowHandler*
 		
@@ -35,7 +37,7 @@ class Cli(object):
 	def _excepthook(self, Type, value, tb):
 		p = [Config.__application_name__, 'Version: ' + Config.__version__]
 		p += traceback.format_exception(type, value, tb)
-		self.config['global']['log-exception'](self, '\n'.join(p) )
+		self.logException(self, '\n'.join(p) )
 		self.application.stop()
 		raise Type(value)
 	
@@ -61,19 +63,19 @@ class Cli(object):
 	
 	def onApplication(self, application, evt, arg):
 		if evt in (application.EvtStart, application.EvtStop):
-			self.config['global']['log'](application, '%s %s' % (evt, arg) )
+			self.log(application, '%s %s' % (evt, arg) )
 			return False
 		return False
 	
 	def onMouseManager(self, mouseManager, evt, arg):
 		if evt in (mouseManager.EvtStart, mouseManager.EvtStop):
-			self.config['global']['log'](mouseManager, '%s %s' % (evt, arg) )
+			self.log(mouseManager, '%s %s' % (evt, arg) )
 			return False
 		return False
 	
 	def onKeyboardManager(self, keyboardManager, evt, arg):
 		if evt in (keyboardManager.EvtStart, keyboardManager.EvtStop):
-			self.config['global']['log'](keyboardManager, '%s %s' % (evt, arg) )
+			self.log(keyboardManager, '%s %s' % (evt, arg) )
 			return False
 		
 		key = arg
@@ -83,15 +85,15 @@ class Cli(object):
 		if key == self.config['cli']['key-report-keyboard']:	
 			if evt == keyboardManager.EvtKeyReleased:
 				flag = self.keyboardReportSetPaused(not self.keyboardReportIsPaused())
-				self.config['global']['log'](self, 'keyboard report paused' if flag else 'keyboard report resumed')
+				self.log(self, 'keyboard report paused' if flag else 'keyboard report resumed')
 		if evt == keyboardManager.EvtKeyPressed:	
 			if not self.keyboardReportIsPaused():
-				self.config['global']['log'](self, '%s "%s"' % (evt, key.value) )
+				self.log(self, '%s "%s"' % (evt, key.value) )
 		
 		elif key == self.config['cli']['key-pause-keyboard']:
 			if evt == keyboardManager.EvtKeyReleased:
 				flag = self.keyboardSetPaused(not self.keyboardIsPaused())
-				self.config['global']['log'](self, 'keyboard paused' if flag else 'keyboard resumed')
+				self.log(self, 'keyboard paused' if flag else 'keyboard resumed')
 			return True
 		if self.keyboardIsPaused():
 			return False
@@ -99,7 +101,7 @@ class Cli(object):
 		elif key == self.config['cli']['key-report-windows']:
 			if evt == keyboardManager.EvtKeyReleased:
 				flag = self.windowReportSetPaused(not self.windowReportIsPaused())
-				self.config['global']['log'](self, 'window report paused' if flag else 'window report resumed')
+				self.log(self, 'window report paused' if flag else 'window report resumed')
 			return True
 
 		elif key == self.config['cli']['key-info-window']:
@@ -125,7 +127,7 @@ class Cli(object):
 	
 	def onWindowManager(self, windowManager, evt, arg):
 		if evt in (windowManager.EvtStart, windowManager.EvtStop):
-			self.config['global']['log'](windowManager, '%s %s' % (evt, arg) )
+			self.log(windowManager, '%s %s' % (evt, arg) )
 			return False
 	
 		hWindow = arg
@@ -141,7 +143,7 @@ class Cli(object):
 				if handler is not None:
 					self.windows[hWindow] = handler
 					if not self.windowReportIsPaused():
-						self.config['global']['log'](handler, '%s %s' % (evt, hWindow) )
+						self.log(handler, '%s %s' % (evt, hWindow) )
 					break
 			# no handler found, check if we have a default handler for the window
 			else:
@@ -151,27 +153,27 @@ class Cli(object):
 					if handler is not None:
 						self.windows[hWindow] = handler
 						if not self.windowReportIsPaused():
-							self.config['global']['log'](handler, '%s %s' % (evt, hWindow) )
+							self.log(handler, '%s %s' % (evt, hWindow) )
 		
 		elif evt == windowManager.EvtWindowDestroyed:
 			handler = self.windows.get(hWindow, None)
 			if handler is not None:
 				del self.windows[hWindow]
 				if not self.windowReportIsPaused():
-					self.config['global']['log'](handler, '%s %s' % (evt, hWindow) )
+					self.log(handler, '%s %s' % (evt, hWindow) )
 				result = handler.handleWindowDestroyed(self, hWindow)
 		elif evt == windowManager.EvtWindowGainForeground:
 			handler = self.windows.get(hWindow, None)
 			if handler is not None:
 				result = handler.handleWindowGainForeground(self, hWindow)
 				if not self.windowReportIsPaused():
-					self.config['global']['log'](handler, '%s %s' % (evt, hWindow) )
+					self.log(handler, '%s %s' % (evt, hWindow) )
 		elif evt == windowManager.EvtWindowLooseForeground:
 			handler = self.windows.get(hWindow, None)
 			if handler is not None:
 				result = handler.handleWindowLooseForeground(self, hWindow)
 				if not self.windowReportIsPaused():
-					self.config['global']['log'](handler, '%s %s' % (evt, hWindow) )
+					self.log(handler, '%s %s' % (evt, hWindow) )
 		
 	def windowInfo(self, hwnd, header=None, nIndent=0):
 		"""prints out window info 
@@ -183,17 +185,17 @@ class Cli(object):
 		ptMouseAbs = self.application.mouseManager.mouseGetPos()
 		ptMouseRel = self.application.windowManager.windowScreenPointToClientPoint(hwnd, ptMouseAbs)
 		if header is not None:
-			self.config['global']['log'](self, '%s# ##############################' % indent)
-			self.config['global']['log'](self, '%s# %s' % (indent, header))
-			self.config['global']['log'](self, '%s# ##############################' % indent)
-		self.config['global']['log'](self, '%shwnd: %s' % (indent, hwnd))
-		self.config['global']['log'](self, "%stitle: '%s'" % (indent, self.application.windowManager.windowGetText(hwnd) ) )
-		self.config['global']['log'](self, "%sclass: '%s'" % (indent, self.application.windowManager.windowGetClassName(hwnd) ) )
-		self.config['global']['log'](self, '%srect: %s' % (indent, self.application.windowManager.windowGetRect(hwnd) ) )
-		self.config['global']['log'](self, '%sclientSize: %s' % (indent, self.application.windowManager.windowGetClientRect(hwnd)[2:] ) )
-		self.config['global']['log'](self, '%sisVisible: %s' % (indent, self.application.windowManager.windowIsVisible(hwnd) ) )
-		self.config['global']['log'](self, '%smousePos(abs): %s' % (indent, ptMouseAbs) )
-		self.config['global']['log'](self, '%smousePos(rel): %s' % (indent, ptMouseRel) )
+			self.log(self, '%s# ##############################' % indent)
+			self.log(self, '%s# %s' % (indent, header))
+			self.log(self, '%s# ##############################' % indent)
+		self.log(self, '%shwnd: %s' % (indent, hwnd))
+		self.log(self, "%stitle: '%s'" % (indent, self.application.windowManager.windowGetText(hwnd) ) )
+		self.log(self, "%sclass: '%s'" % (indent, self.application.windowManager.windowGetClassName(hwnd) ) )
+		self.log(self, '%srect: %s' % (indent, self.application.windowManager.windowGetRect(hwnd) ) )
+		self.log(self, '%sclientSize: %s' % (indent, self.application.windowManager.windowGetClientRect(hwnd)[2:] ) )
+		self.log(self, '%sisVisible: %s' % (indent, self.application.windowManager.windowIsVisible(hwnd) ) )
+		self.log(self, '%smousePos(abs): %s' % (indent, ptMouseAbs) )
+		self.log(self, '%smousePos(rel): %s' % (indent, ptMouseRel) )
 		
 	def windowInfoUnderMouse(self):
 		"""prints out a report (size, mousePos, child windows (...)) of the window under the mouse pointer. see L{infoWindow}
@@ -213,11 +215,11 @@ class Cli(object):
 				self.windowInfo(hwndParent, header='WINDOW PARENT(%s)' % nIndent, nIndent=nIndent)
 				myHwndCurrent = hwndParent
 		else:
-			self.config['global']['log'](self, None)
+			self.log(self, None)
 			
-		self.config['global']['log'](self, '')
-		self.config['global']['log'](self, 'EXTENDET INFORMATION')
-		self.config['global']['log'](self, '')
+		self.log(self, '')
+		self.log(self, 'EXTENDET INFORMATION')
+		self.log(self, '')
 		for nIndent, hwnd in self.application.windowManager.windowWalkChildren(hwndCurrent, report=True):
 			header = 'WINDOW' if hwnd == hwndCurrent else 'CHILD WINDOW(%s)' % nIndent
 			self.windowInfo(hwnd, header=header, nIndent=nIndent)	

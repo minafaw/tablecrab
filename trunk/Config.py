@@ -87,12 +87,7 @@ class TypeSize(TypePoint): pass
 #*************************************************************************************************
 class Config(object):
 	Defaults = {
-						
-			'global': {
-				'log': lambda obj, msg: logger.debug('%s:%s' % (obj.Type, msg)),	# global logger
-				'log-exception': lambda obj, msg: logger.critical('%s:%s' % (obj.Type, msg)),
-				},
-			
+				
 			'cli': {
 				'key-pause-keyboard':  TypeKey(None),
 				'key-report-keyboard': TypeKey(None),
