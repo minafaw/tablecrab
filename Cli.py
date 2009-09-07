@@ -28,7 +28,7 @@ class Cli(object):
 		self.log = lambda obj, msg: Config.logger.debug('%s:%s' % (obj.Type, msg))
 		self.logException = lambda obj, msg: Config.logger.critical('%s:%s' % (obj.Type, msg))
 				
-		self.windows = {}		# hWindow --> WindowHandler*
+		self.windowHandlers = {}		# hWindow --> WindowHandler*
 		
 		self._keyboardIsPaused = False
 		self._keyboardReportIsPaused = True
@@ -126,7 +126,7 @@ class Cli(object):
 		
 		# pass key to window handler
 		hWindow = self.application.windowManager.windowForeground()
-		handler = self.windows.get(hWindow, None)
+		handler = self.windowHandlers.get(hWindow, None)
 		if handler is None:
 			return False
 		if evt == keyboardManager.EvtKeyPressed:
@@ -154,7 +154,7 @@ class Cli(object):
 					continue
 				handler = klassHandler.handleWindowCreated(cli, hWindow)
 				if handler is not None:
-					self.windows[hWindow] = handler
+					self.windowHandlers[hWindow] = handler
 					if not self.windowReportIsPaused():
 						self.log(handler, '%s %s' % (evt, hWindow) )
 					break
@@ -164,7 +164,7 @@ class Cli(object):
 				if klassHandler is not None:
 					handler = klassHandler.handleWindowCreated(self, hWindow)
 					if handler is not None:
-						self.windows[hWindow] = handler
+						self.windowHandlers[hWindow] = handler
 						if not self.windowReportIsPaused():
 							self.log(handler, '%s className="%s" title="%s"' % (
 												evt, 
@@ -173,14 +173,14 @@ class Cli(object):
 												)
 		
 		elif evt == windowManager.EvtWindowDestroyed:
-			handler = self.windows.get(hWindow, None)
+			handler = self.windowHandlers.get(hWindow, None)
 			if handler is not None:
-				del self.windows[hWindow]
+				del self.windowHandlers[hWindow]
 				if not self.windowReportIsPaused():
 					self.log(handler, '%s className="" title=""' % (evt, ) )
 				result = handler.handleWindowDestroyed(self, hWindow)
 		elif evt == windowManager.EvtWindowGainForeground:
-			handler = self.windows.get(hWindow, None)
+			handler = self.windowHandlers.get(hWindow, None)
 			if handler is not None:
 				result = handler.handleWindowGainForeground(self, hWindow)
 				if not self.windowReportIsPaused():
@@ -190,7 +190,7 @@ class Cli(object):
 												windowManager.windowGetText(hWindow)) 
 												)
 		elif evt == windowManager.EvtWindowLooseForeground:
-			handler = self.windows.get(hWindow, None)
+			handler = self.windowHandlers.get(hWindow, None)
 			if handler is not None:
 				result = handler.handleWindowLooseForeground(self, hWindow)
 				if not self.windowReportIsPaused():
