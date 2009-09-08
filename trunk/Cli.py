@@ -156,7 +156,11 @@ class Cli(object):
 				if handler is not None:
 					self.windowHandlers[hWindow] = handler
 					if not self.windowReportIsPaused():
-						self.log(handler, '%s %s' % (evt, hWindow) )
+						self.log(self, '%s className="%s" title="%s"' % (
+												evt, 
+												windowManager.windowGetClassName(hWindow), 
+												windowManager.windowGetText(hWindow)) 
+												)
 					break
 			# no handler found, check if we have a default handler for the window
 			else:
@@ -166,7 +170,7 @@ class Cli(object):
 					if handler is not None:
 						self.windowHandlers[hWindow] = handler
 						if not self.windowReportIsPaused():
-							self.log(handler, '%s className="%s" title="%s"' % (
+							self.log(self, '%s className="%s" title="%s"' % (
 												evt, 
 												windowManager.windowGetClassName(hWindow), 
 												windowManager.windowGetText(hWindow)) 
@@ -177,14 +181,14 @@ class Cli(object):
 			if handler is not None:
 				del self.windowHandlers[hWindow]
 				if not self.windowReportIsPaused():
-					self.log(handler, '%s className="" title=""' % (evt, ) )
+					self.log(self, '%s className="" title=""' % (evt, ) )
 				result = handler.handleWindowDestroyed(self, hWindow)
 		elif evt == windowManager.EvtWindowGainForeground:
 			handler = self.windowHandlers.get(hWindow, None)
 			if handler is not None:
 				result = handler.handleWindowGainForeground(self, hWindow)
 				if not self.windowReportIsPaused():
-					self.log(handler, '%s className="%s" title="%s"' % (
+					self.log(self, '%s className="%s" title="%s"' % (
 												evt, 
 												windowManager.windowGetClassName(hWindow), 
 												windowManager.windowGetText(hWindow)) 
@@ -194,7 +198,7 @@ class Cli(object):
 			if handler is not None:
 				result = handler.handleWindowLooseForeground(self, hWindow)
 				if not self.windowReportIsPaused():
-					self.log(handler, '%s className="%s" title="%s"' % (
+					self.log(self, '%s className="%s" title="%s"' % (
 												evt, 
 												windowManager.windowGetClassName(hWindow), 
 												windowManager.windowGetText(hWindow)) 
