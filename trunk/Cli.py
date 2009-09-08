@@ -152,7 +152,7 @@ class Cli(object):
 			for typeKlass, klassHandler in WindowHandlers.WindowHandlerRegistry.items():
 				if typeKlass is WindowHandlers.WindowHandlerType: 	# skip default window handler
 					continue
-				handler = klassHandler.handleWindowCreated(cli, hWindow)
+				handler = klassHandler.handleWindowCreated(self, hWindow)
 				if handler is not None:
 					self.windowHandlers[hWindow] = handler
 					if not self.windowReportIsPaused():
