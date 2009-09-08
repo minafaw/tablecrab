@@ -24,7 +24,7 @@ class PokerStarsPopupNews(PokerStarsWindowBase.PokerStarsWindowBase):
 		self.cli = cli
 		self.hWindow = hWindow
 		if cli.config['pokerstars']['bool-close-popup-news']:
-			self.cli.log(self, 'auto-close hWindow="%s"' % self.hWindow)
+			self.cli.log(self, 'close hWindow="%s"' % self.hWindow)
 			cli.application.windowManager.windowClose(self.hWindow)
 			
 	def handleWindowDestroyed(self, cli, hWindow):
