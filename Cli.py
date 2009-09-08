@@ -243,7 +243,7 @@ class Cli(object):
 			self.log(self, None)
 			
 		self.log(self, '')
-		self.log(self, 'EXTENDET INFORMATION')
+		self.log(self, 'EXTENDED INFORMATION')
 		self.log(self, '')
 		for nIndent, hwnd in self.application.windowManager.windowWalkChildren(hwndCurrent, report=True):
 			header = 'WINDOW' if hwnd == hwndCurrent else 'CHILD WINDOW(%s)' % nIndent
