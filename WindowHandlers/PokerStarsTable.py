@@ -86,6 +86,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 	def __init__(self, cli, hWindow):
 		self.cli = cli
 		self.hWindow = hWindow
+		self.cli.log(self, 'created hWindow="%s" title="%s"' % (self.hWindow, self.cli.application.windowManager.windowGetText(self.hWindow)) )
 		
 	def getBlinds(self):
 		title = self.cli.application.windowManager.windowGetText(self.hWindow)
@@ -236,6 +237,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 	
 	
 	def handleWindowDestroyed(self, cli, hWindow):
+		self.cli.log(self, 'destroyed hWindow="%s"' % self.hWindow)
 		return False
 	
 	def handleWindowGainForeground(self, cli, hWindow):
