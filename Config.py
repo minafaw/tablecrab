@@ -29,8 +29,6 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format="%(message)s"
 #****************************************************************************************************
 class ConfigError(Exception): pass
 
-def TypeNone(default=None): return default
-
 class ConfigValue(object): pass
 
 class TypeString(ConfigValue):
@@ -55,7 +53,6 @@ class TypeBool(ConfigValue):
 		return value
 	def toConfig(self, key, value):
 		return str(value).lower()
-		
 
 class TypeKey(ConfigValue):
 	def __init__(self, default=None):
