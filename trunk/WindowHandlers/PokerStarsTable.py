@@ -241,6 +241,23 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		return False
 	
 	def handleWindowGainForeground(self, cli, hWindow):
+		
+		if cli.config['pokerstars']['bool-move-mouse-to-active-table']:
+			# skip if any mouse buttons are down
+			if cli.application.mouseManager.mouseGetButtonsDown():
+				#NOTE: mouse messages may come at any time. so this test does not work reliably
+				# if mouse holds down left on self caption for example we get foreground status before
+				# the new mouse status gets reported ++ all sorts of evil race conditions more
+				return False
+			# skip if the mouse is already on the window. have to check this this here, see note above
+			x, y, w, h =  cli.application.windowManager.windowGetRect(hWindow)
+			mX, mY = cli.application.mouseManager.mouseGetPos()
+			if (mX >= x and mX <= x + w) and (mY >= y and mY <= y + h):
+				return False
+			rc = cli.application.windowManager.windowGetClientRect(hWindow, toScreen=True)
+			cli.application.mouseManager.mouseSetPos( (rc[0] + rc[2], rc[1] + rc[3]) )
+			return True
+		
 		return False
 	
 	def handleWindowLooseForeground(self, cli, hWindow):

@@ -108,6 +108,7 @@ class Config(object):
 			
 			'pokerstars': {
 					'bool-close-popup-news': TypeBool(False),
+					'bool-move-mouse-to-active-table': TypeBool(False),
 					},
 			'pokerstars-tables': [],		#
 		}
