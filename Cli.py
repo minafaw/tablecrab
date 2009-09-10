@@ -115,14 +115,16 @@ class Cli(object):
 			return True
 
 		elif key == self.config['cli']['key-info-window']:
-			hWindow = self.application.windowManager.windowForeground()
-			if hWindow:
-				self.windowInfo(hWindow, header='window info')
-			return True
+			if evt == keyboardManager.EvtKeyReleased:
+				hWindow = self.application.windowManager.windowForeground()
+				if hWindow:
+					self.windowInfo(hWindow, header='window info')
+				return True
 		
 		elif key == self.config['cli']['key-info-window-under-mouse']:
-			self.windowInfoUnderMouse()
-			return True
+			if evt == keyboardManager.EvtKeyReleased:
+				self.windowInfoUnderMouse()
+				return True
 		
 		# pass key to window handler
 		hWindow = self.application.windowManager.windowForeground()
