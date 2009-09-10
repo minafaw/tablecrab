@@ -242,7 +242,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 	
 	def handleWindowGainForeground(self, cli, hWindow):
 		
-		if cli.config['pokerstars']['bool-move-mouse-to-active-table']:
+		if cli.config['tables']['bool-move-mouse-to-active-table']:
 			# skip if any mouse buttons are down
 			if cli.application.mouseManager.mouseGetButtonsDown():
 				#NOTE: mouse messages may come at any time. so this test does not work reliably

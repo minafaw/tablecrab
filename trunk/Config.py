@@ -92,7 +92,10 @@ class Config(object):
 				'key-info-window': TypeKey(None),
 				'key-info-window-under-mouse': TypeKey(None),
 				},
-			
+				
+			'tables': {
+				'bool-move-mouse-to-active-table': TypeBool(False),
+				},
 			
 			'table': {
 				'key-fold': TypeKey(None),
@@ -108,7 +111,6 @@ class Config(object):
 			
 			'pokerstars': {
 					'bool-close-popup-news': TypeBool(False),
-					'bool-move-mouse-to-active-table': TypeBool(False),
 					},
 			'pokerstars-tables': [],		#
 		}
