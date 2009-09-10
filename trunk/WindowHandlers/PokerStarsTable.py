@@ -289,10 +289,31 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 			if self.doAddOneSB(): return True
 		elif key == self.cli.config['table']['key-subtract-one-sb']:
 			if self.doSubtractOneSB(): return True
-			
 		return False	
 	
 	def handleKeyReleased(self,  cli, key):
+		for table in self.cli.config['pokerstars-tables']:
+			if key == table['key']:
+				return True
+		
+		if key == self.cli.config['table']['key-fold']:
+			return True
+		elif key == self.cli.config['table']['key-check']:
+			return True
+		elif key == self.cli.config['table']['key-raise']:
+			return True
+		elif key == self.cli.config['table']['key-replayer']:
+			return True
+		elif key == self.cli.config['table']['key-hilight-bet-amount']:
+			return True
+		elif key == self.cli.config['table']['key-add-one-bb']:
+			return True
+		elif key == self.cli.config['table']['key-subtract-one-bb']:
+			return True
+		elif key == self.cli.config['table']['key-add-one-sb']:
+			return True
+		elif key == self.cli.config['table']['key-subtract-one-sb']:
+			return True
 		return False
 		
 
