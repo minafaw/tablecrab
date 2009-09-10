@@ -138,10 +138,8 @@ class Config(object):
 			parser.read(filePathCfg)
 			
 		for section, values in self.Defaults.items():
-			if section == 'global':
-				self._settings[section] = values
-			
-			elif section == 'pokerstars-tables':
+				
+			if section == 'pokerstars-tables':
 				tables = []
 				self._settings[section] = tables
 				# try to get value from cfg
