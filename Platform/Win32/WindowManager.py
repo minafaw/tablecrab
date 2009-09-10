@@ -4,6 +4,11 @@ from ctypes import *
 from ctypes.wintypes import *
 
 user32 = windll.user32
+#TDODO:
+#    - for compat we should return a default value in all method calls that fail when called with 
+#      the desktop window as param. for example user32.GetClassName(None) raises. instead 
+#      we should return ""
+#
 #***********************************************************************************************
 
 class WindowManager(object):
