@@ -147,6 +147,7 @@ class Config(object):
 		userSettings = {}
 		if filePathCfg is not None:
 			parser = ConfigParser.ConfigParser()
+			logger.debug('Config:parsing config: %s' % filePathCfg)
 			try:
 				parser.read(filePathCfg)
 			except:
