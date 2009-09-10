@@ -96,6 +96,7 @@ class Cli(object):
 			if evt == keyboardManager.EvtKeyReleased:
 				flag = self.keyboardReportSetPaused(not self.keyboardReportIsPaused())
 				self.log(self, 'keyboardReport="%s"' % ('of' if flag else 'on') )
+			return True
 		if evt == keyboardManager.EvtKeyPressed:	
 			if not self.keyboardReportIsPaused():
 				self.log(self, '%s key="%s"' % (evt, key.value) )
@@ -119,12 +120,12 @@ class Cli(object):
 				hWindow = self.application.windowManager.windowForeground()
 				if hWindow:
 					self.windowInfo(hWindow, header='window info')
-				return True
+			return True
 		
 		elif key == self.config['cli']['key-info-window-under-mouse']:
 			if evt == keyboardManager.EvtKeyReleased:
 				self.windowInfoUnderMouse()
-				return True
+			return True
 		
 		# pass key to window handler
 		hWindow = self.application.windowManager.windowForeground()
