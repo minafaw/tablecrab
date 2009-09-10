@@ -29,20 +29,28 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format="%(message)s"
 #****************************************************************************************************
 class ConfigError(Exception): pass
 
-class ConfigValue(object): pass
+class ConfigValue(object):
+	def __init__(self, default=None):
+		self.default = default
+	def fromConfig(self, value):
+		return value
+	@classmethod
+	def toConfig(klass, value):
+		return value
 
 class TypeString(ConfigValue):
 	def __init__(self, default=None):
 		self.default = default
-	def fromConfig(self, key, value):
+	def fromConfig(self, value):
 		return value
-	def toConfig(self, key, value):
+	@classmethod
+	def toConfig(klass, value):
 		return value
 
 class TypeBool(ConfigValue):
 	def __init__(self, default=None):
 		self.default = default
-	def fromConfig(self, key, value):
+	def fromConfig(self, value):
 		value = value.lower().strip()
 		if value == 'true':
 			value = True
@@ -51,32 +59,34 @@ class TypeBool(ConfigValue):
 		else:
 			raise ConfigError('invalid bool, key: %s=%s' % (key, value) )
 		return value
-	def toConfig(self, key, value):
+	@classmethod
+	def toConfig(klass, value):
 		return str(value).lower()
 
 class TypeKey(ConfigValue):
 	def __init__(self, default=None):
 		self.default = default
-	def fromConfig(self, key, value):
+	def fromConfig(self, value):
 		myValue = value.strip()
 		return myValue
-	def toConfig(self, key, value):
+	@classmethod
+	def toConfig(klass, value):
 		return value
 
 class TypePoint(ConfigValue):
 	def __init__(self, default=None):
 		self.default = default
-	def fromConfig(self, key, value):
+	def fromConfig(self, value):
 		myValue = [i.strip() for i in value.split(',')]
 		if len(myValue) != 2:
-			raise ConfigError('invalid point, key: %s=%s' % (key, value) )
+			raise ConfigError('invalid point')
 		try:
 			myValue = [int(i) for i in myValue]
 		except ValueError:
-			raise ConfigError('invalid point, key: %s=%s' % (key, value) )
+			raise ConfigError('invalid poin' )
 		return tuple(myValue)
 	@classmethod
-	def toConfig(self, key, value):
+	def toConfig(klass, value):
 		return '%s, %s' % value
 
 class TypeSize(TypePoint): pass
@@ -112,9 +122,11 @@ class Config(object):
 			'pokerstars': {
 					'bool-close-popup-news': TypeBool(False),
 					},
-			'pokerstars-tables': [],		#
-		}
 			
+			#'pokerstars-tables': [],		# filled in later
+			
+		}
+		
 	DefaultsPokerStarsTable = {
 			'key': TypeKey(None), 
 			'name': TypeString(''),
@@ -126,60 +138,76 @@ class Config(object):
 			'point-button-replayer-1': TypePoint(None),
 			'point-button-replayer-2': TypePoint(None),
 			}
-		
-		
-		
+	
 	def __init__(self, filePathCfg=FilePathDefaultCfg):
+		
 		self._settings = {}
-			
-		parser = None
+		pokerStarsTables= []
+		
+		userSettings = {}
 		if filePathCfg is not None:
 			parser = ConfigParser.ConfigParser()
-			parser.read(filePathCfg)
-			
-		for section, values in self.Defaults.items():
-				
-			if section == 'pokerstars-tables':
-				tables = []
-				self._settings[section] = tables
-				# try to get value from cfg
-				if parser is not None:
-						parserSections = [i.lower() for i in parser.sections()]
-						for section in parserSections:
-							if section.startswith('pokerstars-table-'):
-								table = {}
-								tables.append(table)
-								parserSection = parser.sections()[parserSections.index(section)]
-								for option, typeOption in self.DefaultsPokerStarsTable.items():
-									if parser.has_option(parserSection, option):
-										value = parser.get(parserSection, option)
-										value = typeOption.fromConfig('[%s]%s' % (parserSection, option), value)
-										table[option] = value
-										continue
-									
-									# default
-									table[option] = typeOption.default
-						
+			try:
+				parser.read(filePathCfg)
+			except:
+				logger.debug('Config:could not read config file: %s' % filePathCfg)
 			else:
-				self._settings[section] = {}
-				for option, typeOption in values.items():
-					if isinstance(typeOption, ConfigValue):
-						
-						# try to get value from cfg
-						if parser is not None:
-							#NOTE: ConfigParser sections are case-sensitive, handle case-insensitive here
-							parserSections = [i.lower() for i in parser.sections()]
-							if section in parserSections:
-								parserSection = parser.sections()[parserSections.index(section)]
-								if parser.has_option(parserSection, option):
-									value = parser.get(parserSection, option)
-									value = typeOption.fromConfig('[%s]%s' % (parserSection, option), value)
-									self._settings[section][option] = value
-									continue
-						
-						# default
-						self._settings[section][option] = typeOption.default
-	
+				userSettings = dict( [(section.lower(), dict(parser.items(section)) ) for section in parser.sections()] )
+			
+		# parse config
+		for (section, options) in self.Defaults.items():
+			self._settings[section] = {}
+			userOptions = userSettings.get(section, {})
+			for (option, typeOption) in options.items():
+				userValue = userOptions.get(option, None)
+				if userValue is None:
+					value = typeOption.default
+				else:
+					del userOptions[option]
+					try:
+						value = typeOption.fromConfig(userValue)
+					except ConfigError:
+						value = typeOption.default
+						logger.debug('Config:invalid value for option:[%s]:%s' % (section, option) )
+				self._settings[section][option] = value
+			userSection = userSettings.get(section, None)
+			if userSection is not None and not userSection:
+				del userSettings[section]
+				
+		# parse config for pokerStars tables
+		#TODO: on read/write, how to enshure user specified section names remain stable?
+		for (section, userOptions) in userSettings.items():
+			if section.startswith('pokerstars-table-'):
+				table = {}
+				for (option, typeOption) in self.DefaultsPokerStarsTable.items():
+					userValue = userOptions.get(option, None)
+					if userValue is None:
+						value = typeOption.default
+					else:
+						del userOptions[option]
+						try:
+							value = typeOption.fromConfig(userValue)
+						except ConfigError:
+							value = typeOption.default
+							logger.debug('Config:invalid value for option:[%s]:%s' % (section, option) )
+						table[option] = value
+				userSection = userSettings.get(section, None)
+				if userSection is not None and not userSection:
+					del userSettings[section]
+								
+				pokerStarsTables.append(table)
+				
+		# errorcheck
+		for (section, options) in userSettings.items():
+			if section in self._settings or section.startswith('pokerstars-table-'):
+				for option, value in options.items():
+					logger.debug('Config:unknown option:[%s]:%s' % (section, option) )
+			else:
+				logger.debug('Config:unknown section:[%s]' % section)
+		
+		#
+		self._settings['pokerstars-tables'] = pokerStarsTables	
+		
 		
 	def __getitem__(self, key):
 		return self._settings[key]
@@ -189,13 +217,12 @@ class Config(object):
 #**************************************************************************************************
 if __name__ == '__main__':
 	
-	# shallow test if we our parsing of default.cfg is correct
+	# shallow test if we our parsing is correct
 	c = Config()
 	for section, value in c._settings.items():
-		
 		if section == 'pokerstars-tables':
-			for table in value:
-				print '[%s-XX]' % 'pokerstars-table'
+			for i, table in enumerate(value):
+				print '[%s-%s]' % ('pokerstars-table', i)
 				for option, value in table.items():
 					print '%s=%s' % (option, value)
 				print
