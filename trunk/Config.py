@@ -151,12 +151,11 @@ class Config(object):
 		if filePathCfg is not None:
 			parser = ConfigParser.ConfigParser()
 			logger.debug('Config:parsing config: %s' % filePathCfg)
-			try:
-				parser.read(filePathCfg)
-			except:
-				logger.debug('Config:could not read config file: %s' % filePathCfg)
-			else:
-				userSettings = dict( [(section.lower(), dict(parser.items(section)) ) for section in parser.sections()] )
+			# NOTE: we do config is crucial. so not errorcheck here, we want the exception to be thrown
+			#            ++ ConfigParser ignores non-existing files, we add a test for that here
+			open(filePathCfg).close()
+			parser.read(filePathCfg)
+			userSettings = dict( [(section.lower(), dict(parser.items(section)) ) for section in parser.sections()] )
 			
 		# parse config
 		for (section, options) in self.Defaults:
