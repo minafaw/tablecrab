@@ -91,6 +91,20 @@ class TypePoint(ConfigValue):
 
 class TypeSize(TypePoint): pass
 
+class TypeChoice(ConfigValue):
+	def __init__(self, default=None, choices=None):
+		self.default = default
+		self.choices = () if choices is None else choices
+	def fromConfig(self, value):
+		myValue = value.strip().lower()
+		if value not in self.choices:
+			raise ConfigError('invalid choice')
+		return value
+	@classmethod
+	def toConfig(klass, value):
+		return value	
+	
+	
 #*************************************************************************************************
 class Config(object):
 	Defaults = (
@@ -106,6 +120,7 @@ class Config(object):
 			(
 				'tables', (
 					('bool-move-mouse-to-active-table', TypeBool(False)),
+					('flag-move-mouse-to-active-table-edge', TypeChoice(default='top-left', choices=('top-left', 'top-right', 'bottom-left', 'bottom-right') )),
 				),
 			),
 			(
