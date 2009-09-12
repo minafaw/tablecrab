@@ -107,53 +107,57 @@ class TypeChoice(ConfigValue):
 	
 #*************************************************************************************************
 class Config(object):
-	Defaults = (
-			(
-				'cli', (
-					('key-pause-keyboard',  TypeKey(None)),
-					('key-report-keyboard', TypeKey(None)),
-					('key-report-windows', TypeKey(None)),
-					('key-info-window', TypeKey(None)),
-					('key-info-window-under-mouse', TypeKey(None)),
-				),
-			),
-			(
-				'tables', (
-					('bool-move-mouse-to-active-table', TypeBool(False)),
-					('flag-move-mouse-to-active-table-edge', TypeChoice(default='top-left', choices=('top-left', 'top-right', 'bottom-left', 'bottom-right') )),
-				),
-			),
-			(
-				'table', (
-					('key-fold', TypeKey(None)),
-					('key-check', TypeKey(None)),
-					('key-raise', TypeKey(None)),
-					('key-hilight-bet-amount', TypeKey(None)),
-					('key-replayer', TypeKey(None)),
-					('key-add-one-bb', TypeKey(None)),
-					('key-subtract-one-bb', TypeKey(None)),
-					('key-add-one-sb', TypeKey(None)),
-					('key-subtract-one-sb', TypeKey(None)),
-				),
-			),
-			(
-				'pokerstars', (
-					('bool-close-popup-news', TypeBool(False)),
-				),
-			),
-			#'pokerstars-tables': [],		# filled in later
+	SectionCli = (
+			'cli', (
+				('key-pause-keyboard',  TypeKey(None) ),
+				('key-report-keyboard', TypeKey(None) ),
+				('key-report-windows', TypeKey(None) ),
+				('key-info-window', TypeKey(None) ),
+				('key-info-window-under-mouse', TypeKey(None) ),
+			)
+		)
+	SectionTables = (
+			'tables', (
+				('bool-move-mouse-to-active-table', TypeBool(False) ),
+				('flag-move-mouse-to-active-table-edge', TypeChoice(default='top-left', choices=('top-left', 'top-right', 'bottom-left', 'bottom-right') ) ),
+			)
+		)
+	SectionTable = (
+			'table', (
+				('key-fold', TypeKey(None) ),
+				('key-check', TypeKey(None) ),
+				('key-raise', TypeKey(None) ),
+				('key-hilight-bet-amount', TypeKey(None) ),
+				('key-replayer', TypeKey(None) ),
+				('key-add-one-bb', TypeKey(None)),
+				('key-subtract-one-bb', TypeKey(None) ),
+				('key-add-one-sb', TypeKey(None) ),
+				('key-subtract-one-sb', TypeKey(None) ),
+			)
+		)
+	SectionPokerstars = (
+			'pokerstars', (
+				('bool-close-popup-news', TypeBool(False)),
+			)
+		)
+	SectionPokerStarsTable = (
+		('key', TypeKey(None) ), 
+		#('name', TypeString('') ),		# filled in later
+		('size', TypeSize(None)),
+		('point-button-check', TypePoint(None) ),
+		('point-button-fold', TypePoint(None) ),
+		('point-button-raise', TypePoint(None) ),
+		('point-checkbox-fold', TypePoint(None) ),
+		('point-button-replayer-1', TypePoint(None) ),
+		('point-button-replayer-2', TypePoint(None) ),
 		)
 		
-	DefaultsPokerStarsTable = (
-			('key', TypeKey(None)), 
-			#'name': TypeString(''),		# filled in later
-			('size', TypeSize(None)),
-			('point-button-check', TypePoint(None)),
-			('point-button-fold', TypePoint(None)),
-			('point-button-raise', TypePoint(None)),
-			('point-checkbox-fold', TypePoint(None)),
-			('point-button-replayer-1', TypePoint(None)),
-			('point-button-replayer-2', TypePoint(None)),
+	Sections = (
+			SectionCli ,
+			SectionTables,
+			SectionTable,
+			SectionPokerstars,
+			#'pokerstars-tables': [SectionPokerStarsTable(0), ...SectionPokerStarsTable(N)],	# filled in later
 			)
 			
 		
@@ -173,7 +177,7 @@ class Config(object):
 			userSettings = dict( [(section.lower(), dict(parser.items(section)) ) for section in parser.sections()] )
 			
 		# parse config
-		for (section, options) in self.Defaults:
+		for (section, options) in self.Sections:
 			self._settings[section] = {}
 			userOptions = userSettings.get(section, {})
 			for (option, typeOption) in options:
@@ -198,7 +202,7 @@ class Config(object):
 				table = {
 						'name': section[len('pokerstars-table-'): ]
 						}
-				for (option, typeOption) in self.DefaultsPokerStarsTable:
+				for (option, typeOption) in self.SectionPokerStarsTable:
 					userValue = userOptions.get(option, None)
 					if userValue is None:
 						value = typeOption.default
@@ -235,7 +239,7 @@ class Config(object):
 		
 	def toConfig(self):
 		result = []
-		for (section, options) in self.Defaults:
+		for (section, options) in self.Sections:
 			result.append( ('[%s]' % section).upper() )
 			for option, typeOption in options:
 				value = self._settings[section][option]
@@ -247,7 +251,7 @@ class Config(object):
 			if section == 'pokerstars':
 				for table in self._settings['pokerstars-tables']:
 					result.append( ('[pokerstars-table-%s]' % table['name']).upper() )
-					for (option, typeOption) in self.DefaultsPokerStarsTable:
+					for (option, typeOption) in self.SectionPokerStarsTable:
 						value = table[option]
 						value = typeOption.toConfig(value)
 						result.append( '%s=%s' % (option, value) )
