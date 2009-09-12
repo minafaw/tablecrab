@@ -257,13 +257,13 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 			edge = cli.config['tables']['flag-move-mouse-to-active-table-edge']
 			pos = None
 			if edge == 'top-left':
-				pos = (x, y)
+				pos = (x+1, y+1)
 			elif edge == 'top-right':
-				pos = (x+w, y)
+				pos = (x-1+w, y+1)
 			elif edge == 'bottom-left':
-				pos = (x, y+h)	
+				pos = (x+1, y-1+h)	
 			elif edge == 'bottom-right':
-				pos = (x+w, y+h)					
+				pos = (x-1+w, y-1+h)					
 			if pos is not None:
 				cli.application.mouseManager.mouseSetPos(pos)
 			return True
