@@ -264,6 +264,14 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 				self.cli.application.windowManager.windowSetClientSize(hwnd, size=table['size'])
 				return True
 		
+		# handle table only if it matches its predefined client area size
+		mySize = self.cli.application.windowManager.windowGetClientSize(self.hWindow)
+		for table in self.cli.config['pokerstars-tables']:
+			if table['size'] == mySize:
+				break
+		else:
+			return False
+		
 		for params in  self.cli.config['table']['alter-bet-amounts']:
 			if params['key'] == key:
 				if self.canBet():
@@ -289,6 +297,14 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		for params in  self.cli.config['table']['alter-bet-amounts']:
 			if params['key'] == key:
 				return True
+		
+		# handle table only if it matches its predefined client area size
+		mySize = self.cli.application.windowManager.windowGetClientSize(self.hWindow)
+		for table in self.cli.config['pokerstars-tables']:
+			if table['size'] == mySize:
+				break
+		else:
+			return False
 		
 		if key == self.cli.config['table']['key-fold']:
 			return True
