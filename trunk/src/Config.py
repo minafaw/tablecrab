@@ -1,5 +1,5 @@
 
-import sys, os, logging
+import sys, os, logging, operator
 from logging import handlers
 import ConfigParser
 
@@ -47,6 +47,20 @@ class TypeString(ConfigValue):
 	def toConfig(klass, value):
 		return value
 
+class TypeFloat(ConfigValue):
+	def __init__(self, default=None):
+		self.default = default
+	def fromConfig(self, value):
+		value = value.strip()
+		try:
+			value =float(value)
+		except ValueError:
+			raise ConfigError('invalid integer')
+		return value
+	@classmethod
+	def toConfig(klass, value):
+		return str(value)
+
 class TypeBool(ConfigValue):
 	def __init__(self, default=None):
 		self.default = default
@@ -57,7 +71,7 @@ class TypeBool(ConfigValue):
 		elif value == 'false':
 			value = False
 		else:
-			raise ConfigError('invalid bool, key: %s=%s' % (key, value) )
+			raise ConfigError('invalid bool')
 		return value
 	@classmethod
 	def toConfig(klass, value):
@@ -104,7 +118,6 @@ class TypeChoice(ConfigValue):
 	def toConfig(klass, value):
 		return value	
 	
-	
 #*************************************************************************************************
 class Config(object):
 	SectionCli = (
@@ -129,10 +142,7 @@ class Config(object):
 				('key-raise', TypeKey(None) ),
 				('key-hilight-bet-amount', TypeKey(None) ),
 				('key-replayer', TypeKey(None) ),
-				('key-add-one-bb', TypeKey(None)),
-				('key-subtract-one-bb', TypeKey(None) ),
-				('key-add-one-sb', TypeKey(None) ),
-				('key-subtract-one-sb', TypeKey(None) ),
+				#('type-alter-bet-amount': []),	# filled in later [{'key': TypeKey, 'type': TypeChoice, 'factor': TypeInt), {'key-add-blind': params, ...}]
 			)
 		)
 	SectionPokerstars = (
@@ -140,6 +150,7 @@ class Config(object):
 				('bool-close-popup-news', TypeBool(False)),
 			)
 		)
+	
 	SectionPokerStarsTable = (
 		('key', TypeKey(None) ), 
 		#('name', TypeString('') ),		# filled in later
@@ -161,10 +172,24 @@ class Config(object):
 			)
 			
 		
+	def _cfgGetValue(self, userOptions, option, typeOption):
+		userValue = userOptions.get(option, None)
+		if userValue is None:
+			value = typeOption.default
+		else:
+			del userOptions[option]
+			try:
+				value = typeOption.fromConfig(userValue)
+			except ConfigError:
+				value = typeOption.default
+				logger.debug('Config:invalid value for option:[%s]:%s' % (section, option) )
+		return value
+	
 	def __init__(self, filePathCfg=FilePathDefaultCfg):
 		
 		self._settings = {}
 		pokerStarsTables= []
+		tableAlterBetAmounts = []
 		
 		userSettings = {}
 		if filePathCfg is not None:
@@ -181,20 +206,41 @@ class Config(object):
 			self._settings[section] = {}
 			userOptions = userSettings.get(section, {})
 			for (option, typeOption) in options:
-				userValue = userOptions.get(option, None)
-				if userValue is None:
-					value = typeOption.default
-				else:
-					del userOptions[option]
-					try:
-						value = typeOption.fromConfig(userValue)
-					except ConfigError:
-						value = typeOption.default
-						logger.debug('Config:invalid value for option:[%s]:%s' % (section, option) )
-				self._settings[section][option] = value
+				self._settings[section][option] = self._cfgGetValue(userOptions, option, typeOption)
 			userSection = userSettings.get(section, None)
 			if userSection is not None and not userSection:
 				del userSettings[section]
+				
+		# special handling for alter-bet-amount-(N)
+		for (section, userOptions) in userSettings.items():
+			if section == 'table':
+				alterBetAmounts = []
+				for option, value in userOptions.items():
+					if option.startswith('type-alter-bet-amount-'):
+						factor = None
+						try:
+							n = int(option[len('type-alter-bet-amount-'): ])
+						except ValueError:
+							logger.debug('Config:invalid option name: [%s]:%s' % (section, option) )
+						else:
+							params = [i.strip() for i in value.split(',')]
+							if len(params) != 3:
+								logger.debug('Config:invalid params: [%s]:%s' % (section, option) )
+							else:
+								try: key = TypeKey().fromConfig(params[0])
+								except ConfigError: logger.debug('Config:invalid params: [%s]:%s' % (section, option) )
+								else:
+									try: baseValue = TypeChoice(choices=('big-blind', 'small-blind')).fromConfig(params[1])
+									except ConfigError: logger.debug('Config:invalid params: [%s]:%s' % (section, option) )
+									else:
+										try: factor = TypeFloat().fromConfig(params[2])
+										except ConfigError: logger.debug('Config:invalid params: [%s]:%s' % (section, option) )
+						del userSettings[section][option]
+						if factor is not None:
+							alterBetAmounts.append( (n, {'key': key, 'baseValue': baseValue, 'factor': factor}) )
+							
+				alterBetAmounts.sort(key=operator.itemgetter(0) )
+				tableAlterBetAmounts = [i[1] for i in alterBetAmounts]
 				
 		# parse config for pokerStars tables
 		for (section, userOptions) in userSettings.items():
@@ -203,21 +249,10 @@ class Config(object):
 						'name': section[len('pokerstars-table-'): ]
 						}
 				for (option, typeOption) in self.SectionPokerStarsTable:
-					userValue = userOptions.get(option, None)
-					if userValue is None:
-						value = typeOption.default
-					else:
-						del userOptions[option]
-						try:
-							value = typeOption.fromConfig(userValue)
-						except ConfigError:
-							value = typeOption.default
-							logger.debug('Config:invalid value for option:[%s]:%s' % (section, option) )
-						table[option] = value
+					table[option] = self._cfgGetValue(userOptions, option, typeOption)
 				userSection = userSettings.get(section, None)
 				if userSection is not None and not userSection:
 					del userSettings[section]
-								
 				pokerStarsTables.append(table)
 				
 		# errorcheck
@@ -230,6 +265,7 @@ class Config(object):
 		
 		#
 		self._settings['pokerstars-tables'] = pokerStarsTables	
+		self._settings['table']['alter-bet-amounts'] = tableAlterBetAmounts	
 		
 		
 	def __getitem__(self, key):
@@ -245,6 +281,13 @@ class Config(object):
 				value = self._settings[section][option]
 				value = typeOption.toConfig(value)
 				result.append( '%s=%s' % (option, value) )
+			
+			# special handling for alter-bet-amount-(N)
+			if section == 'table':
+				for n, alterBetAmount in enumerate(self._settings['table']['alter-bet-amounts']):
+					option = 'alter-bet-amount-%s' % n
+					value = '%(key)s, %(baseValue)s, %(factor)s' % alterBetAmount
+					result.append('%s=%s' % (option, value))
 			result.append('')
 				
 			# add PS tables following [POKERSTARS] section
