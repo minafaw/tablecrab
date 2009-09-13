@@ -193,6 +193,9 @@ class WindowManager(object):
 		if not user32.GetWindowRect(hwnd, byref(rc)): raise WinError(GetLastError())
 		return (rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top)
 		
+	def windowGetSize(self, hwnd):
+		return self.windowGetRect(hwnd)[2: ]
+	
 	def windowSetClientSize(self, hwnd, size=None):
 		"""adjusts the specified windows size to fit the specified size of the client area
 		@hwnd: handle of the window
