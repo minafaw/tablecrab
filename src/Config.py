@@ -55,6 +55,20 @@ class TypeFloat(ConfigValue):
 		try:
 			value =float(value)
 		except ValueError:
+			raise ConfigError('invalid floating point number')
+		return value
+	@classmethod
+	def toConfig(klass, value):
+		return str(value)
+
+class TypeInt(ConfigValue):
+	def __init__(self, default=None):
+		self.default = default
+	def fromConfig(self, value):
+		value = value.strip()
+		try:
+			value =int(value)
+		except ValueError:
 			raise ConfigError('invalid integer')
 		return value
 	@classmethod
@@ -122,6 +136,8 @@ class TypeChoice(ConfigValue):
 class Config(object):
 	SectionCli = (
 			'cli', (
+				('host-single-app',  TypeString(None) ),
+				('port-single-app',  TypeInt(None) ),
 				('key-pause-keyboard',  TypeKey(None) ),
 				('key-report-keyboard', TypeKey(None) ),
 				('key-report-windows', TypeKey(None) ),

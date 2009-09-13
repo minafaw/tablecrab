@@ -10,6 +10,7 @@ import sys, traceback
 from .Platform import Application
 from . import Config
 from . import WindowHandlers
+from .Lib import SingleApp
 
 #******************************************************************************************
 
@@ -33,6 +34,28 @@ class Cli(object):
 		self._keyboardIsPaused = False
 		self._keyboardReportIsPaused = True
 		self._windowReportIsPaused = True
+		
+		# enshure only on instance is running at a time
+		self.singleApp = None
+		hostSingleApp = self.config['cli']['host-single-app']
+		portSingleApp = self.config['cli']['port-single-app']
+		if hostSingleApp and portSingleApp:
+			self.singleApp = SingleApp.SingleApp(
+				host=hostSingleApp,
+				port=portSingleApp, 
+				magicToSend='{537e1cfc-a09e-11de-8f26-be3efbcb665f}',
+				magicToRespond='{75cf3bb0-a09e-11de-b12e-bb31cbf0f1ce}'
+				)
+			try:
+				self.log(self, 'starting single application server')
+				self.singleApp.start()
+			except SingleApp.ErrorOtherAppIsRunning:
+				self.log(self, 'another instance is already running, quiting')
+				sys.exit(5)
+			except SingleApp.ErrorCanNotConnect:
+				self.log(self, 'can not connect single application server, quiting')
+				sys.exit(5)
+			
 			
 	def _excepthook(self, Type, value, tb):
 		p = [Config.__application_name__, 'Version: ' + Config.__version__]
