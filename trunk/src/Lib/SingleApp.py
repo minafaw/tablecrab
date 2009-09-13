@@ -49,7 +49,7 @@ class SingleApp(object):
 			self.socket.listen(1)
 			conn, addr = self.socket.accept()
 			# NOTE: my best guess here is that we can not loop here to make shure we
-			# get some data. mybe the other end of the pipe plays dead
+			# get some data. maybe the other end of the pipe plays dead
 			data = conn.recv(len(self.magicToSend))
 			if data == self.magicToSend:
 				self.onOtherAppIsStarting()
