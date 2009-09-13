@@ -133,39 +133,21 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 			self.cli.application.windowManager.windowSetText(hWindow, text=value)
 	
 	
-	def doAddOneBB(self):
+	def doAlterBetAmount(self, baseValue=None, factor=0):
 		betAmount = self.getBetAmount()
 		if betAmount is not None:
 			blinds = self.getBlinds()
-			self.setBetAmount(value=betAmount + blinds['bigBlind'])
-			self.cli.log(self, 'add one BB')
+			if baseValue == 'big-blind':
+				baseValue = blinds['bigBlind']
+			elif baseValue == 'small-blind':
+				baseValue = blinds['smallBlind']
+			else:
+				raise NotImplementedError()
+			value = round(baseValue * factor, 2)
+			self.setBetAmount(value=betAmount + value)
+			self.cli.log(self, 'alter bet amount: +%s' % value) if value > 0 else self.cli.log(self, 'alter bet amount: -%s' % abs(value))
 			return True
 		
-	def doSubtractOneBB(self):
-		betAmount = self.getBetAmount()
-		if betAmount is not None:
-			blinds = self.getBlinds()
-			self.setBetAmount(value=betAmount - blinds['bigBlind'])
-			self.cli.log(self, 'subtract one BB')
-			return True
-	
-	def doAddOneSB(self):
-		betAmount = self.getBetAmount()
-		if betAmount is not None:
-			blinds = self.getBlinds()
-			self.setBetAmount(value=betAmount + blinds['smallBlind'])
-			self.cli.log(self, 'add one SB')
-			return True
-		
-	def doSubtractOneSB(self):
-		betAmount = self.getBetAmount()
-		if betAmount is not None:
-			blinds = self.getBlinds()
-			self.setBetAmount(value=betAmount - blinds['smallBlind'])
-			self.cli.log(self, 'subtract one SB')
-			return True
-	
-	
 	def doCheck(self):
 		size = self.cli.application.windowManager.windowGetClientSize(self.hWindow)
 		for table in self.cli.config['pokerstars-tables']:
@@ -274,6 +256,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		return False	
 	
 	def handleKeyPressed(self, cli, key):
+			
 		for table in self.cli.config['pokerstars-tables']:
 			if key == table['key']:
 				self.cli.log(self, 'handle table as:%s' % table['name'])
@@ -281,6 +264,12 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 				self.cli.application.windowManager.windowSetClientSize(hwnd, size=table['size'])
 				return True
 		
+		for params in  self.cli.config['table']['alter-bet-amounts']:
+			if params['key'] == key:
+				if self.canBet():
+					self.doAlterBetAmount(baseValue=params['baseValue'], factor=params['factor']) 
+				return True
+			
 		if key == self.cli.config['table']['key-fold']:
 			if self.doFold(): return True
 		elif key == self.cli.config['table']['key-check']:
@@ -291,19 +280,14 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 			if self.doShowReplayer(): return True
 		elif key == self.cli.config['table']['key-hilight-bet-amount']:
 			if self.doHilightBetAmount(): return True
-		elif key == self.cli.config['table']['key-add-one-bb']:
-			if self.doAddOneBB(): return True
-		elif key == self.cli.config['table']['key-subtract-one-bb']:
-			if self.doSubtractOneBB(): return True
-		elif key == self.cli.config['table']['key-add-one-sb']:
-			if self.doAddOneSB(): return True
-		elif key == self.cli.config['table']['key-subtract-one-sb']:
-			if self.doSubtractOneSB(): return True
 		return False	
 	
 	def handleKeyReleased(self,  cli, key):
 		for table in self.cli.config['pokerstars-tables']:
 			if key == table['key']:
+				return True
+		for params in  self.cli.config['table']['alter-bet-amounts']:
+			if params['key'] == key:
 				return True
 		
 		if key == self.cli.config['table']['key-fold']:
@@ -315,14 +299,6 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		elif key == self.cli.config['table']['key-replayer']:
 			return True
 		elif key == self.cli.config['table']['key-hilight-bet-amount']:
-			return True
-		elif key == self.cli.config['table']['key-add-one-bb']:
-			return True
-		elif key == self.cli.config['table']['key-subtract-one-bb']:
-			return True
-		elif key == self.cli.config['table']['key-add-one-sb']:
-			return True
-		elif key == self.cli.config['table']['key-subtract-one-sb']:
 			return True
 		return False
 		
