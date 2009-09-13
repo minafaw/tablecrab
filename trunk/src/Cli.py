@@ -62,12 +62,12 @@ class Cli(object):
 		self.application.stop()
 	
 	def onApplication(self, application, evt, arg):
-		if evt in (application.EvtStart, application.EvtStop):
-			if arg:
-				self.log(application, '%s arg="%s"' % (evt, arg) )
-			else:
-				self.log(application, evt)
-			return False
+		if evt == application.start:
+			self.log(application, evt)
+			return True
+		else:
+			self.log(application, '%s reason="%s"' % (evt, arg) ) if arg else self.log(application, evt)
+			return True
 		return False
 	
 	def onMouseManager(self, mouseManager, evt, arg):
@@ -95,16 +95,16 @@ class Cli(object):
 		if key == self.config['cli']['key-report-keyboard']:	
 			if evt == keyboardManager.EvtKeyReleased:
 				flag = self.keyboardReportSetPaused(not self.keyboardReportIsPaused())
-				self.log(self, 'keyboardReport="%s"' % ('of' if flag else 'on') )
+				self.log(self, 'keyboardReport=%s' % ('off' if flag else 'on') )
 			return True
 		if evt == keyboardManager.EvtKeyPressed:	
 			if not self.keyboardReportIsPaused():
-				self.log(self, '%s key="%s"' % (evt, key.value) )
+				self.log(self, '%s key=%s' % (evt, key.value) )
 		
 		elif key == self.config['cli']['key-pause-keyboard']:
 			if evt == keyboardManager.EvtKeyReleased:
 				flag = self.keyboardSetPaused(not self.keyboardIsPaused())
-				self.log(self, 'keyboard="%s"' % ('of' if flag else 'on') )
+				self.log(self, 'keyboard=%s' % ('off' if flag else 'on') )
 			return True
 		if self.keyboardIsPaused():
 			return False
@@ -112,7 +112,7 @@ class Cli(object):
 		elif key == self.config['cli']['key-report-windows']:
 			if evt == keyboardManager.EvtKeyReleased:
 				flag = self.windowReportSetPaused(not self.windowReportIsPaused())
-				self.log(self, 'windowReport="%s"' % ('of' if flag else 'on') )
+				self.log(self, 'windowReport=%s' % ('off' if flag else 'on') )
 			return True
 
 		elif key == self.config['cli']['key-info-window']:
