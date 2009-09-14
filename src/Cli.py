@@ -10,7 +10,7 @@ import sys, traceback
 from .Platform import Application
 from . import Config
 from . import WindowHandlers
-from .Lib import SingleApp
+from .Lib import SingleAppServer
 
 #******************************************************************************************
 
@@ -36,23 +36,23 @@ class Cli(object):
 		self._windowReportIsPaused = True
 		
 		# enshure only on instance is running at a time
-		self.singleApp = None
-		hostSingleApp = self.config['cli']['host-single-app']
-		portSingleApp = self.config['cli']['port-single-app']
-		if hostSingleApp and portSingleApp:
-			self.singleApp = SingleApp.SingleApp(
-				host=hostSingleApp,
-				port=portSingleApp, 
+		self.singleAppServer = None
+		host = self.config['cli']['host-single-app']
+		port = self.config['cli']['port-single-app']
+		if host:
+			self.singleAppServer = SingleAppServer.SingleAppServer(
+				host=host,
+				port=port, 
 				magicToSend='{537e1cfc-a09e-11de-8f26-be3efbcb665f}',
 				magicToRespond='{75cf3bb0-a09e-11de-b12e-bb31cbf0f1ce}'
 				)
 			try:
 				self.log(self, 'starting single application server')
-				self.singleApp.start()
-			except SingleApp.ErrorOtherAppIsRunning:
+				self.singleAppServer.start()
+			except SingleAppServer.ErrorOtherAppIsRunning:
 				self.log(self, 'another instance is already running, quiting')
 				sys.exit(5)
-			except SingleApp.ErrorCanNotConnect:
+			except SingleAppServer.ErrorCanNotConnect:
 				self.log(self, 'can not connect single application server, quiting')
 				sys.exit(5)
 			

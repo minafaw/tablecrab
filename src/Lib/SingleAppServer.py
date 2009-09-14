@@ -13,7 +13,7 @@ class ErrorOtherAppIsRunning(Exception):
 	"""exception raised when SingleApp detects another application is already running"""
 	
 
-class SingleApp(object):
+class SingleAppServer(object):
 	"""Class doing its best to enshure only one instance of an application
 	is running at the same time
 	
