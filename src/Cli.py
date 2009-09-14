@@ -50,7 +50,7 @@ class Cli(object):
 				self.log(self, 'start SingleAppServer')
 				self.singleAppServer.start()
 			except SingleAppServer.ErrorOtherAppIsRunning:
-				self.log(self, 'another application is already running. quiting')
+				self.log(self, 'another application is already running')
 				self.log(self, 'exit')
 				sys.exit(5)
 			except SingleAppServer.ErrorCanNotConnect:
