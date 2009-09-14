@@ -35,7 +35,7 @@ class Cli(object):
 		self._keyboardReportIsPaused = True
 		self._windowReportIsPaused = True
 		
-		# enshure only on instance is running at a time
+		# enshure only on app is running at a time
 		self.singleAppServer = None
 		host = self.config['cli']['host-single-app']
 		port = self.config['cli']['port-single-app']
@@ -43,17 +43,19 @@ class Cli(object):
 			self.singleAppServer = SingleAppServer.SingleAppServer(
 				host=host,
 				port=port, 
-				magicToSend='{537e1cfc-a09e-11de-8f26-be3efbcb665f}',
-				magicToRespond='{75cf3bb0-a09e-11de-b12e-bb31cbf0f1ce}'
+				magicToSend='%s:{537e1cfc-a09e-11de-8f26-be3efbcb665f}' % Config.__application_name__,
+				magicToRespond='%s:{75cf3bb0-a09e-11de-b12e-bb31cbf0f1ce}' % Config.__application_name__
 				)
 			try:
-				self.log(self, 'starting single application server')
+				self.log(self, 'start SingleAppServer')
 				self.singleAppServer.start()
 			except SingleAppServer.ErrorOtherAppIsRunning:
-				self.log(self, 'another instance is already running, quiting')
+				self.log(self, 'another application is already running. quiting')
+				self.log(self, 'exit')
 				sys.exit(5)
 			except SingleAppServer.ErrorCanNotConnect:
-				self.log(self, 'can not connect single application server, quiting')
+				self.log(self, 'can not connect single application server, host or port may be unavailable')
+				self.log(self, 'exit')
 				sys.exit(5)
 			
 			
