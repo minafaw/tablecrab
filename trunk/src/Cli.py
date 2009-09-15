@@ -83,7 +83,7 @@ class Cli(object):
 		self._windowReportIsPaused = flag
 		return flag
 	
-	def start(self, isMainloop=False):
+	def start(self, isMainloop=True):
 		self.application.start(isMainloop=isMainloop)
 	def stop(self):
 		self.application.stop()
