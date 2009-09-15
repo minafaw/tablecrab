@@ -1,33 +1,31 @@
 additional hotkeys for PokerStars and more
 
-WARNING: this thingy is pretty alpha - so use at your own risk
+WARNING: this thing is pretty alpha - so use at your own risk
 
 --------------------------
 features:
 --------------------------
 
-- hotkeys for table actions like fold, check, raise, alter bet amount, show replayer
-- auto-close popup news if desired
+- configurable hotkeys for table actions like fold, check, raise, alter bet amount, show replayer
+- auto-close popup news
+- move mouse to table that requires attention
 
 ---------------------------
 usage:
 ---------------------------
 
 linux:
-- install wine
-- install the windows version of python (>= 2.6) from [http://python.org/download/]
-- run from commandline: 
-    >> wine pathTo/python.exe pathTo/Cli.py pathTo/my.cfg
-	
-	where "pathTo/my.cfg" is the path to your configuration file. if omitted the default config
-	from User/default.cfg is taken. for details see User/default.cfg
+1. install wine
+2. install the windows version of python (>= 2.6) from [http://python.org/download/]
+3. create your config file (see User/default.cfg) for details
+4. run from commandline: 
+    >> wine pathTo/pythonw.exe pathTo/Cli.py pathTo/my.cfg
 	
 	in case an error occurs a report should be written to User/errlog.txt. please include
 	this file in any failure reports
-	
 
 win32:
-- not tested but may work as expected
+- not tested, but may work as expected
 
 
 --------------------------
@@ -35,10 +33,9 @@ notes:
 --------------------------
 
 - wine specific: if "Allow the window manager to control the windows" is set to False, the foreground 
-   window may or may not be the window you see in the foreground. with this setting turned off, 
-   hotkeys may or may not work  as expected. i have not found a way yet to reliably set foreground
-   status to an uncontrolled window. anyone any ideas?
- 
+   window may not always be the active window. and because the hotkeys implemented here work 
+   only on the currently active window they may not work.
+    
  - wine specific: on my ubuntu box wine took the first keyboard layout it could get a hold on. had
     to remove US keyboard layout to get wine to use the desired german one.
 
