@@ -19,6 +19,10 @@ class Cli(object):
 	Type = 'Cli'
 	
 	def __init__(self, config=None):
+		self.log = lambda obj, msg: Config.logger.debug('%s:%s' % (obj.Type, msg))
+		self.logException = lambda obj, msg: Config.logger.critical('%s:%s' % (obj.Type, msg))
+		self.log(self, 'initializing %s' % Config.__release_name__)
+		
 		sys.excepthook = self._excepthook
 		
 		self.config = Config.Config() if config is None else config
@@ -26,8 +30,6 @@ class Cli(object):
 		self.application.mouseManager.setCB(self.onMouseManager)
 		self.application.keyboardManager.setCB(self.onKeyboardManager)
 		self.application.windowManager.setCB(self.onWindowManager)
-		self.log = lambda obj, msg: Config.logger.debug('%s:%s' % (obj.Type, msg))
-		self.logException = lambda obj, msg: Config.logger.critical('%s:%s' % (obj.Type, msg))
 				
 		self.windowHandlers = {}		# hWindow --> WindowHandler*
 		
