@@ -26,6 +26,8 @@ IncludeExts = ('.py', '.txt', '.cfg', '.mit')
 
 
 def main():
+	print 'create release: %s' % ReleaseName
+	
 	# some tests that we are resided in the right location
 	if not os.path.basename(DirSelf) == 'trunk':
 		raise ValueError('we should always be in trunk/')
@@ -33,10 +35,14 @@ def main():
 		raise ValueError('tags/ directory not found')
 		
 	# make shure release exists in tags/
-	if not os.path.isdir(DirRelease):
+	if os.path.isdir(DirRelease):
+		print 'release dir exists: %s' % DirRelease
+	else:
+		print 'creating release dir: %s' % DirRelease
 		os.makedirs(DirRelease)
 		
 	# collect files to include
+	print 'collect files'
 	fileList = []
 	for root, dirs, files in os.walk(DirSrc):
 		files = [i for i in files if os.path.splitext(i)[1].lower() in IncludeExts]
@@ -44,16 +50,23 @@ def main():
 			for file in files:
 				fPath = os.path.join(root, file)
 				fPathRel = fPath[len(DirSrc)+1: ]
+				print '>>', fPathRel
 				fileList.append( (fPath, fPathRel) )
 		
 	# dump files to zip
-	zipName = os.path.join(DirRelease, ReleaseName + '.zip')
-	zip = zipfile.ZipFile(zipName, 'w', zipfile.ZIP_DEFLATED)
+	zipName = ReleaseName + '.zip'
+	print 'zip files: %s' % zipName
+	zipFileName = os.path.join(DirRelease, zipName)
+	if os.path.exists(zipFileName):
+		raise ValueError('release zip already exists')
+		
+	zip = zipfile.ZipFile(zipFileName, 'w', zipfile.ZIP_DEFLATED)
 	try:
 		for fPath, fPathRel in fileList:
 			zip.write(fPath, fPathRel)
 	finally:
 		zip.close()
+	print 'done'
 
 #***********************************************************************
 if __name__ == '__main__': main()
