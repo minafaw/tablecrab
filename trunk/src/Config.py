@@ -7,7 +7,8 @@ import ConfigParser
 __application_name__ = 'TableCrab'
 __author__ = 'juergen urner'
 __email__ = 'jUrner@arcor.de'
-__version__ = '0.1.1'
+__version__ = '0.1.2'
+__release_name__ = '%s-%s' % (__application_name__, __version__)
 
 #***************************************************************************************************
 DirApplication = os.path.dirname(os.path.abspath(__file__))
