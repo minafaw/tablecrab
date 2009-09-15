@@ -286,7 +286,7 @@ class Cli(object):
 if __name__ == '__main__':
 	import sys
 	if len(sys.argv) > 1:
-		filePathCf = sys.argv[1]
+		filePathCfg = sys.argv[1]
 	else:
 		filePathCfg = Config.FilePathDefaultCfg
 	

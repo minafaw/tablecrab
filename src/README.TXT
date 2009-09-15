@@ -47,7 +47,15 @@ notes:
 version history:
 -------------------------
 
+0.1.1 bugfix release
+-----------------------------
+news:
+fixes:
+- supplying custom cofig via commandline did not work: fixed
+
+
 0.1.0 initial release
+--------------------------
 news:
 fixes:
 
