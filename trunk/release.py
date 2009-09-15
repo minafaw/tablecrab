@@ -19,14 +19,13 @@ from .src import Config
 DirSelf = os.path.dirname(os.path.abspath(__file__))
 DirSrc = os.path.join(DirSelf, 'src')
 DirTags = os.path.join(os.path.dirname(DirSelf), 'tags')
-ReleaseName = '%s-%s' % (Config.__application_name__, Config.__version__)
-DirRelease = os.path.join(DirTags, ReleaseName)
+DirRelease = os.path.join(DirTags, Config.__release_name__)
 
 IncludeExts = ('.py', '.txt', '.cfg', '.mit')
 
 
 def main():
-	print 'create release: %s' % ReleaseName
+	print 'create release: %s' % Config.__release_name__
 	
 	# some tests that we are resided in the right location
 	if not os.path.basename(DirSelf) == 'trunk':
@@ -54,7 +53,7 @@ def main():
 				fileList.append( (fPath, fPathRel) )
 		
 	# dump files to zip
-	zipName = ReleaseName + '.zip'
+	zipName = Config.__release_name__ + '.zip'
 	print 'zip files: %s' % zipName
 	zipFileName = os.path.join(DirRelease, zipName)
 	if os.path.exists(zipFileName):
