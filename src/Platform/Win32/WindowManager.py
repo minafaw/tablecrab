@@ -1,4 +1,5 @@
-
+"""win32 window manager implementation
+"""
 import thread, time
 from ctypes import *
 from ctypes.wintypes import *
@@ -116,7 +117,7 @@ class WindowManager(object):
 		
 	def windowChildren(self, hwndParent=None):
 		"""returns a the list of child windows of a window
-		@hwnd: handle of the window or None to list all toplevel windows
+		@param hwndParent: handle of the window or None to list all toplevel windows
 		@return: (list) of windows of the specified parent
 		"""
 		L= []
@@ -139,7 +140,7 @@ class WindowManager(object):
 		
 	def windowClose(self, hwnd):
 		"""closes the specified window
-		@hwnd: handle of the window
+		@param hwnd: handle of the window
 		@return: None
 		"""
 		if not hwnd: raise ValueError('can not close desktop window')
@@ -156,7 +157,7 @@ class WindowManager(object):
 	
 	def windowGetClassName(self, hwnd):
 		"""returns the class name of the specified window
-		@hwnd: handle of the window
+		@param hwnd: handle of the window
 		@return: (str)
 		"""
 		if not hwnd: raise ValueError('can not retrieve className of desktop window')
@@ -166,7 +167,7 @@ class WindowManager(object):
 	
 	def windowGetClientRect(self, hwnd, toScreen=False):
 		"""returns the client rect of the specified window
-		@hwnd: handle of the window
+		@param hwnd: handle of the window
 		@param toScreen: if True the client coordiantes are converted to screen coordiantes in the call
 		@return: (tuple) (left, top, width, height)
 		"""
@@ -185,7 +186,7 @@ class WindowManager(object):
 		
 	def windowGetRect(self, hwnd):
 		"""returns the window rect of the specified window
-		@hwnd: handle of the window
+		@param hwnd: handle of the window
 		@return: (L{RECT})
 		"""
 		if not hwnd: raise ValueError('can not set rect of desktop window')
@@ -198,7 +199,7 @@ class WindowManager(object):
 	
 	def windowSetClientSize(self, hwnd, size=None):
 		"""adjusts the specified windows size to fit the specified size of the client area
-		@hwnd: handle of the window
+		@param hwnd: handle of the window
 		@param size: (tuple) width, height
 		@return: None
 		"""
@@ -214,7 +215,7 @@ class WindowManager(object):
 	
 	def windowGetText(self, hwnd):
 		"""returns the window title of the specified window
-		@hwnd: handle of the window
+		@param hwnd: handle of the window
 		@return: (str)
 		"""
 		if not hwnd: raise ValueError('can not retrieve text of desktop window')
@@ -238,7 +239,7 @@ class WindowManager(object):
 	
 	def windowSetText(self, hwnd, text=''):
 		"""returns the window title of the specified window
-		@hwnd: handle of the window
+		@param hwnd: handle of the window
 		@todo: we currently send ANSI text only. 
 		@return: (str)
 		"""
@@ -257,7 +258,7 @@ class WindowManager(object):
 	
 	def windowSetPosAndSize(self, hwnd, pos=None, size=None):
 		"""sets size and position of the specified windows 
-		@hwnd: handle of the window
+		@param hwnd: handle of the window
 		@param pos: (tuple) x, y (in screen coordiantes) or None to leave position unchanged
 		@param size: (tuple) width, height or None to leave size unchanged
 		@return: None

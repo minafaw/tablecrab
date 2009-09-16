@@ -1,4 +1,5 @@
- 
+"""window handler registry
+""" 
 WindowHandlerRegistry = {}
 WindowHandlerType = 'WindowHandler'
 

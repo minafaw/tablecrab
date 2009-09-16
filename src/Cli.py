@@ -257,7 +257,7 @@ class Cli(object):
 		self.log(self, '%smousePos(rel): %s' % (indent, ptMouseRel) )
 		
 	def windowInfoUnderMouse(self):
-		"""prints out a report (size, mousePos, child windows (...)) of the window under the mouse pointer. see L{infoWindow}
+		"""prints out a report (size, mousePos, child windows (...)) of the window under the mouse pointer. see L{windowInfo}
 		"""
 		nIndent = 0
 		pt = self.application.mouseManager.mouseGetPos()

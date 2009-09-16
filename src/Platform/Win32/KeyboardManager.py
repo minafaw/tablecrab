@@ -1,4 +1,5 @@
-
+"""win32 keyboard manager implementation
+"""
 from ctypes import *
 from ctypes.wintypes import *
 LRESULT = c_ulong
