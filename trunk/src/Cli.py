@@ -1,4 +1,6 @@
 '''client interface
+
+commandline usage: Client.py [my.cfg]
 '''
 
 from __future__ import absolute_import
@@ -13,17 +15,27 @@ from . import WindowHandlers
 from .Lib import SingleAppServer
 
 #******************************************************************************************
-
-# test application for all of the stuff above
 class Cli(object):
+	"""client implementation
+	
+	@ivar application: application object
+	@ivar config: config object
+	@ivar singleAppServer: SingleAppServer object or None
+	@ivar windowhandlers: (dict)  hWindow --> Windowhandler
+	"""
 	Type = 'Cli'
 	
-	def __init__(self, config=None):
+	def __init__(self, config=None, traceExceptions=True):
+		"""
+		@param config: L{config.Config} or None to use default config
+		@param traceExceptions: (bool) True, to trace exceptions by overwriting sys.excepthook, False to not do so
+		"""
 		self.log = lambda obj, msg: Config.logger.debug('%s:%s' % (obj.Type, msg))
 		self.logException = lambda obj, msg: Config.logger.critical('%s:%s' % (obj.Type, msg))
 		self.log(self, 'initializing %s' % Config.__release_name__)
 		
-		sys.excepthook = self._excepthook
+		if traceExceptions:
+			sys.excepthook = self._excepthook
 		
 		self.config = Config.Config() if config is None else config
 		self.application = Application.Application(cb=self.onApplication)
@@ -60,35 +72,125 @@ class Cli(object):
 				self.log(self, 'exit')
 				sys.exit(5)
 			
-			
+	################
+	## private methods
+	################		
 	def _excepthook(self, Type, value, tb):
+		"""private method to handle exceptions"""
 		p = [Config.__application_name__, 'Version: ' + Config.__version__]
 		p += traceback.format_exception(type, value, tb)
 		self.logException(self, '\n'.join(p) )
 		self.application.stop()
 		raise Type(value)
 	
-	def keyboardIsPaused(self): return self._keyboardIsPaused
+	################
+	## methods
+	################
+	def keyboardIsPaused(self): 
+		"""checks if keyboard handling is paused
+		@return: (bool) True if so, False otherwise
+		"""
+		return self._keyboardIsPaused
 	def keyboardSetPaused(self, flag):
+		"""pause/resumes keyboard handling
+		@param flag: (bool) True to pause, False to resume
+		@return: (bool) current state
+		"""
 		self._keyboardIsPaused = flag
 		return flag
 	
-	def keyboardReportIsPaused(self): return self._keyboardReportIsPaused
+	def keyboardReportIsPaused(self): 
+		"""checks if keyboard stoke reporting is paused
+		@return: (bool) True if so, False otherwise
+		"""
+		return self._keyboardReportIsPaused
 	def keyboardReportSetPaused(self, flag):
+		"""pause/resumes keyboard stroke report
+		@param flag: (bool) True to pause, False to resume
+		@return: (bool) current state
+		"""
 		self._keyboardReportIsPaused = flag
 		return flag
 	
-	def windowReportIsPaused(self): return self._windowReportIsPaused
+	def start(self, isMainloop=True):
+		"""starts the client
+		@param isMainloop: (bool) True, if the client should start a mainloop, False otherwise. set to False
+		if your app is already running a mainloop 
+		"""
+		self.application.start(isMainloop=isMainloop)
+	def stop(self):
+		"""stops the client"""
+		self.application.stop()
+		
+	def windowInfo(self, hwnd, header=None, nIndent=0):
+		"""prints out window info 
+		@param hwnd: (hwnd) hwnd of the window
+		@param header: (str) if desired a header text
+		@param nIndent: (int) indent the report? how many times?
+		"""
+		indent = '\x20' * 4 * nIndent
+		ptMouseAbs = self.application.mouseManager.mouseGetPos()
+		ptMouseRel = self.application.windowManager.windowScreenPointToClientPoint(hwnd, ptMouseAbs)
+		if header is not None:
+			self.log(self, '%s# ##############################' % indent)
+			self.log(self, '%s# %s' % (indent, header))
+			self.log(self, '%s# ##############################' % indent)
+		self.log(self, '%shwnd: %s' % (indent, hwnd))
+		self.log(self, "%stitle: '%s'" % (indent, self.application.windowManager.windowGetText(hwnd) ) )
+		self.log(self, "%sclass: '%s'" % (indent, self.application.windowManager.windowGetClassName(hwnd) ) )
+		self.log(self, '%srect: %s' % (indent, self.application.windowManager.windowGetRect(hwnd) ) )
+		self.log(self, '%sclientSize: %s' % (indent, self.application.windowManager.windowGetClientRect(hwnd)[2:] ) )
+		self.log(self, '%sisVisible: %s' % (indent, self.application.windowManager.windowIsVisible(hwnd) ) )
+		self.log(self, '%smousePos(abs): %s' % (indent, ptMouseAbs) )
+		self.log(self, '%smousePos(rel): %s' % (indent, ptMouseRel) )
+		
+	def windowInfoUnderMouse(self):
+		"""prints out a report (size, mousePos, child windows (...)) of the window under the mouse pointer. see L{windowInfo}
+		"""
+		nIndent = 0
+		pt = self.application.mouseManager.mouseGetPos()
+		hwndCurrent = self.application.windowManager.windowFromPoint(pt)
+		if hwndCurrent:
+			self.windowInfo(hwndCurrent, header='WINDOW UNDER MOUSE', nIndent=nIndent)
+								
+			# print info of all parent windows (not including desktop)
+			myHwndCurrent = hwndCurrent
+			while True:
+				nIndent += 1
+				hwndParent = self.application.windowManager.windowGetParent(myHwndCurrent)
+				if not hwndParent: break
+				self.windowInfo(hwndParent, header='WINDOW PARENT(%s)' % nIndent, nIndent=nIndent)
+				myHwndCurrent = hwndParent
+		else:
+			self.log(self, None)
+			
+		self.log(self, '')
+		self.log(self, 'EXTENDED INFORMATION')
+		self.log(self, '')
+		for nIndent, hwnd in self.application.windowManager.windowWalkChildren(hwndCurrent, report=True):
+			header = 'WINDOW' if hwnd == hwndCurrent else 'CHILD WINDOW(%s)' % nIndent
+			self.windowInfo(hwnd, header=header, nIndent=nIndent)	
+
+	
+	def windowReportIsPaused(self): 
+		"""checks if reporting of window events is paused
+		@return: (bool) True if so, False otherwise
+		"""
+		return self._windowReportIsPaused
+	
 	def windowReportSetPaused(self, flag):
+		"""pause/resumes window event reporting
+		@param flag: (bool) True to pause, False to resume
+		@return: (bool) current state
+		"""
 		self._windowReportIsPaused = flag
 		return flag
 	
-	def start(self, isMainloop=True):
-		self.application.start(isMainloop=isMainloop)
-	def stop(self):
-		self.application.stop()
-	
+	################
+	## event handlers
+	################
 	def onApplication(self, application, evt, arg):
+		"""handler for application events"""
 		if evt == application.start:
 			self.log(application, evt)
 			return True
@@ -97,16 +199,8 @@ class Cli(object):
 			return True
 		return False
 	
-	def onMouseManager(self, mouseManager, evt, arg):
-		if evt in (mouseManager.EvtStart, mouseManager.EvtStop):
-			if arg:
-				self.log(mouseManager, '%s arg="%s"' % (evt, arg) )
-			else:
-				self.log(mouseManager, evt)
-			return False
-		return False
-	
 	def onKeyboardManager(self, keyboardManager, evt, arg):
+		"""handler for keyboard events"""
 		if evt in (keyboardManager.EvtStart, keyboardManager.EvtStop):
 			if arg:
 				keyboardLayout = arg
@@ -165,7 +259,17 @@ class Cli(object):
 			return handler.handleKeyReleased(self, key)
 		return False
 	
+	def onMouseManager(self, mouseManager, evt, arg):
+		if evt in (mouseManager.EvtStart, mouseManager.EvtStop):
+			if arg:
+				self.log(mouseManager, '%s arg="%s"' % (evt, arg) )
+			else:
+				self.log(mouseManager, evt)
+			return False
+		return False
+	
 	def onWindowManager(self, windowManager, evt, arg):
+		"""handler for window events"""
 		if evt in (windowManager.EvtStart, windowManager.EvtStop):
 			if arg:
 				self.log(windowManager, '%s arg="%s"' % (evt, arg) )
@@ -234,56 +338,6 @@ class Cli(object):
 												windowManager.windowGetText(hWindow)) 
 												)
 		
-	def windowInfo(self, hwnd, header=None, nIndent=0):
-		"""prints out window info 
-		@param hwnd: (hwnd) hwnd of the window
-		@param header: (str) if desired a header text
-		@param nIndent: (int) indent the report? how many times?
-		"""
-		indent = '\x20' * 4 * nIndent
-		ptMouseAbs = self.application.mouseManager.mouseGetPos()
-		ptMouseRel = self.application.windowManager.windowScreenPointToClientPoint(hwnd, ptMouseAbs)
-		if header is not None:
-			self.log(self, '%s# ##############################' % indent)
-			self.log(self, '%s# %s' % (indent, header))
-			self.log(self, '%s# ##############################' % indent)
-		self.log(self, '%shwnd: %s' % (indent, hwnd))
-		self.log(self, "%stitle: '%s'" % (indent, self.application.windowManager.windowGetText(hwnd) ) )
-		self.log(self, "%sclass: '%s'" % (indent, self.application.windowManager.windowGetClassName(hwnd) ) )
-		self.log(self, '%srect: %s' % (indent, self.application.windowManager.windowGetRect(hwnd) ) )
-		self.log(self, '%sclientSize: %s' % (indent, self.application.windowManager.windowGetClientRect(hwnd)[2:] ) )
-		self.log(self, '%sisVisible: %s' % (indent, self.application.windowManager.windowIsVisible(hwnd) ) )
-		self.log(self, '%smousePos(abs): %s' % (indent, ptMouseAbs) )
-		self.log(self, '%smousePos(rel): %s' % (indent, ptMouseRel) )
-		
-	def windowInfoUnderMouse(self):
-		"""prints out a report (size, mousePos, child windows (...)) of the window under the mouse pointer. see L{windowInfo}
-		"""
-		nIndent = 0
-		pt = self.application.mouseManager.mouseGetPos()
-		hwndCurrent = self.application.windowManager.windowFromPoint(pt)
-		if hwndCurrent:
-			self.windowInfo(hwndCurrent, header='WINDOW UNDER MOUSE', nIndent=nIndent)
-								
-			# print info of all parent windows (not including desktop)
-			myHwndCurrent = hwndCurrent
-			while True:
-				nIndent += 1
-				hwndParent = self.application.windowManager.windowGetParent(myHwndCurrent)
-				if not hwndParent: break
-				self.windowInfo(hwndParent, header='WINDOW PARENT(%s)' % nIndent, nIndent=nIndent)
-				myHwndCurrent = hwndParent
-		else:
-			self.log(self, None)
-			
-		self.log(self, '')
-		self.log(self, 'EXTENDED INFORMATION')
-		self.log(self, '')
-		for nIndent, hwnd in self.application.windowManager.windowWalkChildren(hwndCurrent, report=True):
-			header = 'WINDOW' if hwnd == hwndCurrent else 'CHILD WINDOW(%s)' % nIndent
-			self.windowInfo(hwnd, header=header, nIndent=nIndent)	
-
-
 #********************************************************************************************
 if __name__ == '__main__':
 	import sys
