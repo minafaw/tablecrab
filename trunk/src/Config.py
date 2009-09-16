@@ -1,4 +1,5 @@
-
+"""client configuration
+"""
 import sys, os, logging, operator
 from logging import handlers
 import ConfigParser

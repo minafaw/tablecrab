@@ -1,4 +1,5 @@
-
+"""win32 mouse manager implementation
+"""
 import time
 
 from ctypes import *
@@ -118,7 +119,7 @@ class MouseManager(object):
 		
 	def mouseGetButtonsDown(self):
 		"""returns list of mouse buttons currently down
-		@return: (list) L{Consts}.BUTTON_*
+		@return: (list) Button*
 		@note: we can not determine mouse buttons down when we start, so the list may not reflect
 		the actual state if mouse buttons are initially down
 		"""
@@ -127,7 +128,7 @@ class MouseManager(object):
 	
 	def mousePressButton(self, button):
 		"""presses the specified mouse button at the current mouse position
-		@param button: (L{Consts}.BUTTON_*)
+		@param button: (Button*)
 		"""
 		# determine button to set down
 		if button in self._mouseButtonsDown: return
@@ -145,7 +146,7 @@ class MouseManager(object):
 		
 	def mouseReleaseButton(self, button):
 		"""releases the specified mouse button at the current mouse position
-		@param button: (L{Consts}.BUTTON_*)
+		@param button: (Button)
 		"""
 		# determine button to set up
 		if button not in self._mouseButtonsDown: return
@@ -163,7 +164,7 @@ class MouseManager(object):
 	
 	def mouseClickPoint(self, button, nClicks=1, pt=None):
 		'''clicks a point with the desired mouse button
-		@param button: (str) button to click: L{Consts}.BUTTON_*
+		@param button: (str) button to click: (Button*)
 		@param nClicks: (int) number of times to click (2 for a double-click)
 		@param pt: (tuple) absolute coordinates to click. if None, the current cursor pos is taken
 		@return: None	
@@ -201,8 +202,7 @@ class MouseManager(object):
 	
 	def mouseGetPos(self):
 		'''returns the current position of the mouse pointer
-		@param hwnd: if specified, returns the point in client coordinates of the window
-		@return: (tuple) coordinates of the mouse cursor
+		@return: (tuple) x, y coordinates of the mouse cursor
 		'''
 		pt = POINT()
 		if not user32.GetCursorPos(byref(pt)): raise WinError(GetLastError())

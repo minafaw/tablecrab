@@ -1,4 +1,5 @@
-
+"""window handler for PokerStars tables
+""" 
 from __future__ import absolute_import
 if __name__ == '__main__':	# see --> http://bugs.python.org/issue1510172 . works only current dir and below
 	import os; __path__ = [os.path.dirname(__file__)]
@@ -121,7 +122,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 				
 	def setBetAmount(self, value=0.0):
 		"""sets the current bet height
-		@param hwnd: (hwnd) of the window to check or None to check the current foreground window
+		@param value: (float) value zo set the bet amount to
 		@return: float(amount) or None
 		"""
 		hWindow = self.getBetAmountBox()
