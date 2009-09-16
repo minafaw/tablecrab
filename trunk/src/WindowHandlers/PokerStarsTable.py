@@ -69,7 +69,7 @@ class PokerStarsTableTitle(object):
 
 #************************************************************************************************
 class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
-	"""fallback window handler if no handler is present for a window"""
+	"""PokerStars table implementation"""
 	Type = Registry.WindowHandlerType
 	Site = 'PokerStars'
 	Window = 'Table'
