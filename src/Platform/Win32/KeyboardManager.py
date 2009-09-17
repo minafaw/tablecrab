@@ -67,6 +67,10 @@ Hack1 = _Hack1()
 Hack1 = _Hack1()
 #***********************************************************************************************
 class Key(object):
+	"""key implementation
+	
+	@ivar value: (str) implementation specific representation of the key
+	"""
 	class Win32Consts:
 		VK_CONTROL =  0x11
 		VK_MENU =  0x12
@@ -274,6 +278,9 @@ class Key(object):
 		KEY_NAMES = dict([(i[1], i[0]) for i in KEY_VALUES.items()])	# vkCode --> keyName
 			
 	def __init__(self, keyboardState=None):
+		"""
+		@param keyboardState: (c_ubyte*256) holding a keyboar state or None
+		"""
 		self.value = ''
 		if keyboardState:		
 			for vkCode, value in enumerate(keyboardState):
@@ -294,22 +301,36 @@ class Key(object):
 						self.value = self.Win32Consts.KEY_NAMES[vkCode]
 		
 	def __eq__(self, other):
+		"""checks if two keys compare equal
+		@param other: either a Key instance or a string
+		@return: (bool)
+		"""
 		if hasattr(other, 'value'):
 			return self.value == other.value
 		else:
 			return self.value == other
-	def __ne__(self, other): return not self.__eq__(other)
+	def __ne__(self, other): 
+		"""checks if two keys compare unequal
+		@param other: either a Key instance or a string
+		@return: (bool)
+		"""
+		return not self.__eq__(other)
 
 
 class KeyboardManager(object):
 	"""win32 keyboard manager implementation
+	
+	@cvar EvtStart: event triggered when the keyboard manager starts. arg = (str) current keyboard layout name or 'unknown'
+	@cvar EvtStop: event triggered when the keyboard manager stops. arg = always None
+	@cvar EvtKeyPressed: event triggerered when a key is pressed. arg = L{Key}
+	@cvar EvtKeyReleased: event triggerered when a key is released. arg = L{Key}
 	"""
 	Type = 'KeyboardManager'
 	EvtStart = 'start'
 	EvtStop = 'stop'
-	EvtKeyReleased = 'keyReleased'
 	EvtKeyPressed = 'keyPressed'
-	
+	EvtKeyReleased = 'keyReleased'
+		
 	class Win32Consts:
 		TRUE = 1
 		WH_KEYBOARD_LL = 13
@@ -489,6 +510,7 @@ class KeyboardManager(object):
 		self._pHookProc = self.Win32Consts.KEYBHOOKPROCLL(self._hookProc)
 		
 	def _hookProc(self, code, wParam, lParam):
+		"""private method, KEYBHOOKPROCLL implementation"""
 		if code == self.Win32Consts.HC_ACTION:
 			keyInfo = self.Win32Consts.KBDLLHOOKSTRUCT.from_address(lParam)
 			#HACK:(1)
@@ -513,17 +535,32 @@ class KeyboardManager(object):
 		return user32.CallNextHookEx(self._hHook, code, wParam, lParam)
 		
 	def setCB(self, cb):
+		"""sets the callback function to be called when an event is triggered
+		@param cb: (function)
+		@return: None
+		"""
 		self._cb = cb
 	
 	def triggerEvent(self, inst, evt, arg):
+		"""triggers an event"""
 		return self._cb(inst, evt, arg)
 		
-	def isStarted(self): return self._isStarted
+	def isStarted(self): 
+		"""cheks if the keyboard manager is started
+		@return: (bool)
+		"""
+		return self._isStarted
 	
 	def keyboardLayoutName(self):
+		"""returns the name of the current keyboard layout
+		@return: (str) layout name or 'unknown'
+		"""
 		return self.Win32Consts.KEYBOARD_LAYOUT_NAMES.get(kernel32.GetOEMCP(), 'unknown')
 	
 	def start(self):
+		"""starts the keyboard manager
+		@return: None
+		"""
 		if self._hHook is None:
 			self._hHook = user32.SetWindowsHookExW(
 				self.Win32Consts.WH_KEYBOARD_LL, 
@@ -537,6 +574,9 @@ class KeyboardManager(object):
 		self.triggerEvent(self, self.EvtStart, self.keyboardLayoutName() )
 		
 	def stop(self):
+		"""stops the keyboard manager
+		@return: None
+		"""
 		if self._hHook is not None:
 			hHook, self._hHook = self._hHook, None
 			if not user32.UnhookWindowsHookEx(hHook):
