@@ -490,7 +490,7 @@ class KeyboardManager(object):
 			key = Key(keyboardState=keyboardState)
 			#Key.fromKeyInfo(keyInfo)
 			evt = self.EvtKeyPressed if wParam in (self.Win32Consts.WM_KEYDOWN, self.Win32Consts.WM_SYSKEYDOWN) else self.EvtKeyReleased
-			result = self.callCB(self, evt, key)
+			result = self.triggerEvent(self, evt, key)
 			
 			#HACK:(1)
 			if wParam in (self.Win32Consts.WM_KEYUP, self.Win32Consts.WM_SYSKEYUP):
@@ -504,7 +504,7 @@ class KeyboardManager(object):
 	def setCB(self, cb):
 		self._cb = cb
 	
-	def callCB(self, inst, evt, arg):
+	def triggerEvent(self, inst, evt, arg):
 		return self._cb(inst, evt, arg)
 		
 	def isStarted(self): return self._isStarted
@@ -523,13 +523,13 @@ class KeyboardManager(object):
 			if not self._hHook:
 				self._hHook = None
 				raise WindowsError(GetLastError())
-		self.callCB(self, self.EvtStart, self.keyboardLayoutName() )
+		self.triggerEvent(self, self.EvtStart, self.keyboardLayoutName() )
 		
 	def stop(self):
 		if self._hHook is not None:
 			hHook, self._hHook = self._hHook, None
 			if not user32.UnhookWindowsHookEx(hHook):
 				raise WindowsError(GetLastError()) 
-		self.callCB(self, self.EvtStop, '')	
+		self.triggerEvent(self, self.EvtStop, '')	
 
 

@@ -84,7 +84,7 @@ class MouseManager(object):
 				else:
 					if button not in self._mouseButtonsDown:
 						self._mouseButtonsDown.append(button)
-				result = self.callCB(self, evt, button)
+				result = self.triggerEvent(self, evt, button)
 				if result:
 					return self.Win32Consts.TRUE
 		return user32.CallNextHookEx(self._hHook, code, wParam, lParam)
@@ -92,7 +92,7 @@ class MouseManager(object):
 	def setCB(self, cb):
 		self._cb = cb
 	
-	def callCB(self, inst, evt, arg):
+	def triggerEvent(self, inst, evt, arg):
 		return self._cb(inst, evt, arg)
 		
 	def isStarted(self): return self._isStarted
@@ -108,14 +108,14 @@ class MouseManager(object):
 			if not self._hHook:
 				self._hHook = None
 				raise WindowsError(GetLastError())
-		self.callCB(self, self.EvtStart, '')	
+		self.triggerEvent(self, self.EvtStart, '')	
 		
 	def stop(self):
 		if self._hHook is not None:
 			hHook, self._hHook = self._hHook, None
 			if not user32.UnhookWindowsHookEx(hHook):
 				raise WindowsError(GetLastError())
-		self.callCB(self, self.EvtStop, '')	
+		self.triggerEvent(self, self.EvtStop, '')	
 		
 	def mouseGetButtonsDown(self):
 		"""returns list of mouse buttons currently down

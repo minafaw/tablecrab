@@ -15,6 +15,11 @@ from . import MouseManager
 
 #**********************************************************************************************
 class Application(object):
+	"""win32 application implementation
+	
+	@cvar EvtStart: event triggered when the application starts. arg = always None
+	@cvar EvtStop: event triggered when the application stops. arg = reason or None
+	"""
 	Type = 'Application'
 	EvtStart = 'start'
 	EvtStop = 'stop'
@@ -24,6 +29,9 @@ class Application(object):
 		STATUS_CONTROL_C_EXIT = 0xC000013A
 	
 	def __init__(self, cb=None):
+		"""
+		@param cb: (function) to be called when an event occurs. the function should take two arguments: Evt*, arg
+		"""
 		self._cb = (lambda *args, **kws: False) if cb is None else cb
 		self._isMainloop = False
 		self._isStarted = False
@@ -34,20 +42,36 @@ class Application(object):
 		self.keyboardManager = KeyboardManager.KeyboardManager()
 			
 	def setCB(self, cb):
+		"""sets the callback function
+		@param cb: (function)
+		@return: None
+		"""
 		self._cb = cb
 	
-	def callCB(self, inst, evt, arg):
+	def triggerEvent(self, inst, evt, arg):
+		"""triggers an event"""
 		return self._cb(inst, evt, arg)
 	
-	def isMainloop(self): return self._isMainloop
-	def isStarted(self): return self._isStarted
+	def isMainloop(self): 
+		"""cheks if the application runs a mainloop
+		@return: (bool)
+		"""
+		return self._isMainloop
+	def isStarted(self): 
+		"""cheks if the application is started
+		@return: (bool)
+		"""
+		return self._isStarted
 		
 	def start(self, isMainloop=True):
+		"""starts the application
+		@param isMainloop: (bool) if True a message pump is started, if False you have to run your own message pump
+		"""
 		self._isMainloop = isMainloop
 		self._postedQuitMessage = False
 		self._isStarted = True
 		
-		self.callCB(self, self.EvtStart, '')
+		self.triggerEvent(self, self.EvtStart, '')
 		for o in (self.windowManager, self.mouseManager, self.keyboardManager):
 			o.start()
 		if not self.isMainloop(): return
@@ -62,7 +86,7 @@ class Application(object):
 			except WindowsError, d:
 				errno = c_ulong(d.winerror).value
 				if errno == self.Win32Consts.STATUS_CONTROL_C_EXIT:
-					self.callCB(self, self.EvtStop, 'keyboard interrupt')
+					self.triggerEvent(self, self.EvtStop, 'keyboard interrupt')
 					self._isMainloop = False
 					if not self._postedQuitMessage:
 						self.stop()
@@ -92,6 +116,7 @@ class Application(object):
 		self._isStarted = False
 
 	def stop(self):
+		"""stops the application. if L{isMainloop} is True the application is terminated"""
 		if self.isStarted():
 			self._isStarted = False
 			for o in (self.windowManager, self.mouseManager, self.keyboardManager):
@@ -99,6 +124,6 @@ class Application(object):
 			if self.isMainloop() and not self._postedQuitMessage:
 				self._postedQuitMessage = True
 				user32.PostQuitMessage(0)
-			self.callCB(self, self.EvtStop, '')
+			self.triggerEvent(self, self.EvtStop, '')
 			
 			
