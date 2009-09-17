@@ -121,17 +121,22 @@ class PokerStarsReplayer(object):		#NOTE: we do not register this class as Windo
 	
 	def handleKeyReleased(self,  cli, key):
 		if key == self.cli.config['pokerstars-replayer']['key-button-start']:
-			return True
+			if self.cli.application.windowManager.windowGetClientSize(self.hWindow) == self.cli.config['pokerstars-replayer']['size']:
+				return True
 		elif key == self.cli.config['pokerstars-replayer']['key-button-stop']:
-			return True
+			if self.cli.application.windowManager.windowGetClientSize(self.hWindow) == self.cli.config['pokerstars-replayer']['size']:
+				return True
 		elif key == self.cli.config['pokerstars-replayer']['key-button-next']:
-			return True
+			if self.cli.application.windowManager.windowGetClientSize(self.hWindow) == self.cli.config['pokerstars-replayer']['size']:
+				return True
 		elif key == self.cli.config['pokerstars-replayer']['key-button-prev']:
-			return True
+			if self.cli.application.windowManager.windowGetClientSize(self.hWindow) == self.cli.config['pokerstars-replayer']['size']:
+				return True
 		elif key == self.cli.config['pokerstars-replayer']['key-button-first']:
 			return True
 		elif key == self.cli.config['pokerstars-replayer']['key-button-last']:
-			return True
+			if self.cli.application.windowManager.windowGetClientSize(self.hWindow) == self.cli.config['pokerstars-replayer']['size']:
+				return True
 		return False	
 		
 
