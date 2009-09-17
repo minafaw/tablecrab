@@ -22,15 +22,19 @@ class SingleAppServer(object):
 	@note: a carefuly chosen magic string to exchange may help to reduce the chance
 	of accidential collisions with other applications
 	@note: race conditions? yes
+	
+	@cvar EvtOtherAppStarting: event trigered when another application running the same server starts. arg = always None
 	"""
 	
-	def __init__(self, host=None, port=None, magicToSend=None, magicToRespond=None, userData=None):
+	EvtOtherAppStarting = 'otherAppStarting'
+	
+	def __init__(self, host=None, port=None, magicToSend=None, magicToRespond=None, cb=None):
 		"""
 		@param host: host to establish the connection to
 		@param port: port to use for the connection
 		@param magicToSend: magic string a client should send to the server
 		@param magicToRespond: magic string the server should send in response
-		@param userData: any data you want to associate to the SignleApp object
+		@param cb: (function) callback function to be called on events. the functon should takes two arguments: Evt*, arg
 		"""
 				
 		if host is None or port is None or magicToSend is None or magicToRespond is None:
@@ -41,9 +45,10 @@ class SingleAppServer(object):
 		self.magicToRespond = magicToRespond
 		self.isServerRunning = False
 		self.socket = None
-		self.userData = userData
+		self.cb = (lambda *args, **kws: False) if cb is None else cb
 			
-	def _runServer(self):
+	def _serverLoop(self):
+		"""private method to run the server loop"""
 		# start server and listen to incoming connections
 		while True:
 			self.socket.listen(1)
@@ -52,7 +57,7 @@ class SingleAppServer(object):
 			# get some data. maybe the other end of the pipe plays dead
 			data = conn.recv(len(self.magicToSend))
 			if data == self.magicToSend:
-				self.onOtherAppIsStarting()
+				self.cb(self.EvtOtherAppStarting, None)
 				conn.send(self.magicToRespond)
 			conn.close()
 		self.socket.close()
@@ -61,7 +66,7 @@ class SingleAppServer(object):
 	
 		
 	def start(self):
-		"""starts SingleApp
+		"""starts the server
 		
 		@raise ErrorCanNotConnect:
 		@raise ErrorOtherAppIsRunning:
@@ -94,13 +99,6 @@ class SingleAppServer(object):
 				self.socket = None
 		else:
 			self.isServerRunning = True
-			thread.start_new_thread(self._runServer, ())
-						
-	def onOtherAppIsStarting(self):
-		"""called when another application using the same magic string is conncting to our server"""
-		print 'another app of the same kind is connecting to us'
-	
-	
-		
-	
+			thread.start_new_thread(self._serverLoop, ())
+
  
