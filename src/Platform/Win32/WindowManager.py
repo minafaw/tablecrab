@@ -54,7 +54,7 @@ class WindowManager(object):
 	def setCB(self, cb):
 		self._cb = cb
 	
-	def callCB(self, inst, evt, arg):
+	def triggerEvent(self, inst, evt, arg):
 		return self._cb(inst, evt, arg)
 	
 	def isStarted(self): return self._isStarted
@@ -63,12 +63,12 @@ class WindowManager(object):
 		if not self.isStarted():
 			self._isStarted = True
 			thread.start_new_thread(self._hookProc, ())
-			self.callCB(self, self.EvtStart, '')
+			self.triggerEvent(self, self.EvtStart, '')
 			
 	def stop(self):
 		if self.isStarted():
 			self._isStarted = False
-		self.callCB(self, self.EvtStop, '')
+		self.triggerEvent(self, self.EvtStop, '')
 		
 	#TODO: if we capture an exception here we can not terminate our application,, hread specific???
 	def _hookProc(self):
@@ -82,10 +82,10 @@ class WindowManager(object):
 			for hwnd in self._windowsMonitored[:]:
 				if hwnd not in toplevelWindows:
 					self._windowsMonitored.remove(hwnd)
-					self.callCB(self, self.EvtWindowDestroyed, hwnd)
+					self.triggerEvent(self, self.EvtWindowDestroyed, hwnd)
 			for hwnd in toplevelWindows:
 				if hwnd not in self._windowsMonitored:
-					self.callCB(self, self.EvtWindowCreated, hwnd)
+					self.triggerEvent(self, self.EvtWindowCreated, hwnd)
 					self._windowsMonitored.append(hwnd)
 					
 			hwndForeground = user32.GetForegroundWindow()
@@ -97,11 +97,11 @@ class WindowManager(object):
 				pass
 			elif hwndForeground not in self._windowsMonitored:
 				if self._windowForeground in self._windowsMonitored:
-					self.callCB(self, self.EvtWindowLooseForeground, self._windowForeground)
-					self.callCB(self, self.EvtWindowGainForeground, hwndForeground)
+					self.triggerEvent(self, self.EvtWindowLooseForeground, self._windowForeground)
+					self.triggerEvent(self, self.EvtWindowGainForeground, hwndForeground)
 			else:
-				self.callCB(self, self.EvtWindowLooseForeground, self._windowForeground)
-				self.callCB(self, self.EvtWindowGainForeground, hwndForeground)
+				self.triggerEvent(self, self.EvtWindowLooseForeground, self._windowForeground)
+				self.triggerEvent(self, self.EvtWindowGainForeground, hwndForeground)
 			self._windowForeground = hwndForeground
 						
 			#self._lock.release()
