@@ -168,6 +168,24 @@ class Config(object):
 				('bool-close-popup-news', TypeBool(False)),
 			)
 		)
+	SectionPokerStarsReplayer = (
+			'pokerstars-replayer', (
+			('key', TypeKey(None)),
+			('size', TypeSize(None)),
+			('point-button-first', TypePoint(None)),
+			('key-button-first', TypeKey(None)),
+			('point-button-last', TypePoint(None)),
+			('key-button-last', TypeKey(None)),
+			('point-button-start', TypePoint(None)),
+			('key-button-start', TypeKey(None)),
+			('point-button-stop', TypePoint(None)),
+			('key-button-stop', TypeKey(None)),
+			('point-button-prev', TypePoint(None)),
+			('key-button-prev', TypeKey(None)),
+			('point-button-next', TypePoint(None)),
+			('key-button-next', TypeKey(None)),
+			)
+		)
 	
 	SectionPokerStarsTable = (
 		('key', TypeKey(None) ), 
@@ -187,6 +205,7 @@ class Config(object):
 			SectionTable,
 			SectionPokerstars,
 			#'pokerstars-tables': [SectionPokerStarsTable(0), ...SectionPokerStarsTable(N)],	# filled in later
+			SectionPokerStarsReplayer,
 			)
 			
 		

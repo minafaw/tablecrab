@@ -8,6 +8,7 @@ import re
 
 from . import Registry
 from . import PokerStarsWindowBase
+from . import PokerStarsReplayer
 
 #TODO:
 #    - check if BB/SB as reflected in title may change while a hand is running (tourneys). cant remember right now
@@ -258,6 +259,12 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 	
 	def handleKeyPressed(self, cli, key):
 			
+		# treat table as replayer
+		if key == cli.config['pokerstars-replayer']['key']:
+			newHandler = PokerStarsReplayer.PokerStarsReplayer(cli, self.hWindow)
+			cli.windowHandlers[self.hWindow] = newHandler
+			return True
+		
 		for table in self.cli.config['pokerstars-tables']:
 			if key == table['key']:
 				self.cli.log(self, 'handle table as:%s' % table['name'])
@@ -292,6 +299,9 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		return False	
 	
 	def handleKeyReleased(self,  cli, key):
+		if key == cli.config['pokerstars-replayer']['key']:
+			return True
+				
 		for table in self.cli.config['pokerstars-tables']:
 			if key == table['key']:
 				return True

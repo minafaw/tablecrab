@@ -10,18 +10,23 @@ class WindowHandlerMeta(type):
 		newKlass = type.__new__(klass, name, bases, kws)
 		if newKlass.Type is None:
 			return newKlass
-		typeKlass = newKlass.Type
-		if newKlass.Site is None and newKlass.Window is not None:
-			raise ValueError('if windowHandlers define Site, Window must be defined aswell')
-		if newKlass.Site is not None:
-			typeKlass += ':%s' % newKlass.Site
-			if newKlass.Window is not None:
-				typeKlass += ':%s' % newKlass.Window
-		if typeKlass in WindowHandlerRegistry:
-			raise ValueError('windowHandler already registered: %s' % typeKlass)
-		newKlass.Type = typeKlass
-		WindowHandlerRegistry[typeKlass] = newKlass
+		newKlass.Type = klass.createTypeName(newKlass)
+		WindowHandlerRegistry[newKlass.Type] = newKlass
 		return newKlass
+		
+	@classmethod
+	def createTypeName(klass, windowHandlerKlass):
+		typeName = windowHandlerKlass.Type
+		if windowHandlerKlass.Site is None and windowHandlerKlass.Window is not None:
+			raise ValueError('if windowHandlers define Site, Window must be defined aswell')
+		if windowHandlerKlass.Site is not None:
+			typeName += ':%s' % windowHandlerKlass.Site
+			if windowHandlerKlass.Window is not None:
+				typeName += ':%s' % windowHandlerKlass.Window
+		if typeName in WindowHandlerRegistry:
+			raise ValueError('windowHandler already registered: %s' % typeKlass)
+		return typeName
+		
 
 
 class WindowHandlerBase(object):
