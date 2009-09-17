@@ -10,6 +10,19 @@ kernel32 = windll.kernel32
 #********************************************************************************************
 #HACK:(1)
 class _Hack1(object):
+	"""wine specific hack
+	
+	KBDLLHOOKSTRUCT.flags is unusable when running in wine. same goses for user32.GetKeyboardState(), 
+	user32.GetAsyncKeyState(). reason is, <quote>wine does not capture all system wide keys</quote>. 
+	
+	we emulate the functions as much as necesssary here to track keyboard state by hand. this makes VK_MENU,
+	VK_CONTROL and VK_SHIFT work. no way to track numlock, capslock and other toggle keys because we do not 
+	know their initial states. side effect is that holding own keys ahead of L{KeyboardManager.start} will never be honored
+		
+	@todo: synchronize this stuff
+	@warning: this hack overwrites user32.GetAsyncKeyState + user32.GetKeyboardState
+	"""
+	
 	class Win32Consts:
 		TRUE = 1
 		VK_CONTROL =  0x11
@@ -21,33 +34,29 @@ class _Hack1(object):
 		VK_SHIFT =  0x10
 		VK_LSHIFT =  0xA0
 		VK_RSHIFT =  0xA1
-	
-	"""wine specific hack
-	KBDLLHOOKSTRUCT.flags is unusable when running in wine. same goses for user32.GetKeyboardState(), 
-	user32.GetAsyncKeyState(). reason is, <quote>wine does not capture all system wide keys. so we emulate the 
-	necessary functions as much as necesssary here 	to track modifiers by hand. this makes at least VK_MENU, 
-	VK_CONTROL and VK_SHIFT work. no way to track numlock, capslock (...), because we do not know their 
-	initial states
-	
-	@note: we do not know the initial states of VK_CONTROL + VK_MENU + VK_SHIFT either, so holding 
-	down one of these modifiers before we start will be ignored as keydown event
-	
-	@todo: synchronize this stuff
-	"""
+		
 	def __init__(self):
 		self.keyboardState = [0] * 256
 		user32.GetKeyboardState = self.MyGetKeyboardState
 		user32.GetAsyncKeyState = self.MyGetAsyncKeyState
 	def MyGetKeyboardState(self, pKeyboardState):
+		"""our implementation of user32.GetKeyboardState"""
 		arr = pKeyboardState._obj
 		for n, i in enumerate(self.keyboardState):
 			arr[n] = i
 		return self.Win32Consts.TRUE
 	def MyGetAsyncKeyState(self, vkCode):
+		"""our implementation of user32.GetAsyncKeyState
+		@note: you can not pass a string as in orig GetAsyncKeyState. only VK_* works
+		"""
 		if isinstance(vkCode, basestring):
 			raise NotImplemetedError('hey! dont stretch this hack too far')
 		return self.keyboardState[vkCode]
 	def setKeyDown(self, vkCode, flag):
+		"""this method should always be called whenever a keyboard manager notices a key press/release
+		@param vkCode: VK_*
+		@param flag: (bool) True if the key was pressed, False if it was released
+		"""
 		value = 0x80 if flag else 0x00
 		self.keyboardState[vkCode] = value
 		if 	vkCode in (self.Win32Consts.VK_LCONTROL, self.Win32Consts.VK_RCONTROL): self.keyboardState[self.Win32Consts.VK_CONTROL] = value		
@@ -293,6 +302,8 @@ class Key(object):
 
 
 class KeyboardManager(object):
+	"""win32 keyboard manager implementation
+	"""
 	Type = 'KeyboardManager'
 	EvtStart = 'start'
 	EvtStop = 'stop'
