@@ -9,6 +9,7 @@ features:
 - configurable hotkeys for table actions like fold, check, raise, alter bet amount, show replayer
 - auto-close popup news
 - move mouse to table that requires attention
+- configurable hotkeys for PokerStars replayer
 
 ---------------------------
 usage:
