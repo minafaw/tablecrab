@@ -48,6 +48,12 @@ notes:
 version history:
 -------------------------
 
+0.2.0
+-----------------------------
+news:
+- configurable hotkeys fror PokerStars replayer
+fixes:
+
 0.1.1 bugfix release
 -----------------------------
 news:
