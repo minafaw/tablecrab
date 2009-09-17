@@ -42,7 +42,7 @@ class Application(object):
 		self.keyboardManager = KeyboardManager.KeyboardManager()
 			
 	def setCB(self, cb):
-		"""sets the callback function
+		"""sets the callback function to be called when an event is triggered
 		@param cb: (function)
 		@return: None
 		"""
