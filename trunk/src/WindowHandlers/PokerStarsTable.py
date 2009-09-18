@@ -280,6 +280,7 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		else:
 			return False
 		
+		#NOTE: always swallow user defined keys
 		for params in  self.cli.config['table']['alter-bet-amounts']:
 			if params['key'] == key:
 				if self.canBet():
@@ -287,15 +288,20 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 				return True
 			
 		if key == self.cli.config['table']['key-fold']:
-			if self.doFold(): return True
+			self.doFold()
+			return True
 		elif key == self.cli.config['table']['key-check']:
-			if self.doCheck(): return True
+			self.doCheck()
+			return True
 		elif key == self.cli.config['table']['key-raise']:
-			if self.doRaise(): return True
+			self.doRaise()
+			return True
 		elif key == self.cli.config['table']['key-replayer']:
-			if self.doShowReplayer(): return True
+			self.doShowReplayer()
+			return True
 		elif key == self.cli.config['table']['key-hilight-bet-amount']:
-			if self.doHilightBetAmount(): return True
+			self.doHilightBetAmount()
+			return True
 		return False	
 	
 	def handleKeyReleased(self,  cli, key):
