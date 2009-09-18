@@ -46,23 +46,32 @@ notes:
 
 -------------------------
 version history:
--------------------------
 
+-----------------------------
 0.2.0
 -----------------------------
 news:
-- configurable hotkeys fror PokerStars replayer
+    - configurable hotkeys fror PokerStars replayer
+
+changes:
+    - table hotkeys: assigned more sensible defaults. see User/default.cfg
+
 fixes:
 
+
+-----------------------------
 0.1.1 bugfix release
 -----------------------------
 news:
+changes:
 fixes:
-- supplying custom cofig via commandline did not work: fixed
+     - supplying custom cofig via commandline did not work: fixed
 
 
+--------------------------
 0.1.0 initial release
 --------------------------
 news:
+changes:
 fixes:
 
