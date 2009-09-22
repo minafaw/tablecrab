@@ -13,9 +13,19 @@ user32 = windll.user32
 #***********************************************************************************************
 
 class WindowManager(object):
+	
+	"""win32 keyboard manager implementation
+	
+	@cvar EvtStart: event triggered when the keyboard manager starts. arg = (str) current keyboard layout name or 'unknown'
+	@cvar EvtStop: event triggered when the keyboard manager stops. arg = always None
+	@cvar EvtWindowCreated: event triggerered when a new to us window is detected. arg = hWindow
+	@cvar EvtWindowDestroyed: event triggerered when a window we keeptrack of is no longer present. arg = hWindow
+	@cvar EvtWindowGainForeground: event triggerered when a window we keeptrack gets foreground status. arg = hWindow
+	@cvar EvtWindowLooseForeground: event triggerered when a window we keeptrack looses foreground status. arg = hWindow
+		
+	@warning: this thing is a bit nasty and may break anything. window handles passed to the callback may or may not be valid 
 	"""
-	@warning: this thing is nasty and may break anything. windows passed to the callback may or may not be valid 
-	"""
+	
 	Type = 'WindowManager'
 	EvtStart = 'start'
 	EvtStop = 'stop'
@@ -23,6 +33,7 @@ class WindowManager(object):
 	EvtWindowDestroyed = 'windowDestroyed'
 	EvtWindowLooseForeground = 'windowLooseForeground'
 	EvtWindowGainForeground = 'windowGainForeground'
+	
 	
 	class Win32Consts:
 		TRUE = 1
@@ -46,32 +57,51 @@ class WindowManager(object):
 		
 						
 	def __init__(self, cb=None):
+		"""
+		@param cb: (function) event handler
+		"""
 		self._cb = (lambda *args, **kws: False) if cb is None else cb
 		self._isStarted = False
 		self._windowsMonitored = []
 		self._windowForeground = None
 			
 	def setCB(self, cb):
+		"""sets the callback function to be called when an event is triggered
+		@param cb: (function)
+		@return: None
+		"""
 		self._cb = cb
 	
 	def triggerEvent(self, inst, evt, arg):
+		"""triggers an event"""
 		return self._cb(inst, evt, arg)
 	
-	def isStarted(self): return self._isStarted
+	def isStarted(self): 
+		"""cheks if the window manager is started
+		@return: (bool)
+		"""
+		return self._isStarted
 	
 	def start(self):
+		"""starts the keyboard manager
+		@return: None
+		"""
 		if not self.isStarted():
 			self._isStarted = True
 			thread.start_new_thread(self._hookProc, ())
 			self.triggerEvent(self, self.EvtStart, '')
 			
 	def stop(self):
+		"""stops the window manager
+		@return: None
+		"""
 		if self.isStarted():
 			self._isStarted = False
 		self.triggerEvent(self, self.EvtStop, '')
 		
 	#TODO: if we capture an exception here we can not terminate our application,, hread specific???
 	def _hookProc(self):
+		"""private method, home-brewn window hook implementation"""
 		print		#threads and sys.stdout. for some reason we have to print here to get messages through
 		
 		while self.isStarted():
@@ -108,10 +138,12 @@ class WindowManager(object):
 			time.sleep(self.Win32Consts.MY_TIMEOUT)
 			
 	def windowForeground(self):
+		"""returns the handle of current the foreground window"""
 		hwnd = user32.GetForegroundWindow()
 		return hwnd if hwnd else None
 			
 	def windowActive(self):
+		"""returns the handle of the currently active window"""
 		hwnd = user32.GetActiveWindow()
 		return hwnd if hwnd else None
 		
@@ -195,6 +227,9 @@ class WindowManager(object):
 		return (rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top)
 		
 	def windowGetSize(self, hwnd):
+		"""returns the size of a window
+		@return: (tuple) w, h
+		"""
 		return self.windowGetRect(hwnd)[2: ]
 	
 	def windowSetClientSize(self, hwnd, size=None):
@@ -211,6 +246,9 @@ class WindowManager(object):
 		self.windowSetPosAndSize(hwnd, pos=None, size=(newW, newH) )
 			
 	def windowGetClientSize(self, hwnd):
+		"""returns the size of the client area of a window
+		@return: (tuple) w, h
+		"""
 		return self.windowGetClientRect(hwnd)[2: ]
 	
 	def windowGetText(self, hwnd):
@@ -314,9 +352,12 @@ class WindowManager(object):
 		return (pt.x, pt.y) 
 		
 	def windowFromPoint(self, pt):
+		"""returns the handle of the window at a specified point
+		"""
 		hwnd = user32.WindowFromPoint(POINT(*pt))
 		return hwnd if hwnd else None
 	
 	def windowGetParent(self, hwnd):
+		"""returns the handle of the parent of a window"""
 		hwnd = user32.GetParent(hwnd)
 		return hwnd if hwnd else None

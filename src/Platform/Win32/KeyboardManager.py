@@ -504,6 +504,9 @@ class KeyboardManager(object):
 				}
 		
 	def __init__(self, cb=None):
+		"""
+		@param cb: (function) event handler
+		"""
 		self._cb = (lambda *args, **kws: False) if cb is None else cb
 		self._isStarted = False
 		self._hHook = None
