@@ -11,6 +11,14 @@ kernel32 = windll.kernel32
 #***********************************************************************************************
 
 class MouseManager(object):
+	"""win32 keyboard manager implementation
+	
+	@cvar EvtStart: event triggered when the keyboard manager starts. arg = (str) current keyboard layout name or 'unknown'
+	@cvar EvtStop: event triggered when the keyboard manager stops. arg = always None
+	@cvar EvtMouseButtonUp: event triggerered when a mouse  button is pressed. arg = Button*
+	@cvar EvtMouseButtonDown: event triggerered when a mosue button is released. arg = Button*
+	"""
+	
 	Type = 'MouseManager'
 	EvtStart = 'start'
 	EvtStop = 'stop'
@@ -47,6 +55,9 @@ class MouseManager(object):
 				
 		
 	def __init__(self, cb=None):
+		"""
+		@param cb: (function) event handler
+		"""
 		self._cb = (lambda *args, **kws: False) if cb is None else cb
 		self._isStarted = False
 		self._hHook = None
@@ -54,6 +65,7 @@ class MouseManager(object):
 		self._mouseButtonsDown = []
 		
 	def _hookProc(self, code, wParam, lParam):
+		"""private method, MOUSEHOOKPROCLL implementation"""
 		
 		if code == self.Win32Consts.HC_ACTION:
 						
@@ -90,14 +102,26 @@ class MouseManager(object):
 		return user32.CallNextHookEx(self._hHook, code, wParam, lParam)
 	
 	def setCB(self, cb):
+		"""sets the callback function to be called when an event is triggered
+		@param cb: (function)
+		@return: None
+		"""
 		self._cb = cb
 	
 	def triggerEvent(self, inst, evt, arg):
+		"""triggers an event"""
 		return self._cb(inst, evt, arg)
 		
-	def isStarted(self): return self._isStarted
+	def isStarted(self): 
+		"""cheks if the mouse manager is started
+		@return: (bool)
+		"""
+		return self._isStarted
 	
 	def start(self):
+		"""starts the mouse manager
+		@return: None
+		"""
 		if self._hHook is None:
 			self._hHook = user32.SetWindowsHookExW(
 				self.Win32Consts.WH_MOUSE_LL, 
@@ -111,6 +135,9 @@ class MouseManager(object):
 		self.triggerEvent(self, self.EvtStart, '')	
 		
 	def stop(self):
+		"""stops the mouse manager
+		@return: None
+		"""
 		if self._hHook is not None:
 			hHook, self._hHook = self._hHook, None
 			if not user32.UnhookWindowsHookEx(hHook):
@@ -187,16 +214,28 @@ class MouseManager(object):
 				time.sleep(0.1)
 
 	def mouseClickLeft(self, pt):
+		"""clicks the left mouse button at the specified point
+		"""
 		return self.mouseClickPoint(self.ButtonLeft, pt=pt, nClicks=1)
 	def mouseClickLeftDouble(self, pt):
+		"""double clicks the left mouse button at the specified point
+		"""
 		return self.mouseClickPoint(self.ButtonLeft, pt=pt, nClicks=2)
 	def mouseClickRight(self, pt):
+		"""clicks the right mouse button at the specified point
+		"""
 		return self.mouseClickPoint(self.ButtonRight, pt=pt, nClicks=1)
 	def mouseClickRightDouble(self, pt):
+		"""double clicks the right mouse button at the specified point
+		"""
 		return self.mouseClickPoint(self.ButtonRight, pt=pt, nClicks=2)
 	def mouseClickMiddle(self, pt):
+		"""clicks the middle mouse button at the specified point
+		"""
 		return self.mouseClickPoint(self.ButtonMiddle, pt=pt, nClicks=1)
 	def mouseClickMiddleDouble(self, pt):
+		"""double clicks the middle mouse button at the specified point
+		"""
 		return self.mouseClickPoint(self.ButtonMiddle, pt=pt, nClicks=2)
 	
 	

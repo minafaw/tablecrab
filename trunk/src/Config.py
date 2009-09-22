@@ -210,6 +210,7 @@ class Config(object):
 			
 		
 	def _cfgGetValue(self, userOptions, option, typeOption):
+		"""private method to retrieve a value for an option"""
 		userValue = userOptions.get(option, None)
 		if userValue is None:
 			value = typeOption.default
@@ -305,12 +306,15 @@ class Config(object):
 		self._settings['table']['alter-bet-amounts'] = tableAlterBetAmounts	
 		
 		
-	def __getitem__(self, key):
-		return self._settings[key]
-	def __setitem__(self, key, value):
-		self._settings[key] = value
+	def __getitem__(self, section):
+		return self._settings[section]
+	def __setitem__(self, key, section):
+		self._settings[section] = value
 		
 	def toConfig(self):
+		"""dumps settings to a string representing a cfg file
+		@return: (str)
+		"""
 		result = []
 		for (section, options) in self.Sections:
 			result.append( ('[%s]' % section).upper() )
