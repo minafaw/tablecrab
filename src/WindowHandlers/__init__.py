@@ -11,5 +11,6 @@ from . import WindowHandlerDefault
 
 from . import PokerStarsTable
 from . import PokerStarsPopupNews
+from . import PokerStarsInstantHandHistory
 
 

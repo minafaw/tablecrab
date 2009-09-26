@@ -20,6 +20,8 @@ class PokerStarsWindowBase(Registry.WindowHandlerBase):
 	PsClassTable = 'PokerStarsTableFrameClass'
 	PsClassNews = '#32770'
 	PsTitleNews = 'News'
+	PsClassInstantHandHistory = '#32770'
+	PsTitleInstantHandHistory = 'Instant Hand History'
 	
 	@classmethod
 	def psIsTable(klass, cli, hWindow):
@@ -34,6 +36,13 @@ class PokerStarsWindowBase(Registry.WindowHandlerBase):
 			hWindowParent = cli.application.windowManager.windowGetParent(hWindow)
 			if hWindowParent and cli.application.windowManager.windowGetText(hWindowParent).startswith(klass.PsTitleLobby):
 				return True
+		return False
+		
+	@classmethod
+	def psIsInstantHandHistory(klass, cli, hWindow):
+		if cli.application.windowManager.windowGetClassName(hWindow) == klass.PsClassInstantHandHistory and \
+					cli.application.windowManager.windowGetText(hWindow) == klass.PsTitleInstantHandHistory:
+			return True
 		return False
 	
 	
