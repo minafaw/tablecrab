@@ -48,6 +48,14 @@ notes:
 version history:
 
 -----------------------------
+0.2.1
+-----------------------------
+news:
+changes:
+fixes:
+    - it was not possible to reasign PokerStars replayer as table via hotkey. this is fixed now 
+
+-----------------------------
 0.2.0
 -----------------------------
 news:

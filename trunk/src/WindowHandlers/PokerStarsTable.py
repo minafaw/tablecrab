@@ -261,10 +261,11 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 			
 		# treat table as replayer
 		if key == cli.config['pokerstars-replayer']['key']:
-			newHandler = PokerStarsReplayer.PokerStarsReplayer(cli, self.hWindow)
+			newHandler = PokerStarsReplayer.PokerStarsReplayer(cli, self.hWindow, pokerStarsTable=self)
 			cli.windowHandlers[self.hWindow] = newHandler
 			return True
 		
+		# check if key is a table hotkey
 		for table in self.cli.config['pokerstars-tables']:
 			if key == table['key']:
 				self.cli.log(self, 'handle table as:%s' % table['name'])
