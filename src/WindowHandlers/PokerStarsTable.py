@@ -10,9 +10,6 @@ from . import Registry
 from . import PokerStarsWindowBase
 from . import PokerStarsReplayer
 
-#TODO:
-#    - check if BB/SB as reflected in title may change while a hand is running (tourneys). cant remember right now
-#
 #********************************************************************************************
 class PokerStarsTableTitle(object):
 	PatAmountSB = re.compile('.*(?: [^0-9\.]|\s)   ( (?: 0\.[0-9]{2})   |    (?: [0-9]+))/.*', re.X|re.I)
