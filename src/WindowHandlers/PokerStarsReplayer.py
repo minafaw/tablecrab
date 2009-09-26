@@ -20,9 +20,11 @@ class PokerStarsReplayer(object):		#NOTE: we do not register this class as Windo
 	def handleWindowCreated(klass, cli, hWindow):
 		raise ValueError('this class does is not intended to be used as registered WindowHandler')
 				
-	def __init__(self, cli, hWindow):
+	def __init__(self, cli, hWindow,  pokerStarsTable=None):
 		self.cli = cli
 		self.hWindow = hWindow
+		self.pokerStarsTable = pokerStarsTable
+		
 		self.cli.log(self, 'created hWindow="%s" title="%s"' % (self.hWindow, self.cli.application.windowManager.windowGetText(self.hWindow)) )
 		self.cli.application.windowManager.windowSetClientSize(self.hWindow, size=self.cli.config['pokerstars-replayer']['size'])
 		
@@ -105,6 +107,16 @@ class PokerStarsReplayer(object):		#NOTE: we do not register this class as Windo
 		return False	
 	
 	def handleKeyPressed(self, cli, key):
+			
+		#NOTE: replayer and table can not have he same hotkeys, so always swallow here
+		for table in self.cli.config['pokerstars-tables']:
+			if key == table['key']:
+				if self.pokerStarsTable is not None:
+					self.cli.log(self, 'handle table as:%s' % table['name'])
+					self.cli.application.windowManager.windowSetClientSize(self.hWindow, size=table['size'])
+					cli.windowHandlers[self.hWindow] = self.pokerStarsTable
+				return True
+		
 		if key == self.cli.config['pokerstars-replayer']['key-button-start']:
 			if self.doHandStart(): return True
 		elif key == self.cli.config['pokerstars-replayer']['key-button-stop']:
@@ -120,6 +132,11 @@ class PokerStarsReplayer(object):		#NOTE: we do not register this class as Windo
 		return False	
 	
 	def handleKeyReleased(self,  cli, key):
+		
+		for table in self.cli.config['pokerstars-tables']:
+			if key == table['key']:
+				return True
+		
 		if key == self.cli.config['pokerstars-replayer']['key-button-start']:
 			if self.cli.application.windowManager.windowGetClientSize(self.hWindow) == self.cli.config['pokerstars-replayer']['size']:
 				return True
