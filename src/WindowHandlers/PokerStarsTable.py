@@ -236,15 +236,17 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 			if (mX >= x and mX <= x + w) and (mY >= y and mY <= y + h):
 				return False
 			edge = cli.config['tables']['flag-move-mouse-to-active-table-edge']
+			offset = cli.config['tables']['offset-move-mouse-to-active-table']
+			x, y, w, h =  cli.application.windowManager.windowGetClientRect(hWindow, toScreen=True)
 			pos = None
 			if edge == 'top-left':
-				pos = (x+2, y+2)
+				pos = (x+offset, y+offset)
 			elif edge == 'top-right':
-				pos = (x-2+w, y+2)
+				pos = (x+w-offset, y+offset)
 			elif edge == 'bottom-left':
-				pos = (x+2, y-2+h)	
+				pos = (x+offset, y+h-offset)	
 			elif edge == 'bottom-right':
-				pos = (x-2+w, y-2+h)					
+				pos = (x+w-offset, y+h-offset)					
 			if pos is not None:
 				cli.application.mouseManager.mouseSetPos(pos)
 			return True

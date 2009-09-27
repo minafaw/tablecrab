@@ -151,6 +151,7 @@ class Config(object):
 			'tables', (
 				('bool-move-mouse-to-active-table', TypeBool(False) ),
 				('flag-move-mouse-to-active-table-edge', TypeChoice(default='top-left', choices=('top-left', 'top-right', 'bottom-left', 'bottom-right') ) ),
+				('offset-move-mouse-to-active-table', TypeInt(0)),
 			)
 		)
 	SectionTable = (
