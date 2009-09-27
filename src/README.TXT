@@ -56,7 +56,7 @@ changes:
       the mouse pointer is now placed relative to the client area of the window and it is possible to specify an offset
       to fine tune its positioning.
 fixes:
-    - it was not possible to reasign PokerStars replayer as table via hotkey. this is fixed now 
+    - it was not possible to reasign PokerStars replayer as table via hotkey. this is working now as expected
 
 -----------------------------
 0.2.0
