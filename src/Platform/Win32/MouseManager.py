@@ -24,6 +24,7 @@ class MouseManager(object):
 	EvtStop = 'stop'
 	EvtMouseButtonUp = 'mouseButtonUp'
 	EvtMouseButtonDown = 'mouseButtonDown'
+	EvtMouseWheelScrolled = 'mouseWheelScrolled'
 	
 	ButtonLeft = 'left'
 	ButtonRight = 'right'
@@ -42,6 +43,7 @@ class MouseManager(object):
 		WM_RBUTTONUP = 517
 		WM_MBUTTONDOWN = 519
 		WM_MBUTTONUP = 520
+		WM_MOUSEWHEEL = 522
 		
 		MOUSEEVENTF_MOVE = 1
 		MOUSEEVENTF_LEFTDOWN = 2
@@ -52,8 +54,29 @@ class MouseManager(object):
 		MOUSEEVENTF_MIDDLEUP = 64
 		MOUSEEVENTF_WHEEL = 0x0800
 		MOUSEEVENTF_ABSOLUTE = 32768
-				
 		
+		WHEEL_DELTA =120
+			
+		class MSLLHOOKSTRUCT(Structure):
+			_fields_ = [
+				('pt', POINT),
+				('mouseData', DWORD),
+				('flags', DWORD),
+				('time', DWORD),
+				('dwExtraInfo', POINTER(ULONG))
+				]
+		
+		@classmethod
+		def HIWORD(klass, dword):
+			return DWORD(dword).value >> 16
+		
+		@classmethod
+		def GET_WHEEL_DELTA_WPARAM(klass, wParam):
+			return c_short(klass.HIWORD(wParam)).value
+		
+		
+		
+	
 	def __init__(self, cb=None):
 		"""
 		@param cb: (function) event handler
@@ -88,7 +111,14 @@ class MouseManager(object):
 			elif wParam == self.Win32Consts.WM_MBUTTONUP:
 				button = self.ButtonMiddle
 				evt = self.EvtMouseButtonUp
-			
+			elif wParam == self.Win32Consts.WM_MOUSEWHEEL:
+				mouseInfo = self.Win32Consts.MSLLHOOKSTRUCT.from_address(lParam)
+				wheelDelta = self.Win32Consts.GET_WHEEL_DELTA_WPARAM(mouseInfo.mouseData)
+				nSteps = wheelDelta / self.Win32Consts.WHEEL_DELTA
+				result = self.triggerEvent(self, self.EvtMouseWheelScrolled, nSteps)
+				if result:
+					return self.Win32Consts.TRUE
+				
 			if evt is not None:
 				if evt == self.EvtMouseButtonUp:
 					if button in self._mouseButtonsDown:

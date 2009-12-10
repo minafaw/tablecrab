@@ -8,7 +8,7 @@ import ConfigParser
 __application_name__ = 'TableCrab'
 __author__ = 'juergen urner'
 __email__ = 'jUrner@arcor.de'
-__version__ = '0.2.2'
+__version__ = '0.3.0'
 __release_name__ = '%s-%s' % (__application_name__, __version__)
 
 #***************************************************************************************************
@@ -162,6 +162,8 @@ class Config(object):
 				('key-hilight-bet-amount', TypeKey(None) ),
 				('key-replayer', TypeKey(None) ),
 				#('type-alter-bet-amount': []),	# filled in later [{'key': TypeKey, 'type': TypeChoice, 'factor': TypeInt), {'key-add-blind': params, ...}]
+				#'type-alter-bet-amount-mouse-wheel-up', # filled in later {'type': TypeChoice, 'factor': TypeInt}
+				#'type-alter-bet-amount-mouse-wheel-down', # filled in later {'type': TypeChoice, 'factor': TypeInt}
 			)
 		)
 	SectionPokerstars = (
@@ -255,7 +257,26 @@ class Config(object):
 			if section == 'table':
 				alterBetAmounts = []
 				for option, value in userOptions.items():
-					if option.startswith('type-alter-bet-amount-'):
+					
+					if option in ('type-alter-bet-amount-mouse-wheel-up', 'type-alter-bet-amount-mouse-wheel-down'):
+						baseValue = factor = None
+						params = value.strip()
+						if not params:
+							pass
+						else:
+							params = [i.strip() for i in value.split(',')]
+							if len(params) != 2:
+								logger.debug('Config:invalid params: [%s]:%s' % (section, option) )
+							else:
+								try: baseValue = TypeChoice(choices=('big-blind', 'small-blind')).fromConfig(params[0])
+								except ConfigError: logger.debug('Config:invalid params: [%s]:%s' % (section, option) )
+								else:
+									try: factor = TypeFloat().fromConfig(params[1])
+									except ConfigError: logger.debug('Config:invalid params: [%s]:%s' % (section, option) )
+						self._settings[section][option] = {'baseValue': baseValue, 'factor': factor}
+						del userSettings[section][option]
+					
+					elif option.startswith('type-alter-bet-amount-'):
 						factor = None
 						try:
 							n = int(option[len('type-alter-bet-amount-'): ])
@@ -277,9 +298,11 @@ class Config(object):
 						del userSettings[section][option]
 						if factor is not None:
 							alterBetAmounts.append( (n, {'key': key, 'baseValue': baseValue, 'factor': factor}) )
-							
+					
 				alterBetAmounts.sort(key=operator.itemgetter(0) )
 				tableAlterBetAmounts = [i[1] for i in alterBetAmounts]
+					
+				
 				
 		# parse config for pokerStars tables
 		for (section, userOptions) in userSettings.items():
@@ -330,6 +353,15 @@ class Config(object):
 					option = 'alter-bet-amount-%s' % n
 					value = '%(key)s, %(baseValue)s, %(factor)s' % alterBetAmount
 					result.append('%s=%s' % (option, value))
+				
+				for option in ('type-alter-bet-amount-mouse-wheel-up', 'type-alter-bet-amount-mouse-wheel-down'):
+					params = self._settings['table'][option]
+					if params['baseValue'] is None:
+						value = ''
+					else:
+						value = '%(baseValue)s, %(factor)s' % params
+					result.append('%s=%s' % (option, value))
+			
 			result.append('')
 				
 			# add PS tables following [POKERSTARS] section
@@ -349,6 +381,8 @@ if __name__ == '__main__':
 	
 	# shallow test if we our parsing is correct
 	c = Config()
+	print c.toConfig()
+	print '-----------------------------------------------'
 	print c.toConfig()
 		
 	

@@ -76,9 +76,10 @@ VERSION HISTORY
 ==============================================================================
 
 -----------------------------
-0.2.2
+0.3.0
 -----------------------------
 news:
+    - bet amount at table cam be altered now via mouse wheel
 changes:
 fixes:
 

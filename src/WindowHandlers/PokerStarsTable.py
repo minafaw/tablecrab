@@ -334,5 +334,31 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		elif key == self.cli.config['table']['key-hilight-bet-amount']:
 			return True
 		return False
+	
+	def handleMouseWheelScrolled(self, cli, nSteps):
 		
+		# handle table only if it matches its predefined client area size
+		mySize = self.cli.application.windowManager.windowGetClientSize(self.hWindow)
+		for table in self.cli.config['pokerstars-tables']:
+			if table['size'] == mySize:
+				break
+		else:
+			return False
+			
+		if not self.canBet():
+			return False
+			
+		params = baseValue = factor = None
+		if nSteps > 0:
+			params = self.cli.config['table']['type-alter-bet-amount-mouse-wheel-up']
+		elif nSteps < 0:
+			params = self.cli.config['table']['type-alter-bet-amount-mouse-wheel-down']
+		if params is not None:
+			baseValue, factor = params['baseValue'], params['factor']
+		if baseValue is not None:
+			self.doAlterBetAmount(baseValue=baseValue, factor=factor)
+			return True
+		
+		return False
+
 
