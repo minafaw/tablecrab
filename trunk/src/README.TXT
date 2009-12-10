@@ -82,6 +82,7 @@ news:
     - bet amount at table cam be altered now via mouse wheel
 changes:
 fixes:
+    - sometimes the client failed because it could not retrieve the class name of a window. this is hopefuly fixed now
 
 
 -----------------------------
