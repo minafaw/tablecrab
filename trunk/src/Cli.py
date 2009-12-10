@@ -266,8 +266,16 @@ class Cli(object):
 			else:
 				self.log(mouseManager, evt)
 			return False
+		
+		# pass key to window handler
+		hWindow = self.application.windowManager.windowForeground()
+		handler = self.windowHandlers.get(hWindow, None)
+		if handler is None:
+			return False
+		if evt == mouseManager.EvtMouseWheelScrolled:
+			return handler.handleMouseWheelScrolled(self, arg)
 		return False
-	
+		
 	def onWindowManager(self, windowManager, evt, arg):
 		"""handler for window events"""
 		if evt in (windowManager.EvtStart, windowManager.EvtStop):

@@ -95,5 +95,12 @@ class WindowHandlerBase(object):
 		@note: if you return True, the key press is swallowed, that is, it never reaches the window
 		"""
 		return False
-	
+	def handleMouseWheelScrolled(self, cli, nSteps):
+		"""called when the mouse wheel is scrolled while the window is the foreground window
+		@param cli: client instance
+		@param nSteps: (int) number of steps scrolled. my be positive or negative 
+		@return: True if the handler handles the event, False otherwise
+		@note: if you return True, the scroll is swallowed, that is, it never reaches the window
+		"""
+		return False
 	
