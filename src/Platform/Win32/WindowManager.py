@@ -194,7 +194,9 @@ class WindowManager(object):
 		"""
 		if not hwnd: raise ValueError('can not retrieve className of desktop window')
 		p = create_unicode_buffer(self.Win32Consts.MY_MAX_CLASS_NAME)
-		if not user32.GetClassNameW(hwnd, p, sizeof(p)): raise WinError(GetLastError())
+		if not user32.GetClassNameW(hwnd, p, sizeof(p)):
+			#NOTE: GetClassName() sometimes fails for some unknown reason, so we return '' here
+			return ''
 		return p.value
 	
 	def windowGetClientRect(self, hwnd, toScreen=False):
