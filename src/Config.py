@@ -8,7 +8,7 @@ import ConfigParser
 __application_name__ = 'TableCrab'
 __author__ = 'juergen urner'
 __email__ = 'jUrner@arcor.de'
-__version__ = '0.3.0'
+__version__ = '0.4.0'
 __release_name__ = '%s-%s' % (__application_name__, __version__)
 
 #***************************************************************************************************
@@ -268,7 +268,7 @@ class Config(object):
 							if len(params) != 2:
 								logger.debug('Config:invalid params: [%s]:%s' % (section, option) )
 							else:
-								try: baseValue = TypeChoice(choices=('big-blind', 'small-blind')).fromConfig(params[0])
+								try: baseValue = TypeChoice(choices=('big-blind', 'small-blind', 'x')).fromConfig(params[0])
 								except ConfigError: logger.debug('Config:invalid params: [%s]:%s' % (section, option) )
 								else:
 									try: factor = TypeFloat().fromConfig(params[1])
@@ -290,7 +290,7 @@ class Config(object):
 								try: key = TypeKey().fromConfig(params[0])
 								except ConfigError: logger.debug('Config:invalid params: [%s]:%s' % (section, option) )
 								else:
-									try: baseValue = TypeChoice(choices=('big-blind', 'small-blind')).fromConfig(params[1])
+									try: baseValue = TypeChoice(choices=('big-blind', 'small-blind', 'x')).fromConfig(params[1])
 									except ConfigError: logger.debug('Config:invalid params: [%s]:%s' % (section, option) )
 									else:
 										try: factor = TypeFloat().fromConfig(params[2])
