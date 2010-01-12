@@ -140,6 +140,8 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 				baseValue = blinds['bigBlind']
 			elif baseValue == 'small-blind':
 				baseValue = blinds['smallBlind']
+			elif baseValue == 'x':
+				baseValue = betAmount
 			else:
 				raise NotImplementedError()
 			value = round(baseValue * factor, 2)

@@ -76,6 +76,14 @@ VERSION HISTORY
 ==============================================================================
 
 -----------------------------
+0.4.0
+-----------------------------
+news:
+    - you can now alter bet amount with a base value of 'x'. this makes it possible for example to 2 1/2x the current value in the bet amount box
+changes:
+fixes:
+
+----------------------------
 0.3.0
 -----------------------------
 news:
