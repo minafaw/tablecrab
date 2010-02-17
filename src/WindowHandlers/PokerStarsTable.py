@@ -73,8 +73,6 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 	Window = 'Table'
 	
 	PsClassTableBetAmountBox = 'PokerStarsSliderEditorClass'
-	PatAmountSB = re.compile('.*(?: [^0-9\.]|\s)   ( (?: 0\.[0-9]{2})   |    (?: [0-9]+))/.*', re.X|re.I)
-	PatAmountBB = re.compile('.*/[^0-9\.]?(   (?: 0\.[0-9]{2})   |    (?: [0-9]+)).*', re.X|re.I)
 	
 	@classmethod
 	def handleWindowCreated(klass, cli, hWindow):
