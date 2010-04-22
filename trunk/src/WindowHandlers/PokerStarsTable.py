@@ -208,6 +208,22 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 					return True
 		return False
 		
+	def doShowInstantHandHistory(self):
+		size = self.cli.application.windowManager.windowGetClientSize(self.hWindow)
+		for table in self.cli.config['pokerstars-tables']:
+			if table['size'] == size:
+				pt = table['point-button-instant-hand-history-1']
+				if pt is not None:
+					pt = self.cli.application.windowManager.windowClientPointToScreenPoint(self.hWindow, pt)
+					self.cli.application.mouseManager.mouseClickLeft(pt)
+					pt = table['point-button-instant-hand-history-2']
+					if pt is not None:
+						pt = self.cli.application.windowManager.windowClientPointToScreenPoint(self.hWindow, pt)
+						self.cli.application.mouseManager.mouseClickLeft(pt)
+					self.cli.log(self, 'show/update instant hand history')
+				return True
+		return False
+		
 	def doHilightBetAmount(self):
 		hWindow = self.getBetAmountBox()
 		if hWindow:
@@ -299,6 +315,9 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		elif key == self.cli.config['table']['key-replayer']:
 			self.doShowReplayer()
 			return True
+		elif key == self.cli.config['table']['key-instant-hand-history']:
+			self.doShowInstantHandHistory()
+			return True
 		elif key == self.cli.config['table']['key-hilight-bet-amount']:
 			self.doHilightBetAmount()
 			return True
@@ -330,6 +349,8 @@ class PokerStarsTable(PokerStarsWindowBase.PokerStarsWindowBase):
 		elif key == self.cli.config['table']['key-raise']:
 			return True
 		elif key == self.cli.config['table']['key-replayer']:
+			return True
+		elif key == self.cli.config['table']['key-instant-hand-history']:
 			return True
 		elif key == self.cli.config['table']['key-hilight-bet-amount']:
 			return True
