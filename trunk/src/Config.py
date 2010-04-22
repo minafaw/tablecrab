@@ -8,7 +8,7 @@ import ConfigParser
 __application_name__ = 'TableCrab'
 __author__ = 'juergen urner'
 __email__ = 'jUrner@arcor.de'
-__version__ = '0.4.0'
+__version__ = '0.5.0'
 __release_name__ = '%s-%s' % (__application_name__, __version__)
 
 #***************************************************************************************************
@@ -161,6 +161,7 @@ class Config(object):
 				('key-raise', TypeKey(None) ),
 				('key-hilight-bet-amount', TypeKey(None) ),
 				('key-replayer', TypeKey(None) ),
+				('key-instant-hand-history', TypeKey(None) ),
 				#('type-alter-bet-amount': []),	# filled in later [{'key': TypeKey, 'type': TypeChoice, 'factor': TypeInt), {'key-add-blind': params, ...}]
 				#'type-alter-bet-amount-mouse-wheel-up', # filled in later {'type': TypeChoice, 'factor': TypeInt}
 				#'type-alter-bet-amount-mouse-wheel-down', # filled in later {'type': TypeChoice, 'factor': TypeInt}
@@ -200,6 +201,8 @@ class Config(object):
 		('point-checkbox-fold', TypePoint(None) ),
 		('point-button-replayer-1', TypePoint(None) ),
 		('point-button-replayer-2', TypePoint(None) ),
+		('point-button-instant-hand-history-1', TypePoint(None) ),
+		('point-button-instant-hand-history-2', TypePoint(None) ),
 		)
 		
 	Sections = (
