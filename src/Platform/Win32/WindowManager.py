@@ -311,8 +311,10 @@ class WindowManager(object):
 			flags |= self.Win32Consts.SWP_NOSIZE
 		x, y = (0, 0) if pos is None else pos
 		w, h = (0, 0) if size is None else size	
-		if not user32.SetWindowPos(hwnd, None, x, y, w, h, flags): raise WinError(GetLastError())
-			
+		#NOTE: SetWindowPos seems broken in lucid (beta). looks like SetWindowPos always returns 0, doing nothing
+		##if not user32.SetWindowPos(hwnd, None, x, y, w, h, flags): raise WinError(GetLastError())
+		user32.SetWindowPos(hwnd, None, x, y, w, h, flags)
+	
 	def windowWalkChildren(self, hwnd=None, report=False):
 		"""walks over all child windows of a window
 		@param report: (bool) if True report the current recursion level
