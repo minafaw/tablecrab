@@ -76,6 +76,17 @@ VERSION HISTORY
 ==============================================================================
 
 -----------------------------
+0.5.0
+-----------------------------
+news:
+    - you can now assign a hotkey to update instand hand history
+changes:
+fixes:
+	- on ubuntu lucid resizing of tables does not work (maybe due to some kernel update, no idea). removed a check regarding this to not break TableCrab.
+	  so, to resize tables you may have to make use of PokerStars custom layouts.
+
+
+-----------------------------
 0.4.0
 -----------------------------
 news:
