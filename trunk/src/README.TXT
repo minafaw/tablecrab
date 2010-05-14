@@ -66,6 +66,8 @@ linux/wine
 - maybe stating the obvious ..but note that keys will only be captured when a "wine window" has the keyboard
   focus. same goes for window events: they will only be captured if a "wine window" is affected.
 
+- on ubuntu lucid resizing of tables does not work (no idea why so far). so you have to make use of PokerStars custom layouts
+
 -------------------------
 windows
 --------------------------
@@ -80,10 +82,11 @@ VERSION HISTORY
 -----------------------------
 news:
     - you can now assign a hotkey to update instand hand history
+	- added a standalone script to grab PokerStars instant hand history and dump it to a nicely formatted html file
 changes:
 fixes:
-	- on ubuntu lucid resizing of tables does not work (maybe due to some kernel update, no idea). removed a check regarding this to not break TableCrab.
-	  so, to resize tables you may have to make use of PokerStars custom layouts.
+	- on ubuntu lucid resizing of tables does not work (maybe due to some kernel update, no idea) and breaks TableCrab.
+	  fixed it so TableCrab does not break, but to resize tables to a desired size you may have to use PokerStars custom layouts
 
 
 -----------------------------
