@@ -311,7 +311,7 @@ class WindowManager(object):
 			flags |= self.Win32Consts.SWP_NOSIZE
 		x, y = (0, 0) if pos is None else pos
 		w, h = (0, 0) if size is None else size	
-		#NOTE: SetWindowPos seems broken in lucid (beta). looks like SetWindowPos always returns 0, doing nothing
+		#NOTE: SetWindowPos seems broken in lucid. looks like SetWindowPos always returns 0, doing nothing
 		##if not user32.SetWindowPos(hwnd, None, x, y, w, h, flags): raise WinError(GetLastError())
 		user32.SetWindowPos(hwnd, None, x, y, w, h, flags)
 	
