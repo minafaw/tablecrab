@@ -98,9 +98,6 @@ class Hand(object):
 	StreetRiver = 'river'
 	StreetShowdown = 'showdown'
 	StreetSummary = 'summary'
-	BlindSmall = 'blindSmall'
-	BlindBig = 'blindBig'
-	BlindAnte = 'blindAnte'
 	class Action(object):
 		Bet = 'bet'
 		Check = 'check'
@@ -112,7 +109,7 @@ class Hand(object):
 			self.name = name
 			self.amount = amount
 	class Player(object):
-		def __init__(self, hand, name='', seatNo=0, stack=0.0, cards=None, blindAnte=0.0, blindSmall=0.0, blindBig=0.0, isButton=False):
+		def __init__(self, name='', seatNo=0, stack=0.0, cards=None, blindAnte=0.0, blindSmall=0.0, blindBig=0.0):
 			self.name = name
 			self.seatNo = seatNo
 			self.stack = stack
@@ -120,7 +117,6 @@ class Hand(object):
 			self.blindAnte = blindAnte
 			self.blindSmall = blindSmall
 			self.blindBig = blindBig
-			self.isButton = isButton
 	def __init__(self):
 		self.handHistory = ''
 		self.cards = ['', '', '', '', '']
@@ -191,7 +187,7 @@ class HandHistoryParser(object):
 	def matchSeat(self, hand, streetCurrent, line):
 		result= self.PatternSeat.match(line)
 		if result is not None:
-			player = hand.Player(hand, name=result.group('player'), seatNo=result.group('seatNo'), stack=self.stringToFloat(result.group('stack')))
+			player = hand.Player(name=result.group('player'), seatNo=result.group('seatNo'), stack=self.stringToFloat(result.group('stack')))
 			hand.players[player.name] = player
 			if player.seatNo == hand.seatNoButton:
 				hand.playerButton = player.name
