@@ -80,6 +80,8 @@ Css = '''
 		.playerActionCheck{background-color:#98FB98;}
 		.playerActionBet{background-color:#FFA54F;}
 		.playerActionRaise{background-color:#FF6EB4;}
+		.playerActionPostBlindBig{}
+		.playerActionPostBlindSmall{}
 	
 	'''
 
@@ -87,47 +89,45 @@ Css = '''
 #
 #***********************************************************************************************
 class Hand(object):
-	StreetNone = ''
-	StreetBlinds = 'blinds'
-	StreetPreflop = 'preflop'
-	StreetFlop  = 'flop'
-	StreetTurn = 'turn'
-	StreetRiver = 'river'
-	StreetShowdown = 'showdown'
-	StreetSummary = 'summary'
+	StreetNone = 0
+	StreetBlinds = 1
+	StreetPreflop = 2
+	StreetFlop  = 3
+	StreetTurn = 4
+	StreetRiver = 5
+	StreetShowdown = 6
+	StreetSummary = 7
 	class Action(object):
-		TypeNone = ''
-		TypeBet = 'bet'
-		TypeCheck = 'check'
-		TypeCall = 'call'
-		TypeFold= 'fold'
-		TypeRaise  = 'raise'
+		TypeNone = 0
+		TypeBet = 1
+		TypeCheck = 2
+		TypeCall = 3
+		TypeFold = 4
+		TypeRaise = 5
+		TypePostBlindAnte = 6
+		TypePostBlindSmall = 7
+		TypePostBlindBig = 8
 		def __init__(self, player=None, type=TypeNone, amount=0.0):
 			self.player = player
 			self.type = type
 			self.amount = amount
 	class Player(object):
-		def __init__(self, name='', seatNo=0, stack=0.0, cards=None, blindAnte=0.0, blindSmall=0.0, blindBig=0.0):
+		def __init__(self, name='', stack=0.0, cards=None, blindAnte=0.0, blindSmall=0.0, blindBig=0.0):
 			self.name = name
-			self.seatNo = seatNo
 			self.stack = stack
 			self.cards = ['', ''] if cards is None else cards
-			self.blindAnte = blindAnte
-			self.blindSmall = blindSmall
-			self.blindBig = blindBig
 	def __init__(self):
 		self.handHistory = ''
+		self.seats = []					# len(seats) == maxPlayers. empty seat is set to None
 		self.cards = ['', '', '', '', '']
 		self.blindAnte = 0.0
 		self.blindSmall = 0.0
 		self.blindBig = 0.0
 		self.hasCents = True		# flag indicating if cent bets is allowed or not
-		self.players = {}
-		self.playerButton = ''
 		self.seatNoButton = None
 		self.tableName = ''
-		self.maxPlayers = 0
 		self.actions = {
+				self.StreetBlinds: [],
 				self.StreetPreflop: [],
 				self.StreetFlop: [],
 				self.StreetTurn: [],
@@ -137,26 +137,27 @@ class Hand(object):
 	def calcPotSizes(self):
 		streets = (self.StreetBlinds, self.StreetPreflop, self.StreetFlop, self.StreetTurn, self.StreetRiver)
 		result = dict([(street, 0.0) for street in streets])
-		players = self.players.items()
-		
-		bets = dict( [(name, 0.0) for name in self.players])
-		for (name, player) in players:
-			bets[name] += player.blindSmall + player.blindBig + player.blindAnte
-			result[self.StreetBlinds] += player.blindSmall + player.blindBig + player.blindAnte
-			
-		for street in streets[1:]:
-			for (name, player) in players:
+		players = [player for player in self.seats if player is not None]
+		bets = dict( [(player, 0.0) for player in players])
+		for street in streets:
+			for player in players:
 				actions = [action for action in self.actions[street] if action.player is player]
 				for action in actions:
 					amount = action.amount
 					if action.type == action.TypeRaise:
-						amount -= bets[name]
-					bets[name] += amount
+						amount -= bets[player]
+					bets[player] += amount
 					result[street] += amount
-			
-			bets = dict( [(name, 0.0) for name in self.players] )
+			bets = dict( [(player, 0.0) for player in players] )
 			result[street] += result[streets[streets.index(street)-1]]
 		return result
+		
+	def playerFromName(self, playerName):
+		for player in self.seats:
+			if player is None: continue
+			if player.name == playerName:
+				return player
+		return None
 	
 #********************************************************************************************************
 # hand parser
@@ -180,7 +181,7 @@ class HandHistoryParser(object):
 		result = self.PatternTableInfo.match(line)
 		if result is not None:
 			hand.tableName = result.group('tableName')
-			hand.maxPlayers = int(result.group('maxPlayers'))
+			hand.seats = [None for i in range( int(result.group('maxPlayers') ))]
 			hand.seatNoButton = int(result.group('seatNoButton'))
 		return result is not None
 			
@@ -188,19 +189,19 @@ class HandHistoryParser(object):
 	def matchSeat(self, hand, streetCurrent, line):
 		result= self.PatternSeat.match(line)
 		if result is not None:
-			player = hand.Player(name=result.group('player'), seatNo=result.group('seatNo'), stack=self.stringToFloat(result.group('stack')))
-			hand.players[player.name] = player
-			if player.seatNo == hand.seatNoButton:
-				hand.playerButton = player.name
+			player = hand.Player(name=result.group('player'), stack=self.stringToFloat(result.group('stack')))
+			seatNo = int(result.group('seatNo')) -1
+			hand.seats[seatNo] = player
 		return result is not None
 	
 	PatternDealtTo = re.compile('Dealt \s to \s (?P<player>.+?) \s \[  (?P<cards>.+?) \]', re.X)
 	def matchDealtTo(self, hand, streetCurrent, line):
 		result = self.PatternDealtTo.match(line)
 		if result is not None:
-			hand.players[result.group('player')].cards = self.stringToCards(result.group('cards'))
+			hand.playerFromName(result.group('player')).cards = self.stringToCards(result.group('cards'))
 		return result is not None
 	
+	#TODO: we can not determine hand.BlindAnte/BlindSmall/BlindBig from what player posted. have to parse hand header instead
 	PatternAnte =  re.compile('^(?P<player>.*?)\: \s posts \s the \s ante \s [\$\EUR]? (?P<amount>[0-9\.\,]+ )', re.X)
 	def matchAnte(self, hand, streetCurrent, line):
 		result = self.PatternAnte.match(line)
@@ -208,7 +209,9 @@ class HandHistoryParser(object):
 			amount = self.stringToFloat(result.group('amount'))
 			if amount:
 				hand.blindAnte = amount
-				hand.players[result.group('player')].blindAnte = amount
+				player = hand.playerFromName(result.group('player'))
+				action = hand.Action(player=player, type=hand.Action.TypePostBlindAnte, amount=amount)
+				hand.actions[streetCurrent].append(action)
 		return result is not None
 		
 	PatternSmallBlind = re.compile('^(?P<player>.*?)\: \s posts \s small \s blind \s [\$\EUR]? (?P<amount>[0-9\.\,]+)', re.X)
@@ -218,7 +221,9 @@ class HandHistoryParser(object):
 			amount = self.stringToFloat(result.group('amount'))
 			if amount:
 				hand.blindSmall = amount
-				hand.players[result.group('player')].blindSmall = amount
+				player = hand.playerFromName(result.group('player'))
+				action = hand.Action(player=player, type=hand.Action.TypePostBlindSmall, amount=amount)
+				hand.actions[streetCurrent].append(action)
 		return result is not None
 	
 	PatternBigBlind = re.compile('^(?P<player>.*?)\: \s posts \s big \s blind \s [\$\EUR]? (?P<amount>[0-9\.\,]+ )', re.X)
@@ -228,7 +233,9 @@ class HandHistoryParser(object):
 			amount = self.stringToFloat(result.group('amount'))
 			if amount:
 				hand.blindBig = amount
-				hand.players[result.group('player')].blindBig = amount
+				player = hand.playerFromName(result.group('player'))
+				action = hand.Action(player=player, type=hand.Action.TypePostBlindBig, amount=amount)
+				hand.actions[streetCurrent].append(action)
 		return result is not None
 	
 	PatternBoardCards = re.compile('^Board \s \[  (?P<cards>.*?)   \]', re.X)
@@ -242,28 +249,28 @@ class HandHistoryParser(object):
 	def matchShowsCards(self, hand, streetCurrent, line):
 		result = self.PatternShowsCards.match(line)
 		if result is not None:
-			hand.players[result.group('player')].cards = self.stringToCards(result.group('cards'))
+			hand.playerFromName(result.group('player')).cards = self.stringToCards(result.group('cards'))
 		return result is not None
 	
 	PatternShowedCards = re.compile('^Seat\s[1-9]+\:\s (?P<player>.+?) \s showed \s\[  (?P<cards>.+?) \]', re.X)
 	def matchShowedCards(self, hand, streetCurrent, line):
 		result = self.PatternShowedCards.match(line)
 		if result is not None:
-			hand.players[result.group('player')].cards = self.stringToCards(result.group('cards'))
+			hand.playerFromName(result.group('player')).cards = self.stringToCards(result.group('cards'))
 		return result is not None
 	
 	PatternMuckedCards = re.compile('^Seat\s[1-9]+\:\s (?P<player>.+?) \s mucked \s\[  (?P<cards>.+?) \]', re.X)
 	def matchMuckedCards(self, hand, streetCurrent, line):
 		result = self.PatternMuckedCards.match(line)
 		if result is not None:
-			hand.players[result.group('player')].cards = self.stringToCards(result.group('cards'))
+			hand.playerFromName(result.group('player')).cards = self.stringToCards(result.group('cards'))
 		return result is not None
 	
 	PatternCheck = re.compile('^(?P<player>.+?) \:\s checks', re.X)
 	def matchCheck(self, hand, streetCurrent, line):
 		result = self.PatternCheck.match(line)
 		if result is not None:
-			player = hand.players[result.group('player')]
+			player = hand.playerFromName(result.group('player'))
 			action = hand.Action(player=player, type=hand.Action.TypeCheck)
 			hand.actions[streetCurrent].append(action)
 		return result is not None
@@ -272,7 +279,7 @@ class HandHistoryParser(object):
 	def matchFold(self, hand, streetCurrent, line):
 		result = self.PatternFold.match(line)
 		if result is not None:
-			player = hand.players[result.group('player')]
+			player = hand.playerFromName(result.group('player'))
 			action = hand.Action(player=player, type=hand.Action.TypeFold)
 			hand.actions[streetCurrent].append(action)
 		return result is not None
@@ -281,7 +288,7 @@ class HandHistoryParser(object):
 	def matchCall(self, hand, streetCurrent, line):
 		result = self.PatternCall.match(line)
 		if result is not None:
-			player = hand.players[result.group('player')]
+			player = hand.playerFromName(result.group('player'))
 			action = hand.Action(player=player, type=hand.Action.TypeCall, amount=self.stringToFloat(result.group('amount')))
 			hand.actions[streetCurrent].append(action)
 		return result is not None
@@ -290,7 +297,7 @@ class HandHistoryParser(object):
 	def matchBet(self, hand, streetCurrent, line):
 		result = self.PatternBet.match(line)
 		if result is not None:
-			player = hand.players[result.group('player')]
+			player = hand.playerFromName(result.group('player'))
 			action = hand.Action(player=player, type=hand.Action.TypeBet, amount=self.stringToFloat(result.group('amount')))
 			hand.actions[streetCurrent].append(action)
 		return result is not None
@@ -299,7 +306,7 @@ class HandHistoryParser(object):
 	def matchRaise(self, hand, streetCurrent, line):
 		result = self.PatternRaise.match(line)
 		if result is not None:
-			player = hand.players[result.group('player')]
+			player = hand.playerFromName(result.group('player'))
 			action = hand.Action(player=player, type=hand.Action.TypeRaise, amount=self.stringToFloat(result.group('amount')))
 			hand.actions[streetCurrent].append(action)
 		return result is not None
@@ -309,7 +316,7 @@ class HandHistoryParser(object):
 		# create new hand object
 		hand = Hand()
 		hand.handHistory = handHistory.replace('\r', '')
-		streetCurrent = hand.StreetNone
+		streetCurrent = hand.StreetBlinds
 			
 		# clean handHistory up a bit to make it easier on us..
 		handHistory = handHistory.replace('(small blind) ', '').replace('(big blind) ', '').replace('(button) ', '').replace('(Play Money) ', '')
@@ -339,7 +346,7 @@ class HandHistoryParser(object):
 				continue
 			
 			# parse streets
-			if streetCurrent == hand.StreetNone:
+			if streetCurrent == hand.StreetBlinds:
 				if self.matchTableInfo(hand, streetCurrent, line): continue
 				if self.matchSeat(hand, streetCurrent, line): continue
 				if self.matchAnte(hand, streetCurrent,line): continue
@@ -440,18 +447,14 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	def dump(self, hand):
 		p = '<html><head><style type="text/css">%s</style></head><body class="handHistoryBody"><table class="handHistoryTable" border="1" cellspacing="0" cellpadding="0">'	% Css		
 		
-		# sort players
-		def sortf(a, b):
-			return cmp(a[1].seatNo, b[1].seatNo)
-		players = hand.players.items()
-		players.sort(cmp=sortf)
-		
-		for name, player in players:
+		for player in hand.seats:
+			if player is None: continue
+			
 			p += '<tr>'
 				
 			# add player summary column
 			p += '<td class="playerCell">'
-			p += '<div class="playerName">%s</div>' % self.truncateText(name, MaxPlayerName)
+			p += '<div class="playerName">%s</div>' % self.truncateText(player.name, MaxPlayerName)
 			p += '<div class="playerStack">%s</div>' % self.formatNum(hand, player.stack)
 			p += '</td>'
 				
@@ -459,16 +462,8 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			p += '<td class="playerCardsCell">%s</td>' % self.htmlFormatCard(player.cards[0])
 			p += '<td class="playerCardsCell">%s</td>' % self.htmlFormatCard(player.cards[1])
 			
-			# add blinds column
-			prefix, blind = PrefixBigBlind, player.blindBig
-			if not blind:
-				prefix, blind = PrefixSmallBlind, player.blindSmall
-				if not blind:
-					prefix, blind = '&nbsp;', ''
-			p += '<td class="playerActionsCell">%s%s</td>' % (prefix, self.formatNum(hand, blind))
-				
 			# add preflop and postflop actions
-			for street in (hand.StreetPreflop, hand.StreetFlop, hand.StreetTurn, hand.StreetRiver):
+			for street in (hand.StreetBlinds, hand.StreetPreflop, hand.StreetFlop, hand.StreetTurn, hand.StreetRiver):
 				actions = [action for action in hand.actions[street] if action.player is player]
 				if street == hand.StreetFlop:
 					p += '<td class="playerActionsCell" colspan="3">'
@@ -486,6 +481,11 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 						p += '<div class="playerActionRaise">%s%s</div>' % (PrefixRaise, self.formatNum(hand, action.amount) )
 					elif action.type == action.TypeCall:
 						p += '<div class="playerActionCall">%s%s</div>' % (PrefixCall, self.formatNum(hand, action.amount) )
+					elif action.type == action.TypePostBlindBig:
+						p += '<div class="playerActionPostBlindBig">%s%s</div>' % (PrefixBigBlind, self.formatNum(hand, action.amount) )
+					elif action.type == action.TypePostBlindSmall:
+						p += '<div class="playerActionPostBlindSmall">%s%s</div>' % (PrefixSmallBlind, self.formatNum(hand, action.amount) )	
+					
 				if nActions is None:
 					p += '&nbsp;'
 				p += '</td>'		
@@ -495,6 +495,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		# add pot size
 		p += '<tr>'
 		pot = hand.calcPotSizes()
+		#TODO: to save some space we don't display ante for individual player. good idea otr not?
 		potCellExtra = PrefixAnte + self.formatNum(hand, hand.blindAnte) if hand.blindAnte else '&nbsp;'
 		p += '<td colspan="3" class="potCellExtra">%s</td>' % potCellExtra
 		p += '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetBlinds])
