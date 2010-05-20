@@ -9,14 +9,11 @@ usage: path/to/python PokerStarsHandHistoryGrabber.py
 
 '''
 
-import re, time
+import re, time, sys
 
-from ctypes import *
-from ctypes.wintypes import *
 #***********************************************************************************************
 # user settings (adjust to your needs)
 #***********************************************************************************************
-
 PrefixSmallBlind = 'sb'				# prefixes for player actions
 PrefixBigBlind = 'bb'
 PrefixAnte = 'ante '
@@ -99,14 +96,15 @@ class Hand(object):
 	StreetShowdown = 'showdown'
 	StreetSummary = 'summary'
 	class Action(object):
-		Bet = 'bet'
-		Check = 'check'
-		Call = 'call'
-		Fold= 'fold'
-		Raise  = 'raise'
-		def __init__(self, player=None, name='', amount=0.0):
+		TypeNone = ''
+		TypeBet = 'bet'
+		TypeCheck = 'check'
+		TypeCall = 'call'
+		TypeFold= 'fold'
+		TypeRaise  = 'raise'
+		def __init__(self, player=None, type=TypeNone, amount=0.0):
 			self.player = player
-			self.name = name
+			self.type = type
 			self.amount = amount
 	class Player(object):
 		def __init__(self, name='', seatNo=0, stack=0.0, cards=None, blindAnte=0.0, blindSmall=0.0, blindBig=0.0):
@@ -151,7 +149,7 @@ class Hand(object):
 				actions = [action for action in self.actions[street] if action.player is player]
 				for action in actions:
 					amount = action.amount
-					if action.name == action.Raise:
+					if action.type == action.TypeRaise:
 						amount -= bets[name]
 					bets[name] += amount
 					result[street] += amount
@@ -160,6 +158,9 @@ class Hand(object):
 			result[street] += result[streets[streets.index(street)-1]]
 		return result
 	
+#********************************************************************************************************
+# hand parser
+#********************************************************************************************************
 class HandHistoryParser(object):
 		
 	def __init__(self): pass
@@ -263,7 +264,7 @@ class HandHistoryParser(object):
 		result = self.PatternCheck.match(line)
 		if result is not None:
 			player = hand.players[result.group('player')]
-			action = hand.Action(player=player, name=hand.Action.Check)
+			action = hand.Action(player=player, type=hand.Action.TypeCheck)
 			hand.actions[streetCurrent].append(action)
 		return result is not None
 	
@@ -272,7 +273,7 @@ class HandHistoryParser(object):
 		result = self.PatternFold.match(line)
 		if result is not None:
 			player = hand.players[result.group('player')]
-			action = hand.Action(player=player, name=hand.Action.Fold)
+			action = hand.Action(player=player, type=hand.Action.TypeFold)
 			hand.actions[streetCurrent].append(action)
 		return result is not None
 	
@@ -281,7 +282,7 @@ class HandHistoryParser(object):
 		result = self.PatternCall.match(line)
 		if result is not None:
 			player = hand.players[result.group('player')]
-			action = hand.Action(player=player, name=hand.Action.Call, amount=self.stringToFloat(result.group('amount')))
+			action = hand.Action(player=player, type=hand.Action.TypeCall, amount=self.stringToFloat(result.group('amount')))
 			hand.actions[streetCurrent].append(action)
 		return result is not None
 	
@@ -290,7 +291,7 @@ class HandHistoryParser(object):
 		result = self.PatternBet.match(line)
 		if result is not None:
 			player = hand.players[result.group('player')]
-			action = hand.Action(player=player, name=hand.Action.Bet, amount=self.stringToFloat(result.group('amount')))
+			action = hand.Action(player=player, type=hand.Action.TypeBet, amount=self.stringToFloat(result.group('amount')))
 			hand.actions[streetCurrent].append(action)
 		return result is not None
 	
@@ -299,7 +300,7 @@ class HandHistoryParser(object):
 		result = self.PatternRaise.match(line)
 		if result is not None:
 			player = hand.players[result.group('player')]
-			action = hand.Action(player=player, name=hand.Action.Raise, amount=self.stringToFloat(result.group('amount')))
+			action = hand.Action(player=player, type=hand.Action.TypeRaise, amount=self.stringToFloat(result.group('amount')))
 			hand.actions[streetCurrent].append(action)
 		return result is not None
 	
@@ -370,8 +371,7 @@ class HandHistoryParser(object):
 			raise ValueError('could not determine button player')
 		
 		return hand	
-		
-		
+	
 #********************************************************************************************************
 # hand formatters
 #********************************************************************************************************
@@ -476,15 +476,15 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 					p += '<td class="playerActionsCell">'
 				nActions = None
 				for nActions, action in enumerate(actions):
-					if action.name == action.Fold: 
+					if action.type == action.TypeFold: 
 						p += '<div class="playerActionFold">%s</div>' % PrefixFold
-					elif action.name == action.Check: 
+					elif action.type == action.TypeCheck: 
 						p +=  '<div class="playerActionCheck">%s</div>' % PrefixCheck
-					elif action.name == action.Bet:
+					elif action.type == action.TypeBet:
 						p += '<div class="playerActionBet">%s%s</div>' % (PrefixBet, self.formatNum(hand, action.amount) )
-					elif action.name == action.Raise:
+					elif action.type == action.TypeRaise:
 						p += '<div class="playerActionRaise">%s%s</div>' % (PrefixRaise, self.formatNum(hand, action.amount) )
-					elif action.name == action.Call:
+					elif action.type == action.TypeCall:
 						p += '<div class="playerActionCall">%s%s</div>' % (PrefixCall, self.formatNum(hand, action.amount) )
 				if nActions is None:
 					p += '&nbsp;'
@@ -520,70 +520,81 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 
 
 #**********************************************************************************************************
-
-class InstantHandHistoryGrabber(object):
-	WindowClassName = '#32770'
-	WindowTitle = 'Instant Hand History'
-	WidgetClassName = 'PokerStarsViewClass'
-	
-	user32 = windll.user32
-	
-	def __init__(self, handParser, handFormatter):
-		self.handParser = handParser
-		self.handFormatter = handFormatter
+# hand grabber (only available on win32 platforms)
+#**********************************************************************************************************
+InstantHandHistoryGrabber = None
+if sys.platform == 'win32':
+	class InstantHandHistoryGrabber(object):
+		WindowClassName = '#32770'
+		WindowTitle = 'Instant Hand History'
+		WidgetClassName = 'PokerStarsViewClass'
 		
-	def runServer(self):
-		print 'starting hand history dumper'
-		hwnds = []
-		def enumWindowsCB(hwnd, lp):
-			hwnds.append(hwnd)
-			return 1
-		WM_GETTEXT = 13
-		SMTO_ABORTIFHUNG = 2
-		SMTO_TIMEOUT = 1000
-		enumWindowsProc = WINFUNCTYPE(INT, HANDLE, LPARAM)(enumWindowsCB)
-		pText = create_unicode_buffer(100)
-		pResult = DWORD()
-		lastHandHistory = None
+		def __init__(self, handParser, handFormatter):
+			self.handParser = handParser
+			self.handFormatter = handFormatter
 			
-		while True:
-		
-			# find "instant hand history" dialog
+		def runServer(self):
+			print 'starting hand history dumper'
+			
 			hwnds = []
-			if not self.user32.EnumWindows(enumWindowsProc, 0): raise WinError(GetLastError())
-			for hwnd in hwnds:
-				
-				# window title and className must match
-				n = self.user32.GetWindowTextLengthW(hwnd)
-				if n != len(self.WindowTitle): continue
-				if not self.user32.GetWindowTextW(hwnd, pText, sizeof(pText)): raise WinError(GetLastError())
-				if pText.value != self.WindowTitle: continue
-				if not self.user32.GetClassNameW(hwnd, pText, sizeof(pText)): raise WinError(GetLastError())
-				if pText.value != self.WindowClassName: continue
+			def enumWindowsCB(hwnd, lp):
+				hwnds.append(hwnd)
+				return 1
 					
-				# find hand history in dialog
+			from ctypes import windll, sizeof, byref, WinError, GetLastError, WINFUNCTYPE, create_unicode_buffer 
+			from ctypes.wintypes import INT, HANDLE, LPARAM, DWORD
+			user32 = windll.user32
+			
+			WM_GETTEXT = 13
+			SMTO_ABORTIFHUNG = 2
+			SMTO_TIMEOUT = 1000
+			enumWindowsProc = WINFUNCTYPE(INT, HANDLE, LPARAM)(enumWindowsCB)
+			pText = create_unicode_buffer(100)
+			pResult = DWORD()
+			lastHandHistory = None
+				
+			while True:
+			
+				# find "instant hand history" dialog
 				hwnds = []
-				if not self.user32.EnumChildWindows(hwnd, enumWindowsProc, 0): raise WinError(GetLastError())
+				if not user32.EnumWindows(enumWindowsProc, 0): raise WinError(GetLastError())
 				for hwnd in hwnds:
-					if not self.user32.GetClassNameW(hwnd, pText, sizeof(pText)): raise WinError(GetLastError())
-					if pText.value != self.WidgetClassName: continue
+					
+					# window title and className must match
+					n = user32.GetWindowTextLengthW(hwnd)
+					if n != len(self.WindowTitle): continue
+					if not user32.GetWindowTextW(hwnd, pText, sizeof(pText)): raise WinError(GetLastError())
+					if pText.value != self.WindowTitle: continue
+					if not user32.GetClassNameW(hwnd, pText, sizeof(pText)): raise WinError(GetLastError())
+					if pText.value != self.WindowClassName: continue
 						
-					# grab hand history
-					n = self.user32.GetWindowTextLengthW(hwnd)
-					if n:
-						p = create_unicode_buffer(n +1)
-						self.user32.SendMessageTimeoutW(hwnd, WM_GETTEXT, sizeof(p), p, SMTO_ABORTIFHUNG, SMTO_TIMEOUT, byref(pResult))
-						if p.value != lastHandHistory:
-							# parse and dump hand history
-							hand = self.handParser.parse(p.value)
-							self.handFormatter.dump(hand)
-							lastHandHistory = p.value
+					# find hand history in dialog
+					hwnds = []
+					if not user32.EnumChildWindows(hwnd, enumWindowsProc, 0): raise WinError(GetLastError())
+					for hwnd in hwnds:
+						if not user32.GetClassNameW(hwnd, pText, sizeof(pText)): raise WinError(GetLastError())
+						if pText.value != self.WidgetClassName: continue
+							
+						# grab hand history
+						n = user32.GetWindowTextLengthW(hwnd)
+						if n:
+							p = create_unicode_buffer(n +1)
+							user32.SendMessageTimeoutW(hwnd, WM_GETTEXT, sizeof(p), p, SMTO_ABORTIFHUNG, SMTO_TIMEOUT, byref(pResult))
+							if p.value != lastHandHistory:
+								# parse and dump hand history
+								hand = self.handParser.parse(p.value)
+								self.handFormatter.dump(hand)
+								lastHandHistory = p.value
+						break
 					break
-				break
-			time.sleep(DumpTimeout)
+				time.sleep(DumpTimeout)
 
 #*********************************************************************************************************************
 if __name__ == '__main__':
+	if InstantHandHistoryGrabber is None:
+		print 'HandHistoryGrabber is not supported on your platform: %s' % sys.platform
+		sys.exit(1)
+		
 	grabber = InstantHandHistoryGrabber(HandHistoryParser(), HandFormatters[HandFormatter]())
 	grabber.runServer()
 
