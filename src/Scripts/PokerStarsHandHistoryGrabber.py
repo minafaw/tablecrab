@@ -214,7 +214,7 @@ class HandHistoryParser(object):
 			player = hand.playerFromName(result.group('player'))
 			action = hand.Action(player=player, type=hand.Action.TypePostBlindAnte, amount=amount)
 			hand.actions[streetCurrent].append(action)
-			hand.blindAnte = amount
+			hand.blindAnte = max(amount, hand.blindAnte)
 		return result is not None
 		
 	PatternPostSmallBlind = re.compile('^(?P<player>.*?)\: \s posts \s small \s blind \s [$€]? (?P<amount>[0-9\.\,]+)', re.X)
@@ -226,7 +226,7 @@ class HandHistoryParser(object):
 			player = hand.playerFromName(result.group('player'))
 			action = hand.Action(player=player, type=hand.Action.TypePostBlindSmall, amount=amount)
 			hand.actions[streetCurrent].append(action)
-			hand.blindSmall = amount
+			hand.blindSmall = max(amount, hand.blindSmall)
 		return result is not None
 	
 	PatternPostBigBlind = re.compile('^(?P<player>.*?)\: \s posts \s big \s blind \s [$€]? (?P<amount>[0-9\.\,]+ )', re.X)
@@ -237,7 +237,7 @@ class HandHistoryParser(object):
 			player = hand.playerFromName(result.group('player'))
 			action = hand.Action(player=player, type=hand.Action.TypePostBlindBig, amount=amount)
 			hand.actions[streetCurrent].append(action)
-			hand.blindBig = amount
+			hand.blindBig = max(amount, hand.blindBig)
 		return result is not None
 	
 	PatternBoardCards = re.compile('^Board \s \[  (?P<cards>.*?)   \]', re.X)
