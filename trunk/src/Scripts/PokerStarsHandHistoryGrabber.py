@@ -1,3 +1,5 @@
+# -*- coding: UTF-8 -*-s
+
 '''PokerStars "instant hand history" grabber
 
 this programm runs a standalone to grab, format and dump to html the hand history currently
@@ -185,9 +187,8 @@ class HandHistoryParser(object):
 			hand.seatNoButton = int(result.group('seatNoButton'))
 		return result is not None
 			
-	PatternSeat = re.compile('^Seat \s(?P<seatNo>[1-9]+)\:\s   (?P<player>.*?) \s\( (?P<stack>.*?)\s.*  \)', re.X)
+	PatternSeat = re.compile('^Seat \s(?P<seatNo>[1-9]+)\:\s   (?P<player>.*?) \s\( [$€]? (?P<stack>.*?)\s.*  \)', re.X)
 	def matchSeat(self, hand, streetCurrent, line):
-		line = line.replace('$', '').replace('EUR', '')
 		result= self.PatternSeat.match(line)
 		if result is not None:
 			player = hand.Player(name=result.group('player'), stack=self.stringToFloat(result.group('stack')))
@@ -205,9 +206,8 @@ class HandHistoryParser(object):
 	#FIXME: determine hand.BlindAnte/BlindSmall/BlindBig from what player posted is quite stupid. have to parse hand header 
 	#            instead. but ..dont like parsing this mess + it is broken anyways. ante is not mentioned for cash games. maybe 
 	#            stars get their stuff sorted out somedays. gogogogo stars
-	PatternPostAnte =  re.compile('^(?P<player>.*?)\: \s posts \s the \s ante \s (?P<amount>[0-9\.\,]+ )', re.X)
+	PatternPostAnte =  re.compile('^(?P<player>.*?)\: \s posts \s the \s ante \s [$€]? (?P<amount>[0-9\.\,]+ )', re.X)
 	def matchPostAnte(self, hand, streetCurrent, line):
-		line = line.replace('$', '').replace('EUR', '')
 		result = self.PatternPostAnte.match(line)
 		if result is not None:
 			amount = self.stringToFloat(result.group('amount'))
@@ -217,7 +217,7 @@ class HandHistoryParser(object):
 			hand.blindAnte = amount
 		return result is not None
 		
-	PatternPostSmallBlind = re.compile('^(?P<player>.*?)\: \s posts \s small \s blind \s (?P<amount>[0-9\.\,]+)', re.X)
+	PatternPostSmallBlind = re.compile('^(?P<player>.*?)\: \s posts \s small \s blind \s [$€]? (?P<amount>[0-9\.\,]+)', re.X)
 	def matchPostSmallBlind(self, hand, streetCurrent, line):
 		line = line.replace('$', '').replace('EUR', '')
 		result = self.PatternPostSmallBlind.match(line)
@@ -229,9 +229,8 @@ class HandHistoryParser(object):
 			hand.blindSmall = amount
 		return result is not None
 	
-	PatternPostBigBlind = re.compile('^(?P<player>.*?)\: \s posts \s big \s blind \s (?P<amount>[0-9\.\,]+ )', re.X)
+	PatternPostBigBlind = re.compile('^(?P<player>.*?)\: \s posts \s big \s blind \s [$€]? (?P<amount>[0-9\.\,]+ )', re.X)
 	def matchPostBigBlind(self, hand, streetCurrent, line):
-		line = line.replace('$', '').replace('EUR', '')
 		result = self.PatternPostBigBlind.match(line)
 		if result is not None:
 			amount = self.stringToFloat(result.group('amount'))
@@ -287,9 +286,8 @@ class HandHistoryParser(object):
 			hand.actions[streetCurrent].append(action)
 		return result is not None
 	
-	PatternCall = re.compile('^(?P<player>.+?) \:\s calls \s (?P<amount>[0-9\.\,]+)', re.X)
+	PatternCall = re.compile('^(?P<player>.+?) \:\s calls \s [$€]? (?P<amount>[0-9\.\,]+)', re.X)
 	def matchCall(self, hand, streetCurrent, line):
-		line = line.replace('$', '').replace('EUR', '')
 		result = self.PatternCall.match(line)
 		if result is not None:
 			player = hand.playerFromName(result.group('player'))
@@ -297,9 +295,8 @@ class HandHistoryParser(object):
 			hand.actions[streetCurrent].append(action)
 		return result is not None
 	
-	PatternBet = re.compile('^(?P<player>.+?) \:\s bets \s (?P<amount>[0-9\.\,]+)', re.X)
+	PatternBet = re.compile('^(?P<player>.+?) \:\s bets \s [$€]? (?P<amount>[0-9\.\,]+)', re.X)
 	def matchBet(self, hand, streetCurrent, line):
-		line = line.replace('$', '').replace('EUR', '')
 		result = self.PatternBet.match(line)
 		if result is not None:
 			player = hand.playerFromName(result.group('player'))
@@ -307,9 +304,8 @@ class HandHistoryParser(object):
 			hand.actions[streetCurrent].append(action)
 		return result is not None
 	
-	PatternRaise = re.compile('^(?P<player>.+?) \:\s raises \s  .*?\s to \s (?P<amount>[0-9\.\,]+)', re.X)
+	PatternRaise = re.compile('^(?P<player>.+?) \:\s raises \s  .*?\s to \s [$€]? (?P<amount>[0-9\.\,]+)', re.X)
 	def matchRaise(self, hand, streetCurrent, line):
-		line = line.replace('$', '').replace('EUR', '')
 		result = self.PatternRaise.match(line)
 		if result is not None:
 			player = hand.playerFromName(result.group('player'))
