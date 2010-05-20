@@ -140,6 +140,30 @@ class Hand(object):
 				self.StreetRiver: [],
 				}
 	
+	def calcPotSizes(self):
+		streets = (self.StreetBlinds, self.StreetPreflop, self.StreetFlop, self.StreetTurn, self.StreetRiver)
+		result = dict([(street, 0.0) for street in streets])
+		players = self.players.items()
+		
+		bets = dict( [(name, 0.0) for name in self.players])
+		for (name, player) in players:
+			bets[name] += player.blindSmall + player.blindBig + player.blindAnte
+			result[self.StreetBlinds] += player.blindSmall + player.blindBig + player.blindAnte
+			
+		for street in streets[1:]:
+			for (name, player) in players:
+				actions = [action for action in self.actions[street] if action.player is player]
+				for action in actions:
+					amount = action.amount
+					if action.name == action.Raise:
+						amount -= bets[name]
+					bets[name] += amount
+					result[street] += amount
+			
+			bets = dict( [(name, 0.0) for name in self.players] )
+			result[street] += result[streets[streets.index(street)-1]]
+		return result
+	
 class HandHistoryParser(object):
 		
 	def __init__(self): pass
@@ -383,31 +407,6 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	def __init__(self):
 		pass
 	
-	def calcPotSizes(self, hand):
-		streets = (hand.StreetBlinds,hand.StreetPreflop, hand.StreetFlop, hand.StreetTurn, hand.StreetRiver)
-		result = dict([(street, 0.0) for street in streets])
-		players = hand.players.items()
-		
-		bets = dict( [(name, 0.0) for name in hand.players])
-		for (name, player) in players:
-			bets[name] += player.blindSmall + player.blindBig + player.blindAnte
-			result[hand.StreetBlinds] += player.blindSmall + player.blindBig + player.blindAnte
-			
-		for street in streets[1:]:
-			for (name, player) in players:
-				actions = [action for action in hand.actions[street] if action.player is player]
-				for action in actions:
-					amount = action.amount
-					if action.name == action.Raise:
-						amount -= bets[name]
-					bets[name] += amount
-					result[street] += amount
-			
-			bets = dict( [(name, 0.0) for name in hand.players] )
-			result[street] += result[streets[streets.index(street)-1]]
-				
-		return result
-	
 	def formatNum(self, hand, num):
 		if not num:
 			result = ''
@@ -499,7 +498,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 				
 		# add pot size
 		p += '<tr>'
-		pot = self.calcPotSizes(hand)
+		pot = hand.calcPotSizes()
 		potCellExtra = PrefixAnte + self.formatNum(hand, hand.blindAnte) if hand.blindAnte else '&nbsp;'
 		p += '<td colspan="3" class="potCellExtra">%s</td>' % potCellExtra
 		p += '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetBlinds])
@@ -533,7 +532,9 @@ class InstantHandHistoryGrabber(object):
 	
 	user32 = windll.user32
 	
-	def __init__(self): pass
+	def __init__(self, handParser, handFormatter):
+		self.handParser = handParser
+		self.handFormatter = handFormatter
 		
 	def runServer(self):
 		print 'starting hand history dumper'
@@ -547,8 +548,6 @@ class InstantHandHistoryGrabber(object):
 		enumWindowsProc = WINFUNCTYPE(INT, HANDLE, LPARAM)(enumWindowsCB)
 		pText = create_unicode_buffer(100)
 		pResult = DWORD()
-		parser = HandHistoryParser()
-		formatter = HandFormatters[HandFormatter]()
 		lastHandHistory = None
 			
 		while True:
@@ -580,8 +579,8 @@ class InstantHandHistoryGrabber(object):
 						self.user32.SendMessageTimeoutW(hwnd, WM_GETTEXT, sizeof(p), p, SMTO_ABORTIFHUNG, SMTO_TIMEOUT, byref(pResult))
 						if p.value != lastHandHistory:
 							# parse and dump hand history
-							hand = parser.parse(p.value)
-							formatter.dump(hand)
+							hand = self.handParser.parse(p.value)
+							self.handFormatter.dump(hand)
 							lastHandHistory = p.value
 					break
 				break
@@ -589,6 +588,6 @@ class InstantHandHistoryGrabber(object):
 
 #*********************************************************************************************************************
 if __name__ == '__main__':
-	grabber = InstantHandHistoryGrabber()
+	grabber = InstantHandHistoryGrabber(HandHistoryParser(), HandFormatters[HandFormatter]())
 	grabber.runServer()
 
