@@ -112,7 +112,7 @@ class Hand(object):
 			self.type = type
 			self.amount = amount
 	class Player(object):
-		def __init__(self, name='', stack=0.0, cards=None, blindAnte=0.0, blindSmall=0.0, blindBig=0.0):
+		def __init__(self, name='', stack=0.0, cards=None):
 			self.name = name
 			self.stack = stack
 			self.cards = ['', ''] if cards is None else cards
