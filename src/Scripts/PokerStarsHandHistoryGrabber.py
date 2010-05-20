@@ -175,7 +175,7 @@ class HandHistoryParser(object):
 			cards += ['']*zfill
 			return cards[:zfill]
 		return cards
-			
+		
 	PatternTableInfo = re.compile('^Table \s \' (?P<tableName>.+?) \' \s (?P<maxPlayers>[0-9]+)\-max \s Seat \s \#(?P<seatNoButton>[0-9]+) \s is \s the \s button', re.X)
 	def matchTableInfo(self, hand, streetCurrent, line):
 		result = self.PatternTableInfo.match(line)
@@ -202,7 +202,9 @@ class HandHistoryParser(object):
 			hand.playerFromName(result.group('player')).cards = self.stringToCards(result.group('cards'))
 		return result is not None
 	
-	#TODO: we can not determine hand.BlindAnte/BlindSmall/BlindBig from what player posted. have to parse hand header instead
+	#FIXME: determine hand.BlindAnte/BlindSmall/BlindBig from what player posted is quite stupid. have to parse hand header 
+	#            instead. but ..dont like parsing this mess + it is broken anyways. ante is not mentioned for cash games. maybe 
+	#            stars get their stuff sorted out somedays. gogogogo stars
 	PatternPostAnte =  re.compile('^(?P<player>.*?)\: \s posts \s the \s ante \s (?P<amount>[0-9\.\,]+ )', re.X)
 	def matchPostAnte(self, hand, streetCurrent, line):
 		line = line.replace('$', '').replace('EUR', '')
