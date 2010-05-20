@@ -101,16 +101,17 @@ class Hand(object):
 	BlindSmall = 'blindSmall'
 	BlindBig = 'blindBig'
 	BlindAnte = 'blindAnte'
+	class Action(object):
+		Bet = 'bet'
+		Check = 'check'
+		Call = 'call'
+		Fold= 'fold'
+		Raise  = 'raise'
+		def __init__(self, player=None, name='', amount=0.0):
+			self.player = player
+			self.name = name
+			self.amount = amount
 	class Player(object):
-		class Action(object):
-			Bet = 'bet'
-			Check = 'check'
-			Call = 'call'
-			Fold= 'fold'
-			Raise  = 'raise'
-			def __init__(self, name='', amount=0.0):
-				self.name = name
-				self.amount = amount
 		def __init__(self, hand, name='', seatNo=0, stack=0.0, cards=None, blindAnte=0.0, blindSmall=0.0, blindBig=0.0, isButton=False):
 			self.name = name
 			self.seatNo = seatNo
@@ -120,12 +121,6 @@ class Hand(object):
 			self.blindSmall = blindSmall
 			self.blindBig = blindBig
 			self.isButton = isButton
-			self.actions = {
-					hand.StreetPreflop: [],
-					hand.StreetFlop: [],
-					hand.StreetTurn: [],
-					hand.StreetRiver: [],
-					}
 	def __init__(self):
 		self.handHistory = ''
 		self.cards = ['', '', '', '', '']
@@ -138,6 +133,12 @@ class Hand(object):
 		self.seatNoButton = None
 		self.tableName = ''
 		self.maxPlayers = 0
+		self.actions = {
+				self.StreetPreflop: [],
+				self.StreetFlop: [],
+				self.StreetTurn: [],
+				self.StreetRiver: [],
+				}
 	
 class HandHistoryParser(object):
 		
@@ -241,40 +242,45 @@ class HandHistoryParser(object):
 	def matchCheck(self, hand, streetCurrent, line):
 		result = self.PatternCheck.match(line)
 		if result is not None:
-			action = hand.Player.Action(name=hand.Player.Action.Check)
-			hand.players[result.group('player')].actions[streetCurrent].append(action)
+			player = hand.players[result.group('player')]
+			action = hand.Action(player=player, name=hand.Action.Check)
+			hand.actions[streetCurrent].append(action)
 		return result is not None
 	
 	PatternFold = re.compile('^(?P<player>.+?) \:\s folds', re.X)
 	def matchFold(self, hand, streetCurrent, line):
 		result = self.PatternFold.match(line)
 		if result is not None:
-			action = hand.Player.Action(name=hand.Player.Action.Fold)
-			hand.players[result.group('player')].actions[streetCurrent].append(action)
+			player = hand.players[result.group('player')]
+			action = hand.Action(player=player, name=hand.Action.Fold)
+			hand.actions[streetCurrent].append(action)
 		return result is not None
 	
 	PatternCall = re.compile('^(?P<player>.+?) \:\s calls \s [\$\EUR]? (?P<amount>[0-9\.\,]+)', re.X)
 	def matchCall(self, hand, streetCurrent, line):
 		result = self.PatternCall.match(line)
 		if result is not None:
-			action = hand.Player.Action(name=hand.Player.Action.Call, amount=self.stringToFloat(result.group('amount')))
-			hand.players[result.group('player')].actions[streetCurrent].append(action)
+			player = hand.players[result.group('player')]
+			action = hand.Action(player=player, name=hand.Action.Call, amount=self.stringToFloat(result.group('amount')))
+			hand.actions[streetCurrent].append(action)
 		return result is not None
 	
 	PatternBet = re.compile('^(?P<player>.+?) \:\s bets \s [\$\EUR]? (?P<amount>[0-9\.\,]+)', re.X)
 	def matchBet(self, hand, streetCurrent, line):
 		result = self.PatternBet.match(line)
 		if result is not None:
-			action = hand.Player.Action(name=hand.Player.Action.Bet, amount=self.stringToFloat(result.group('amount')))
-			hand.players[result.group('player')].actions[streetCurrent].append(action)
+			player = hand.players[result.group('player')]
+			action = hand.Action(player=player, name=hand.Action.Bet, amount=self.stringToFloat(result.group('amount')))
+			hand.actions[streetCurrent].append(action)
 		return result is not None
 	
 	PatternRaise = re.compile('^(?P<player>.+?) \:\s raises \s [\$\EUR]? .*?\s to \s [\$\EUR]?  (?P<amount>[0-9\.\,]+)', re.X)
 	def matchRaise(self, hand, streetCurrent, line):
 		result = self.PatternRaise.match(line)
 		if result is not None:
-			action = hand.Player.Action(name=hand.Player.Action.Raise, amount=self.stringToFloat(result.group('amount')))
-			hand.players[result.group('player')].actions[streetCurrent].append(action)
+			player = hand.players[result.group('player')]
+			action = hand.Action(player=player, name=hand.Action.Raise, amount=self.stringToFloat(result.group('amount')))
+			hand.actions[streetCurrent].append(action)
 		return result is not None
 	
 	def parse(self,handHistory):
@@ -389,10 +395,10 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			
 		for street in streets[1:]:
 			for (name, player) in players:
-				actions = player.actions[street]
+				actions = [action for action in hand.actions[street] if action.player is player]
 				for action in actions:
 					amount = action.amount
-					if action.name == player.Action.Raise:
+					if action.name == action.Raise:
 						amount -= bets[name]
 					bets[name] += amount
 					result[street] += amount
@@ -468,21 +474,22 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 				
 			# add preflop and postflop actions
 			for street in (hand.StreetPreflop, hand.StreetFlop, hand.StreetTurn, hand.StreetRiver):
+				actions = [action for action in hand.actions[street] if action.player is player]
 				if street == hand.StreetFlop:
 					p += '<td class="playerActionsCell" colspan="3">'
 				else:
 					p += '<td class="playerActionsCell">'
 				nActions = None
-				for nActions, action in enumerate(player.actions[street]):
-					if action.name == player.Action.Fold: 
+				for nActions, action in enumerate(actions):
+					if action.name == action.Fold: 
 						p += '<div class="playerActionFold">%s</div>' % PrefixFold
-					elif action.name == player.Action.Check: 
+					elif action.name == action.Check: 
 						p +=  '<div class="playerActionCheck">%s</div>' % PrefixCheck
-					elif action.name == player.Action.Bet:
+					elif action.name == action.Bet:
 						p += '<div class="playerActionBet">%s%s</div>' % (PrefixBet, self.formatNum(hand, action.amount) )
-					elif action.name == player.Action.Raise:
+					elif action.name == action.Raise:
 						p += '<div class="playerActionRaise">%s%s</div>' % (PrefixRaise, self.formatNum(hand, action.amount) )
-					elif action.name == player.Action.Call:
+					elif action.name == action.Call:
 						p += '<div class="playerActionCall">%s%s</div>' % (PrefixCall, self.formatNum(hand, action.amount) )
 				if nActions is None:
 					p += '&nbsp;'
@@ -584,5 +591,4 @@ class InstantHandHistoryGrabber(object):
 if __name__ == '__main__':
 	grabber = InstantHandHistoryGrabber()
 	grabber.runServer()
-
 
