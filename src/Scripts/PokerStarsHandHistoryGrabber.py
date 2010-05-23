@@ -178,6 +178,7 @@ class HandHistoryParser(object):
 			return cards[:zfill]
 		return cards
 		
+	#NOTE: in tourneys <tableName> is composed of 'tourneyID tableNo'. no idea if this is of any relevance to us
 	PatternTableInfo = re.compile('^Table \s \' (?P<tableName>.+?) \' \s (?P<maxPlayers>[0-9]+)\-max \s Seat \s \#(?P<seatNoButton>[0-9]+) \s is \s the \s button', re.X)
 	def matchTableInfo(self, hand, streetCurrent, line):
 		result = self.PatternTableInfo.match(line)
@@ -219,7 +220,6 @@ class HandHistoryParser(object):
 		
 	PatternPostSmallBlind = re.compile('^(?P<player>.*?)\: \s posts \s small \s blind \s [$€]? (?P<amount>[0-9\.\,]+)', re.X)
 	def matchPostSmallBlind(self, hand, streetCurrent, line):
-		line = line.replace('$', '').replace('EUR', '')
 		result = self.PatternPostSmallBlind.match(line)
 		if result is not None:
 			amount = self.stringToFloat(result.group('amount'))
@@ -606,4 +606,3 @@ if __name__ == '__main__':
 		
 	grabber = InstantHandHistoryGrabber(HandHistoryParser(), HandFormatters[HandFormatter]())
 	grabber.runServer()
-
