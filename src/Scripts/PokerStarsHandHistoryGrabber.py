@@ -541,10 +541,16 @@ if sys.platform == 'win32':
 		def __init__(self, handParser, handFormatter):
 			self.handParser = handParser
 			self.handFormatter = handFormatter
+			self._isRunning = False
 			
-		def runServer(self):
+		def stopServer(self):
+			self._isRunning = False
+		
+		
+		def startServer(self):
 			print 'starting hand history dumper'
 			
+			self._isRunning = True
 			hwnds = []
 			def enumWindowsCB(hwnd, lp):
 				hwnds.append(hwnd)
@@ -562,7 +568,7 @@ if sys.platform == 'win32':
 			pResult = DWORD()
 			lastHandHistory = None
 				
-			while True:
+			while self._isRunning:
 			
 				# find "instant hand history" dialog
 				hwnds = []
@@ -605,4 +611,4 @@ if __name__ == '__main__':
 		sys.exit(1)
 		
 	grabber = InstantHandHistoryGrabber(HandHistoryParser(), HandFormatters[HandFormatter]())
-	grabber.runServer()
+	grabber.startServer()
