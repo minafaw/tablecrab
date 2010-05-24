@@ -17,13 +17,19 @@ import re, time, sys
 # user settings (adjust to your needs)
 #***********************************************************************************************
 PrefixSmallBlind = 'sb'				# prefixes for player actions
+PostfixSmallBlind = ''
 PrefixBigBlind = 'bb'
+PostfixBigBlind = ''
 PrefixAnte = 'ante '
+PostfixAnte = ''
 PrefixCheck = 'ck'
 PrefixBet = 'b'
+PostfixBet = ''
 PrefixFold = 'f'
 PrefixCall = 'c'
+PostfixCall = ''
 PrefixRaise = 'r'
+PostfixRaise = ''
 
 MaxPlayerName = 10					# truncate player names to this size (set to 0 to  not truncate at all)
 DumpTimeout = 0.4					# check if there is a new hand history every N seconds
@@ -484,15 +490,15 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 					elif action.type == action.TypeCheck: 
 						p +=  '<div class="playerActionCheck">%s</div>' % PrefixCheck
 					elif action.type == action.TypeBet:
-						p += '<div class="playerActionBet">%s%s</div>' % (PrefixBet, self.formatNum(hand, action.amount) )
+						p += '<div class="playerActionBet">%s%s%s</div>' % (PrefixBet, self.formatNum(hand, action.amount), PostfixBet )
 					elif action.type == action.TypeRaise:
-						p += '<div class="playerActionRaise">%s%s</div>' % (PrefixRaise, self.formatNum(hand, action.amount) )
+						p += '<div class="playerActionRaise">%s%s%s</div>' % (PrefixRaise, self.formatNum(hand, action.amount), PostfixRaise )
 					elif action.type == action.TypeCall:
-						p += '<div class="playerActionCall">%s%s</div>' % (PrefixCall, self.formatNum(hand, action.amount) )
+						p += '<div class="playerActionCall">%s%s%s</div>' % (PrefixCall, self.formatNum(hand, action.amount), PostfixCall )
 					elif action.type == action.TypePostBlindBig:
-						p += '<div class="playerActionPostBlindBig">%s%s</div>' % (PrefixBigBlind, self.formatNum(hand, action.amount) )
+						p += '<div class="playerActionPostBlindBig">%s%s%s</div>' % (PrefixBigBlind, self.formatNum(hand, action.amount), PostfixBigBlind )
 					elif action.type == action.TypePostBlindSmall:
-						p += '<div class="playerActionPostBlindSmall">%s%s</div>' % (PrefixSmallBlind, self.formatNum(hand, action.amount) )	
+						p += '<div class="playerActionPostBlindSmall">%s%s%s</div>' % (PrefixSmallBlind, self.formatNum(hand, action.amount), PostfixSmallBlind )	
 					
 				if nActions is None:
 					p += '&nbsp;'
@@ -504,7 +510,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		p += '<tr>'
 		pot = hand.calcPotSizes()
 		#TODO: to save some space we don't display ante for individual player. good idea otr not?
-		potCellExtra = PrefixAnte + self.formatNum(hand, hand.blindAnte) if hand.blindAnte else '&nbsp;'
+		potCellExtra = (PrefixAnte + self.formatNum(hand, hand.blindAnte) + PostfixAnte) if hand.blindAnte else '&nbsp;'
 		p += '<td colspan="3" class="potCellExtra">%s</td>' % potCellExtra
 		p += '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetBlinds])
 		p += '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetPreflop])
