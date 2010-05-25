@@ -7,36 +7,16 @@ displayed in PokerStars "instant hand history". there is no viewer for the file,
 the dumped file into a browser and set the browser to autorefresh every N seconds.
 
 requires: python >= 2.6
-usage: path/to/python PokerStarsHandHistoryGrabber.py
+usage: path/to/python PokerStarsHandHistoryGrabber.py [path/toMyConfig.cfg]
 
 '''
-
-import re, time, sys
+from __future__ import with_statement
+import re, time, sys, os, cStringIO
+import ConfigParser
 
 #***********************************************************************************************
-# user settings (adjust to your needs)
+# user settings
 #***********************************************************************************************
-PrefixSmallBlind = 'sb'				# prefixes for player actions
-PostfixSmallBlind = ''
-PrefixBigBlind = 'bb'
-PostfixBigBlind = ''
-PrefixAnte = 'ante '
-PostfixAnte = ''
-PrefixCheck = 'ck'
-PrefixBet = 'b'
-PostfixBet = ''
-PrefixFold = 'f'
-PrefixCall = 'c'
-PostfixCall = ''
-PrefixRaise = 'r'
-PostfixRaise = ''
-
-MaxPlayerName = 10					# truncate player names to this size (set to 0 to  not truncate at all)
-DumpTimeout = 0.4					# check if there is a new hand history every N seconds
-NoFloatingPoint = True				# if True, converts stacks and bets on tables with cents to non floating point values
-HandFormatter = 'HtmlTabular'	# what hand formatter too use
-HandFormatterOutputFile = 'c:\\PokerStarsHandHistory.html'		# where to output the formatted hand history?
-
 # and this is the css for the html file
 Css = '''
 		.handHistoryBody{margin-left:0px;margin-top:0px;}
@@ -94,6 +74,43 @@ Css = '''
 		.playerActionPostBlindSmall{}
 	
 	'''
+
+#***********************************************************************************************
+#
+#***********************************************************************************************
+class Config(object):
+	def __init__(self, filename=None, string=None):
+		self.filename = filename
+		self._configParser = ConfigParser.ConfigParser()
+		self._configParser.optionxform = lambda x: x
+		if filename is not None: self._configParser.read([self.filename, ])
+		elif string is not None: self._configParser.readfp(cStringIO.cStringIO(string))
+	def flush(self):
+		if self.filename is not None:
+			with open(self.filename, 'w') as fp:
+				self._configParser.write(fp)
+	def get(self, section, option, default, valueType):
+		isDirty = False
+		if not self._configParser.has_section(section): 
+			isDirty = True
+			self._configParser.add_section(section)
+		if not self._configParser.has_option(section, option):
+			isDirty = True
+			self._configParser.set(section, option, default)
+		if isDirty: self.flush()
+		value = default
+		try: value = valueType(self._configParser.get(section, option))
+		except ValueError: self._configParser.set(section, option, default)
+		return value	
+	def set(self, section, option, value, flush=True):
+		if not self._configParser.has_section(section):
+			self._configParser.add_section(section)
+		self._configParser.set(section, option, value)
+		if flush: self.flush()
+	def bool(self, value):
+		if value.lower() in ('true', 'yes', 'y', '1'):
+			return True
+		return False
 
 #***********************************************************************************************
 #
@@ -214,7 +231,8 @@ class HandHistoryParser(object):
 					},
 			}
 		
-	def __init__(self): pass
+	def __init__(self, config):
+		self.config = config
 		
 	def stringToFloat(self, string):
 		return float(string.replace(',', ''))
@@ -477,17 +495,17 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	"""Hand formatter that formats a hand as a tabular html"""
 	Name = 'HtmlTabular'
 		
-	def __init__(self):
-		pass
+	def __init__(self, config):
+		self.config = config
 	
 	def formatNum(self, hand, num):
 		if not num:
 			result = ''
 		elif hand.hasCents:
-			if NoFloatingPoint:
+			if self.config.get('HandFornmatterHtmlTabular', 'NoFloatingPoint', 'yes', self.config.bool):
 				result = str(int(num*100))
 			else:
-				str(num)
+				result = str(num)
 		else:
 			result = str(int(num))
 		return result
@@ -525,7 +543,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		return text
 		
 	def dump(self, hand):
-		p = '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><style type="text/css">%s</style></head><body class="handHistoryBody"><table class="handHistoryTable" border="1" cellspacing="0" cellpadding="0">'	% Css		
+		p = '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><style type="text/css">%s</style></head><body class="handHistoryBody"><table class="handHistoryTable" border="1" cellspacing="0" cellpadding="0">'	% self.config.get('HandFornmatterHtmlTabular', 'Css', Css, str)	
 		
 		for player in hand.seats:
 			if player is None: continue
@@ -534,7 +552,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 				
 			# add player summary column
 			p += '<td class="playerCell">'
-			p += '<div class="playerName">%s</div>' % self.htmlEscapeString(self.truncateText(player.name, MaxPlayerName), spaces=True)
+			p += '<div class="playerName">%s</div>' % self.htmlEscapeString(self.truncateText(player.name, self.config.get('HandFornmatterHtmlTabular', 'MaxPlayerName', '10', int)), spaces=True)
 			p += '<div class="playerStack">%s</div>' % self.formatNum(hand, player.stack)
 			p += '</td>'
 				
@@ -549,20 +567,40 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 				nActions = None
 				for nActions, action in enumerate(actions):
 					if action.type == action.TypeFold: 
-						p += '<div class="playerActionFold">%s</div>' % PrefixFold
+						p += '<div class="playerActionFold">%s</div>' % self.config.get('HandFornmatterHtmlTabular', 'PrefixFold', 'f', str)
 					elif action.type == action.TypeCheck: 
-						p +=  '<div class="playerActionCheck">%s</div>' % PrefixCheck
+						p +=  '<div class="playerActionCheck">%s</div>' % self.config.get('HandFornmatterHtmlTabular', 'PrefixFold', 'c', str)
 					elif action.type == action.TypeBet:
-						p += '<div class="playerActionBet">%s%s%s</div>' % (PrefixBet, self.formatNum(hand, action.amount), PostfixBet )
+						p += '<div class="playerActionBet">%s%s%s</div>' % (
+								self.config.get('HandFornmatterHtmlTabular', 'PrefixBet', 'b', str), 
+								self.formatNum(hand, action.amount), 
+								self.config.get('HandFornmatterHtmlTabular', 'PostfixBet', '', str)
+								)
 					elif action.type == action.TypeRaise:
-						p += '<div class="playerActionRaise">%s%s%s</div>' % (PrefixRaise, self.formatNum(hand, action.amount), PostfixRaise )
+						p += '<div class="playerActionRaise">%s%s%s</div>' % (
+								self.config.get('HandFornmatterHtmlTabular', 'PrefixRaise', 'r', str), 
+								self.formatNum(hand, action.amount), 
+								self.config.get('HandFornmatterHtmlTabular', 'PostfixRaise', '', str)
+								)
 					elif action.type == action.TypeCall:
-						p += '<div class="playerActionCall">%s%s%s</div>' % (PrefixCall, self.formatNum(hand, action.amount), PostfixCall )
+						p += '<div class="playerActionCall">%s%s%s</div>' % (
+								self.config.get('HandFornmatterHtmlTabular', 'PrefixCall', 'c', str), 
+								self.formatNum(hand, action.amount), 
+								self.config.get('HandFornmatterHtmlTabular', 'PostixCall', '', str)
+								)
 					elif action.type == action.TypePostBlindBig:
-						p += '<div class="playerActionPostBlindBig">%s%s%s</div>' % (PrefixBigBlind, self.formatNum(hand, action.amount), PostfixBigBlind )
+						p += '<div class="playerActionPostBlindBig">%s%s%s</div>' % (
+								self.config.get('HandFornmatterHtmlTabular', 'PrefixBigBlind', 'bb', str), 
+								self.formatNum(hand, action.amount), 
+								self.config.get('HandFornmatterHtmlTabular', 'PostfixBigBlind', '', str)
+								)
 					elif action.type == action.TypePostBlindSmall:
-						p += '<div class="playerActionPostBlindSmall">%s%s%s</div>' % (PrefixSmallBlind, self.formatNum(hand, action.amount), PostfixSmallBlind )	
-					
+						p += '<div class="playerActionPostBlindSmall">%s%s%s</div>' % (
+								self.config.get('HandFornmatterHtmlTabular', 'PrefixSmallBlind', 'sb', str), 
+								self.formatNum(hand, action.amount), 
+								self.config.get('HandFornmatterHtmlTabular', 'PostfixSmallBlind', '', str)
+								)
+				
 				if nActions is None:
 					p += '&nbsp;'
 				p += '</td>'		
@@ -573,7 +611,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		p += '<tr>'
 		pot = hand.calcPotSizes()
 		#TODO: to save some space we don't display ante for individual player. good idea or not?
-		potCellExtra = (PrefixAnte + self.formatNum(hand, hand.blindAnte) + PostfixAnte) if hand.blindAnte else '&nbsp;'
+		potCellExtra = (self.config.get('HandFornmatterHtmlTabular', 'PrefixAnte', '', str) + self.formatNum(hand, hand.blindAnte) + self.config.get('HandFornmatterHtmlTabular', 'PostixAnte', '', str)) if hand.blindAnte else '&nbsp;'
 		p += '<td colspan="2" class="potCellExtra">%s</td>' % potCellExtra
 		p += '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetBlinds])
 		p += '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetPreflop])
@@ -592,8 +630,9 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		
 		# dump html to file
 		p += '</table><pre class="handHistorySource">%s</pre></body></html>' % self.htmlEscapeString(hand.handHistory, spaces=False)
-		with open(HandFormatterOutputFile, 'w') as fp: fp.write(p.encode('utf-8'))
-
+		filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'User', 'PokerStarsHandHistory.html')
+		with open(self.config.get('HandFornmatterHtmlTabular', 'OutputFile', filename, str), 'w') as fp:
+			fp.write(p.encode('utf-8'))
 
 #**********************************************************************************************************
 # hand grabber (only available on win32 platforms)
@@ -605,7 +644,8 @@ if sys.platform == 'win32':
 		WindowTitle = 'Instant Hand History'
 		WidgetClassName = 'PokerStarsViewClass'
 		
-		def __init__(self, handParser, handFormatter):
+		def __init__(self, config, handParser, handFormatter):
+			self.config = config
 			self.handParser = handParser
 			self.handFormatter = handFormatter
 			self._isRunning = False
@@ -669,7 +709,7 @@ if sys.platform == 'win32':
 								lastHandHistory = p.value
 						break
 					break
-				time.sleep(DumpTimeout)
+				time.sleep(self.config.get('HandHistoryGrabber', 'GrabTimeout', '0.4', float))
 
 #*********************************************************************************************************************
 if __name__ == '__main__':
@@ -677,5 +717,13 @@ if __name__ == '__main__':
 		print 'HandHistoryGrabber is not supported on your platform: %s' % sys.platform
 		sys.exit(1)
 		
-	grabber = InstantHandHistoryGrabber(HandHistoryParser(), HandFormatters[HandFormatter]())
+	if len(sys.argv) > 1:
+		config = Config(filename=sys.argv[1])
+	else:
+		config = Config()
+		config.filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'User', 'PokerStarsHandHistoryGrabber.cfg')
+	
+	handParser = HandHistoryParser(config)
+	handFormatter = HandFormatters[config.get('Global', 'HandFormatter', 'HtmlTabular', str)](config)
+	grabber = InstantHandHistoryGrabber(config, handParser, handFormatter)
 	grabber.startServer()
