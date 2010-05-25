@@ -77,6 +77,21 @@ windows
 VERSION HISTORY
 ==============================================================================
 
+----------------------------
+0.5.1
+-----------------------------
+news: 
+	- 
+fixes:
+	- PokerStarsHandHistoryGrabber.py: 
+		° utf-8 encoding and proper escaping for generated html
+
+new:
+	- PokerStarsHandHistoryGrabber.py: 
+			° added "playerActionPostBlindBig", "playerActionPostBlindSmall", "cards" and "cardCell" as CSS properties
+			° added support for bet amount postfixes
+			° you can dump Omaha hand histories now aswell
+			
 -----------------------------
 0.5.0
 -----------------------------
