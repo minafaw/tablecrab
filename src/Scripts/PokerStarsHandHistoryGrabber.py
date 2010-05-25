@@ -105,6 +105,13 @@ class Hand(object):
 	StreetRiver = 5
 	StreetShowdown = 6
 	StreetSummary = 7
+	GameTypeNone = 0x0
+	GameTypeHoldem = 0x1
+	GameTypeOmaha = 0x2
+	GameSubTypeHiLo = 0x1000
+	GameLimitNoLimit = 0x2000
+	GameLimitPotLimit = 0x4000
+	GameLimitLimit = 0x8000
 	class Action(object):
 		TypeNone = 0
 		TypeBet = 1
@@ -126,6 +133,7 @@ class Hand(object):
 			self.cards = ['', ''] if cards is None else cards
 	def __init__(self):
 		self.handHistory = ''
+		self.gameType = self.GameTypeNone
 		self.seats = []					# len(seats) == maxPlayers. empty seat is set to None
 		self.cards = ['', '', '', '', '']
 		self.blindAnte = 0.0
@@ -172,6 +180,16 @@ class Hand(object):
 #********************************************************************************************************
 class HandHistoryParser(object):
 		
+	GameTypeMapping= {
+			"Hold'em No Limit": Hand.GameTypeHoldem | Hand.GameLimitNoLimit,
+			"Hold'em Pot Limit": Hand.GameTypeHoldem | Hand.GameLimitPotLimit,
+			"Hold'em Limit": Hand.GameTypeHoldem | Hand.GameLimitLimit,
+			'Omaha Limit': Hand.GameTypeOmaha | Hand.GameLimitLimit,
+			'Omaha Pot Limit': Hand.GameTypeOmaha | Hand.GameLimitPotLimit,
+			'Omaha Hi/Lo Limit': Hand.GameTypeOmaha | Hand.GameSubTypeHiLo | Hand.GameLimitLimit,
+			'Omaha Hi/Lo Pot Limit':	Hand.GameTypeOmaha | Hand.GameSubTypeHiLo | Hand.GameLimitPotLimit,	
+			}
+		
 	def __init__(self): pass
 		
 	def stringToFloat(self, string):
@@ -183,6 +201,13 @@ class HandHistoryParser(object):
 			cards += ['']*zfill
 			return cards[:zfill]
 		return cards
+		
+	PatGameHeader = re.compile('^PokerStars\s Game\s \#[0-9]+\:\s .*? \s(?P<gameType>%s)\s.*' % '|'.join([re.escape(i).replace('\ ', '\s') for i in GameTypeMapping]), re.X)
+	def matchGameHeader(self, hand, streetCurrent, line):
+		result = self.PatGameHeader.match(line)
+		if result is not None:
+			hand.gameType = self.GameTypeMapping[result.group('gameType')]
+		return result is not None	
 		
 	#NOTE: in tourneys <tableName> is composed of 'tourneyID tableNo'. no idea if this is of any relevance to us
 	PatternTableInfo = re.compile('^Table \s \' (?P<tableName>.+?) \' \s (?P<maxPlayers>[0-9]+)\-max \s Seat \s \#(?P<seatNoButton>[0-9]+) \s is \s the \s button', re.X)
@@ -327,12 +352,16 @@ class HandHistoryParser(object):
 		streetCurrent = hand.StreetBlinds
 			
 		# clean handHistory up a bit to make it easier on us..
-		handHistory = handHistory.replace('(small blind) ', '').replace('(big blind) ', '').replace('(button) ', '').replace('(Play Money) ', '')
+		handHistory = hand.handHistory.replace('(small blind) ', '').replace('(big blind) ', '').replace('(button) ', '').replace('(Play Money) ', '')
 		
-		for line in handHistory.split('\n'):
+		for lineno, line in enumerate(handHistory.split('\n')):
 			line = line.strip()
 			if not line: continue
 				
+			if lineno == 0:
+				if self.matchGameHeader(hand, streetCurrent, line): continue
+				return None
+			
 			# determine Street we are in
 			if line.startswith('*** HOLE CARDS ***'):
 				streetCurrent = hand.StreetPreflop
@@ -604,7 +633,8 @@ if sys.platform == 'win32':
 							if p.value != lastHandHistory:
 								# parse and dump hand history
 								hand = self.handParser.parse(p.value)
-								self.handFormatter.dump(hand)
+								if hand is not None:
+									self.handFormatter.dump(hand)
 								lastHandHistory = p.value
 						break
 					break
