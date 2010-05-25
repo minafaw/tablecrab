@@ -108,12 +108,12 @@ class Hand(object):
 	StreetShowdown = 6
 	StreetSummary = 7
 	GameTypeNone = 0x0
-	GameTypeHoldem = 0x1
-	GameTypeOmaha = 0x2
-	GameSubTypeHiLo = 0x1000
-	GameLimitNoLimit = 0x2000
-	GameLimitPotLimit = 0x4000
-	GameLimitLimit = 0x8000
+	GameTypeHoldem = 1 << 0
+	GameTypeOmaha = 1 << 1
+	GameSubTypeHiLo = 1 << 20
+	GameLimitNoLimit = 1 << 40
+	GameLimitPotLimit = 1 << 41
+	GameLimitLimit = 1 << 42
 	class Action(object):
 		TypeNone = 0
 		TypeBet = 1
