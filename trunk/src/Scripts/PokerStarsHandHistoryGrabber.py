@@ -58,10 +58,12 @@ Css = '''
 		.boardCardCell{}
 		.boardCardCellExtra{}
 		
+		.cards{border: 0px; border-spacing: 0px;}
+		.cardCell{padding: 0px;}
 		.card{
 				border:solid 1px;
 				background-color:red;
-				border-spacing:0px;
+				border-spacing: 0px;
 				margin-left:auto;		/* centers contents of the cell */
 				margin-right:auto;	/* centers contents of the cell */
 				}
@@ -465,22 +467,28 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			string = string.replace(' ', '&nbsp;')
 		return string
 	
-	def htmlFormatCard(self, card):
-		if not card:
-			shape = 'A'
-			htmlSuit = '&diams;'
-			htmlKlass = 'cardBack'
-		else:
-			shape = card[0]
-			htmlSuit, htmlKlass = HtmlCardSuitMapping[card[1]]
-		return '''<table class="card">
-		<tr>
-			<td class="cardShape %s">%s</td>
-		</tr>
-		<tr>
-			<td class="cardSuit %s">%s</td>
-		</tr>
-		</table>''' % (htmlKlass, shape, htmlKlass, htmlSuit)
+	def htmlFormatCards(self, *cards):
+		
+		tds = ''
+		for card in cards:
+			if not card:
+				shape = 'A'
+				htmlSuit = '&diams;'
+				htmlKlass = 'cardBack'
+			else:
+				shape = card[0]
+				htmlSuit, htmlKlass = HtmlCardSuitMapping[card[1]]
+			
+			tds += '''
+			<td class="cardCell">
+				<div class="card">
+					<div class="cardShape %s">%s</div><div class="cardSuit %s">%s</div>
+				</div>
+			</td>
+			''' % (htmlKlass, shape, htmlKlass, htmlSuit)
+		return '''
+		<table class="cards"><tr>%s</tr></table>
+		''' % tds
 		
 	def truncateText(self, text, n):
 		if n and len(text) > n:
@@ -502,16 +510,13 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			p += '</td>'
 				
 			# add pocket cards column
-			p += '<td class="playerCardsCell">%s</td>' % self.htmlFormatCard(player.cards[0])
-			p += '<td class="playerCardsCell">%s</td>' % self.htmlFormatCard(player.cards[1])
+			p += '<td class="playerCardsCell">%s</td>' % self.htmlFormatCards(*player.cards)
+			#p += '<td class="playerCardsCell">%s</td>' % self.htmlFormatCard(player.cards[1])
 			
 			# add preflop and postflop actions
 			for street in (hand.StreetBlinds, hand.StreetPreflop, hand.StreetFlop, hand.StreetTurn, hand.StreetRiver):
 				actions = [action for action in hand.actions[street] if action.player is player]
-				if street == hand.StreetFlop:
-					p += '<td class="playerActionsCell" colspan="3">'
-				else:
-					p += '<td class="playerActionsCell">'
+				p += '<td class="playerActionsCell">'
 				nActions = None
 				for nActions, action in enumerate(actions):
 					if action.type == action.TypeFold: 
@@ -540,22 +545,20 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		pot = hand.calcPotSizes()
 		#TODO: to save some space we don't display ante for individual player. good idea otr not?
 		potCellExtra = (PrefixAnte + self.formatNum(hand, hand.blindAnte) + PostfixAnte) if hand.blindAnte else '&nbsp;'
-		p += '<td colspan="3" class="potCellExtra">%s</td>' % potCellExtra
+		p += '<td colspan="2" class="potCellExtra">%s</td>' % potCellExtra
 		p += '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetBlinds])
 		p += '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetPreflop])
-		p += '<td class="potCell" colspan="3">%s</td>' % (self.formatNum(hand, pot[hand.StreetFlop]) if hand.cards[2] else '&nbsp;')
+		p += '<td class="potCell">%s</td>' % (self.formatNum(hand, pot[hand.StreetFlop]) if hand.cards[2] else '&nbsp;')
 		p += '<td class="potCell">%s</td>' % (self.formatNum(hand, pot[hand.StreetTurn]) if hand.cards[3] else '&nbsp;')
 		p += '<td class="potCell">%s</td>' % (self.formatNum(hand, pot[hand.StreetRiver]) if hand.cards[4] else '&nbsp;')
 		p += '</tr>'
 			
 		# add board cards + hand history source
 		p += '<tr>'
-		p += '<td class="boardCardCellExtra" colspan="5">&nbsp;</td>'
-		p += '<td class="boardCardCell">%s</td>' % self.htmlFormatCard(hand.cards[0])
-		p += '<td class="boardCardCell">%s</td>' % self.htmlFormatCard(hand.cards[1])
-		p += '<td class="boardCardCell">%s</td>' % self.htmlFormatCard(hand.cards[2])
-		p += '<td class="boardCardCell">%s</td>' % self.htmlFormatCard(hand.cards[3])
-		p += '<td class="boardCardCell">%s</td>' % self.htmlFormatCard(hand.cards[4])
+		p += '<td class="boardCardCellExtra" colspan="4">&nbsp;</td>'
+		p += '<td class="boardCardCell">%s</td>' % self.htmlFormatCards(hand.cards[0], hand.cards[1], hand.cards[2])
+		p += '<td class="boardCardCell">%s</td>' % self.htmlFormatCards(hand.cards[3])
+		p += '<td class="boardCardCell">%s</td>' % self.htmlFormatCards(hand.cards[4])
 		p += '</tr>'
 		
 		# dump html to file
