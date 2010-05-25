@@ -528,7 +528,6 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			.playerActionPostBlindSmall{}
 		
 		'''
-
 		
 	def __init__(self, config):
 		'''
@@ -536,7 +535,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		'''
 		self.config = config
 	
-	def formatNum(self, hand, num):
+	def formatNum(self, hand, num, toInt=False):
 		if not num:
 			result = ''
 		elif hand.hasCents:
@@ -575,10 +574,11 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		<table class="cards"><tr>%s</tr></table>
 		''' % tds
 		
-	def truncateText(self, text, n):
-		if n and len(text) > n:
-			text = text[:n-2] + '..'
-		return text
+	def formatPlayerName(self, playerName):
+		maxPlayerName = self.config.get('HandFornmatterHtmlTabular', 'MaxPlayerName', '10', int)
+		if maxPlayerName and len(playerName) > maxPlayerName:
+			text = playerName[:maxPlayerName-2] + '..'
+		return self.htmlEscapeString(playerName, spaces=True)
 		
 	def dump(self, hand):
 		p = '<html>'
@@ -592,13 +592,12 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 				
 			# add player summary column
 			p += '<td class="playerCell">'
-			p += '<div class="playerName">%s</div>' % self.htmlEscapeString(self.truncateText(player.name, self.config.get('HandFornmatterHtmlTabular', 'MaxPlayerName', '10', int)), spaces=True)
+			p += '<div class="playerName">%s</div>' % self.formatPlayerName(player.name)
 			p += '<div class="playerStack">%s</div>' % self.formatNum(hand, player.stack)
 			p += '</td>'
 				
 			# add pocket cards column
 			p += '<td class="playerCardsCell">%s</td>' % self.htmlFormatCards(*player.cards)
-			#p += '<td class="playerCardsCell">%s</td>' % self.htmlFormatCard(player.cards[1])
 			
 			# add preflop and postflop actions
 			for street in (hand.StreetBlinds, hand.StreetPreflop, hand.StreetFlop, hand.StreetTurn, hand.StreetRiver):
