@@ -577,7 +577,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	def formatPlayerName(self, playerName):
 		maxPlayerName = self.config.get('HandFornmatterHtmlTabular', 'MaxPlayerName', '10', int)
 		if maxPlayerName and len(playerName) > maxPlayerName:
-			text = playerName[:maxPlayerName-2] + '..'
+			playerName = playerName[:maxPlayerName-2] + '..'
 		return self.htmlEscapeString(playerName, spaces=True)
 		
 	def dump(self, hand):
