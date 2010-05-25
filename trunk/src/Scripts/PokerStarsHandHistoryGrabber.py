@@ -14,6 +14,11 @@ from __future__ import with_statement
 import re, time, sys, os, cStringIO
 import ConfigParser
 
+__application_name__ = 'PokerStarsHandHistoryGrabber'
+__version__ = '0.1.0'
+__author__ = 'juergen urner'
+__email__ = 'jUrner@arcor.de'
+__release_name__ = '%s-%s' % (__application_name__, __version__)
 #***********************************************************************************************
 # user settings
 #***********************************************************************************************
@@ -569,7 +574,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 					if action.type == action.TypeFold: 
 						p += '<div class="playerActionFold">%s</div>' % self.config.get('HandFornmatterHtmlTabular', 'PrefixFold', 'f', str)
 					elif action.type == action.TypeCheck: 
-						p +=  '<div class="playerActionCheck">%s</div>' % self.config.get('HandFornmatterHtmlTabular', 'PrefixFold', 'c', str)
+						p +=  '<div class="playerActionCheck">%s</div>' % self.config.get('HandFornmatterHtmlTabular', 'PrefixCheck', 'ck', str)
 					elif action.type == action.TypeBet:
 						p += '<div class="playerActionBet">%s%s%s</div>' % (
 								self.config.get('HandFornmatterHtmlTabular', 'PrefixBet', 'b', str), 
