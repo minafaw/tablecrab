@@ -671,8 +671,12 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		
 		# dump html to file
 		p += '</table><pre class="handHistorySource">%s</pre></body></html>' % self.htmlEscapeString(hand.handHistory, spaces=False)
-		filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'User', 'PokerStarsHandHistory.html')
-		with open(self.config.get('HandFornmatterHtmlTabular', 'OutputFile', filename, str), 'w') as fp:
+		
+		#NOTE: we have to take care not to accidently dump an os dependend filename into default config. so keep default as ''
+		filename = self.config.get('HandFornmatterHtmlTabular', 'OutputFile', '', str)
+		if not filename:	
+			filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'User', 'PokerStarsHandHistory.html')
+		with open(filename, 'w') as fp:
 			fp.write(p.encode('utf-8'))
 
 #**********************************************************************************************************
