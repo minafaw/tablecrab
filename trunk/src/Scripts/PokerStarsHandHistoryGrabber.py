@@ -371,7 +371,11 @@ class HandHistoryParser(object):
 			hand.actions[streetCurrent].append(action)
 		return result is not None
 	
-	def parse(self,handHistory):
+	def parse(self, handHistory):
+		"""parses a hand history from a string containing exactly one hand history
+		@param handHistory: (str)
+		@return: L{Hand} or None if string could not be parsed
+		"""
 		
 		# create new hand object
 		hand = Hand()
@@ -389,7 +393,7 @@ class HandHistoryParser(object):
 				if self.matchGameHeader(hand, streetCurrent, line): continue
 				return None
 			
-			# determine Street we are in
+			# determine street we are in
 			if line.startswith('*** HOLE CARDS ***'):
 				streetCurrent = hand.StreetPreflop
 				continue
@@ -608,8 +612,7 @@ if sys.platform == 'win32':
 			
 		def stopServer(self):
 			self._isRunning = False
-		
-		
+				
 		def startServer(self):
 			print 'starting hand history dumper'
 			
