@@ -1,13 +1,13 @@
 # -*- coding: UTF-8 -*-s
 
-'''PokerStars "instant hand history" grabber
+'''standalone PokerStars "instant hand history" grabber
 
 this programm runs a standalone to grab, format and dump to html the hand history currently
 displayed in PokerStars "instant hand history". there is no viewer for the file, so an idea is to load 
 the dumped file into a browser and set the browser to autorefresh every N seconds.
 
-requires: python >= 2.6
-usage: path/to/python PokerStarsHandHistoryGrabber.py [path/toMyConfig.cfg]
+@requires: python >= 2.6
+@usage: path/to/python PokerStarsHandHistoryGrabber.py [path/toMyConfig.cfg]
 
 '''
 from __future__ import with_statement
@@ -84,17 +84,32 @@ Css = '''
 #
 #***********************************************************************************************
 class Config(object):
+	"""ConfigParser wraper class"""
 	def __init__(self, filename=None, string=None):
+		"""
+		@param filename: (str) filename of the file to parse for config values
+		@param string: ..alteranatively a string to parse for config values
+		"""
 		self.filename = filename
 		self._configParser = ConfigParser.ConfigParser()
 		self._configParser.optionxform = lambda x: x
 		if filename is not None: self._configParser.read([self.filename, ])
 		elif string is not None: self._configParser.readfp(cStringIO.cStringIO(string))
 	def flush(self):
+		"""flushes config values to disk if possible
+		@return: always None
+		"""
 		if self.filename is not None:
 			with open(self.filename, 'w') as fp:
 				self._configParser.write(fp)
 	def get(self, section, option, default, valueType):
+		"""returns a config value. if the config value is not present it will be created
+		@param section: (str) section the config vsalue is located in
+		@param option: (str) option name
+		@param default: (str) default value of the value
+		@param valueType: (method) to call to convert the value to a desired type. if the value can not be converted the method should raise a ValueError
+		@return: whatever the valueType method returns
+		"""
 		isDirty = False
 		if not self._configParser.has_section(section): 
 			isDirty = True
@@ -108,11 +123,22 @@ class Config(object):
 		except ValueError: self._configParser.set(section, option, default)
 		return value	
 	def set(self, section, option, value, flush=True):
+		"""sets a config value
+		@param section: (str) section the config vsalue is located in
+		@param option: (str) option name
+		@param value: (str) string representation of the value
+		@param flush: (bool) if True the config is flushed to disk in the call. if False not
+		@return: always None
+		"""
 		if not self._configParser.has_section(section):
 			self._configParser.add_section(section)
 		self._configParser.set(section, option, value)
 		if flush: self.flush()
 	def bool(self, value):
+		"""converts a config value to a python bool. recognized values are "true", "yes", "y", "1" (case-insensitive) as True. everything else is interpreted as False
+		@param value: (str) value to convert
+		@return: (bool)
+		"""
 		if value.lower() in ('true', 'yes', 'y', '1'):
 			return True
 		return False
@@ -121,6 +147,7 @@ class Config(object):
 #
 #***********************************************************************************************
 class Hand(object):
+	"""dand object"""
 	StreetNone = 0
 	StreetBlinds = 1
 	StreetPreflop = 2
@@ -204,7 +231,8 @@ class Hand(object):
 # hand parser
 #********************************************************************************************************
 class HandHistoryParser(object):
-		
+	"""hand history parser
+	"""	
 	GameTypeMapping= {
 			"Hold'em No Limit": {
 					'gameType': Hand.GameTypeHoldem | Hand.GameLimitNoLimit,
@@ -237,6 +265,9 @@ class HandHistoryParser(object):
 			}
 		
 	def __init__(self, config):
+		"""
+		@param config: L{Config}
+		"""
 		self.config = config
 		
 	def stringToFloat(self, string):
@@ -485,6 +516,7 @@ HtmlCardSuitMapping = {		# suit --> (entity, htmlKlass)
 
 HandFormatters = {}
 class HandFormatterMeta(type):
+	"""meta class for hand formatters"""
 	def __new__(klass, name, bases, kws):
 		newKlass = type.__new__(klass, name, bases, kws)
 		if newKlass.Name is not None:
@@ -492,6 +524,7 @@ class HandFormatterMeta(type):
 		return newKlass
 		
 class HandFormatterBase(object):
+	"""base class for hand formatters"""
 	__metaclass__ = HandFormatterMeta
 	Name = None
 	
@@ -501,6 +534,9 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	Name = 'HtmlTabular'
 		
 	def __init__(self, config):
+		'''
+		@param config: L{Config}
+		'''
 		self.config = config
 	
 	def formatNum(self, hand, num):
@@ -645,6 +681,12 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 InstantHandHistoryGrabber = None
 if sys.platform == 'win32':
 	class InstantHandHistoryGrabber(object):
+		"""hand history grabber
+		
+		server to grab the current hand history from PokerStars InstantHandHistory dialog
+		@note: this server is only available on windows oses. on other oses it is set to None
+		"""
+		
 		WindowClassName = '#32770'
 		WindowTitle = 'Instant Hand History'
 		WidgetClassName = 'PokerStarsViewClass'
@@ -656,10 +698,16 @@ if sys.platform == 'win32':
 			self._isRunning = False
 			
 		def stopServer(self):
+			"""stops the server
+			@return: always None
+			"""
 			self._isRunning = False
 				
 		def startServer(self):
-			print 'starting hand history dumper'
+			"""starts the server
+			@return: always None
+			"""
+			print 'starting hand history grabber'
 			
 			self._isRunning = True
 			hwnds = []
