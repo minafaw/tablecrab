@@ -456,7 +456,6 @@ HtmlCardSuitMapping = {		# suit --> (entity, htmlKlass)
 		'd': ('&diams;', 'cardSuitDiamond'),
 		'h': ('&hearts;', 'cardSuitHeart'),
 		}
-	
 
 HandFormatters = {}
 class HandFormatterMeta(type):
@@ -497,7 +496,6 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		return string
 	
 	def htmlFormatCards(self, *cards):
-		
 		tds = ''
 		for card in cards:
 			if not card:
@@ -507,7 +505,6 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			else:
 				shape = card[0]
 				htmlSuit, htmlKlass = HtmlCardSuitMapping[card[1]]
-			
 			tds += '''
 			<td class="cardCell">
 				<div class="card">
