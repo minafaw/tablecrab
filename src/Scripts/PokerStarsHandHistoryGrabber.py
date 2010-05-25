@@ -20,67 +20,6 @@ __author__ = 'juergen urner'
 __email__ = 'jUrner@arcor.de'
 __release_name__ = '%s-%s' % (__application_name__, __version__)
 #***********************************************************************************************
-# user settings
-#***********************************************************************************************
-# and this is the css for the html file
-Css = '''
-		.handHistoryBody{margin-left:0px;margin-top:0px;}
-		.handHistoryTable{}
-		.handHistorySource{margin-top:10em;}
-		
-		.playerCell{vertical-align:top;}
-		.playerName{}
-		.playerStack{}
-				
-		.playerCardsCell{}
-		.playerActionsCell{white-space:nowrap;vertical-align:top;padding-left:0.1em;}
-		
-		.potCell{
-				text-align: center;
-				}
-		.potCellExtra{padding-left:1em;}
-		
-		.boardCardCell{}
-		.boardCardCellExtra{}
-		
-		.cards{border: 0px; border-spacing: 0px;}
-		.cardCell{padding: 0px;}
-		.card{
-				border:solid 1px;
-				background-color:red;
-				border-spacing: 0px;
-				margin-left:auto;		/* centers contents of the cell */
-				margin-right:auto;	/* centers contents of the cell */
-				}
-		.cardShape{
-				padding: 0px 0px 0px 0px;
-				background-color: white;
-				}
-		.cardSuit{
-				text-indent:0.3em;
-				padding: 0px 0px 0px 0px;
-				background-color: white;
-				}
-		.cardSuitSpade{color:black;}
-		.cardSuitClub{color:black;}
-		.cardSuitHeart{color:red;}
-		.cardSuitDiamond{color:red;}
-		.cardBack{
-				color:#355b73;
-				background-color:#355b73;
-				}
-				
-		.playerActionFold{}
-		.playerActionCall{background-color:#87CEFA ;}
-		.playerActionCheck{background-color:#98FB98;}
-		.playerActionBet{background-color:#FFA54F;}
-		.playerActionRaise{background-color:#FF6EB4;}
-		.playerActionPostBlindBig{}
-		.playerActionPostBlindSmall{}
-	
-	'''
-
-#***********************************************************************************************
 #
 #***********************************************************************************************
 class Config(object):
@@ -532,6 +471,64 @@ class HandFormatterBase(object):
 class HandFormatterHtmlTabular(HandFormatterBase):
 	"""Hand formatter that formats a hand as a tabular html"""
 	Name = 'HtmlTabular'
+	# and this is the css for the html file
+	Css = '''
+			.handHistoryBody{margin-left:0px;margin-top:0px;}
+			.handHistoryTable{}
+			.handHistorySource{margin-top:10em;}
+			
+			.playerCell{vertical-align:top;}
+			.playerName{}
+			.playerStack{}
+					
+			.playerCardsCell{}
+			.playerActionsCell{white-space:nowrap;vertical-align:top;padding-left:0.1em;}
+			
+			.potCell{
+					text-align: center;
+					}
+			.potCellExtra{padding-left:1em;}
+			
+			.boardCardCell{}
+			.boardCardCellExtra{}
+			
+			.cards{border: 0px; border-spacing: 0px;}
+			.cardCell{padding: 0px;}
+			.card{
+					border:solid 1px;
+					background-color:red;
+					border-spacing: 0px;
+					margin-left:auto;		/* centers contents of the cell */
+					margin-right:auto;	/* centers contents of the cell */
+					}
+			.cardShape{
+					padding: 0px 0px 0px 0px;
+					background-color: white;
+					}
+			.cardSuit{
+					text-indent:0.3em;
+					padding: 0px 0px 0px 0px;
+					background-color: white;
+					}
+			.cardSuitSpade{color:black;}
+			.cardSuitClub{color:black;}
+			.cardSuitHeart{color:red;}
+			.cardSuitDiamond{color:red;}
+			.cardBack{
+					color:#355b73;
+					background-color:#355b73;
+					}
+					
+			.playerActionFold{}
+			.playerActionCall{background-color:#87CEFA ;}
+			.playerActionCheck{background-color:#98FB98;}
+			.playerActionBet{background-color:#FFA54F;}
+			.playerActionRaise{background-color:#FF6EB4;}
+			.playerActionPostBlindBig{}
+			.playerActionPostBlindSmall{}
+		
+		'''
+
 		
 	def __init__(self, config):
 		'''
@@ -584,7 +581,9 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		return text
 		
 	def dump(self, hand):
-		p = '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><style type="text/css">%s</style></head><body class="handHistoryBody"><table class="handHistoryTable" border="1" cellspacing="0" cellpadding="0">'	% self.config.get('HandFornmatterHtmlTabular', 'Css', Css, str)	
+		p = '<html>'
+		p += '<meta http-equiv="Content-Type" content="text/html; charset=utf-8"><style type="text/css">%s</style>' % self.config.get('HandFornmatterHtmlTabular', 'Css', self.Css, str)
+		p += '<body class="handHistoryBody"><table class="handHistoryTable" border="1" cellspacing="0" cellpadding="0">'
 		
 		for player in hand.seats:
 			if player is None: continue
