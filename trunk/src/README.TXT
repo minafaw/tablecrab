@@ -78,7 +78,7 @@ VERSION HISTORY
 ==============================================================================
 
 ----------------------------
-0.5.1
+0.6.0
 -----------------------------
 news: 
 	- 
@@ -91,6 +91,7 @@ new:
 			° added "playerActionPostBlindBig", "playerActionPostBlindSmall", "cards" and "cardCell" as CSS properties
 			° added support for bet amount postfixes
 			° you can dump Omaha hand histories now aswell
+			° the script now has a real config. it is located in Scripts/User. usage: wine path/to/pythonw.exe path/to/PokerStarsHandHistoryGrabber.py path/to/your/config.cfg
 			
 -----------------------------
 0.5.0
