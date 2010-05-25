@@ -136,6 +136,7 @@ class Hand(object):
 	def __init__(self):
 		self.handHistory = ''
 		self.gameType = self.GameTypeNone
+		self.numPlayercards = 0
 		self.seats = []					# len(seats) == maxPlayers. empty seat is set to None
 		self.cards = ['', '', '', '', '']
 		self.blindAnte = 0.0
@@ -183,13 +184,34 @@ class Hand(object):
 class HandHistoryParser(object):
 		
 	GameTypeMapping= {
-			"Hold'em No Limit": Hand.GameTypeHoldem | Hand.GameLimitNoLimit,
-			"Hold'em Pot Limit": Hand.GameTypeHoldem | Hand.GameLimitPotLimit,
-			"Hold'em Limit": Hand.GameTypeHoldem | Hand.GameLimitLimit,
-			'Omaha Limit': Hand.GameTypeOmaha | Hand.GameLimitLimit,
-			'Omaha Pot Limit': Hand.GameTypeOmaha | Hand.GameLimitPotLimit,
-			'Omaha Hi/Lo Limit': Hand.GameTypeOmaha | Hand.GameSubTypeHiLo | Hand.GameLimitLimit,
-			'Omaha Hi/Lo Pot Limit':	Hand.GameTypeOmaha | Hand.GameSubTypeHiLo | Hand.GameLimitPotLimit,	
+			"Hold'em No Limit": {
+					'gameType': Hand.GameTypeHoldem | Hand.GameLimitNoLimit,
+					'numPlayerCards': 2,
+					},
+			"Hold'em Pot Limit": {
+					'gameType': Hand.GameTypeHoldem | Hand.GameLimitPotLimit,
+					'numPlayerCards': 2,
+					},
+			"Hold'em Limit": {
+					'gameType': Hand.GameTypeHoldem | Hand.GameLimitLimit,
+					'numPlayerCards': 2,
+					},
+			'Omaha Limit': {
+					'gameType': Hand.GameTypeOmaha | Hand.GameLimitLimit,
+					'numPlayerCards': 4,
+					},
+			'Omaha Pot Limit': {
+					'gameType': Hand.GameTypeOmaha | Hand.GameLimitPotLimit,
+					'numPlayerCards': 4,
+					},
+			'Omaha Hi/Lo Limit': {
+					'gameType': Hand.GameTypeOmaha | Hand.GameSubTypeHiLo | Hand.GameLimitLimit,
+					'numPlayerCards': 4,
+					},
+			'Omaha Hi/Lo Pot Limit':	{
+					'gameType': Hand.GameTypeOmaha | Hand.GameSubTypeHiLo | Hand.GameLimitLimit,
+					'numPlayerCards': 4,
+					},
 			}
 		
 	def __init__(self): pass
@@ -208,7 +230,9 @@ class HandHistoryParser(object):
 	def matchGameHeader(self, hand, streetCurrent, line):
 		result = self.PatGameHeader.match(line)
 		if result is not None:
-			hand.gameType = self.GameTypeMapping[result.group('gameType')]
+			gameType = self.GameTypeMapping[result.group('gameType')]
+			hand.gameType = gameType['gameType']
+			hand.numPlayerCards = gameType['numPlayerCards']
 		return result is not None	
 		
 	#NOTE: in tourneys <tableName> is composed of 'tourneyID tableNo'. no idea if this is of any relevance to us
@@ -226,6 +250,7 @@ class HandHistoryParser(object):
 		result= self.PatternSeat.match(line)
 		if result is not None:
 			player = hand.Player(name=result.group('player'), stack=self.stringToFloat(result.group('stack')))
+			player.cards = [''] * hand.numPlayerCards
 			seatNo = int(result.group('seatNo')) -1
 			hand.seats[seatNo] = player
 		return result is not None
