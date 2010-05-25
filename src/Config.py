@@ -8,7 +8,7 @@ import ConfigParser
 __application_name__ = 'TableCrab'
 __author__ = 'juergen urner'
 __email__ = 'jUrner@arcor.de'
-__version__ = '0.5.1'
+__version__ = '0.6.0'
 __release_name__ = '%s-%s' % (__application_name__, __version__)
 
 #***************************************************************************************************
