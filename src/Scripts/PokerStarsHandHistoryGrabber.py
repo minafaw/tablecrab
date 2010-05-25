@@ -568,7 +568,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		# add pot size
 		p += '<tr>'
 		pot = hand.calcPotSizes()
-		#TODO: to save some space we don't display ante for individual player. good idea otr not?
+		#TODO: to save some space we don't display ante for individual player. good idea or not?
 		potCellExtra = (PrefixAnte + self.formatNum(hand, hand.blindAnte) + PostfixAnte) if hand.blindAnte else '&nbsp;'
 		p += '<td colspan="2" class="potCellExtra">%s</td>' % potCellExtra
 		p += '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetBlinds])
