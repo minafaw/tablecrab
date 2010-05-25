@@ -249,8 +249,11 @@ class HandHistoryParser(object):
 	def matchSeat(self, hand, streetCurrent, line):
 		result= self.PatternSeat.match(line)
 		if result is not None:
-			player = hand.Player(name=result.group('player'), stack=self.stringToFloat(result.group('stack')))
-			player.cards = [''] * hand.numPlayerCards
+			player = hand.Player(
+					name=result.group('player'), 
+					stack=self.stringToFloat(result.group('stack')),
+					cards=[''] * hand.numPlayerCards,
+					)
 			seatNo = int(result.group('seatNo')) -1
 			hand.seats[seatNo] = player
 		return result is not None
