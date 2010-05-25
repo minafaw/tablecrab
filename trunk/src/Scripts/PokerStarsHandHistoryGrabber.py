@@ -581,6 +581,8 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		return self.htmlEscapeString(playerName, spaces=True)
 		
 	def dump(self, hand):
+		
+		# setup html page
 		p = '<html>'
 		p += '<meta http-equiv="Content-Type" content="text/html; charset=utf-8"><style type="text/css">%s</style>' % self.config.get('HandFornmatterHtmlTabular', 'Css', self.Css, str)
 		p += '<body class="handHistoryBody"><table class="handHistoryTable" border="1" cellspacing="0" cellpadding="0">'
@@ -599,7 +601,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			# add pocket cards column
 			p += '<td class="playerCardsCell">%s</td>' % self.htmlFormatCards(*player.cards)
 			
-			# add preflop and postflop actions
+			# add player actions
 			for street in (hand.StreetBlinds, hand.StreetPreflop, hand.StreetFlop, hand.StreetTurn, hand.StreetRiver):
 				actions = [action for action in hand.actions[street] if action.player is player]
 				p += '<td class="playerActionsCell">'
@@ -669,7 +671,6 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		
 		# dump html to file
 		p += '</table><pre class="handHistorySource">%s</pre></body></html>' % self.htmlEscapeString(hand.handHistory, spaces=False)
-		
 		#NOTE: we have to take care not to accidently dump an os dependend filename into default config. so keep default as ''
 		filename = self.config.get('HandFornmatterHtmlTabular', 'OutputFile', '', str)
 		if not filename:	
