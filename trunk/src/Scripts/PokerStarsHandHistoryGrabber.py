@@ -611,7 +611,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		p += '<tr>'
 		pot = hand.calcPotSizes()
 		#TODO: to save some space we don't display ante for individual player. good idea or not?
-		potCellExtra = (self.config.get('HandFornmatterHtmlTabular', 'PrefixAnte', '', str) + self.formatNum(hand, hand.blindAnte) + self.config.get('HandFornmatterHtmlTabular', 'PostixAnte', '', str)) if hand.blindAnte else '&nbsp;'
+		potCellExtra = (self.config.get('HandFornmatterHtmlTabular', 'PrefixAnte', 'ante ', str) + self.formatNum(hand, hand.blindAnte) + self.config.get('HandFornmatterHtmlTabular', 'PostixAnte', '', str)) if hand.blindAnte else '&nbsp;'
 		p += '<td colspan="2" class="potCellExtra">%s</td>' % potCellExtra
 		p += '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetBlinds])
 		p += '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetPreflop])
