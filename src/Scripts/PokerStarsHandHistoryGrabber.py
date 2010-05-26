@@ -529,6 +529,33 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		
 		'''
 		
+	class IndentBuffer(object):
+		"""write buffer with indentation support"""
+		def __init__(self, indent='\x20\x20\x20\x20'):
+			"""
+			@param indent: (str) chars to use for indentation
+			@ivar indentLevel: (int) current level of indentation
+			@ivar indent:  (str) chars to use for indentation
+			@ivar: data: (str) data contained in the buffer
+			"""
+			self.indentLevel = 0
+			self.indent = indent
+			self.data = ''
+		def __rshift__(self, chars):
+			"""add chars to the buffer and increases indentLevel for all following adds
+			"""
+			self.data += (self.indent*self.indentLevel) + chars + '\n'
+			self.indentLevel += 1
+		def __lshift__(self, chars):
+			"""decreases indentLevel and add chars to the buffer
+			"""
+			self.indentLevel -= 1
+			if self.indentLevel < 0: raise ValueError('indent level exceeded')
+			self.data += (self.indent*self.indentLevel) + chars + '\n'
+		def __or__(self, chars):
+			"""adds chars to the buffer without altering the current indentLevel"""
+			self.data += (self.indent*self.indentLevel) + chars + '\n'
+				
 	def __init__(self, config):
 		'''
 		@param config: L{Config}
@@ -553,9 +580,9 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			string = string.replace(' ', '&nbsp;')
 		return string
 	
-	def htmlFormatCards(self, *cards):
-		table = ''
-		tds = ''
+	def htmlFormatCards(self, p, *cards):
+		p >> '<table class="cards">'
+		p >> '<tr>'
 		for card in cards:
 			if not card:
 				shape = 'A'
@@ -564,143 +591,139 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			else:
 				shape = card[0]
 				htmlSuit, htmlKlass = HtmlCardSuitMapping[card[1]]
-			tds += self.indent(6, '<td class="cardCell">')
-			tds += '<div class="card">'
-			tds += '<div class="cardShape %s">%s</div><div class="cardSuit %s">%s</div>' % (htmlKlass, shape, htmlKlass, htmlSuit)
-			tds += '</div>'
-			tds +=  '</td>\n'
-		table += self.indent(4, '<table class="cards">\n')
-		table += self.indent(5, '<tr>\n')
-		table += tds
-		table += self.indent(5, '</tr>\n')
-		table += self.indent(4, '</table>\n')
-		return table
-		
+			p >> '<td class="cardCell">'
+			#p >> '<div class="card">'
+			p | '<div class="card"><div class="cardShape %s">%s</div><div class="cardSuit %s">%s</div></div>' % (htmlKlass, shape, htmlKlass, htmlSuit)
+			#p << '</div>'
+			p <<  '</td>'
+		p << '</tr>'
+		p << '</table>'
+			
 	def formatPlayerName(self, playerName):
 		maxPlayerName = self.config.get('HandFornmatterHtmlTabular', 'MaxPlayerName', '10', int)
 		if maxPlayerName and len(playerName) > maxPlayerName:
 			playerName = playerName[:maxPlayerName-2] + '..'
 		return self.htmlEscapeString(playerName, spaces=True)
 		
-	def indent(self, n, string):
-		return ('    '*n) + string
-		
-	
 	def dump(self, hand):
 		
-		# setup html page
-		p = '<html><head>\n'
-		p += self.indent(1, '<meta name="author" content="TableCrab">\n')
-		p += self.indent(1, '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">\n')
-		p += self.indent(1, '<style type="text/css">%s\n' % self.config.get('HandFornmatterHtmlTabular', 'Css', self.Css, str) )
-		p += self.indent(1, '</style>\n')
-		p += '</head>\n'
+		p = self.IndentBuffer()
 		
-		p += '<body class="handHistoryBody">\n'
-		p += self.indent(1, '<table class="handHistoryTable" border="1" cellspacing="0" cellpadding="0">\n')
+		# setup html page
+		p >> '<html>'
+		p >> '<head>'
+		p | '<meta name="author" content="TableCrab">'
+		p | '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
+		p | '<style type="text/css"><!-- %s --></style>' % self.config.get('HandFornmatterHtmlTabular', 'Css', self.Css, str)
+		p << '</head>'
+		
+		p >> '<body class="handHistoryBody">'
+		p >> '<table class="handHistoryTable" border="1" cellspacing="0" cellpadding="0">'
 		
 		for player in hand.seats:
 			if player is None: continue
 			
-			p += self.indent(2, '<tr>\n')
+			p >> '<tr>'
 				
 			# add player summary column
-			p += self.indent(3, '<td class="playerCell">\n')
-			p += self.indent(4, '<div class="playerName">%s</div>\n' % self.formatPlayerName(player.name) )
-			p += self.indent(4, '<div class="playerStack">%s</div>\n' % self.formatNum(hand, player.stack) )
-			p += self.indent(3, '</td>\n')
+			p >> '<td class="playerCell">'
+			p | '<div class="playerName">%s</div><div class="playerStack">%s</div>' % (
+						self.formatPlayerName(player.name), 
+						self.formatNum(hand, player.stack) 
+						)
+			p << '</td>'
 				
 			# add pocket cards column
-			p += self.indent(3, '<td class="playerCardsCell">\n')
-			p += self.htmlFormatCards(*player.cards)
-			p += self.indent(3, '</td>\n')
+			p >> '<td class="playerCardsCell">'
+			self.htmlFormatCards(p, *player.cards)
+			p << '</td>'
 			
 			# add player actions
 			for street in (hand.StreetBlinds, hand.StreetPreflop, hand.StreetFlop, hand.StreetTurn, hand.StreetRiver):
 				actions = [action for action in hand.actions[street] if action.player is player]
-				p += self.indent(3, '<td class="playerActionsCell">')
+				p >> '<td class="playerActionsCell">'
 				nActions = None
 				for nActions, action in enumerate(actions):
 					if action.type == action.TypeFold: 
-						p +='<div class="playerActionFold">%s</div>' % self.config.get('HandFornmatterHtmlTabular', 'PrefixFold', 'f', str)
+						p | '<div class="playerActionFold">%s</div>' % self.config.get('HandFornmatterHtmlTabular', 'PrefixFold', 'f', str)
 					elif action.type == action.TypeCheck: 
-						p +=  '<div class="playerActionCheck">%s</div>' % self.config.get('HandFornmatterHtmlTabular', 'PrefixCheck', 'ck', str)
+						p |  '<div class="playerActionCheck">%s</div>' % self.config.get('HandFornmatterHtmlTabular', 'PrefixCheck', 'ck', str)
 					elif action.type == action.TypeBet:
-						p += '<div class="playerActionBet">%s%s%s</div>' % (
+						p | '<div class="playerActionBet">%s%s%s</div>' % (
 								self.config.get('HandFornmatterHtmlTabular', 'PrefixBet', 'b', str), 
 								self.formatNum(hand, action.amount), 
 								self.config.get('HandFornmatterHtmlTabular', 'PostfixBet', '', str)
 								)
 					elif action.type == action.TypeRaise:
-						p += '<div class="playerActionRaise">%s%s%s</div>' % (
+						p | '<div class="playerActionRaise">%s%s%s</div>' % (
 								self.config.get('HandFornmatterHtmlTabular', 'PrefixRaise', 'r', str), 
 								self.formatNum(hand, action.amount), 
 								self.config.get('HandFornmatterHtmlTabular', 'PostfixRaise', '', str)
 								)
 					elif action.type == action.TypeCall:
-						p += '<div class="playerActionCall">%s%s%s</div>' % (
+						p | '<div class="playerActionCall">%s%s%s</div>' % (
 								self.config.get('HandFornmatterHtmlTabular', 'PrefixCall', 'c', str), 
 								self.formatNum(hand, action.amount), 
 								self.config.get('HandFornmatterHtmlTabular', 'PostixCall', '', str)
 								)
 					elif action.type == action.TypePostBlindBig:
-						p += '<div class="playerActionPostBlindBig">%s%s%s</div>' % (
+						p | '<div class="playerActionPostBlindBig">%s%s%s</div>' % (
 								self.config.get('HandFornmatterHtmlTabular', 'PrefixBigBlind', 'bb', str), 
 								self.formatNum(hand, action.amount), 
 								self.config.get('HandFornmatterHtmlTabular', 'PostfixBigBlind', '', str)
 								)
 					elif action.type == action.TypePostBlindSmall:
-						p += '<div class="playerActionPostBlindSmall">%s%s%s</div>' % (
+						p | '<div class="playerActionPostBlindSmall">%s%s%s</div>' % (
 								self.config.get('HandFornmatterHtmlTabular', 'PrefixSmallBlind', 'sb', str), 
 								self.formatNum(hand, action.amount), 
 								self.config.get('HandFornmatterHtmlTabular', 'PostfixSmallBlind', '', str)
 								)
 				
 				if nActions is None:
-					p += '&nbsp;'
-				p += '</td>\n'		
+					p | '&nbsp;'
+				p << '</td>'		
 				
-			p += self.indent(2, '</tr>\n')
+			p << '</tr>'
 				
 		# add pot size
-		p +=  self.indent(2, '<tr>\n')
+		p >> '<tr>'
 		pot = hand.calcPotSizes()
 		#TODO: to save some space we don't display ante for individual player. good idea or not?
 		potCellExtra = (self.config.get('HandFornmatterHtmlTabular', 'PrefixAnte', 'ante ', str) + self.formatNum(hand, hand.blindAnte) + self.config.get('HandFornmatterHtmlTabular', 'PostixAnte', '', str)) if hand.blindAnte else '&nbsp;'
-		p += self.indent(3, '<td colspan="2" class="potCellExtra">%s</td>\n' % potCellExtra)
-		p += self.indent(3, '<td class="potCell">%s</td>\n' % self.formatNum(hand, pot[hand.StreetBlinds]) )
-		p += self.indent(3, '<td class="potCell">%s</td>\n' % self.formatNum(hand, pot[hand.StreetPreflop]) )
-		p += self.indent(3, '<td class="potCell">%s</td>\n' % (self.formatNum(hand, pot[hand.StreetFlop]) if hand.cards[2] else '&nbsp;') )
-		p += self.indent(3, '<td class="potCell">%s</td>\n' % (self.formatNum(hand, pot[hand.StreetTurn]) if hand.cards[3] else '&nbsp;') )
-		p += self.indent(3, '<td class="potCell">%s</td>\n' % (self.formatNum(hand, pot[hand.StreetRiver]) if hand.cards[4] else '&nbsp;') )
-		p +=  self.indent(2, '</tr>\n')
+		p | '<td colspan="2" class="potCellExtra">%s</td>' % potCellExtra
+		p | '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetBlinds])
+		p | '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetPreflop])
+		p | '<td class="potCell">%s</td>' % (self.formatNum(hand, pot[hand.StreetFlop]) if hand.cards[2] else '&nbsp;')
+		p | '<td class="potCell">%s</td>' % (self.formatNum(hand, pot[hand.StreetTurn]) if hand.cards[3] else '&nbsp;')
+		p | '<td class="potCell">%s</td>' % (self.formatNum(hand, pot[hand.StreetRiver]) if hand.cards[4] else '&nbsp;')
+		p << '</tr>'
 			
 		# add board cards + hand history source
-		p +=  self.indent(2, '<tr>\n')
-		p +=  self.indent(3, '<td class="boardCardCellExtra" colspan="4">&nbsp;</td>\n')
-		p += self.indent(3, '<td class="boardCardCell">\n')
-		p += self.htmlFormatCards(hand.cards[0], hand.cards[1], hand.cards[2])
-		p += self.indent(3, '</td>\n')
-		p += self.indent(3, '<td class="boardCardCell">\n')
-		p += self.htmlFormatCards(hand.cards[3])
-		p += self.indent(3, '</td>\n')
-		p += self.indent(3, '<td class="boardCardCell">\n')
-		p += self.htmlFormatCards(hand.cards[4])
-		p += self.indent(3, '</td>\n')
-		p +=  self.indent(2, '</tr>\n')
+		p >> '<tr>'
+		p | '<td class="boardCardCellExtra" colspan="4">&nbsp;</td>'
+		p >> '<td class="boardCardCell">'
+		self.htmlFormatCards(p, hand.cards[0], hand.cards[1], hand.cards[2])
+		p << '</td>'
+		p >> '<td class="boardCardCell">'
+		self.htmlFormatCards(p, hand.cards[3])
+		p << '</td>'
+		p >> '<td class="boardCardCell">'
+		self.htmlFormatCards(p, hand.cards[4])
+		p << '</td>'
+		p << '</tr>'
 		
 		# dump html to file
-		p += self.indent(1, '</table>\n')
-		p += self.indent(1, '<pre class="handHistorySource">%s</pre>\n' % self.htmlEscapeString(hand.handHistory, spaces=False) )
-		p += self.indent(1, '</body>\n')
-		p += '</html>\n'
+		p << '</table>'
+		p | '<pre class="handHistorySource">%s</pre>' % self.htmlEscapeString(hand.handHistory, spaces=False)
+		p << '</body>'
+		p << '</html>'
 		
 		#NOTE: we have to take care not to accidently dump an os dependend filename into default config. so keep default as ''
 		filename = self.config.get('HandFornmatterHtmlTabular', 'OutputFile', '', str)
 		if not filename:	
 			filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'User', 'PokerStarsHandHistory.html')
 		with open(filename, 'w') as fp:
-			fp.write(p.encode('utf-8'))
+			fp.write(p.data.encode('utf-8'))
 
 #**********************************************************************************************************
 # hand grabber (only available on win32 platforms)
