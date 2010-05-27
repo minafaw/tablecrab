@@ -11,7 +11,7 @@ the dumped file into a browser and set the browser to autorefresh every N second
 
 '''
 from __future__ import with_statement
-import re, time, sys, os, cStringIO
+import re, time, sys, os, cStringIO, logging, logging.handlers, traceback
 import ConfigParser
 
 __application_name__ = 'PokerStarsHandHistoryGrabber'
@@ -22,6 +22,16 @@ __release_name__ = '%s-%s' % (__application_name__, __version__)
 #***********************************************************************************************
 #
 #***********************************************************************************************
+logger = logging.getLogger(__application_name__)
+excHandler = logging.handlers.RotatingFileHandler(
+		os.path.join(os.path.dirname(os.path.abspath(__file__)), 'User', 'Errlog.log'),
+		mode='a',
+		maxBytes=32000,
+		backupCount=0,
+		)
+excHandler.setLevel(logging.CRITICAL)
+logger.addHandler(excHandler)
+
 class Config(object):
 	"""ConfigParser wraper class"""
 	def __init__(self, filename=None, string=None):
@@ -814,12 +824,20 @@ if sys.platform == 'win32':
 					break
 				time.sleep(self.config.get('HandHistoryGrabber', 'GrabTimeout', '0.4', float))
 
+
 #*********************************************************************************************************************
-if __name__ == '__main__':
+def main(config=None):
 	if InstantHandHistoryGrabber is None:
 		print 'HandHistoryGrabber is not supported on your platform: %s' % sys.platform
-		sys.exit(1)
+		return False
 		
+	def excepthook(Type, value, tb):
+		p = [__release_name__ + '\n', ]
+		p += traceback.format_exception(type, value, tb)
+		logger.critical(''.join(p))
+		raise Type(value)
+	sys.excepthook = excepthook
+	
 	if len(sys.argv) > 1:
 		config = Config(filename=sys.argv[1])
 	else:
@@ -830,3 +848,7 @@ if __name__ == '__main__':
 	handFormatter = HandFormatters[config.get('Global', 'HandFormatter', 'HtmlTabular', str)](config)
 	grabber = InstantHandHistoryGrabber(config, handParser, handFormatter)
 	grabber.startServer()
+
+#*********************************************************************************************************************
+if __name__ == '__main__': main()
+
