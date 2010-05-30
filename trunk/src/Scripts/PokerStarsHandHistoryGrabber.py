@@ -483,26 +483,46 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	Name = 'HtmlTabular'
 	# and this is the css for the html file
 	Css = '''
-			.handHistoryBody{margin-left:0px;margin-top:0px;}
-			.handHistoryTable{}
+						.handHistoryBody{
+					margin-left:0px;
+					margin-top:0px;
+					}
+			.handHistoryTable{
+					border-spacing: 0px; 
+					border-collapse:collapse;
+					}
 			.handHistorySource{margin-top:10em;}
 			
-			.playerCell{vertical-align:top;}
+			.playerCell{
+					vertical-align:top; 
+					border:1px solid black; 
+					}
 			.playerName{}
 			.playerStack{}
 					
-			.playerCardsCell{}
-			.playerActionsCell{white-space:nowrap;vertical-align:top;padding-left:0.1em;}
+			.playerCardsCell{border:1px solid black;}
+			.playerActionsCell{
+					white-space:nowrap;
+					vertical-align:top;padding-left:0.1em; 
+					border:1px solid black; 
+					}
 			
 			.potCell{
 					text-align: center;
+					border:1px solid black; 
 					}
-			.potCellExtra{padding-left:1em;}
+			.potCellExtra{
+					padding-left:1em; 
+					border:1px solid black; 
+					}
 			
-			.boardCardCell{}
-			.boardCardCellExtra{}
+			.boardCardCell{border:1px solid black;}
+			.boardCardCellExtra{border:1px solid black; }
 			
-			.cards{border: 0px; border-spacing: 0px;}
+			.cards{
+					border: 0px; 
+					border-spacing: 0px;
+					}
 			.cardCell{padding: 0px;}
 			.card{
 					border:solid 1px;
@@ -628,7 +648,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		p << '</head>'
 		
 		p >> '<body class="handHistoryBody">'
-		p >> '<table class="handHistoryTable" border="1" cellspacing="0" cellpadding="0">'
+		p >> '<table class="handHistoryTable">'
 		
 		for player in hand.seats:
 			if player is None: continue
