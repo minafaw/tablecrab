@@ -77,6 +77,15 @@ windows
 VERSION HISTORY
 ==============================================================================
 
+
+----------------------------
+0.6.1
+-----------------------------
+
+fixes:
+	- PokerStarsHandHistoryGrabber.py: 
+		° in generated Html table cell borders are now adjusted via Css. you may have to adjust your Css to make the hand history look like expected
+
 ----------------------------
 0.6.0
 -----------------------------
