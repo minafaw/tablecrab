@@ -15,7 +15,7 @@ import re, time, sys, os, cStringIO, logging, logging.handlers, traceback
 import ConfigParser
 
 __application_name__ = 'PokerStarsHandHistoryGrabber'
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 __author__ = 'juergen urner'
 __email__ = 'jUrner@arcor.de'
 __release_name__ = '%s-%s' % (__application_name__, __version__)
