@@ -516,7 +516,11 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 					border:1px solid black; 
 					}
 			
-			.boardCardCell{border:1px solid black;}
+			.boardCardCell{
+					border:1px solid black;
+					margin-left:auto;		/* centers contents of the cell */
+					margin-right:auto;	/* centers contents of the cell */
+					}
 			.boardCardCellExtra{border:1px solid black; }
 			
 			.cards{
