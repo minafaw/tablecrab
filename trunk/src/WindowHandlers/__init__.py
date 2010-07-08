@@ -12,5 +12,7 @@ from . import WindowHandlerDefault
 from . import PokerStarsTable
 from . import PokerStarsPopupNews
 from . import PokerStarsInstantHandHistory
+from . import PokerStarsTourneyRegistrationMessageBox
+from . import PokerStarsTableMessageBox
 
 
