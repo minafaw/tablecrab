@@ -79,8 +79,14 @@ VERSION HISTORY
 
 
 ----------------------------
-0.6.1
+0.7.0a - test version
 -----------------------------
+news:
+	- popup news got only closed in the lobby - they will now get closed anywhere
+	- new flag in TableCrab config: bool-auto-ok-tourney-registration-message-boxes . this will automatically hit 'OK' in all 'Tourney Registration' dialogs popping up 
+		WARNING: this feature is	experimental. use at you own risk
+	- new flag in TableCrab config: bool-auto-ok-table-message-boxes . this will automatically hit 'OK' in all message boxes popping up on tables. WARNING: this feature is
+		experimental. use at you own risk
 
 fixes:
 	- PokerStarsHandHistoryGrabber.py: 
