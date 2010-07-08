@@ -55,7 +55,9 @@ class WindowManager(object):
 		MY_SMTO_TIMEOUT = 1000
 		MY_MAX_CLASS_NAME = 64
 		
-						
+		BM_CLICK =245
+		
+		
 	def __init__(self, cb=None):
 		"""
 		@param cb: (function) event handler
@@ -365,3 +367,20 @@ class WindowManager(object):
 		"""returns the handle of the parent of a window"""
 		hwnd = user32.GetParent(hwnd)
 		return hwnd if hwnd else None
+			
+	def windowClickButton(self, hwnd, buttonText):
+		for hwnd in self.windowChildren(hwnd):
+			if self.windowGetClassName(hwnd) == 'Button':
+				if self.windowGetText(hwnd) == buttonText:
+					if user32.SendNotifyMessageW(hwnd, self.Win32Consts.BM_CLICK, 0, 0): return True
+					break
+		return False
+		
+		
+		
+		
+		
+		
+		
+			
+			
