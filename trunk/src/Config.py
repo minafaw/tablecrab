@@ -8,7 +8,7 @@ import ConfigParser
 __application_name__ = 'TableCrab'
 __author__ = 'juergen urner'
 __email__ = 'jUrner@arcor.de'
-__version__ = '0.6.1'
+__version__ = '0.7.0a'
 __release_name__ = '%s-%s' % (__application_name__, __version__)
 
 #***************************************************************************************************
@@ -170,6 +170,9 @@ class Config(object):
 	SectionPokerstars = (
 			'pokerstars', (
 				('bool-close-popup-news', TypeBool(False)),
+				('bool-auto-ok-tourney-registration-message-boxes', TypeBool(False)),
+				('bool-auto-ok-table-message-boxes', TypeBool(False)),
+				
 			)
 		)
 	SectionPokerStarsReplayer = (
