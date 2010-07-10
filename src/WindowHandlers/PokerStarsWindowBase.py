@@ -82,7 +82,7 @@ class PokerStarsWindowBase(Registry.WindowHandlerBase):
 		if not cli.application.windowManager.windowGetClassName(hWindow) == klass.PsClassTableMessageBox: return False
 		if not cli.application.windowManager.windowGetText(hWindow) == klass.PsTitleTableMessageBox: return False
 		hWindowParent = cli.application.windowManager.windowGetParent(hWindow)
-		if not klass.psIsTable(hWindowParent): return False
+		if not klass.psIsTable(cli, hWindowParent): return False
 		return True
 
 
