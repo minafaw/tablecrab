@@ -369,6 +369,11 @@ class WindowManager(object):
 		return hwnd if hwnd else None
 			
 	def windowClickButton(self, hwnd, buttonText):
+		"""clicks a button in the window
+		@param hwnd: handle of the window
+		@param buttonText: (str) text of the button to click
+		@return: (bool) True if the button was clicked successfuly, False otherwise
+		"""
 		for hwnd in self.windowChildren(hwnd):
 			if self.windowGetClassName(hwnd) == 'Button':
 				if self.windowGetText(hwnd) == buttonText:
