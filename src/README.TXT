@@ -16,34 +16,94 @@ FEATURES
 - auto-close popup news
 - move mouse to table that requires attention
 - configurable hotkeys for PokerStars replayer
-
+- PokerStars instant hand history grabber
 
 ==============================================================================
 USAGE
 ==============================================================================
 
--------------------------
-linux/wine
--------------------------
+-----------------------------------------------
+1a) install and run on linux/wine
+-----------------------------------------------
 1. install wine
-2. install the windows version of python (>= 2.6) from [http://python.org/download/]
+2. install the windows version of python (>= 2.6) from [http://python.org/download/] or use "wintricks" to do so
 3. create your config file (see User/default.cfg) for details
 4. run from commandline: 
-    >> wine pathTo/pythonw.exe pathTo/Cli.py pathTo/my.cfg
+    >> wine pathTo/pythonw.exe pathTo/TableCrab/Cli.py pathTo/my.cfg
 	
 	
---------------------------
-windows
---------------------------
+---------------------------------------------
+1b) install and run on windows
+---------------------------------------------
 WARNING: nothing is tested on windows, so things may or may not work as expected
 
 1. install the windows version of python (>= 2.6) from [http://python.org/download/]
 2. create your config file (see User\default.cfg) for details
 3. run from commandline: 
-    >> pathTo\pythonw.exe pathTo\Cli.py pathTo\my.cfg
+    >> pathTo\pythonw.exe pathTo\TableCrab\Cli.py pathTo\my.cfg
 
 
-in case an error occurs a report should be written to User/errlog.txt. please include this file in any failure reports
+..next is configuring TableCrab through "User/default.cfg". you best make adjustenents in your own newly created config and use 
+default.cfg as lookup.
+
+-------------------------------------
+2) setup tables
+-------------------------------------
+TableCrab is most likely is not working out of the box. you have to adjust its config (TableCrab/User/default.cfg).
+to get table hotkeys working you have to tell TableCrab what size your table(s) are and what points to click inside the tables.
+the best way to do so i found was taking a scrennshot of a table and load it into an image editor. the size of the screenshot
+image obviously is the size of the table. your image editor hopefuly shows the coordinates of the cursor, so it should be easy
+to locate the points to click for buttons like "fold", "call" (...). from these coordinates you have to subtract the height title bar
+and width the borders because TableCrab assumes them to be in coordinates relative to the client area of the window. that
+is the window without borders and title bar.
+
+note that TableCrab only works on tables having exactly the size you specified. so best use PokerStars custom layouts to
+remember and restore tables to the specified sizes.
+
+-------------------------------------
+3) configure hotkeys
+-------------------------------------
+TableCrab has preconfigured hotkeys you may change at any time. to do so take a look at "key-report-keyboard" in "default.cfg".
+hit this key combination when the PokerStars client is in the foreground. untill you hit that key again TableCrab will report
+any key combination pressed. something like:
+
+Cli:keyPressed key=F LCONTROL
+
+hitting left control key and the "F" key simultaniously.  "F LCONTROL" is the hotkey we may want copy into our config. 
+
+------------------------------------------------
+4) in case something goes wrong
+-----------------------------------------------
+TableCrab may crash. please report. there is a file "errlog.txt" in every User directory conatining potentially useful information.
+please include this file in any failure reports
+
+
+
+==============================================================================
+ADD ONS
+==============================================================================
+TableCrab comes equipped with some additional tools described here
+
+----------------------------------------------
+PokerStars hand history grabber
+----------------------------------------------
+PokerStars hand replayer is not very handy. so i coded a grabber for its "instant hand history". the grabber will dump the current hand
+as a html file to a directory of your choice. set your favourite browser to reload this file at certain intervals, assign a hotkey in TableCrab
+to update "instant hand history" and you get a nicely formatted overview of a hand how it played out.
+
+usage: wine pathTo/pythonw.exe pathTo/TableCrab/Scripts/PokerStarsHandHistoryGrabber.py pathTo/my.cfg
+
+for the default config take a look at TableCrab/Scripts/User/PokerStarsHandHistoryGrabber.cfg
+
+
+----------------------------------------------
+generating developer docs
+----------------------------------------------
+if you are a python developer you may be interested in the source code documentation. format used is epydoc, so you may have to install
+epydoc. and for me being lazy i wrote a script that generates the documentation and dumps it to TableCrab/Doc/Devel. 
+
+usage (no wine required this time): python path/to/TableCrab/Scripts/GenDevelDocs.py 
+
 
 ==============================================================================
 NOTES
@@ -72,11 +132,40 @@ linux/wine
 windows
 --------------------------
 
+none so far
+
+
+==============================================================================
+FAQ
+==============================================================================
+
+why does TableCrab need to be run through wine?
+   
+   everything TableCrab does could be done running easily on linux aswell - except two things:
+        1) retrieving the contents of child widgets
+        2) setting them
+
+    as an example: alter the current bet amount. this is easily done on win32 (get editbox text --> alter it --> dump it back
+    to the editbox). on linux on the other han the contents of the box would have to be screenscraped, that is messing around
+    with some sort of optical char recognition. not a thing you want to do unless you absolutely have to.
+
+
+TableCrab is not easy to use - why?
+	
+	1) because you most likely run linux and linux has to be pain
+	2) i am too lazy to write a nice an user friendly GUI. i'd rather kick PokerStars butts to implement all these features into their client
+		where they belong
+
 
 ==============================================================================
 VERSION HISTORY
 ==============================================================================
 
+----------------------------
+0.7.1a - test version
+-----------------------------
+fixes:
+	- an invalid method call TableCrab stopped TableCrab from working at the tables, this is fixed now
 
 ----------------------------
 0.7.0a - test version
