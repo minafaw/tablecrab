@@ -6,34 +6,34 @@ from PyQt4 import QtCore, QtGui, QtWebKit, QtNetwork
 #
 #**********************************************************************************************
 
-Topics = (
-		'index', (
-			'widgets', (
-				'screenshotInfo',
-				),
-			'hotkeys', (
-				'hotkeyAlterBetAmount',
-				'hotkeyCheck',
-				'hotkeyFold',
-				'hotkeyHilightBetAmount',
-				'hotkeyInstantHandHistory',
-				'hotkeyRaise',
-				'hotkeyReplayer',
-				'hotkeyScreenshot',
-				),
-			'hand',
-			'settings', (
-				'settingsGlobal',
-				'settingsHand',
-				'settingsHandCss',
-				'settingsPokerStars',
-				),
-			),
-		)
+Topics = [
+		('index', 'TableCrab'), [
+			('widgets', 'Widgets'), [
+				('screenshotInfo', 'Screenshot Info Dialog'),
+				],
+			('hotkeys', 'Hotkeys'), [
+				('hotkeyAlterBetAmount', 'AlterBetAmount'),
+				('hotkeyCheck', 'Check'),
+				('hotkeyFold', 'Fold'),
+				('hotkeyHilightBetAmount', 'HilightBetAmount'),
+				('hotkeyInstantHandHistory', 'InstantHandHistory'),
+				('hotkeyRaise', 'Raise'),
+				('hotkeyReplayer', 'Replayer'),
+				('hotkeyScreenshot', 'Screenshot'),
+				],
+			('hand', 'Hand'),
+			('settings', 'Settings'), [
+				('settingsGlobal', 'Global'),
+				('settingsHand', 'Hand'),
+				('settingsHandCss', 'Hand-Css'),
+				('settingsPokerStars', 'PokerStars'),
+				],
+			],
+		]
 		
 def walkTopics():
 	def walker(item, level=0):
-		if not isinstance(item, tuple):
+		if not isinstance(item, list):
 			yield level -1, item
 		else:
 			for child in item:
@@ -157,13 +157,14 @@ class FrameHelpTree(QtGui.QFrame):
 		lastTopicItem = None
 		firstTopicItem = None
 		stack = []
-		for level, topic in walkTopics():
+		for level, (topic, topicName) in walkTopics():
 			while len(stack) > level:
 				stack.pop(-1)
 			if stack:
-				item = QtGui.QTreeWidgetItem(stack[-1], [topic, ])
+				item = QtGui.QTreeWidgetItem(stack[-1], [topicName, ])
 			else:
-				item = QtGui.QTreeWidgetItem(self.tree, [topic, ])
+				item = QtGui.QTreeWidgetItem(self.tree, [topicName, ])
+			item.setData(0, QtCore.Qt.UserRole, QtCore.QVariant(topic))
 			
 			#TODO: for some reason DontShowIndicator items are never expanded. seems to be a but in Qt4
 			#item.setChildIndicatorPolicy(item.DontShowIndicator)
@@ -205,7 +206,7 @@ class FrameHelpTree(QtGui.QFrame):
 		items = self.tree.selectedItems()
 		if not items: return
 		item = items[0]
-		topic =  str(item.text(0))
+		topic = item.data(0, QtCore.Qt.UserRole).toString()
 		url = QtCore.QUrl('TableCrab://HtmlPage/%s' % topic)
 		self.webView.setUrl(url)
 		TableCrabConfig.settingsSetValue('Gui/Help/Topic', topic)
