@@ -1,16 +1,11 @@
 
-we serve pages from python resource modules (PyInstaller troubles) so..
+we serve pages from our python resource modules (PyInstaller troubles) so..
 
-to reference a page you have to use:
-	TableCrab://HtmlPage/myPageName
-	
-to reference an image you have to use:
-	TableCrab://Pixmap/myPixmapName
-	
+- no subdirectories allowed in here
+-  *.html / *.css only
+- png images can be taken from "../Pixnaps" - none other
+- changes will not get reflected unless you regenerate the resources via "../_GenResources.py"
 
-..and use the internal help viewer to view them. 
-
-NOTE: changes will not get reflected unless you regenerate the resources via "GenResources.py" in the parent directory
 
 
 
