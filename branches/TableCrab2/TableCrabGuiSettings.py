@@ -51,7 +51,7 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		grid2.addWidget(self.buttonBox, 0, 0)
 		
 	def onButtonHelpClicked(self, checked):
-		TableCrabGuiHelp.dialogHelp('SettingsGlobal', parent=self)
+		TableCrabGuiHelp.dialogHelp('settingsGlobal', parent=self)
 		
 	def onButtonGuiFontClicked(self, checked):
 		font, ok = QtGui.QFontDialog.getFont(QtGui.qApp.font(), self)
@@ -105,7 +105,7 @@ class FrameSettingsPokerStars(QtGui.QFrame):
 		grid2.addWidget(self.buttonBox, 0, 0)
 		
 	def onButtonHelpClicked(self, checked):
-		TableCrabGuiHelp.dialogHelp('SettingsPokerStars', parent=self)
+		TableCrabGuiHelp.dialogHelp('settingsPokerStars', parent=self)
 	
 
 class FrameSettingsHand(QtGui.QFrame):
@@ -200,7 +200,7 @@ class FrameSettingsHand(QtGui.QFrame):
 		grid2.addWidget(self.buttonBox, 0, 0)
 		
 	def onButtonHelpClicked(self, checked):
-		TableCrabGuiHelp.dialogHelp('SettingsHand', parent=self)
+		TableCrabGuiHelp.dialogHelp('settingsHand', parent=self)
 		
 
 class FrameSettingsHandCss(QtGui.QFrame):
@@ -229,7 +229,7 @@ class FrameSettingsHandCss(QtGui.QFrame):
 		grid2.addWidget(self.buttonBox, 0, 0)
 			
 	def onButtonHelpClicked(self, checked):
-		TableCrabGuiHelp.dialogHelp('SettingsHandCss', parent=self)
+		TableCrabGuiHelp.dialogHelp('settingsHandCss', parent=self)
 				
 	#TODO: resetting document jumps to top of widget. store/restore position would be nice
 	def onButtonRestoreDefaultClicked(self):

@@ -71,7 +71,7 @@ class ActionCheckEditor(QtGui.QDialog):
 		grid.addWidget(self.buttonBox, 99, 0, 1, 3)	
 	
 	def onButtonHelpClicked(self, checked):
-		TableCrabGuiHelp.dialogHelp('Hotkey%s' % self.actionItem.itemName(), parent=self)
+		TableCrabGuiHelp.dialogHelp('hotkey%s' % self.actionItem.itemName(), parent=self)
 	
 	def accept(self):
 		self.actionItem.name = self.editName.text()
@@ -138,7 +138,7 @@ class ActionAlterBetAmountEditor(QtGui.QDialog):
 		grid.addWidget(self.buttonBox, 99, 0, 1, 3)	
 		
 	def onButtonHelpClicked(self, checked):
-		TableCrabGuiHelp.dialogHelp('Hotkey%s' % self.actionItem.itemName(), parent=self)
+		TableCrabGuiHelp.dialogHelp('hotkey%s' % self.actionItem.itemName(), parent=self)
 	
 	def accept(self):
 		self.actionItem.name = self.editName.text()
@@ -411,7 +411,7 @@ class FrameHotkeys(QtGui.QFrame):
 		self.actionItemTreeWidget.createActionItem(self.sender().actionItemProto)
 		
 	def onButtonHelpClicked(self, checked):
-		TableCrabGuiHelp.dialogHelp('Hotkeys', parent=self)
+		TableCrabGuiHelp.dialogHelp('hotkeys', parent=self)
 		
 #**********************************************************************************************
 #

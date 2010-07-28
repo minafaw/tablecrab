@@ -125,7 +125,7 @@ class FrameHand(QtGui.QFrame):
 			self.webView.setHtml(data)
 			
 	def onButtonHelpClicked(self, checked):
-		TableCrabGuiHelp.dialogHelp('Hand', parent=self)
+		TableCrabGuiHelp.dialogHelp('hand', parent=self)
 
 #**********************************************************************************************
 #
