@@ -1,21 +1,59 @@
 
-import sys, os, posixpath, thread, time, re
-from PyQt4 import QtCore, QtGui, QtWebKit
-
-import TableCrabWin32
-from TableCrabRes import Pixmaps, HtmlPages
-
-#************************************************************************************
-
+#****************************************************************************************
+# setup minimal stuff to get at least some information in case something goes wrong
+#
+# every module should add this module as the very first import
+#***************************************************************************************
 TableCrabApplicationName = 'TableCrab2'
 TableCrabVersion = '0.1.0'
 TableCrabReleaseName = '%s-%s' % (TableCrabApplicationName, TableCrabVersion)
 TableCrabAuthor = 'JuergenUrner'
 
-DirSelf = os.path.abspath(os.path.dirname(__file__))
-DirRes = os.path.join(DirSelf, 'Res')
-DirDoc = os.path.join(DirSelf, 'Doc')
-DirHelp = os.path.join(DirDoc, 'Help')
+import sys, os, traceback, logging
+from logging import handlers
+logger = logging.getLogger(TableCrabApplicationName)
+print os.getcwd()
+logger.addHandler(handlers.RotatingFileHandler(
+		os.path.join(os.getcwd(), TableCrabApplicationName + '-Error.log'),
+		mode='a',
+		maxBytes=32000,
+		backupCount=0,
+		))
+def _excepthook(type, value, tb):
+	# as failsave as possible
+	p = ''
+	p += 'TableCrab: %s\n' % TableCrabReleaseName
+	p += 'Platform: %s\n' % sys.platform
+	p += 'PythonVersion: %s\n' % sys.version.split()[0]
+	try:
+		from PyQt4.QtCore import qVersion, PYQT_VERSION_STR
+		p += 'QtVersion: %s\n' % qVersion()
+		p += 'PyQtVersion: %s\n' % PYQT_VERSION_STR
+	except:
+		p += 'QtVersion: Unknown\n'
+		p += 'PyQtVersion: Unknown\n'
+	try:
+		import sipconfig
+		p += 'SipVersion: %s\n' % sipconfig.Configuration().sip_version_str
+	except:
+		p += 'SipVersion: Unknown\n'
+	p += ''.join(traceback.format_exception(type, value, tb))
+	try:	# try to log
+		logger.critical(p)
+	except:	# no success ..write to console
+		print p
+	
+	raise type(value)
+sys.excepthook = _excepthook
+
+#************************************************************************************
+#
+#************************************************************************************
+import os, posixpath, thread, time, re
+from PyQt4 import QtCore, QtGui, QtWebKit
+
+import TableCrabWin32
+from TableCrabRes import Pixmaps, HtmlPages, StyleSheets
 
 #***********************************************************************************
 # global QSettings
