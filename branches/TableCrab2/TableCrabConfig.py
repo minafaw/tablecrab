@@ -909,11 +909,11 @@ class _SiteManager(QtCore.QObject):
 		##print 'created: ',  hwnd, "'%s'" % windowGetClassName(hwnd), "'%s'" %  windowGetText(hwnd)
 		
 		if self.windowIsPokerStarsPopupNews(hwnd):
-			if Config.value('PokerStars/AutoClosePopupNews', False).toBool():
+			if settingsValue('PokerStars/AutoClosePopupNews', False).toBool():
 				windowClose(hwnd)
 		
 		elif self.windowIsPokerStarsTourneyRegistrationMessageBox(hwnd):
-			if Config.value('PokerStars/AutoCloseTourneyRegistrationBoxes', False).toBool():
+			if settingsValue('PokerStars/AutoCloseTourneyRegistrationBoxes', False).toBool():
 				buttons = windowGetButtons(hwnd)
 				if len(buttons) != 1: return
 				if not 'OK' in buttons: return
@@ -921,7 +921,7 @@ class _SiteManager(QtCore.QObject):
 				windowClickButton(buttons['OK'])
 		
 		elif self.windowIsPokerStarsTableMessageBox(hwnd):
-			if Config.value('PokerStars/AutoCloseTableMessageBoxes', False).toBool():
+			if settingsValue('PokerStars/AutoCloseTableMessageBoxes', False).toBool():
 				buttons = windowGetButtons(hwnd)
 				if len(buttons) != 1: return
 				if not 'OK' in buttons: return
