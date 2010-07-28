@@ -643,6 +643,10 @@ class PersistentItemManager(QtCore.QObject):
 		self.itemProtos= [] if itemProtos is None else itemProtos
 	def read(self):
 		# read items
+		if self._items:
+			#TODO: implement?
+			raise NotImplementedError('you can read items only once')
+		self._items = []
 		if self.key is not None:
 			newItems = []
 			for slot in xrange(self.maxItems):
@@ -651,7 +655,9 @@ class PersistentItemManager(QtCore.QObject):
 					newItem = itemProto.fromConfig(key)
 					if newItem is not None:
 						newItems.append( (slot, newItem) )
-			self._items = [i[1] for i in sorted(newItems)]
+			for _, item in sorted(newItems):
+				self._items.append(item)
+				signalEmit(self, 'itemRead(QObject*)', item)
 			self.dump()
 			signalEmit(self, 'readFinished()')
 	def dump(self):

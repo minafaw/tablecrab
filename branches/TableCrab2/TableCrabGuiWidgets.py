@@ -116,9 +116,9 @@ class WidgetItemTreeWidget(QtGui.QTreeWidget):
 		self.header().setVisible(False)
 		self.header().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
 		self.header().setResizeMode(1, QtGui.QHeaderView.ResizeToContents)
-		
+			
 		#NOTE: we have to connect after adding the initial tables cos QTreeWidget informs us about every* itemChange
-		TableCrabConfig.signalConnect(TableCrabConfig.widgetItemManager, self, 'readFinished()', self.onWidgetItemManagerReadFinished)
+		TableCrabConfig.signalConnect(TableCrabConfig.widgetItemManager, self, 'itemRead(QObject*)', self.onWidgetItemManagerItemRead)
 		TableCrabConfig.signalConnect(self, self, 'itemChanged(QTreeWidgetItem*, int)', self.onTreeItemChanged)
 		TableCrabConfig.signalConnect(self, self, 'itemDoubleClicked(QListWidgetItem*)',self.editItem)
 		TableCrabConfig.signalConnect(self, self, 'itemExpanded(QTreeWidgetItem*)',self.onItemExpanded)
@@ -135,14 +135,15 @@ class WidgetItemTreeWidget(QtGui.QTreeWidget):
 	def onWidgetItemAdded(self, widgetItem):
 		item = TablePokerStarsTreeWidgetItem(widgetItem, parent=self)
 		self.addTopLevelItem(item)
+		self.setCurrentItem(item)
 	def onTreeItemChanged(self, item, column):
 		if item.attrName == 'name':
 			if item.text(0) != item.widgetItem.name:	#NOTE: special handling for in-place editing
 				item.widgetItem.name = item.text(0)
 		TableCrabConfig.widgetItemManager.dump()
-	def onWidgetItemManagerReadFinished(self):
-		for widgetItem in TableCrabConfig.widgetItemManager:
-			self.onWidgetItemAdded(widgetItem)
+	def onWidgetItemManagerItemRead(self, widgetItem):
+		item = TablePokerStarsTreeWidgetItem(widgetItem, parent=self)
+		self.addTopLevelItem(item)
 	def onItemExpanded(self, item):
 		item.widgetItem.itemIsExpanded = True
 		TableCrabConfig.widgetItemManager.dump()
@@ -153,7 +154,7 @@ class WidgetItemTreeWidget(QtGui.QTreeWidget):
 		widgetItem = widgetItemProto(name=widgetItemProto.itemName())
 		TableCrabConfig.signalConnect(widgetItem, self, 'itemAdded(QObject*)', self.onWidgetItemAdded)
 		TableCrabConfig.widgetItemManager.addItem(widgetItem)
-		
+	
 
 class FrameWidgetItems(QtGui.QFrame):
 	

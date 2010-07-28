@@ -252,7 +252,7 @@ class ActionItemTreeWidget(QtGui.QTreeWidget):
 	def __init__(self, parent=None):
 		QtGui.QTreeWidget.__init__(self, parent)
 		TableCrabConfig.signalConnect(self, self, 'itemDoubleClicked(QTreeWidgetItem*, int)', self.editItem)
-		TableCrabConfig.signalConnect(TableCrabConfig.actionItemManager, self, 'readFinished()', self.onActionItemManagerReadFinished)
+		TableCrabConfig.signalConnect(TableCrabConfig.actionItemManager, self, 'itemRead(QObject*)', self.onActiontItemManagerItemRead)
 		
 		self.setColumnCount(2)
 		self.setRootIsDecorated(False)
@@ -270,12 +270,13 @@ class ActionItemTreeWidget(QtGui.QTreeWidget):
 				self.editItem(item)
 			return
 		return QtGui.QTreeWidget.keyReleaseEvent(self, event)
-	def onActionItemManagerReadFinished(self):
-		for actionItem in TableCrabConfig.actionItemManager:
-			self.onActionItemAdded(actionItem)
+	def onActiontItemManagerItemRead(self, actionItem):
+		item = ActionItemTreeWidgetItem(actionItem, parent=self)
+		self.addTopLevelItem(item)
 	def onActionItemAdded(self, actionItem):
 		item = ActionItemTreeWidgetItem(actionItem, parent=self)
 		self.addTopLevelItem(item)
+		self.setCurrentItem(item)
 	def editItem(self, item):
 		editor = EditorMapping[item.actionItem.__class__]
 		dlg =editor(item.actionItem, parent=self)
