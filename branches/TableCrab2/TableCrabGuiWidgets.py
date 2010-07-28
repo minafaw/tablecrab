@@ -41,10 +41,14 @@ class TablePokerStarsTreeWidgetItem(QtGui.QTreeWidgetItem):
 				'replayer': ChildItem('replayer', 'Replayer:', TableCrabConfig.pointToString(self.widgetItem.replayer), parent=self),
 				}
 		
+		TableCrabConfig.signalConnect(None, self.widgetItem, 'widgetScreenshotSet(int, int)', self.onWidgetScreenshotSet)
 		TableCrabConfig.signalConnect(self.widgetItem, self.widgetItem, 'attributeValueChanged(QString)', self.onWidgetItemAttributeValueChanged)
 		TableCrabConfig.signalConnect(self.widgetItem, self.widgetItem, 'itemMovedUp(QObject*, int)', self.onWidgetItemMovedUp)
 		TableCrabConfig.signalConnect(self.widgetItem, self.widgetItem, 'itemMovedDown(QObject*, int)', self.onWidgetItemMovedDown)
 		TableCrabConfig.signalConnect(self.widgetItem, self.widgetItem, 'itemRemoved(QObject*)', self.onWidgetItemRemoved)
+		
+		#TODO: bit of a hack here to disable child items initially
+		self.onWidgetScreenshotSet(-9, -9)
 	
 	def childItem(self, attrName):
 		for index in xrange(self.childCount()):
@@ -85,7 +89,21 @@ class TablePokerStarsTreeWidgetItem(QtGui.QTreeWidgetItem):
 		else:
 			child = self.myChildren[attrName]
 			child.setText(1, TableCrabConfig.pointToString( getattr(self.widgetItem, attrName) ) )
-
+	def onWidgetScreenshotSet(self, w, h):
+		hasScreenshot = w > -1 and  h > -1
+		size = (w, h)
+		mySize = (self.widgetItem.size.width(), self.widgetItem.size.height())
+		sizeNone = (-1, -1)
+		for child in self.myChildren.values():
+			if not hasScreenshot:
+				child.setDisabled(True)
+			elif mySize == size:
+				child.setDisabled(False)
+			elif mySize == sizeNone:
+				child.setDisabled(False)
+			else:
+				child.setDisabled(True)
+	
 
 class WidgetItemTreeWidget(QtGui.QTreeWidget):
 	def __init__(self, parent=None):
@@ -135,7 +153,6 @@ class WidgetItemTreeWidget(QtGui.QTreeWidget):
 		TableCrabConfig.signalConnect(widgetItem, self, 'itemAdded(QObject*)', self.onWidgetItemAdded)
 		TableCrabConfig.widgetItemManager.addItem(widgetItem)
 		
-	
 
 class FrameWidgetItems(QtGui.QFrame):
 	
@@ -294,6 +311,10 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		self.buttonSave.setEnabled(True)
 		self.gatherWindowInfo(hwnd)		
 		self.buttonInfo.setEnabled(True)
+		# emit global signal
+		w, h = pixmap.width(), pixmap.height()
+		TableCrabConfig.signalEmit(None, 'widgetScreenshotSet(int, int)', w, h)
+		
 		
 	def 	gatherWindowInfo(self, hwnd):
 		def windowInfo(hwnd, level=0):
@@ -352,15 +373,6 @@ class FrameTablesScreenshot(QtGui.QFrame):
 			screenshotW = px.width()
 			screenshotH = px.height()
 			TableCrabConfig.signalEmit(self, 'screenshotClicked(QSize*, QPoint*)', QtCore.QSize(screenshotW, screenshotH), point)
-		
-	def setScreenshot(self, pixmap):
-		if pixmap.isNull():
-			self.label.setText('Screenshot')
-		else:
-			self.label.setPixmap(pixmap)
-			#TODO: check if it is correct to do so..
-			self.label.setFixedSize(QtCore.QSize(pixmap.width(), pixmap.height()))
-		self.buttonSave.setEnabled(pixmap is not None)
 		
 	def onButtonOpenClicked(self, checked):
 		dlg = QtGui.QFileDialog(self)
