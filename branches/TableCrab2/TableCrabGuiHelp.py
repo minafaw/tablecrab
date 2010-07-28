@@ -282,6 +282,8 @@ def dialogHelp(topic, parent=None):
 	dlg.restoreGeometry( TableCrabConfig.settingsValue('Gui/DialogHelp/Geometry', QtCore.QByteArray()).toByteArray() )
 	dlg.show()
 	TableCrabConfig.settingsSetValue('Gui/DialogHelp/Geometry', dlg.saveGeometry() )
+	#TODO: how to save the splitter state? code below does not work. we may have to abstract the frame a bit more to get support for this
+	##dlg.frameHelpTree.onCloseEvent(None)
 
 #**********************************************************************************************
 #
