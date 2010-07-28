@@ -93,11 +93,13 @@ class NetworkAccessManager(QtNetwork.QNetworkAccessManager):
 		self.setProxy(oldManager.proxy())
 		self.setProxyFactory(oldManager.proxyFactory())
 	def createRequest(self, operation, request, data):
+		
+		#TODO: would be nice to be able to serve this as local files not "tableCrab://" so our real Html pages dont break
 		if request.url().scheme() == "TableCrab" and operation == self.GetOperation:
-			
 			buffer = ByteArrayBuffer()
 			reply = TableCrabReply(buffer, parent=self)
 			reply.setUrl(request.url() )
+			
 			if request.url().authority() == 'htmlpage':
 				reply.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader, QtCore.QVariant("text/html; charset=UTF-8"))
 				name = str( request.url().path() ).lstrip('/')
