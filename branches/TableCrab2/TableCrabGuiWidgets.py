@@ -49,6 +49,7 @@ class TablePokerStarsTreeWidgetItem(QtGui.QTreeWidgetItem):
 		
 		#TODO: bit of a hack here to disable child items initially
 		self.onWidgetScreenshotSet(-9, -9)
+		
 	
 	def childItem(self, attrName):
 		for index in xrange(self.childCount()):
@@ -178,7 +179,8 @@ class FrameWidgetItems(QtGui.QFrame):
 			self.menuNewWidgetItem.addAction(widgetItem)
 		self.buttonNew.setMenu(self.menuNewWidgetItem)
 			
-		# init buttons
+		#
+		TableCrabConfig.signalConnect(None, self, 'widgetScreenshotDoubleClicked(QSize*, QPoint*)', self.onWidgetScreenshotDoubleClicked)
 		TableCrabConfig.signalConnect(self.widgetItemTreeWidget, self, 'itemSelectionChanged()', self.onTreeItemSelectionChanged)
 		TableCrabConfig.signalConnect(self.buttonUp, self, 'clicked(bool)', self.onButtonUpClicked)
 		TableCrabConfig.signalConnect(self.buttonDown, self, 'clicked(bool)', self.onButtonDownClicked)
@@ -195,7 +197,7 @@ class FrameWidgetItems(QtGui.QFrame):
 		box.addWidget(self.buttonUp, 1, 1)
 		box.addWidget(self.buttonDown, 2, 1)
 	
-	def setPoint(self, size, point):
+	def onWidgetScreenshotDoubleClicked(self, size, point):
 		item = self.widgetItemTreeWidget.currentItem()
 		if item is None:
 			return False
@@ -263,8 +265,10 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		def mouseDoubleClickEvent(self, event):
 			if event.button() == QtCore.Qt.LeftButton:
 				#TODO: check if the point is client cordinates of the label
-				TableCrabConfig.signalEmit(self, 'doubleClicked(QPoint*)', event.pos())
-			return QtGui.QLabel.mouseDoubleClickEvent(self, event)
+				px = self.pixmap()
+				if px is not None:
+					TableCrabConfig.signalEmit(None, 'widgetScreenshotDoubleClicked(QSize*, QPoint*)', px.size(), event.pos())
+				return QtGui.QLabel.mouseDoubleClickEvent(self, event)
 	
 	
 	def __init__(self, parent=None):
@@ -285,7 +289,6 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		self.lastInfo = None
 		
 		TableCrabConfig.signalConnect(None, self, 'windowScreenshot(int, QPixmap*)', self.onWindowScreenshot)
-		TableCrabConfig.signalConnect(self.label, self, 'doubleClicked(QPoint*)', self.onLabelDoubleClicked)
 		self.buttonSave.setEnabled(False)
 		TableCrabConfig.signalConnect(self.buttonOpen, self, 'clicked(bool)', self.onButtonOpenClicked)
 		TableCrabConfig.signalConnect(self.buttonSave, self, 'clicked(bool)', self.onButtonSaveClicked)
@@ -366,13 +369,6 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		box = TableCrabConfig.GridBox(self)
 		box.addWidget(self.scrollArea, 0, 0)
 		box.addWidget(self.buttonBox, 1, 0)
-		
-	def onLabelDoubleClicked(self, point):
-		px = self.label.pixmap()
-		if px is not None:
-			screenshotW = px.width()
-			screenshotH = px.height()
-			TableCrabConfig.signalEmit(self, 'screenshotClicked(QSize*, QPoint*)', QtCore.QSize(screenshotW, screenshotH), point)
 		
 	def onButtonOpenClicked(self, checked):
 		dlg = QtGui.QFileDialog(self)
@@ -502,9 +498,7 @@ class FrameWidgets(QtGui.QFrame):
 		self.splitter.addWidget(self.frameWidgetItems)
 		self.splitter.addWidget(self.frameTablesScreenshot)
 		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Widgets/SplitterState', QtCore.QByteArray()).toByteArray() )
-		
 		TableCrabConfig.signalConnect(None, self, 'closeEvent(QEvent*)', self.onCloseEvent)
-		TableCrabConfig.signalConnect(self.frameTablesScreenshot, self, 'screenshotClicked(QSize*, QPoint*)', self.onPaneTablesScreenshotScreenshotClicked)
 		
 		self.layout()
 	def layout(self):
@@ -512,9 +506,6 @@ class FrameWidgets(QtGui.QFrame):
 		hbox.addWidget(self.splitter)
 	def onCloseEvent(self, event):
 		TableCrabConfig.settingsSetValue('Gui/Widgets/SplitterState', self.splitter.saveState())
-		
-	def onPaneTablesScreenshotScreenshotClicked(self, screenshotSize, point):
-		self.frameWidgetItems.setPoint(screenshotSize, point)
 
 #**********************************************************************************************
 #
