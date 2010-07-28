@@ -30,7 +30,6 @@ def main():
 			px.save(p, 'png')
 			
 			funtionName = os.path.splitext(name)[0]
-			funtionName = funtionName[0].lower() + funtionName[1:]
 			fp.write('def %s():\n' % funtionName)
 			fp.write('\tpx = _cache.get("%s", None)\n' % funtionName)
 			fp.write('\tif px is None:\n')
@@ -53,7 +52,26 @@ def main():
 				arr = QtCore.QByteArray(fp2.read() )
 			
 			funtionName = os.path.splitext(name)[0]
-			funtionName = funtionName[0].lower() + funtionName[1:]
+			fp.write('def %s():\n' % funtionName)
+			fp.write('\tarr = _cache.get("%s", None)\n' % funtionName)
+			fp.write('\tif arr is None:\n')
+			fp.write('\t\tarr = QtCore.QByteArray.fromBase64("%s")\n' % arr.toBase64() )
+			fp.write('\t\t_cache["%s"] = arr\n' % funtionName)
+			fp.write('\treturn QtCore.QString(arr)\n')
+	
+# gen StyleSheets.py
+with open(os.path.join(DirSelf, 'StyleSheets.py'), 'w') as fp:
+		fp.write('# auto generated resource file. WARNING: do not edit\n')
+		fp.write('from PyQt4 import QtCore\n')
+		fp.write('_cache = {}\n')
+		for name in os.listdir(DirHtmlPages):
+			fileName = os.path.join(DirHtmlPages, name)
+			if not os.path.isfile(fileName): continue
+			if not os.path.splitext(name)[1].lower() == '.css': continue
+			with open(fileName, 'r') as fp2:
+				arr = QtCore.QByteArray(fp2.read() )
+			
+			funtionName = os.path.splitext(name)[0]
 			fp.write('def %s():\n' % funtionName)
 			fp.write('\tarr = _cache.get("%s", None)\n' % funtionName)
 			fp.write('\tif arr is None:\n')
