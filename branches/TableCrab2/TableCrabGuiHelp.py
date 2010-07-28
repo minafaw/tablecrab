@@ -94,39 +94,47 @@ class NetworkAccessManager(QtNetwork.QNetworkAccessManager):
 		self.setProxyFactory(oldManager.proxyFactory())
 	def createRequest(self, operation, request, data):
 		
-		#TODO: would be nice to be able to serve this as local files not "tableCrab://" so our real Html pages dont break
-		if request.url().scheme() == "TableCrab" and operation == self.GetOperation:
+		# serve local files from our resource modules
+		if request.url().scheme() == "file" and operation == self.GetOperation:
+			fileInfo = QtCore.QFileInfo(request.url().path())
+			name = str(fileInfo.baseName() )		#NOTE: we need to string it ..getattr() crasches otherwise
+			ext = fileInfo.suffix()
+			
 			buffer = ByteArrayBuffer()
 			reply = TableCrabReply(buffer, parent=self)
 			reply.setUrl(request.url() )
 			
-			if request.url().authority() == 'htmlpage':
+			if ext == 'html':
 				reply.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader, QtCore.QVariant("text/html; charset=UTF-8"))
-				name = str( request.url().path() ).lstrip('/')
 				func = getattr(TableCrabConfig.HtmlPages, name, None)
-				if func is None:
-					buffer.setByteArray(QtCore.QByteArray('<h2>404: File Not Found</h2>'))
-				else:
+				if func is not None:
 					arr = QtCore.QByteArray()
 					arr+= func()
 					buffer.setByteArray(arr)
-				
-			elif request.url().authority() == 'pixmap':
-				reply.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader, QtCore.QVariant("image/png"))
-				name = str( request.url().path() ).lstrip('/')
-				func = getattr(TableCrabConfig.Pixmaps, name, None)
-				if func is None:
-					#TODO: ...
-					pass
 				else:
+					buffer.setByteArray(QtCore.QByteArray('<h2>404: File Not Found</h2>'))
+				return reply
+				
+			elif ext == 'png':
+				reply.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader, QtCore.QVariant("image/png"))
+				func = getattr(TableCrabConfig.Pixmaps, name, None)
+				if func is not None:		# let QtWebKit handle other case
 					arr = QtCore.QByteArray()
 					p = QtCore.QBuffer(arr)
 					p.open(p.WriteOnly)
 					px = func()
 					px.save(p, 'png')
 					buffer.setByteArray(arr)
+					return reply
 			
-			return reply
+			elif ext == 'css':
+				reply.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader, QtCore.QVariant("text/css"))
+				func = getattr(TableCrabConfig.StyleSheets, name, None)
+				if func is not None:		# let QtWebKit handle other case
+					arr = QtCore.QByteArray()
+					arr+= func()
+					buffer.setByteArray(arr)
+					return reply	
 			
 		return QtNetwork.QNetworkAccessManager.createRequest(self, operation, request, data)
 
@@ -209,7 +217,8 @@ class FrameHelpTree(QtGui.QFrame):
 		if not items: return
 		item = items[0]
 		topic = item.data(0, QtCore.Qt.UserRole).toString()
-		url = QtCore.QUrl('TableCrab://HtmlPage/%s' % topic)
+		#url = QtCore.QUrl('TableCrab://HtmlPage/%s' % topic)
+		url = QtCore.QUrl('%s.html' % topic)
 		self.webView.setUrl(url)
 		TableCrabConfig.settingsSetValue('Gui/Help/Topic', topic)
 		
