@@ -86,7 +86,7 @@ class TablePokerStarsTreeWidgetItem(QtGui.QTreeWidgetItem):
 			child = self.myChildren[attrName]
 			child.setText(1, TableCrabConfig.sizeToString(self.widgetItem.size))
 		elif attrName == 'itemIsExpanded':
-			pass
+			self.setExpanded(self.widgetItem.itemIsExpanded)
 		else:
 			child = self.myChildren[attrName]
 			child.setText(1, TableCrabConfig.pointToString( getattr(self.widgetItem, attrName) ) )
@@ -105,7 +105,6 @@ class TablePokerStarsTreeWidgetItem(QtGui.QTreeWidgetItem):
 			else:
 				child.setDisabled(True)
 	
-
 class WidgetItemTreeWidget(QtGui.QTreeWidget):
 	def __init__(self, parent=None):
 		QtGui.QTreeWidget.__init__(self, parent)
@@ -136,6 +135,7 @@ class WidgetItemTreeWidget(QtGui.QTreeWidget):
 		item = TablePokerStarsTreeWidgetItem(widgetItem, parent=self)
 		self.addTopLevelItem(item)
 		self.setCurrentItem(item)
+		widgetItem.itemIsExpanded = True
 	def onTreeItemChanged(self, item, column):
 		if item.attrName == 'name':
 			if item.text(0) != item.widgetItem.name:	#NOTE: special handling for in-place editing
