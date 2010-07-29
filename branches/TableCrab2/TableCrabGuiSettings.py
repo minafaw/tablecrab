@@ -38,7 +38,7 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		
 		self.checkAlternatingRowColors = TableCrabConfig.CheckBox('Use Alternating Row Colors', default=False, settingsKey='Gui/AlternatingRowColors', parent=self)
 		TableCrabConfig.signalConnect(self.checkAlternatingRowColors, self, 'stateChanged(int)', self.onAlternatingRowColorsChanged)
-		self.checkChildItemIndicators = TableCrabConfig.CheckBox('Show Child Item Indicators', default=False, settingsKey='Gui/ChildItemIndicators', parent=self)
+		self.checkChildItemIndicators = TableCrabConfig.CheckBox('Show Child Item Indicators', default=True, settingsKey='Gui/ChildItemIndicators', parent=self)
 		TableCrabConfig.signalConnect(self.checkChildItemIndicators, self, 'stateChanged(int)', self.onChildItemIndicatorsChanged)
 		
 		self.buttonHelp = QtGui.QPushButton('Help', self)

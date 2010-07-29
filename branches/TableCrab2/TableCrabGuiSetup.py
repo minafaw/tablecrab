@@ -118,7 +118,7 @@ class PersistentItemTreeWidget(QtGui.QTreeWidget):
 		self.header().setResizeMode(1, QtGui.QHeaderView.ResizeToContents)
 		self.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
 		TableCrabConfig.signalConnect(None, self, 'settingAlternatingRowColorsChanged(bool)', self.onSettingAlternatingRowColorsChanged)	
-		self.setRootIsDecorated( TableCrabConfig.settingsValue('Gui/ChildItemIndicators', False).toBool() )
+		self.setRootIsDecorated( TableCrabConfig.settingsValue('Gui/ChildItemIndicators', True).toBool() )
 		TableCrabConfig.signalConnect(None, self, 'settingChildItemIndicatorsChanged(bool)', self.onSettingChildItemIndicatorsChanged)	
 		
 		#NOTE: we have to connect after adding the initial tables cos QTreeWidget informs us about every* itemChange
