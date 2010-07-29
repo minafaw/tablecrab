@@ -3,7 +3,7 @@ import TableCrabConfig
 from PyQt4 import QtCore, QtGui
 
 import TableCrabGuiSettings
-import TableCrabGuiWidgets
+import TableCrabGuiSetup
 import TableCrabGuiHotkeys
 import TableCrabGuiHand
 import TableCrabGuiHelp
@@ -17,7 +17,7 @@ class Gui(TableCrabConfig.MainWindow):
 		self.tabWidget = QtGui.QTabWidget(self)
 		self.setCentralWidget(self.tabWidget)
 		
-		self.tabWidget.addTab(TableCrabGuiWidgets.FrameWidgets(parent=self), 'Widgets')
+		self.tabWidget.addTab(TableCrabGuiSetup.FrameSetup(parent=self), 'Setup')
 		self.tabWidget.addTab(TableCrabGuiHotkeys.FrameHotkeys(parent=self), 'Hotkeys')
 		self.tabWidget.addTab(TableCrabGuiHand.FrameHand(parent=self), 'Hand')
 		self.tabWidget.addTab(TableCrabGuiSettings.FrameSettings(parent=self), 'Settings')

@@ -116,7 +116,7 @@ class PersistentItemTreeWidget(QtGui.QTreeWidget):
 		self.header().setResizeMode(1, QtGui.QHeaderView.ResizeToContents)
 			
 		#NOTE: we have to connect after adding the initial tables cos QTreeWidget informs us about every* itemChange
-		TableCrabConfig.signalConnect(TableCrabConfig.widgetItemManager, self, 'itemRead(QObject*)', self.onPersistentItemManagerItemRead)
+		TableCrabConfig.signalConnect(TableCrabConfig.setupWidgetItemManager, self, 'itemRead(QObject*)', self.onPersistentItemManagerItemRead)
 		TableCrabConfig.signalConnect(self, self, 'itemChanged(QTreeWidgetItem*, int)', self.onTreeItemChanged)
 		TableCrabConfig.signalConnect(self, self, 'itemDoubleClicked(QTreeWidgetItem*)',self.editItem)
 		TableCrabConfig.signalConnect(self, self, 'itemExpanded(QTreeWidgetItem*)',self.onItemExpanded)
@@ -134,28 +134,28 @@ class PersistentItemTreeWidget(QtGui.QTreeWidget):
 		item = TablePokerStarsTreeWidgetItem(persistentItem, parent=self)
 		self.addTopLevelItem(item)
 		self.setCurrentItem(item)
-		TableCrabConfig.widgetItemManager.setItemAttr(persistentItem, 'itemIsExpanded', True)
+		TableCrabConfig.setupWidgetItemManager.setItemAttr(persistentItem, 'itemIsExpanded', True)
 	def onTreeItemChanged(self, item, column):
-		if not TableCrabConfig.widgetItemManager.readFinished():
+		if not TableCrabConfig.setupWidgetItemManager.readFinished():
 			return
 		if item.attrName == 'name':
 			if item.text(0) != item.persistentItem.name:	#NOTE: special handling for in-place editing
-				TableCrabConfig.widgetItemManager.setItemAttr(item.persistentItem, 'name', item.text(0))
+				TableCrabConfig.setupWidgetItemManager.setItemAttr(item.persistentItem, 'name', item.text(0))
 	def onPersistentItemManagerItemRead(self, persistentItem):
 		item = TablePokerStarsTreeWidgetItem(persistentItem, parent=self)
 		self.addTopLevelItem(item)
 	def onItemExpanded(self, item):
-		if not TableCrabConfig.widgetItemManager.readFinished():
+		if not TableCrabConfig.setupWidgetItemManager.readFinished():
 			return
-		TableCrabConfig.widgetItemManager.setItemAttr(item.persistentItem, 'itemIsExpanded', True)
+		TableCrabConfig.setupWidgetItemManager.setItemAttr(item.persistentItem, 'itemIsExpanded', True)
 	def onItemCollapsed(self, item):
-		if not TableCrabConfig.widgetItemManager.readFinished():
+		if not TableCrabConfig.setupWidgetItemManager.readFinished():
 			return
-		TableCrabConfig.widgetItemManager.setItemAttr(item.persistentItem, 'itemIsExpanded', False)
+		TableCrabConfig.setupWidgetItemManager.setItemAttr(item.persistentItem, 'itemIsExpanded', False)
 	def createPersistentItem(self, persistentItemProto):
 		persistentItem = persistentItemProto(name=persistentItemProto.itemName())
 		TableCrabConfig.signalConnect(persistentItem, self, 'itemAdded(QObject*)', self.onPersistentItemAdded)
-		TableCrabConfig.widgetItemManager.addItem(persistentItem)
+		TableCrabConfig.setupWidgetItemManager.addItem(persistentItem)
 	
 
 class FramePersistentItems(QtGui.QFrame):
@@ -176,7 +176,7 @@ class FramePersistentItems(QtGui.QFrame):
 		self.menuNewPersistentItem = QtGui.QMenu(self)
 		
 		#
-		for persistentItemProto in TableCrabConfig.WidgetItems:
+		for persistentItemProto in TableCrabConfig.SetupWidgetItems:
 			persistentItem = self.ActionNewPersistentItem(persistentItemProto, parent=self)
 			TableCrabConfig.signalConnect(persistentItem, self, 'triggered(bool)', self.onPersistentItemNewTriggered)
 			self.menuNewPersistentItem.addAction(persistentItem)
@@ -187,7 +187,7 @@ class FramePersistentItems(QtGui.QFrame):
 		TableCrabConfig.signalConnect(self.persistentItemTreeWidget, self, 'itemSelectionChanged()', self.onTreeItemSelectionChanged)
 		TableCrabConfig.signalConnect(self.buttonUp, self, 'clicked(bool)', self.onButtonUpClicked)
 		TableCrabConfig.signalConnect(self.buttonDown, self, 'clicked(bool)', self.onButtonDownClicked)
-		self.buttonNew.setEnabled(TableCrabConfig.widgetItemManager.canAddItem() )
+		self.buttonNew.setEnabled(TableCrabConfig.setupWidgetItemManager.canAddItem() )
 		TableCrabConfig.signalConnect(self.buttonRemove, self, 'clicked(bool)', self.onButtonRemoveClicked)
 		
 		self._adjustButtons()
@@ -211,7 +211,7 @@ class FramePersistentItems(QtGui.QFrame):
 			pass
 		elif persistentItem.size != size:
 			return False
-		TableCrabConfig.widgetItemManager.setItemAttrs(persistentItem, {item.attrName: point, 'size': size})
+		TableCrabConfig.setupWidgetItemManager.setItemAttrs(persistentItem, {item.attrName: point, 'size': size})
 		return True
 		
 	def onButtonUpClicked(self, checked):
@@ -220,7 +220,7 @@ class FramePersistentItems(QtGui.QFrame):
 			self.buttonUp.setEnabled(False)
 			return
 		persistentItem= item.persistentItem if item.parent() is None else item.parent().persistentItem
-		TableCrabConfig.widgetItemManager.moveItemUp(persistentItem)
+		TableCrabConfig.setupWidgetItemManager.moveItemUp(persistentItem)
 	
 	def onButtonDownClicked(self, checked):
 		item = self.persistentItemTreeWidget.currentItem()
@@ -228,7 +228,7 @@ class FramePersistentItems(QtGui.QFrame):
 			self.buttonDown.setEnabled(False)
 			return
 		persistentItem = item.persistentItem if item.parent() is None else item.parent().persistentItem
-		TableCrabConfig.widgetItemManager.moveItemDown(persistentItem)
+		TableCrabConfig.setupWidgetItemManager.moveItemDown(persistentItem)
 	
 	def onButtonRemoveClicked(self, checked):
 		item = self.persistentItemTreeWidget.currentItem()
@@ -236,7 +236,7 @@ class FramePersistentItems(QtGui.QFrame):
 			self.buttonRemove.setEnabled(False)
 			return
 		persistentItem = item.persistentItem if item.parent() is None else item.parent().persistentItem
-		TableCrabConfig.widgetItemManager.removeItem(persistentItem)
+		TableCrabConfig.setupWidgetItemManager.removeItem(persistentItem)
 		
 	def onTreeItemSelectionChanged(self):
 		self._adjustButtons()
@@ -254,8 +254,8 @@ class FramePersistentItems(QtGui.QFrame):
 			self.buttonDown.setEnabled(False)
 			self.buttonRemove.setEnabled(False)
 		else:
-			self.buttonUp.setEnabled(TableCrabConfig.widgetItemManager.canMoveItemUp(persistentItem) )
-			self.buttonDown.setEnabled(TableCrabConfig.widgetItemManager.canMoveItemDown(persistentItem) )
+			self.buttonUp.setEnabled(TableCrabConfig.setupWidgetItemManager.canMoveItemUp(persistentItem) )
+			self.buttonDown.setEnabled(TableCrabConfig.setupWidgetItemManager.canMoveItemDown(persistentItem) )
 			self.buttonRemove.setEnabled(True)
 		
 	def onPersistentItemNewTriggered(self, checked):
@@ -491,7 +491,7 @@ class DialgScreenshotInfo(QtGui.QDialog):
 		TableCrabGuiHelp.dialogHelp('screenshotInfo', parent=self)
 		
 
-class FrameWidgets(QtGui.QFrame):
+class FrameSetup(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 		self.splitter = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
@@ -500,7 +500,7 @@ class FrameWidgets(QtGui.QFrame):
 		
 		self.splitter.addWidget(self.framePersistentItems)
 		self.splitter.addWidget(self.frameTablesScreenshot)
-		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Widgets/SplitterState', QtCore.QByteArray()).toByteArray() )
+		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Setup/SplitterState', QtCore.QByteArray()).toByteArray() )
 		TableCrabConfig.signalConnect(None, self, 'closeEvent(QEvent*)', self.onCloseEvent)
 		
 		self.layout()
@@ -508,14 +508,14 @@ class FrameWidgets(QtGui.QFrame):
 		hbox = TableCrabConfig.HBox(self)
 		hbox.addWidget(self.splitter)
 	def onCloseEvent(self, event):
-		TableCrabConfig.settingsSetValue('Gui/Widgets/SplitterState', self.splitter.saveState())
+		TableCrabConfig.settingsSetValue('Gui/Setup/SplitterState', self.splitter.saveState())
 
 #**********************************************************************************************
 #
 #**********************************************************************************************
 if __name__ == '__main__':
 	g = TableCrabConfig.MainWindow()
-	g.setCentralWidget(FrameWidgets(g))
+	g.setCentralWidget(FrameSetup(g))
 	g.start()
 	
 	

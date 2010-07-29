@@ -885,7 +885,7 @@ class _ActionItemManager(PersistentItemManager):
 actionItemManager = _ActionItemManager()
 
 
-class WidgetItemTablePokerStars(PersistentItem):
+class SetupWidgetItemTablePokerStars(PersistentItem):
 	Attrs = (		# name--> valueType
 			('name', QtCore.QString),
 			('size', QtCore.QSize), 
@@ -929,15 +929,15 @@ class WidgetItemTablePokerStars(PersistentItem):
 		settingsSetValue(settingsKeyJoin(key, 'ItemIsExpanded'), self.itemIsExpanded)
 		return True
 
-WidgetItems = (
-		WidgetItemTablePokerStars,
+SetupWidgetItems = (
+		SetupWidgetItemTablePokerStars,
 		)
-MaxWidgetItems = 64
-class _WidgetItemManager(PersistentItemManager):
+MaxSetupWidgetItems = 64
+class _SetupWidgetItemManager(PersistentItemManager):
 	def __init__(self, parent=None):
-		PersistentItemManager.__init__(self, parent=parent, key='Scrapes', maxItems=MaxWidgetItems, itemProtos=WidgetItems)
+		PersistentItemManager.__init__(self, parent=parent, key='Scrapes', maxItems=MaxSetupWidgetItems, itemProtos=SetupWidgetItems)
 		
-widgetItemManager = _WidgetItemManager()
+setupWidgetItemManager = _SetupWidgetItemManager()
 
 #***********************************************************************************
 # 
@@ -1407,7 +1407,7 @@ class MainWindow(QtGui.QMainWindow):
 		keyboardHook.start()
 		windowHook.start()
 		actionItemManager.read()
-		widgetItemManager.read()
+		setupWidgetItemManager.read()
 	def closeEvent(self, event):
 		signalEmit(None, 'closeEvent(QEvent*)', event)
 		mouseHook.stop()
