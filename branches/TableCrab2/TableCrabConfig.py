@@ -87,9 +87,10 @@ def settingsRemoveKey(key):
 # global signal  'closeEvent(QEvent*)'
 # global signal 'feedbackMessage(QString)'
 # global signal 'feedbackException()'
-# global signal 'windowScreenshot(int, QPixmap*)'
-# global signal 'widgetScreenshotSet(int, int)'
+# global signal 'widgetScreenshot(int, QPixmap*)'
+# global signal 'widgetScreenshotSet(QSize*)'
 # global signal 'widgetScreenshotDoubleClicked(QSize*, QPoint*)'
+# global signal 'widgetScreenshotQuery()'
 # global signal 'settingAlternatingRowColorsChanged(bool)'
 # global signal 'settingChildItemIndicatorsChanged(bool)'
 #
@@ -113,9 +114,9 @@ def helpUrl(name):
 #***********************************************************************************
 # global window methods
 #***********************************************************************************
-def windowScreenshot(hwnd):
+def widgetScreenshot(hwnd):
 	pixmap = QtGui.QPixmap.grabWindow(hwnd, 0, 0, -1,-1)
-	signalEmit(None, 'windowScreenshot(int, QPixmap*)', hwnd, pixmap)
+	signalEmit(None, 'widgetScreenshot(int, QPixmap*)', hwnd, pixmap)
 
 class _WindowForegroundHook(QtCore.QObject):
 	def __init__(self, parent=None):
@@ -1047,7 +1048,7 @@ class _SiteManager(QtCore.QObject):
 			actionName = actionItem.itemName()
 			if actionName == ActionScreenshot.itemName():
 				if not keydown or nSteps is not None:
-					windowScreenshot(hwnd)
+					widgetScreenshot(hwnd)
 				return True
 				
 			elif actionName == ActionCheck.itemName():
