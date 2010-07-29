@@ -787,7 +787,7 @@ class ActionCheck(PersistentItem):
 		return 'Check'
 	@classmethod
 	def fromConfig(klass, key):
-		itemName = settingsValue( settingsKeyJoin(key, 'itemName'), '').toString()
+		itemName = settingsValue( settingsKeyJoin(key, 'ItemName'), '').toString()
 		if itemName != klass.itemName(): return None
 		hotkey = settingsValue( settingsKeyJoin(key, 'Hotkey'), ValueNone).toString()
 		if hotkey == ValueNone: return None
@@ -795,7 +795,7 @@ class ActionCheck(PersistentItem):
 		hotkeyName = settingsValue( settingsKeyJoin(key, 'HotkeyName'), '').toString()
 		return klass(name=name, hotkey=hotkey, hotkeyName=hotkeyName)
 	def toConfig(self, key):
-		settingsSetValue( settingsKeyJoin(key, 'itemName'), self.itemName() )
+		settingsSetValue( settingsKeyJoin(key, 'ItemName'), self.itemName() )
 		settingsSetValue( settingsKeyJoin(key, 'Name'), self.name )
 		settingsSetValue( settingsKeyJoin(key, 'Hotkey'), self.hotkey )
 		settingsSetValue( settingsKeyJoin(key, 'HotkeyName'), self.hotkeyName)
@@ -845,7 +845,7 @@ class ActionAlterBetAmount(PersistentItem):
 		return 'AlterBetAmount'
 	@classmethod
 	def fromConfig(klass, key):
-		itemName = settingsValue( settingsKeyJoin(key, 'itemName'), ValueNone).toString()
+		itemName = settingsValue( settingsKeyJoin(key, 'ItemName'), ValueNone).toString()
 		if itemName != klass.itemName(): return None
 		hotkey = settingsValue( settingsKeyJoin(key, 'Hotkey'), ValueNone).toString()
 		if hotkey == ValueNone: return None
@@ -857,7 +857,7 @@ class ActionAlterBetAmount(PersistentItem):
 		name = settingsValue( settingsKeyJoin(key, 'Name'), ValueNone).toString()
 		return klass(name=name, hotkey=hotkey, hotkeyName=hotkeyName, baseValue = baseValue, multiplier=multiplier)
 	def toConfig(self, key):
-		settingsSetValue( settingsKeyJoin(key, 'itemName'), self.itemName() )
+		settingsSetValue( settingsKeyJoin(key, 'ItemName'), self.itemName() )
 		settingsSetValue( settingsKeyJoin(key, 'Name'), self.name)
 		settingsSetValue( settingsKeyJoin(key, 'HotkeyName'), self.hotkeyName)
 		settingsSetValue( settingsKeyJoin(key, 'Hotkey'), self.hotkey)
