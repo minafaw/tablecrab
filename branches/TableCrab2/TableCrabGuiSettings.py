@@ -12,9 +12,18 @@ import TableCrabGuiHelp
 class FrameSettingsGlobal(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
+		self.labelGuiStyle = QtGui.QLabel('Global Style:', self)
+		self.comboGuiStyle = TableCrabConfig.ComboBox(
+				[style for style in QtGui.QStyleFactory().keys()] , 
+				settingsKey='Gui/Style', 
+				default=QtGui.qApp.style().objectName(),	#HACK:  not documented for getting style name but the lights are on. so i assume it works
+				failsave=True,
+				)
 		self.labelGuiFont = QtGui.QLabel('Global Font:', self)
 		self.buttonGuiFont = QtGui.QPushButton('..', self)
 		TableCrabConfig.signalConnect(self.buttonGuiFont, self, 'clicked(bool)', self.onButtonGuiFontClicked)
+		
+		TableCrabConfig.signalConnect(self.comboGuiStyle, self, 'currentIndexChanged(QString)', self.onComboGuiStyleCurrentIndexChanged)
 		self.labelZoomIncrement = QtGui.QLabel('Zoom Increment:', self)
 		self.spinZoomIncrement = TableCrabConfig.DoubleSpinBox(
 				settingsKey='Gui/WebView/ZoomIncrement', 
@@ -34,20 +43,23 @@ class FrameSettingsGlobal(QtGui.QFrame):
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
 		
-		
-		grid.addWidget(self.labelGuiFont, 0, 0)
-		grid.addWidget(self.buttonGuiFont, 0, 1)
+		grid.addWidget(self.labelGuiStyle, 0, 0)
+		grid.addWidget(self.comboGuiStyle, 0, 1)
 		grid.addLayout(TableCrabConfig.HStretch(), 0, 2)
-			
-		grid.addWidget(self.labelZoomIncrement, 1, 0)
-		grid.addWidget(self.spinZoomIncrement, 1, 1)
+		
+		grid.addWidget(self.labelGuiFont, 1, 0)
+		grid.addWidget(self.buttonGuiFont, 1, 1)
 		grid.addLayout(TableCrabConfig.HStretch(), 1, 2)
+				
+		grid.addWidget(self.labelZoomIncrement, 2, 0)
+		grid.addWidget(self.spinZoomIncrement, 2, 1)
+		grid.addLayout(TableCrabConfig.HStretch(), 2, 2)
 			
-		grid.addLayout(TableCrabConfig.VStretch(), 2, 0)
-		grid.addWidget(TableCrabConfig.HLine(self), 3, 0, 1, 3)
+		grid.addLayout(TableCrabConfig.VStretch(), 3, 0)
+		grid.addWidget(TableCrabConfig.HLine(self), 4, 0, 1, 3)
 			
 		grid2 = TableCrabConfig.GridBox()
-		grid.addLayout(grid2, 4, 0, 1, 3)
+		grid.addLayout(grid2, 5, 0, 1, 3)
 		grid2.addWidget(self.buttonBox, 0, 0)
 		
 	def onButtonHelpClicked(self, checked):
@@ -58,6 +70,10 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		if ok:
 			QtGui.qApp.setFont(font)
 			TableCrabConfig.settingsSetValue('Gui/Font', font.toString())
+	
+	def onComboGuiStyleCurrentIndexChanged(self, qString):
+		QtGui.qApp.setStyle(QtGui.QStyleFactory.create(qString))
+		
 
 
 class FrameSettingsPokerStars(QtGui.QFrame):

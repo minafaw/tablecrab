@@ -1329,10 +1329,22 @@ class CheckBox(QtGui.QCheckBox):
 		if self.settingsKey is not None: settingsSetValue(self.settingsKey, self.checkState() == QtCore.Qt.Checked)
 
 class ComboBox(QtGui.QComboBox):
-	def __init__(self, choices, default='', parent=None):
+	def __init__(self, choices, default='', failsave=False, settingsKey=None, parent=None):
 		QtGui.QComboBox.__init__(self, parent)
 		self.addItems(choices)
-		self.setCurrentIndex(choices.index(default))
+		self.settingsKey = settingsKey
+		if self.settingsKey is None:
+			value = default
+		else:
+			value = settingsValue(self.settingsKey, default).toString()
+			self.connect(self, QtCore.SIGNAL('currentIndexChanged(QString)'), self.onCurrentIndexChanged)
+		if failsave:
+			if value in choices:
+				self.setCurrentIndex(choices.index(value))
+		else:
+			self.setCurrentIndex(choices.index(value))
+	def 	onCurrentIndexChanged(self, qString):
+		if self.settingsKey is not None: settingsSetValue(self.settingsKey, qString)
 
 contentsMargins = QtCore.QMargins(2, 2, 2, 2)
 class VBox(QtGui.QVBoxLayout):
@@ -1416,6 +1428,8 @@ class MainWindow(QtGui.QMainWindow):
 			QtGui.qApp.setFont(font)
 		self.restoreGeometry( settingsValue('Gui/Geometry', QtCore.QByteArray()).toByteArray() )
 	def show(self):
+		style = settingsValue('Gui/Style', '').toString()
+		QtGui.qApp.setStyle(QtGui.QStyleFactory.create(style))
 		QtGui.QMainWindow.show(self)
 		mouseHook.start()
 		keyboardHook.start()
