@@ -69,6 +69,9 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		font, ok = QtGui.QFontDialog.getFont(QtGui.qApp.font(), self)
 		if ok:
 			QtGui.qApp.setFont(font)
+			#TODO: for some reason font changes are reflected when we run this module but not when we run from TableCrabGui.py
+			#				setting style explicitely fixes this. hack fro now 
+			QtGui.qApp.setStyle(QtGui.QStyleFactory.create( TableCrabConfig.settingsValue('Gui/Style', '').toString() ))
 			TableCrabConfig.settingsSetValue('Gui/Font', font.toString())
 	
 	def onComboGuiStyleCurrentIndexChanged(self, qString):
