@@ -195,11 +195,11 @@ class FramePersistentItems(QtGui.QFrame):
 	def layout(self):
 		box = TableCrabConfig.GridBox(self)
 		box.addWidget(self.persistentItemTreeWidget, 0, 0, 1, 2)
-		box.addWidget(self.buttonNew, 1, 0)
-		box.addWidget(self.buttonRemove, 2, 0)
-		box.addWidget(self.buttonUp, 1, 1)
-		box.addWidget(self.buttonDown, 2, 1)
-	
+		box.addWidget(self.buttonUp, 1, 0)
+		box.addWidget(self.buttonDown, 1, 1)
+		box.addWidget(self.buttonNew, 2, 0)
+		box.addWidget(self.buttonRemove, 2, 1)
+		
 	def onWidgetScreenshotDoubleClicked(self, size, point):
 		item = self.persistentItemTreeWidget.currentItem()
 		if item is None:
