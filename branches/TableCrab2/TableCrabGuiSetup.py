@@ -40,6 +40,7 @@ class TablePokerStarsTreeWidgetItem(QtGui.QTreeWidgetItem):
 				'instantHandHistory': ChildItem('instantHandHistory', 'InstantHandHistory:', TableCrabConfig.pointToString(self.persistentItem.instantHandHistory), parent=self),
 				'replayer': ChildItem('replayer', 'Replayer:', TableCrabConfig.pointToString(self.persistentItem.replayer), parent=self),
 				}
+		self.myChildren['itemName'].setDisabled(True)
 		
 		TableCrabConfig.signalConnect(None, self.persistentItem, 'widgetScreenshotSet(QPixmap*)', self.onWidgetScreenshotSet)
 		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemAttrChanged(QObject*, QString)', self.onPersistentItemAttrChanged)
@@ -87,6 +88,7 @@ class TablePokerStarsTreeWidgetItem(QtGui.QTreeWidgetItem):
 				child.setText(1, 'None')
 			else:
 				child.setText(1, TableCrabConfig.sizeToString(self.persistentItem.size))
+				child.setDisabled(True)
 		elif attrName == 'itemIsExpanded':
 			self.setExpanded(self.persistentItem.itemIsExpanded)
 		else:
@@ -94,7 +96,15 @@ class TablePokerStarsTreeWidgetItem(QtGui.QTreeWidgetItem):
 			child.setText(1, TableCrabConfig.pointToString( getattr(self.persistentItem, attrName) ) )
 	
 	def onWidgetScreenshotSet(self, pixmap):
-		for child in self.myChildren.values():
+		for attrName, child in self.myChildren.items():
+			if attrName == 'itemName': continue
+			if attrName == 'size':
+				# enable only if size is available as slot
+				if not pixmap.isNull() and self.persistentItem.size.isEmpty():
+					child.setDisabled(False)
+				else:
+					child.setDisabled(True)
+				continue
 			if pixmap.isNull():
 				child.setDisabled(True)
 			elif self.persistentItem.size == pixmap.size():

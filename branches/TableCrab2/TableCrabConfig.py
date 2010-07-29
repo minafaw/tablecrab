@@ -1432,19 +1432,8 @@ def MsgCritical(msg):
 def pointToString(qPoint):
 	return '%s, %s' % (qPoint.x(), qPoint.y())
 
-def pointFromString(string):
-	p = str(string)
-	x, sep, y = p.partition(', ')
-	if not sep:
-		x, sep, y = p.partition(',')
-	return QtCore.QPoint(int(x), int(y))
-
 def sizeToString(qSize):
-	return '%s, %s' % (qSize.width(), qSize.height())
-
-def sizeFromString(string):
-	pt = pointFromString(string)
-	return QtCore.QSize(pt.x, pt.y)
+	return '%sx%s' % (qSize.width(), qSize.height())
 
 #***********************************************************************************
 # global Application and ainWindow object
