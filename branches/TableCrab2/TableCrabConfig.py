@@ -4,16 +4,18 @@
 #
 # every module should add this module as the very first import
 #***************************************************************************************
+import sys, os, traceback, logging
+from logging import handlers
+
 TableCrabApplicationName = 'TableCrab2'
 TableCrabVersion = '0.1.0'
 TableCrabReleaseName = '%s-%s' % (TableCrabApplicationName, TableCrabVersion)
 TableCrabAuthor = 'JuergenUrner'
+TableCrabErrorLogName = TableCrabApplicationName + '-Error.log'
 
-import sys, os, traceback, logging
-from logging import handlers
 logger = logging.getLogger(TableCrabApplicationName)
 logger.addHandler(handlers.RotatingFileHandler(
-		os.path.join(os.getcwd(), TableCrabApplicationName + '-Error.log'),
+		os.path.join(os.getcwd(), TableCrabErrorLogName),
 		mode='a',
 		maxBytes=32000,
 		backupCount=0,
@@ -36,6 +38,9 @@ def _excepthook(type, value, tb):
 		p += 'SipVersion: %s\n' % sipconfig.Configuration().sip_version_str
 	except:
 		p += 'SipVersion: Unknown\n'
+	try:
+		signalEmit(None, 'feedbackException()')
+	except: pass
 	p += ''.join(traceback.format_exception(type, value, tb))
 	try:	# try to log
 		logger.critical(p)
@@ -48,7 +53,7 @@ sys.excepthook = _excepthook
 #************************************************************************************
 #
 #************************************************************************************
-import os, posixpath, thread, time, re
+import posixpath, thread, time, re
 from PyQt4 import QtCore, QtGui, QtWebKit
 
 import TableCrabWin32
@@ -75,8 +80,15 @@ def settingsRemoveKey(key):
 	_qSettings.remove(key)
 	
 #***********************************************************************************
-# global singal handling
+# global singal handling and messages
 #***********************************************************************************
+# global signal  'closeEvent(QEvent*)'
+# global signal 'feedbackMessage(QString)'
+# global signal 'feedbackException()'
+# global signal 'windowScreenshot(int, QPixmap*)'
+# global signal 'widgetScreenshotSet(int, int)'
+# global signal 'widgetScreenshotDoubleClicked(QSize*, QPoint*)'
+#
 _qObject = QtCore.QObject()
 def signalEmit(sender, signal, *params):
 	if sender is None: _qObject.emit(QtCore.SIGNAL(signal), *params)
