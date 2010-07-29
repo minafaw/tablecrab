@@ -266,7 +266,7 @@ def windowGetClientRect(hwnd):
 	"""
 	if not hwnd: return (-1, -1, -1, -1)
 	rc = TableCrabWin32.RECT()
-	TableCrabWin32.user32.GetWindowClientRect(hwnd, TableCrabWin32.byref(rc))
+	TableCrabWin32.user32.GetClientRect(hwnd, TableCrabWin32.byref(rc))
 	return (rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top)
 
 def windowGetParent(hwnd):
@@ -286,8 +286,16 @@ def windowScreenPointToClientPoint(hwnd, pt):
 	@return: (tuple) (x, y)
 	"""
 	pt = TableCrabWin32.POINT(*pt)
-	if not TableCrabWin32.user32.ScreenToClient(hwnd, TableCrabWin32.byref(pt)): raise TableCrabWin32.WinError(TableCrabWin32.GetLastError())
+	TableCrabWin32.user32.ScreenToClient(hwnd, TableCrabWin32.byref(pt) )
 	return (pt.x, pt.y) 
+def windowClientPointToScreenPoint(hwnd, pt):
+		"""converts a point in client coordiantes of a window screen coordinates
+		@param pt: (tuple) (x, y)
+		@return: (tuple) (x, y)
+		"""
+		pt = TableCrabWin32.POINT(*pt)
+		TableCrabWin32.user32.ClientToScreen(hwnd, TableCrabWin32.byref(pt) )
+		return (pt.x, pt.y) 
 
 def windowIsVisible(hwnd):
 	return bool(TableCrabWin32.user32.IsWindowVisible(hwnd))
@@ -324,7 +332,7 @@ def windowClickButton(hwndButton):
 			return True
 		return False
 
-def windowFindChild(self, hwnd, className):
+def windowFindChild(hwnd, className):
 	"""finds a child window of a window
 	@return: hwnd of the child window or None
 	@todo: for some reason user32.FindWindowEx() always fails with an "Access Denied" error, so we use our own impl here 
@@ -393,9 +401,9 @@ MouseWheelUp = '<MouseWheelUp>'
 MouseWheelDown = '<MouseWheelDown>'
 
 #NOTE: wine dies not orovide this info so we have to keep track ourselves
-_MouseButtonsDown = []
+_mouseButtonsDown = []
 def mouseButtonsDown():
-	return _MouseButtonsDown[:]
+	return _mouseButtonsDown[:]
 	
 def mousePressButton(button):
 	"""presses the specified mouse button at the current mouse position
@@ -403,15 +411,15 @@ def mousePressButton(button):
 	"""
 	# determine button to set down
 	if button in _mouseButtonsDown: return
-	if button == self.ButtonLeft:
+	if button == MouseButtonLeft:
 		bt = TableCrabWin32.MOUSEEVENTF_LEFTDOWN
-	elif button == self.ButtonRight:
+	elif button == MouseButtonRight:
 		bt = TableCrabWin32.MOUSEEVENTF_RIGHTDOWN
-	elif button == self.ButtonMiddle:
+	elif button == MouseButtonMiddle:
 		bt = TableCrabWin32.MOUSEEVENTF_MIDDLEDOWN
 	else:
 		raise ValueError('no such mouse button: %s' % button) 
-	pt = self.mouseGetPos()
+	pt = mouseGetPos()
 	TableCrabWin32.user32.mouse_event(bt | TableCrabWin32.MOUSEEVENTF_ABSOLUTE, pt[0], pt[1], 0, None)
 
 def mouseReleaseButton(button):
@@ -420,15 +428,15 @@ def mouseReleaseButton(button):
 	"""
 	# determine button to set up
 	if button not in _mouseButtonsDown: return
-	if button == self.ButtonLeft:
+	if button == MouseButtonLeft:
 		bt = TableCrabWin32.MOUSEEVENTF_LEFTUP
-	elif button == self.ButtonRight:
+	elif button == MouseButtonRight:
 		bt = TableCrabWin32.MOUSEEVENTF_RIGHTUP
-	elif button == self.ButtonMiddle:
+	elif button == MouseButtonMiddle:
 		bt = TableCrabWin32.MOUSEEVENTF_MIDDLEUP
 	else:
 		raise ValueError('no such mouse button: %s' % button) 
-	pt = self.mouseGetPos()
+	pt = mouseGetPos()
 	TableCrabWin32.user32.mouse_event(bt | TableCrabWin32.MOUSEEVENTF_ABSOLUTE, pt[0], pt[1], 0, None)	
 
 def mouseClickPoint(button, nClicks=1, pt=None):
@@ -440,7 +448,7 @@ def mouseClickPoint(button, nClicks=1, pt=None):
 	@todo: impl proper double click delay. GetSystemMetrics could do the trick if there is something like a min-double-click-interval defined
 	@NOTE: the mouse is moved to the specified position in the call
 	'''
-	if _MouseButtonsDown: return
+	if _mouseButtonsDown: return
 	# move mouse to point
 	if pt is not None:
 		mouseSetPos(pt)
@@ -477,7 +485,7 @@ def mouseGetPos():
 	@return: (tuple) x, y coordinates of the mouse cursor
 	'''
 	pt = TableCrabWin32.POINT()
-	TableCrabWin32.user32.GetCursorPos(byref(pt))
+	TableCrabWin32.user32.GetCursorPos(TableCrabWin32.byref(pt))
 	return (pt.x, pt.y)
 
 def mouseSetPos(pt):
@@ -523,12 +531,31 @@ class _MouseHook(QtCore.QObject):
 		self._isStarted = False
 		self._hHook = None
 		self._pHookProc = TableCrabWin32.MOUSEHOOKPROCLL(self._hookProc)
-		self._mouseButtonsDown = []
 		
 	def _hookProc(self, code, wParam, lParam):
 		"""private method, MOUSEHOOKPROCLL implementation"""
+		
 		if code == TableCrabWin32.HC_ACTION:
-			if wParam == TableCrabWin32.WM_MOUSEWHEEL:
+			if wParam == TableCrabWin32.WM_LBUTTONDOWN:
+				if MouseButtonLeft not in _mouseButtonsDown:
+					_mouseButtonsDown.append(MouseButtonLeft)
+			elif wParam == TableCrabWin32.WM_RBUTTONDOWN:
+				if MouseButtonRight not in _mouseButtonsDown:
+					_mouseButtonsDown.append(MouseButtonRight)
+			elif wParam == TableCrabWin32.WM_MBUTTONDOWN:
+				if MouseButtonMiddle not in _mouseButtonsDown:
+					_mouseButtonsDown.append(MouseButtonMiddle)
+			elif wParam == TableCrabWin32.WM_LBUTTONUP:
+				if MouseButtonLeft in _mouseButtonsDown:
+					_mouseButtonsDown.remove(MouseButtonLeft)
+			elif wParam == TableCrabWin32.WM_RBUTTONUP:
+				if MouseButtonRight in _mouseButtonsDown:
+					_mouseButtonsDown.remove(MouseButtonRight)
+			elif wParam == TableCrabWin32.WM_MBUTTONUP:
+				if MouseButtonMiddle in _mouseButtonsDown:
+					_mouseButtonsDown.remove(MouseButtonMiddle)
+					
+			elif wParam == TableCrabWin32.WM_MOUSEWHEEL:
 				mouseInfo = TableCrabWin32.MSLLHOOKSTRUCT.from_address(lParam)
 				wheelDelta = TableCrabWin32.GET_WHEEL_DELTA_WPARAM(mouseInfo.mouseData)
 				nSteps = wheelDelta / TableCrabWin32.WHEEL_DELTA
@@ -1085,10 +1112,10 @@ class _SiteManager(QtCore.QObject):
 	#-----------------------------------------------------------------------------------------
 	def pokerStarsGetTableWidgetItem(self, hwnd):
 		w, h = windowGetClientRect(hwnd)[2:]
-		for widgetItem in widgetItemManager:
-			if widgetItem.itemName() == 'PokerStarsTable':
-				if (widgetItem.size.width(), widgetItem.size.height()) == (w, h):
-					return widgetItem
+		for persistentItem in setupWidgetItemManager:
+			if persistentItem.itemName() == 'PokerStarsTable':
+				if (persistentItem.size.width(), persistentItem.size.height()) == (w, h):
+					return persistentItem
 		return None
 
 	
@@ -1097,16 +1124,18 @@ class _SiteManager(QtCore.QObject):
 	PokerStarsClassTableBetAmountBox = 'PokerStarsSliderEditorClass'
 	def pokerStarsTableReadData(self, hwnd):
 		data = {}
-		match = self.PokerStarsPatAmountSB.match(string)
+		text = windowGetText(hwnd)
+		match = self.PokerStarsPatAmountSB.match(text)
 		if match is None:
-			raise ValueError('could not determine smallBlind: %s' % string)
+			raise ValueError('could not determine smallBlind: %s' % text)
 		data['smallBlind'] = float(match.group(1))
-		match = self.PokerStarsPatAmountBB.match(string)
+		match = self.PokerStarsPatAmountBB.match(text)
 		if match is None:
-			raise ValueError('could not determine smallBlind: %s' % string)
+			raise ValueError('could not determine smallBlind: %s' % text)
 		data['bigBlind'] = float(match.group(1))
-		data['hwndBetAmountBox'] = windowFindChild(hwnd, self.PokerStarsClassTableBetAmountBox) 
-		data['betAmountBoxIsVisible'] = windowIsWisible(hwndBetAmountBox )
+		hwndBetAmountBox = windowFindChild(hwnd, self.PokerStarsClassTableBetAmountBox)
+		data['hwndBetAmountBox'] =  hwndBetAmountBox
+		data['betAmountBoxIsVisible'] = windowIsVisible(hwndBetAmountBox )
 		data['betAmount'] = None
 		if data['hwndBetAmountBox']:
 			p = windowGetText(hwndBetAmountBox)
@@ -1116,36 +1145,36 @@ class _SiteManager(QtCore.QObject):
 		return data
 		
 	def pokerStarsTableHandleCheck(self, actionItem, widgetItem, hwnd):
-		data = pokerStarsTableReadData(hwnd)
-		if not data['hwndBetAmountBox']: return
-		if not data['betAmountBoxIsVisible']: return
-		point = widgetItem.checkbpxCheck
-		if not point.isNull():
-			pt = windowClientPointToScreenPoint(hwnd, (point.x(), point.y()) )
-			mouseClickLeft(pt)
-		
-	def pokerStarsTableHandleFold(self, actionItem, widgetItem, hwnd):
-		data = pokerStarsTableReadData(hwnd)
-		if not data['hwndBetAmountBox']: return
-		if data['betAmountBoxIsVisible']:
-			point = widgetItem.buttonFold
-		else:
-			point = widgetItem.checkbboxFold
-		if not point.isNull():
-			pt = windowClientPointToScreenPoint(hwnd, (point.x(), point.y()) )
-			mouseClickLeft(pt)
-	
-	def pokerStarsTableHandleRaise(self, actionItem, widgetItem, hwnd):
-		data = pokerStarsTableReadData(hwnd)
+		data = self.pokerStarsTableReadData(hwnd)
 		if not data['hwndBetAmountBox']: return
 		if not data['betAmountBoxIsVisible']: return
 		point = widgetItem.buttonCheck
 		if not point.isNull():
 			pt = windowClientPointToScreenPoint(hwnd, (point.x(), point.y()) )
 			mouseClickLeft(pt)
+		
+	def pokerStarsTableHandleFold(self, actionItem, widgetItem, hwnd):
+		data = self.pokerStarsTableReadData(hwnd)
+		if not data['hwndBetAmountBox']: return
+		if data['betAmountBoxIsVisible']:
+			point = widgetItem.buttonFold
+		else:
+			point = widgetItem.checkboxFold
+		if not point.isNull():
+			pt = windowClientPointToScreenPoint(hwnd, (point.x(), point.y()) )
+			mouseClickLeft(pt)
+	
+	def pokerStarsTableHandleRaise(self, actionItem, widgetItem, hwnd):
+		data = self.pokerStarsTableReadData(hwnd)
+		if not data['hwndBetAmountBox']: return
+		if not data['betAmountBoxIsVisible']: return
+		point = widgetItem.buttonRaise
+		if not point.isNull():
+			pt = windowClientPointToScreenPoint(hwnd, (point.x(), point.y()) )
+			mouseClickLeft(pt)
 	
 	def pokerStarsTableHandleAlterBetAmount(self, actionItem, widgetItem, hwnd, nSteps=None):
-		data = pokerStarsTableReadData(hwnd)
+		data = self.pokerStarsTableReadData(hwnd)
 		if not data['hwndBetAmountBox']: return
 		if not data['betAmountBoxIsVisible']: return
 		if data['betAmount'] is None: return
