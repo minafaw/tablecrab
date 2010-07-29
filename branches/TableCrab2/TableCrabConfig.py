@@ -1213,7 +1213,7 @@ class _SiteManager(QtCore.QObject):
 		
 	PokerStarsClassTable = 'PokerStarsTableFrameClass'
 	def windowIsPokerStarsTable(self, hwnd):
-		if not windowGetClassName(hwnd) == klass.PokerStarsClassTable: return False
+		if not windowGetClassName(hwnd) == self.PokerStarsClassTable: return False
 		return True	
 
 	PokerStarsClassInstantHandHistory = '#32770'
