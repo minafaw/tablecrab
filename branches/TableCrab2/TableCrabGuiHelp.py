@@ -233,9 +233,9 @@ class FrameHelp(QtGui.QFrame):
 		
 		self.frameHelpTree = FrameHelpTree(parent=self)
 		
-		self.buttonZoomIn = QtGui.QPushButton('Zoom In',self)
+		self.buttonZoomIn = QtGui.QPushButton('Zoom+',self)
 		TableCrabConfig.signalConnect(self.buttonZoomIn, self, 'clicked(bool)', self.frameHelpTree.zoomIn)
-		self.buttonZoomOut = QtGui.QPushButton('Zoom Out',self)
+		self.buttonZoomOut = QtGui.QPushButton('Zoom-',self)
 		TableCrabConfig.signalConnect(self.buttonZoomOut, self, 'clicked(bool)', self.frameHelpTree.zoomOut)
 		
 		self.layout()
@@ -258,9 +258,9 @@ class _DialogHelp(QtGui.QDialog):
 		TableCrabConfig.settingsSetValue('Gui/Help/Topic', topic)
 		self.frameHelpTree = FrameHelpTree(parent=self)
 			
-		self.buttonZoomIn = QtGui.QPushButton('Zoom In',self)
+		self.buttonZoomIn = QtGui.QPushButton('Zoom+',self)
 		TableCrabConfig.signalConnect(self.buttonZoomIn, self, 'clicked(bool)', self.frameHelpTree.zoomIn)
-		self.buttonZoomOut = QtGui.QPushButton('Zoom Out',self)
+		self.buttonZoomOut = QtGui.QPushButton('Zoom-',self)
 		TableCrabConfig.signalConnect(self.buttonZoomOut, self, 'clicked(bool)', self.frameHelpTree.zoomOut)
 		
 		self.buttonBox = QtGui.QDialogButtonBox(self)

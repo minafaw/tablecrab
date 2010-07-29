@@ -28,9 +28,10 @@ class FrameHand(QtGui.QFrame):
 		self.webView.setZoomFactor(TableCrabConfig.settingsValue('Gui/Hand/ZoomFactor', 1.0).toDouble()[0])
 				
 		self.webView.setZoomFactor( TableCrabConfig.settingsValue('Gui/Hand/ZoomFactor',  self.webView.zoomFactor() ).toDouble()[0] )
-		self.buttonZoomIn = QtGui.QPushButton('Zoom In',self)
+		
+		self.buttonZoomIn = QtGui.QPushButton('Zoom+',self)
 		TableCrabConfig.signalConnect(self.buttonZoomIn, self, 'clicked(bool)', self.onButtonZoomInClicked)
-		self.buttonZoomOut = QtGui.QPushButton('Zoom Out',self)
+		self.buttonZoomOut = QtGui.QPushButton('Zoom-',self)
 		TableCrabConfig.signalConnect(self.buttonZoomOut, self, 'clicked(bool)', self.onButtonZoomOutClicked)
 		self.buttonOpen = QtGui.QPushButton('Open..',self)
 		TableCrabConfig.signalConnect(self.buttonOpen, self, 'clicked(bool)', self.onButtonOpenClicked)
@@ -44,7 +45,8 @@ class FrameHand(QtGui.QFrame):
 		self.buttonBox.addButton(self.buttonZoomOut, self.buttonBox.ActionRole)
 		self.buttonBox.addButton(self.buttonOpen, self.buttonBox.ActionRole)
 		self.buttonBox.addButton(self.buttonSave, self.buttonBox.ActionRole)
-		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)	
+		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
+				
 		
 		self.adjustButtons()
 		self.layout()
