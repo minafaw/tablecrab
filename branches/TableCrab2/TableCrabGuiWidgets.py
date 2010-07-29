@@ -116,7 +116,6 @@ class PersistentItemTreeWidget(QtGui.QTreeWidget):
 		self.header().setResizeMode(1, QtGui.QHeaderView.ResizeToContents)
 			
 		#NOTE: we have to connect after adding the initial tables cos QTreeWidget informs us about every* itemChange
-		print self
 		TableCrabConfig.signalConnect(TableCrabConfig.widgetItemManager, self, 'itemRead(QObject*)', self.onPersistentItemManagerItemRead)
 		TableCrabConfig.signalConnect(self, self, 'itemChanged(QTreeWidgetItem*, int)', self.onTreeItemChanged)
 		TableCrabConfig.signalConnect(self, self, 'itemDoubleClicked(QTreeWidgetItem*)',self.editItem)
