@@ -32,7 +32,7 @@ class TablePokerStarsTreeWidgetItem(QtGui.QTreeWidgetItem):
 			self.setExpanded(True)
 		self.myChildren = {
 				'itemName': ChildItem('itemName', 'Window:', self.persistentItem.itemName(), parent=self),
-				'size': ChildItem('size', 'Size:', TableCrabConfig.sizeToString(self.persistentItem.size), parent=self),
+				'size': ChildItem('size', 'Size:', 'None' if self.persistentItem.size.isEmpty() else TableCrabConfig.sizeToString(self.persistentItem.size), parent=self),
 				'buttonCheck': ChildItem('buttonCheck', 'ButtonCheck:', TableCrabConfig.pointToString(self.persistentItem.buttonCheck), parent=self),
 				'buttonFold': ChildItem('buttonFold', 'ButtonFold:', TableCrabConfig.pointToString(self.persistentItem.buttonFold), parent=self),
 				'buttonRaise': ChildItem('buttonRaise', 'ButtonRaise:', TableCrabConfig.pointToString(self.persistentItem.buttonRaise), parent=self),
@@ -83,7 +83,10 @@ class TablePokerStarsTreeWidgetItem(QtGui.QTreeWidgetItem):
 			child.setText(1,self.persistentItem.itemName() )
 		elif attrName == 'size':
 			child = self.myChildren[attrName]
-			child.setText(1, TableCrabConfig.sizeToString(self.persistentItem.size))
+			if self.persistentItem.size.isEmpty():
+				child.setText(1, 'None')
+			else:
+				child.setText(1, TableCrabConfig.sizeToString(self.persistentItem.size))
 		elif attrName == 'itemIsExpanded':
 			self.setExpanded(self.persistentItem.itemIsExpanded)
 		else:
