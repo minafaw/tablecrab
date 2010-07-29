@@ -935,7 +935,7 @@ SetupWidgetItems = (
 MaxSetupWidgetItems = 64
 class _SetupWidgetItemManager(PersistentItemManager):
 	def __init__(self, parent=None):
-		PersistentItemManager.__init__(self, parent=parent, key='Scrapes', maxItems=MaxSetupWidgetItems, itemProtos=SetupWidgetItems)
+		PersistentItemManager.__init__(self, parent=parent, key='Setp/Widgets', maxItems=MaxSetupWidgetItems, itemProtos=SetupWidgetItems)
 		
 setupWidgetItemManager = _SetupWidgetItemManager()
 
