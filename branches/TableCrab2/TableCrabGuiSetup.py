@@ -268,15 +268,21 @@ class FramePersistentItems(QtGui.QFrame):
 class FrameTablesScreenshot(QtGui.QFrame):
 	
 	class MyLabel(QtGui.QLabel):
+		def __init__(self, *args):
+			QtGui.QLabel.__init__(self, *args)
+			self.setMouseTracking(True)
 		def mouseDoubleClickEvent(self, event):
 			if event.button() == QtCore.Qt.LeftButton:
-				#TODO: check if the point is client cordinates of the label
 				px = self.pixmap()
 				if px is not None:
 					TableCrabConfig.signalEmit(None, 'widgetScreenshotDoubleClicked(QSize*, QPoint*)', px.size(), event.pos())
-				return QtGui.QLabel.mouseDoubleClickEvent(self, event)
-	
-	
+		def mouseMoveEvent(self, event):
+			px = self.pixmap()
+			if px is not None:
+				pt = event.pos()
+				p = 'Screenshot - Size %sx%s Mouse %s, %s' % (px.width(), px.height(), pt.x(), pt.y() )
+				TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', p )
+		
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 		self.scrollArea = QtGui.QScrollArea(self)
@@ -301,9 +307,8 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		TableCrabConfig.signalConnect(self.buttonInfo, self, 'clicked(bool)', self.onButtonInfoClicked)
 		self.buttonInfo.setEnabled(False)
 		TableCrabConfig.signalConnect(self.buttonHelp, self, 'clicked(bool)', self.onButtonHelpClicked)
-				
+			
 		self.scrollArea.setBackgroundRole(QtGui.QPalette.Dark)
-		self.scrollArea.setWidgetResizable(True)
 		self.scrollArea.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
 		self.label.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
 		self.scrollArea.setWidget(self.label)
@@ -317,6 +322,8 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		if selfParent == otherParent:
 			return
 		self.label.setPixmap(pixmap)
+		# manually set resize of the label, so we get the correct coordiantes of the mouse cursor
+		self.label.resize(pixmap.size())
 		self.buttonSave.setEnabled(True)
 		self.gatherWindowInfo(hwnd)		
 		self.buttonInfo.setEnabled(True)
