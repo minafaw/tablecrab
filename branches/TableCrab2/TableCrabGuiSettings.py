@@ -18,6 +18,7 @@ class FrameSettingsGlobal(QtGui.QFrame):
 				settingsKey='Gui/Style', 
 				default=QtGui.qApp.style().objectName(),	#HACK:  not documented for getting style name but the lights are on. so i assume it works
 				failsave=True,
+				parent=self,
 				)
 		self.labelGuiFont = QtGui.QLabel('Global Font:', self)
 		self.buttonGuiFont = QtGui.QPushButton('..', self)
@@ -34,12 +35,19 @@ class FrameSettingsGlobal(QtGui.QFrame):
 				step=0.1,
 				parent=self
 				)
+		
+		self.checkAlternatingRowColors = TableCrabConfig.CheckBox('Use Alternating Row Colors', default=False, settingsKey='Gui/AlternatingRowColors', parent=self)
+		TableCrabConfig.signalConnect(self.checkAlternatingRowColors, self, 'stateChanged(int)', self.onAlternatingRowColorsChanged)
+		self.checkChildItemIndicators = TableCrabConfig.CheckBox('Show Child Item Indicators', default=False, settingsKey='Gui/ChildItemIndicators', parent=self)
+		TableCrabConfig.signalConnect(self.checkChildItemIndicators, self, 'stateChanged(int)', self.onChildItemIndicatorsChanged)
+		
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		TableCrabConfig.signalConnect(self.buttonHelp, self, 'clicked(bool)', self.onButtonHelpClicked)
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
 			
 		self.layout()
+	
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
 		
@@ -55,11 +63,14 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		grid.addWidget(self.spinZoomIncrement, 2, 1)
 		grid.addLayout(TableCrabConfig.HStretch(), 2, 2)
 			
-		grid.addLayout(TableCrabConfig.VStretch(), 3, 0)
-		grid.addWidget(TableCrabConfig.HLine(self), 4, 0, 1, 3)
+		grid.addWidget(self.checkAlternatingRowColors, 3, 0)
+		grid.addWidget(self.checkChildItemIndicators, 4, 0)
+		
+		grid.addLayout(TableCrabConfig.VStretch(), 5, 0)
+		grid.addWidget(TableCrabConfig.HLine(self), 6, 0, 1, 3)
 			
 		grid2 = TableCrabConfig.GridBox()
-		grid.addLayout(grid2, 5, 0, 1, 3)
+		grid.addLayout(grid2, 7, 0, 1, 3)
 		grid2.addWidget(self.buttonBox, 0, 0)
 		
 	def onButtonHelpClicked(self, checked):
@@ -77,7 +88,11 @@ class FrameSettingsGlobal(QtGui.QFrame):
 	def onComboGuiStyleCurrentIndexChanged(self, qString):
 		QtGui.qApp.setStyle(QtGui.QStyleFactory.create(qString))
 		
-
+	def onAlternatingRowColorsChanged(self, state):
+		TableCrabConfig.signalEmit(None, 'settingAlternatingRowColorsChanged(bool)', state == QtCore.Qt.Checked)
+	
+	def onChildItemIndicatorsChanged(self, state):
+		TableCrabConfig.signalEmit(None, 'settingChildItemIndicatorsChanged(bool)', state == QtCore.Qt.Checked)
 
 class FrameSettingsPokerStars(QtGui.QFrame):
 	def __init__(self, parent=None):
@@ -280,6 +295,9 @@ class FrameSettings(QtGui.QFrame):
 		TableCrabConfig.signalConnect(None, self, 'closeEvent(QEvent*)', self.onCloseEvent)
 		TableCrabConfig.signalConnect(self.listWidget, self, 'itemPressed(QListWidgetItem*)', self.onSettingSelected)
 		
+		self.listWidget.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
+		TableCrabConfig.signalConnect(None, self, 'settingAlternatingRowColorsChanged(bool)', self.onSettingAlternatingRowColorsChanged)	
+		
 		#
 		self.addSetting('Global', FrameSettingsGlobal(parent=self.stack) )
 		self.addSetting('PokerStars', FrameSettingsPokerStars(parent=self.stack) )
@@ -306,6 +324,9 @@ class FrameSettings(QtGui.QFrame):
 	def onCloseEvent(self, event):
 		TableCrabConfig.settingsSetValue('Gui/Settings/SplitterState', self.splitter.saveState())
 		TableCrabConfig.settingsSetValue('Gui/Settings/CurrentIndex', self.stack.currentIndex())
+		
+	def onSettingAlternatingRowColorsChanged(self, flag):
+		self.listWidget.setAlternatingRowColors(flag)
 
 
 #**********************************************************************************************

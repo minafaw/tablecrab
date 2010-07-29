@@ -264,7 +264,9 @@ class ActionItemTreeWidget(QtGui.QTreeWidget):
 		self.header().setVisible(False)
 		self.header().setResizeMode (0, QtGui.QHeaderView.ResizeToContents)
 		self.header().setResizeMode (1, QtGui.QHeaderView.ResizeToContents)
-		#self.setAlternatingRowColors(True)
+		self.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
+		TableCrabConfig.signalConnect(None, self, 'settingAlternatingRowColorsChanged(bool)', self.onSettingAlternatingRowColorsChanged)
+		
 		
 	def keyReleaseEvent(self, event):
 		#TODO: for some reason the first enter when the widget is created is not accepted
@@ -282,6 +284,10 @@ class ActionItemTreeWidget(QtGui.QTreeWidget):
 		item = ActionItemTreeWidgetItem(persistentItem, parent=self)
 		self.addTopLevelItem(item)
 		self.setCurrentItem(item)
+	
+	def onSettingAlternatingRowColorsChanged(self, flag):
+		self.setAlternatingRowColors(flag)
+		
 	def editItem(self, item):
 		editor = EditorMapping[item.persistentItem.__class__]
 		dlg =editor(item.persistentItem, parent=self)

@@ -113,11 +113,14 @@ class PersistentItemTreeWidget(QtGui.QTreeWidget):
 		##self.setAlternatingRowColors(True)
 		self.setColumnCount(2)
 		self.setExpandsOnDoubleClick(False)
-		self.setRootIsDecorated(False)
 		self.header().setVisible(False)
 		self.header().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
 		self.header().setResizeMode(1, QtGui.QHeaderView.ResizeToContents)
-			
+		self.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
+		TableCrabConfig.signalConnect(None, self, 'settingAlternatingRowColorsChanged(bool)', self.onSettingAlternatingRowColorsChanged)	
+		self.setRootIsDecorated( TableCrabConfig.settingsValue('Gui/ChildItemIndicators', False).toBool() )
+		TableCrabConfig.signalConnect(None, self, 'settingChildItemIndicatorsChanged(bool)', self.onSettingChildItemIndicatorsChanged)	
+		
 		#NOTE: we have to connect after adding the initial tables cos QTreeWidget informs us about every* itemChange
 		TableCrabConfig.signalConnect(TableCrabConfig.setupWidgetItemManager, self, 'itemRead(QObject*)', self.onPersistentItemManagerItemRead)
 		TableCrabConfig.signalConnect(self, self, 'itemChanged(QTreeWidgetItem*, int)', self.onTreeItemChanged)
@@ -159,7 +162,10 @@ class PersistentItemTreeWidget(QtGui.QTreeWidget):
 		persistentItem = persistentItemProto(name=persistentItemProto.itemName())
 		TableCrabConfig.signalConnect(persistentItem, self, 'itemAdded(QObject*)', self.onPersistentItemAdded)
 		TableCrabConfig.setupWidgetItemManager.addItem(persistentItem)
-	
+	def onSettingAlternatingRowColorsChanged(self, flag):
+		self.setAlternatingRowColors(flag)
+	def onSettingChildItemIndicatorsChanged(self, flag):
+		self.setRootIsDecorated(flag)
 
 class FramePersistentItems(QtGui.QFrame):
 	

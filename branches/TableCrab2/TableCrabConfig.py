@@ -90,6 +90,8 @@ def settingsRemoveKey(key):
 # global signal 'windowScreenshot(int, QPixmap*)'
 # global signal 'widgetScreenshotSet(int, int)'
 # global signal 'widgetScreenshotDoubleClicked(QSize*, QPoint*)'
+# global signal 'settingAlternatingRowColorsChanged(bool)'
+# global signal 'settingChildItemIndicatorsChanged(bool)'
 #
 _qObject = QtCore.QObject()
 def signalEmit(sender, signal, *params):
@@ -1324,8 +1326,8 @@ class CheckBox(QtGui.QCheckBox):
 			self.setCheckState(  QtCore.Qt.Checked if default else QtCore.Qt.Unchecked )
 		else:
 			self.setCheckState(  QtCore.Qt.Checked if settingsValue(self.settingsKey, default).toBool() else QtCore.Qt.Unchecked )
-			self.connect(self, QtCore.SIGNAL('stateChanged(int)'), self.onValueChanged)
-	def onValueChanged(self):
+			self.connect(self, QtCore.SIGNAL('stateChanged(int)'), self.onStateChanged)
+	def onStateChanged(self):
 		if self.settingsKey is not None: settingsSetValue(self.settingsKey, self.checkState() == QtCore.Qt.Checked)
 
 class ComboBox(QtGui.QComboBox):
