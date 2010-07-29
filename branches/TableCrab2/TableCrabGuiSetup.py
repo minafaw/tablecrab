@@ -287,6 +287,7 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		QtGui.QFrame.__init__(self, parent)
 		self.scrollArea = QtGui.QScrollArea(self)
 		self.label = self.MyLabel('Screenshot')
+		self.label.setScaledContents(True)
 		self.buttonOpen = QtGui.QPushButton('Open..', self)
 		self.buttonSave = QtGui.QPushButton('Save..', self)
 		self.buttonInfo = QtGui.QPushButton('Info..', self)
@@ -322,7 +323,8 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		if selfParent == otherParent:
 			return
 		self.label.setPixmap(pixmap)
-		# manually set resize of the label, so we get the correct coordiantes of the mouse cursor
+		# manually set size of the label so we get the correct coordiantes of the mouse cursor
+		self.label.setScaledContents(False)
 		self.label.resize(pixmap.size())
 		self.buttonSave.setEnabled(True)
 		self.gatherWindowInfo(hwnd)		
