@@ -12,7 +12,6 @@ TableCrabAuthor = 'JuergenUrner'
 import sys, os, traceback, logging
 from logging import handlers
 logger = logging.getLogger(TableCrabApplicationName)
-print os.getcwd()
 logger.addHandler(handlers.RotatingFileHandler(
 		os.path.join(os.getcwd(), TableCrabApplicationName + '-Error.log'),
 		mode='a',
@@ -671,6 +670,8 @@ ValueNone = 'None'
 #***********************************************************************************
 # persistent items
 #***********************************************************************************
+
+import inspect
 class PersistentItemManager(QtCore.QObject):
 	#NOTE: we can not use __metaclass__ along with QObject. so we have to track actions by hand
 	def __init__(self, parent=None, key=None, maxItems=0,itemProtos=None):
@@ -679,11 +680,11 @@ class PersistentItemManager(QtCore.QObject):
 		self.maxItems = maxItems
 		self.key = key
 		self.itemProtos= [] if itemProtos is None else itemProtos
+		self._readFinished = False
 	def read(self):
 		# read items
-		if self._items:
-			#TODO: implement?
-			raise NotImplementedError('you can read items only once')
+		if self._readFinished:
+			raise ValueError('you can read items only once')
 		self._items = []
 		if self.key is not None:
 			newItems = []
@@ -697,6 +698,7 @@ class PersistentItemManager(QtCore.QObject):
 				self._items.append(item)
 				signalEmit(self, 'itemRead(QObject*)', item)
 			self.dump()
+			self._readFinished = True
 			signalEmit(self, 'readFinished()')
 	def dump(self):
 		settingsRemoveKey(self.key)
@@ -744,10 +746,20 @@ class PersistentItemManager(QtCore.QObject):
 		if self.key is not None:
 			self.dump()
 		signalEmit(item, 'itemMovedDown(QObject*, int)', item, index +1)
+	def readFinished(self):
+		return self._readFinished
+	def setItemAttr(self, item, name, value):
+		setattr(item, name, value)
+		signalEmit(item, 'itemAttrChanged(QObject*, QString)', item, name)
+		self.dump()
+	def setItemAttrs(self, item, values):
+		for name, value in values.items():
+			setattr(item, name, value)
+			signalEmit(item, 'itemAttrChanged(QObject*, QString)', item, name)
+		self.dump()
+
 
 class PersistentItem(QtCore.QObject):
-	"""customized QObject. supports iteration over attributes + signals attribute value changes
-	"""
 	Attrs = (	# (name, valueType) ..if a kw is None an instance of valuetype is set as default
 			)
 	def __init__(self, 
@@ -760,9 +772,6 @@ class PersistentItem(QtCore.QObject):
 			if value is None:
 				value= valueType()
 			setattr(self, name, value)
-	def __setattr__(self, name, value):
-			QtCore.QObject.__setattr__(self, name, value)
-			signalEmit(self, 'attributeValueChanged(QString)', name)
 	def iterAttrs(self):
 		for name, _ in self.Attrs:
 			yield name, getattr(self, name)
@@ -784,7 +793,7 @@ class ActionCheck(PersistentItem):
 		if hotkey == ValueNone: return None
 		name = settingsValue( settingsKeyJoin(key, 'Name'), '').toString()
 		hotkeyName = settingsValue( settingsKeyJoin(key, 'HotkeyName'), '').toString()
-		return klass(name=name, hotkey=hotkey)
+		return klass(name=name, hotkey=hotkey, hotkeyName=hotkeyName)
 	def toConfig(self, key):
 		settingsSetValue( settingsKeyJoin(key, 'itemName'), self.itemName() )
 		settingsSetValue( settingsKeyJoin(key, 'Name'), self.name )

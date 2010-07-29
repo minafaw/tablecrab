@@ -30,9 +30,9 @@ class HotkeyComboBox(QtGui.QComboBox):
 	
 
 class ActionCheckEditor(QtGui.QDialog):
-	def __init__(self, actionItem, parent=None):
+	def __init__(self, persistentItem, parent=None):
 		QtGui.QDialog.__init__(self,parent)
-		self.actionItem = actionItem
+		self.persistentItem = persistentItem
 		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		TableCrabConfig.signalConnect(self.buttonHelp, self, 'clicked(bool)', self.onButtonHelpClicked)
@@ -42,14 +42,14 @@ class ActionCheckEditor(QtGui.QDialog):
 		
 		self.labelName = QtGui.QLabel('Action:', self)
 		self.editName = QtGui.QLineEdit(self)
-		self.editName.setText(actionItem.name)
+		self.editName.setText(persistentItem.name)
 		self.editName.setEnabled(False)
 		
 		self.labelHotkey = QtGui.QLabel('Hotkey:', self)
-		self.comboHotkey = HotkeyComboBox(self.actionItem.hotkey, parent=self)
+		self.comboHotkey = HotkeyComboBox(self.persistentItem.hotkey, parent=self)
 		self.labelHotkeyName = QtGui.QLabel('HotkeyName:', self)
 		self.editHotkeyName = QtGui.QLineEdit(self)
-		self.editHotkeyName.setText(actionItem.hotkeyName)
+		self.editHotkeyName.setText(persistentItem.hotkeyName)
 			
 		self.editName.setText( self.suggestName())
 		self.layout()
@@ -71,20 +71,22 @@ class ActionCheckEditor(QtGui.QDialog):
 		grid.addWidget(self.buttonBox, 99, 0, 1, 3)	
 	
 	def onButtonHelpClicked(self, checked):
-		TableCrabGuiHelp.dialogHelp('hotkey%s' % self.actionItem.itemName(), parent=self)
+		TableCrabGuiHelp.dialogHelp('hotkey%s' % self.persistentItem.itemName(), parent=self)
 	
 	def accept(self):
-		self.actionItem.name = self.editName.text()
-		self.actionItem.hotkey = self.comboHotkey.currentText()
-		self.actionItem.hotkeyName = self.editHotkeyName.text()
+		TableCrabConfig.actionItemManager.setItemAttrs(self.persistentItem, {
+				'name': self.editName.text(),
+				'hotkey': self.comboHotkey.currentText(),
+				'hotkeyName': self.editHotkeyName.text(),
+				})
 		QtGui.QDialog.accept(self)
 	def suggestName(self):
-		return self.actionItem.itemName() 
+		return self.persistentItem.itemName() 
 	
 class ActionAlterBetAmountEditor(QtGui.QDialog):
-	def __init__(self, actionItem, parent=None):
+	def __init__(self, persistentItem, parent=None):
 		QtGui.QDialog.__init__(self,parent)
-		self.actionItem = actionItem
+		self.persistentItem = persistentItem
 		
 		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
 		self.buttonHelp = QtGui.QPushButton('Help', self)
@@ -95,22 +97,22 @@ class ActionAlterBetAmountEditor(QtGui.QDialog):
 		
 		self.labelName = QtGui.QLabel('Action:', self)
 		self.editName = QtGui.QLineEdit(self)
-		self.editName.setText(actionItem.name)
+		self.editName.setText(persistentItem.name)
 		self.editName.setEnabled(False)
 		
 		self.labelHotkey = QtGui.QLabel('Hotkey:', self)
-		self.comboHotkey = HotkeyComboBox(self.actionItem.hotkey, parent=self)
+		self.comboHotkey = HotkeyComboBox(self.persistentItem.hotkey, parent=self)
 		
 		self.labelHotkeyName = QtGui.QLabel('HotkeyName:', self)
 		self.editHotkeyName = QtGui.QLineEdit(self)
-		self.editHotkeyName.setText(actionItem.hotkeyName)
+		self.editHotkeyName.setText(persistentItem.hotkeyName)
 	
 		self.labelBaseValue = QtGui.QLabel('BaseValue:', self)
-		self.comboBaseValue = TableCrabConfig.ComboBox(choices=self.actionItem.BaseValues, default=self.actionItem.baseValue, parent=self)
+		self.comboBaseValue = TableCrabConfig.ComboBox(choices=self.persistentItem.BaseValues, default=self.persistentItem.baseValue, parent=self)
 		TableCrabConfig.signalConnect(self.comboBaseValue, self, 'currentIndexChanged(int)', self.onSuggestDisplayName)
 		
 		self.labelMultiplier = QtGui.QLabel('Multiplier:', self)
-		self.spinMultiplier = TableCrabConfig.DoubleSpinBox(minimum=-9999.99, maximum=9999.99, default=self.actionItem.multiplier, step=0.1, precision=1, parent=self)
+		self.spinMultiplier = TableCrabConfig.DoubleSpinBox(minimum=-9999.99, maximum=9999.99, default=self.persistentItem.multiplier, step=0.1, precision=1, parent=self)
 		TableCrabConfig.signalConnect(self.spinMultiplier, self, 'valueChanged(double)', self.onSuggestDisplayName)
 		self.onSuggestDisplayName()
 		self.layout()
@@ -138,14 +140,16 @@ class ActionAlterBetAmountEditor(QtGui.QDialog):
 		grid.addWidget(self.buttonBox, 99, 0, 1, 3)	
 		
 	def onButtonHelpClicked(self, checked):
-		TableCrabGuiHelp.dialogHelp('hotkey%s' % self.actionItem.itemName(), parent=self)
+		TableCrabGuiHelp.dialogHelp('hotkey%s' % self.persistentItem.itemName(), parent=self)
 	
 	def accept(self):
-		self.actionItem.name = self.editName.text()
-		self.actionItem.hotkey = self.comboHotkey.currentText()
-		self.actionItem.hotkeyName = self.editHotkeyName.text()
-		self.actionItem.baseValue = self.comboBaseValue.currentText()
-		self.actionItem.multiplier = self.spinMultiplier.value()
+		TableCrabConfig.actionItemManager.setItemAttrs(self.persistentItem, {
+				'name': self.editName.text(),
+				'hotkey': self.comboHotkey.currentText(),
+				'hotkeyName': self.editHotkeyName.text(),
+				'baseValue': self.comboBaseValue.currentText(),
+				'multiplier': self.spinMultiplier.value(),
+				})
 		QtGui.QDialog.accept(self)
 		
 	def onSuggestDisplayName(self, *args):
@@ -191,7 +195,7 @@ class ActionAlterBetAmountEditor(QtGui.QDialog):
 			else:
 				text = 'Divide Bet Amount By %.1f' % abs(multiplier)
 		else:
-			raise ValueError('can not handle actionItem.basevalue: %s' % baseValue) 	
+			raise ValueError('can not handle persistentItem.basevalue: %s' % baseValue) 	
 		
 		self.editName.setText(text)
 
@@ -209,50 +213,50 @@ Editors = (
 EditorMapping = dict(Editors)
 
 class ActionItemTreeWidgetItem(QtGui.QTreeWidgetItem):
-	def __init__(self, actionItem, parent=None):
+	def __init__(self, persistentItem, parent=None):
 		QtGui.QTreeWidgetItem.__init__(self, parent)
-		self.actionItem = actionItem
-		if actionItem.hotkeyName:
-			self.setText(0, self.actionItem.hotkeyName)
+		self.persistentItem = persistentItem
+		if persistentItem.hotkeyName:
+			self.setText(0, self.persistentItem.hotkeyName)
 		else:
-			self.setText(0, self.actionItem.hotkey)
-		self.setText(1, self.actionItem.name)
-		TableCrabConfig.signalConnect(self.actionItem, self.actionItem, 'attributeValueChanged(QString)', self.onActionAttributeValueChanged)
-		TableCrabConfig.signalConnect(self.actionItem, self.actionItem, 'itemMovedUp(QObject*, int)', self.onActionMovedUp)
-		TableCrabConfig.signalConnect(self.actionItem, self.actionItem, 'itemMovedDown(QObject*, int)', self.onActionMovedDown)
-		TableCrabConfig.signalConnect(self.actionItem, self.actionItem, 'itemRemoved(QObject*)', self.onActionRemoved)
-	def onActionMovedUp(self, action, index):
+			self.setText(0, self.persistentItem.hotkey)
+		self.setText(1, self.persistentItem.name)
+		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemAttrChanged(QObject*, QString)', self.onPersistentItemAttrChanged)
+		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemMovedUp(QObject*, int)', self.onPersistentItemMovedUp)
+		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemMovedDown(QObject*, int)', self.onPersistentItemMovedDown)
+		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemRemoved(QObject*)', self.onPersistentItemRemoved)
+	def onPersistentItemMovedUp(self, action, index):
 		treeWidget = self.treeWidget()
 		treeWidget.takeTopLevelItem(treeWidget.indexOfTopLevelItem(self))
 		treeWidget.insertTopLevelItem(index, self)
 		treeWidget.setCurrentItem(self)
-	def onActionMovedDown(self, action, index):
+	def onPersistentItemMovedDown(self, action, index):
 		treeWidget = self.treeWidget()
 		treeWidget.takeTopLevelItem(treeWidget.indexOfTopLevelItem(self))
 		treeWidget.insertTopLevelItem(index, self)
 		treeWidget.setCurrentItem(self)
-	def onActionRemoved(self, action):
+	def onPersistentItemRemoved(self, action):
 		treeWidget = self.treeWidget()
-		self.actionItem = None
+		self.persistentItem = None
 		treeWidget.takeTopLevelItem(treeWidget.indexOfTopLevelItem(self))
-	def onActionAttributeValueChanged(self, attrName):
+	def onPersistentItemAttrChanged(self, persistentItem, attrName):
 		if attrName == 'hotkey':
-			if not self.actionItem.hotkeyName:
-				self.setText(0, self.actionItem.hotkey)
+			if not self.persistentItem.hotkeyName:
+				self.setText(0, self.persistentItem.hotkey)
 		elif attrName == 'hotkeyName':
-			if self.actionItem.hotkeyName:
-				self.setText(0, self.actionItem.hotkeyName)
+			if self.persistentItem.hotkeyName:
+				self.setText(0, self.persistentItem.hotkeyName)
 			else:
-				self.setText(0, self.actionItem.hotkey)
+				self.setText(0, self.persistentItem.hotkey)
 		elif attrName == 'name':
-			self.setText(1, self.actionItem.name)
+			self.setText(1, self.persistentItem.name)
 		
 
 class ActionItemTreeWidget(QtGui.QTreeWidget):
 	def __init__(self, parent=None):
 		QtGui.QTreeWidget.__init__(self, parent)
 		TableCrabConfig.signalConnect(self, self, 'itemDoubleClicked(QTreeWidgetItem*, int)', self.editItem)
-		TableCrabConfig.signalConnect(TableCrabConfig.actionItemManager, self, 'itemRead(QObject*)', self.onActiontItemManagerItemRead)
+		TableCrabConfig.signalConnect(TableCrabConfig.actionItemManager, self, 'itemRead(QObject*)', self.onPersistentItemManagerItemRead)
 		
 		self.setColumnCount(2)
 		self.setRootIsDecorated(False)
@@ -270,37 +274,35 @@ class ActionItemTreeWidget(QtGui.QTreeWidget):
 				self.editItem(item)
 			return
 		return QtGui.QTreeWidget.keyReleaseEvent(self, event)
-	def onActiontItemManagerItemRead(self, actionItem):
-		item = ActionItemTreeWidgetItem(actionItem, parent=self)
+	def onPersistentItemManagerItemRead(self, persistentItem):
+		item = ActionItemTreeWidgetItem(persistentItem, parent=self)
 		self.addTopLevelItem(item)
-	def onActionItemAdded(self, actionItem):
-		item = ActionItemTreeWidgetItem(actionItem, parent=self)
+	def onPersistentItemAdded(self, persistentItem):
+		item = ActionItemTreeWidgetItem(persistentItem, parent=self)
 		self.addTopLevelItem(item)
 		self.setCurrentItem(item)
 	def editItem(self, item):
-		editor = EditorMapping[item.actionItem.__class__]
-		dlg =editor(item.actionItem, parent=self)
-		dlg.setWindowTitle('Edit Hotkey (%s)' % item.actionItem.itemName())
+		editor = EditorMapping[item.persistentItem.__class__]
+		dlg =editor(item.persistentItem, parent=self)
+		dlg.setWindowTitle('Edit Hotkey (%s)' % item.persistentItem.itemName())
 		dlg.restoreGeometry( TableCrabConfig.settingsValue('Gui/DialogHotkeyEditor/Geometry', QtCore.QByteArray()).toByteArray() )
 		result = dlg.exec_()
 		TableCrabConfig.settingsSetValue('Gui/DialogHotkeyEditor/Geometry', dlg.saveGeometry() )
 		if result ==dlg.Accepted:
 			TableCrabConfig.actionItemManager.dump()
 		
-	def createActionItem(self, actionItemProto):
-		actionItem = actionItemProto()
+	def createPersistentItem(self, actionItemProto):
+		persistentItem = actionItemProto()
 		editor = EditorMapping[actionItemProto]
-		#actionItem.name = editor.suggestDisplayName(actionItem)
-		dlg = editor(actionItem, parent=self)
-		dlg.setWindowTitle('Create Hotkey (%s)' % actionItem.itemName())
+		#persistentItem.name = editor.suggestDisplayName(persistentItem)
+		dlg = editor(persistentItem, parent=self)
+		dlg.setWindowTitle('Create Hotkey (%s)' % persistentItem.itemName())
 		dlg.restoreGeometry( TableCrabConfig.settingsValue('Gui/DialogHotkeyEditor/Geometry', QtCore.QByteArray()).toByteArray() )
 		result = dlg.exec_()
 		TableCrabConfig.settingsSetValue('Gui/DialogHotkeyEditor/Geometry', dlg.saveGeometry() )
 		if result == QtGui.QDialog.Accepted:
-			TableCrabConfig.signalConnect(actionItem, self, 'itemAdded(QObject*)', self.onActionItemAdded)
-			if not actionItem.name:
-				actionItem.name = editor.suggestDisplayName(actionItem)
-			TableCrabConfig.actionItemManager.addItem(actionItem)
+			TableCrabConfig.signalConnect(persistentItem, self, 'itemAdded(QObject*)', self.onPersistentItemAdded)
+			TableCrabConfig.actionItemManager.addItem(persistentItem)
 	
 class FrameHotkeys(QtGui.QFrame):
 	
@@ -363,21 +365,21 @@ class FrameHotkeys(QtGui.QFrame):
 		if item is None:
 			self.buttonUp.setEnabled(False)
 			return
-		TableCrabConfig.actionItemManager.moveItemUp(item.actionItem)
+		TableCrabConfig.actionItemManager.moveItemUp(item.persistentItem)
 	
 	def onButtonDownClicked(self, checked):
 		item = self.actionItemTreeWidget.currentItem()
 		if item is None:
 			self.buttonDown.setEnabled(False)
 			return
-		TableCrabConfig.actionItemManager.moveItemDown(item.actionItem)
+		TableCrabConfig.actionItemManager.moveItemDown(item.persistentItem)
 	
 	def onButtonRemoveClicked(self, checked):
 		item = self.actionItemTreeWidget.currentItem()
 		if item is None:
 			self.buttonRemove.setEnabled(False)
 			return
-		TableCrabConfig.actionItemManager.removeItem(item.actionItem)
+		TableCrabConfig.actionItemManager.removeItem(item.persistentItem)
 		
 	def onButtonEditClicked(self, checked):
 		item = self.actionItemTreeWidget.currentItem()
@@ -392,24 +394,24 @@ class FrameHotkeys(QtGui.QFrame):
 	def _adjustButtons(self):
 		item = self.actionItemTreeWidget.currentItem()
 		if item is None:
-			actionItem = None
+			persistentItem = None
 		elif item.parent() is None:
-			actionItem = item.actionItem
+			persistentItem = item.persistentItem
 		else:
-			actionItem = item.parent().actionItem
-		if actionItem is None:
+			persistentItem = item.parent().persistentItem
+		if persistentItem is None:
 			self.buttonUp.setEnabled(False)
 			self.buttonDown.setEnabled(False)
 			self.buttonRemove.setEnabled(False)
 			self.buttonEdit.setEnabled(False)
 		else:
-			self.buttonUp.setEnabled(TableCrabConfig.actionItemManager.canMoveItemUp(actionItem) )
-			self.buttonDown.setEnabled(TableCrabConfig.actionItemManager.canMoveItemDown(actionItem) )
+			self.buttonUp.setEnabled(TableCrabConfig.actionItemManager.canMoveItemUp(persistentItem) )
+			self.buttonDown.setEnabled(TableCrabConfig.actionItemManager.canMoveItemDown(persistentItem) )
 			self.buttonRemove.setEnabled(True)
 			self.buttonEdit.setEnabled(True)
 			
 	def onActionNewTriggered(self, checked):
-		self.actionItemTreeWidget.createActionItem(self.sender().actionItemProto)
+		self.actionItemTreeWidget.createPersistentItem(self.sender().actionItemProto)
 		
 	def onButtonHelpClicked(self, checked):
 		TableCrabGuiHelp.dialogHelp('hotkeys', parent=self)
