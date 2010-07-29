@@ -383,9 +383,9 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		filters << 'Images (%s)' % ' '.join(['*.%s' % i for i in imageFormats])
 		filters << 'All Files (*)'
 		dlg.setNameFilters(filters)
-		dlg.restoreState( TableCrabConfig.settingsValue(  'Gui/Screenshot/DialogOpenState', QtCore.QByteArray()).toByteArray() )
+		dlg.restoreState( TableCrabConfig.settingsValue(  'Gui/Screenshot/DialogOpen/State', QtCore.QByteArray()).toByteArray() )
 		result = dlg.exec_()
-		TableCrabConfig.settingsSetValue('Gui/Screenshot/DialogOpenState', dlg.saveState() )
+		TableCrabConfig.settingsSetValue('Gui/Screenshot/DialogOpen/State', dlg.saveState() )
 		if result != dlg.Accepted:
 			return
 			
