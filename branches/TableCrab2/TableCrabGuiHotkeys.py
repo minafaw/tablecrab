@@ -155,6 +155,7 @@ class ActionAlterBetAmountEditor(QtGui.QDialog):
 	def onSuggestDisplayName(self, *args):
 		baseValue = self.comboBaseValue.currentText()
 		multiplier = self.spinMultiplier.value()
+		#TODO: this is not always true for 0. we'd have to use decimal i guess 
 		multiplierIsInt = int(multiplier) == multiplier
 				
 		if baseValue == 'BigBlind':
@@ -189,7 +190,7 @@ class ActionAlterBetAmountEditor(QtGui.QDialog):
 			if multiplier >= 0 and multiplierIsInt:
 				text = 'Multiply Bet Amount By %d' % multiplier
 			elif multiplier >= 0 and not multiplierIsInt:	
-				text = 'Multiply Bet Amount By %s' % multiplier
+				text = 'Multiply Bet Amount By %.1f' % multiplier
 			elif multiplier < 0 and multiplierIsInt:
 				text = 'Divide Bet Amount By %d' % abs(multiplier)
 			else:
