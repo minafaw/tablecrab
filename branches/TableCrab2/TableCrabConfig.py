@@ -3,6 +3,8 @@
 # setup minimal stuff to get at least some information in case something goes wrong
 #
 # every module should add this module as the very first import
+#
+#NOTE: if an exception occurs an error.log will be placed in the current directory. good or not?
 #***************************************************************************************
 import sys, os, traceback, logging
 from logging import handlers
