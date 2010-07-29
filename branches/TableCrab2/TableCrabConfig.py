@@ -751,12 +751,14 @@ class PersistentItemManager(QtCore.QObject):
 	def setItemAttr(self, item, name, value):
 		setattr(item, name, value)
 		signalEmit(item, 'itemAttrChanged(QObject*, QString)', item, name)
-		self.dump()
+		if self.key is not None:
+			self.dump()
 	def setItemAttrs(self, item, values):
 		for name, value in values.items():
 			setattr(item, name, value)
 			signalEmit(item, 'itemAttrChanged(QObject*, QString)', item, name)
-		self.dump()
+		if self.key is not None:
+			self.dump()
 
 
 class PersistentItem(QtCore.QObject):
@@ -925,7 +927,6 @@ class WidgetItemTablePokerStars(PersistentItem):
 		settingsSetValue(settingsKeyJoin(key, 'Replayer'), self.replayer)
 		settingsSetValue(settingsKeyJoin(key, 'InstantHandHistory'), self.instantHandHistory)
 		settingsSetValue(settingsKeyJoin(key, 'ItemIsExpanded'), self.itemIsExpanded)
-		
 		return True
 
 WidgetItems = (
