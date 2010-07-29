@@ -84,9 +84,9 @@ class FrameHand(QtGui.QFrame):
 		filters << 'Html Files (*.html *.htm)'
 		filters << 'All Files (*)'
 		dlg.setNameFilters(filters)
-		dlg.restoreState( TableCrabConfig.settingsValue('Gui/Hand/DialogOpenState', QtCore.QByteArray()).toByteArray() )
+		dlg.restoreState( TableCrabConfig.settingsValue('Gui/Hand/DialogOpen/State', QtCore.QByteArray()).toByteArray() )
 		result = dlg.exec_()
-		TableCrabConfig.settingsSetValue('Gui/Hand/DialogOpenState', dlg.saveState() )
+		TableCrabConfig.settingsSetValue('Gui/Hand/DialogOpen/State', dlg.saveState() )
 		if result != dlg.Accepted: 
 			return
 		fileName = dlg.selectedFiles()[0]
@@ -104,9 +104,9 @@ class FrameHand(QtGui.QFrame):
 		filters << 'Html Files (*.html *.htm)'
 		filters << 'All Files (*)'
 		dlg.setNameFilters(filters)
-		dlg.restoreState( TableCrabConfig.settingsValue('Gui/Hand/DialogSaveState', QtCore.QByteArray()).toByteArray() )
+		dlg.restoreState( TableCrabConfig.settingsValue('Gui/Hand/DialogSave/State', QtCore.QByteArray()).toByteArray() )
 		result = dlg.exec_()
-		TableCrabConfig.settingsSetValue('Gui/Hand/DialogSaveState', dlg.saveState() )
+		TableCrabConfig.settingsSetValue('Gui/Hand/DialogSave/State', dlg.saveState() )
 		if result != dlg.Accepted: 
 			return
 		fileName = dlg.selectedFiles()[0]
