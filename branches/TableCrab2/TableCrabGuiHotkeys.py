@@ -231,11 +231,11 @@ class ActionItemTreeWidgetItem(QtGui.QTreeWidgetItem):
 	def __init__(self, persistentItem, parent=None):
 		QtGui.QTreeWidgetItem.__init__(self, parent)
 		self.persistentItem = persistentItem
+		self.setText(0, self.persistentItem.name)
 		if persistentItem.hotkeyName:
-			self.setText(0, self.persistentItem.hotkeyName)
+			self.setText(1, self.persistentItem.hotkeyName)
 		else:
-			self.setText(0, self.persistentItem.hotkey)
-		self.setText(1, self.persistentItem.name)
+			self.setText(1, self.persistentItem.hotkey)
 		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemAttrChanged(QObject*, QString)', self.onPersistentItemAttrChanged)
 		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemMovedUp(QObject*, int)', self.onPersistentItemMovedUp)
 		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemMovedDown(QObject*, int)', self.onPersistentItemMovedDown)
@@ -257,14 +257,14 @@ class ActionItemTreeWidgetItem(QtGui.QTreeWidgetItem):
 	def onPersistentItemAttrChanged(self, persistentItem, attrName):
 		if attrName == 'hotkey':
 			if not self.persistentItem.hotkeyName:
-				self.setText(0, self.persistentItem.hotkey)
+				self.setText(1, self.persistentItem.hotkey)
 		elif attrName == 'hotkeyName':
 			if self.persistentItem.hotkeyName:
-				self.setText(0, self.persistentItem.hotkeyName)
+				self.setText(1, self.persistentItem.hotkeyName)
 			else:
-				self.setText(0, self.persistentItem.hotkey)
+				self.setText(1, self.persistentItem.hotkey)
 		elif attrName == 'name':
-			self.setText(1, self.persistentItem.name)
+			self.setText(0, self.persistentItem.name)
 		
 
 class ActionItemTreeWidget(QtGui.QTreeWidget):
