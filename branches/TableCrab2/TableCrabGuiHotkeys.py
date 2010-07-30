@@ -29,9 +29,6 @@ class HotkeyComboBox(QtGui.QComboBox):
 		else:
 			self.setItemText(0, hotkey)
 		TableCrabConfig.signalConnect(TableCrabConfig.keyboardHook, self, 'keyPressed(QString)', self.onKeyboardHookKeyPressed)
-	def popup(self, *args):
-		print 11111111111111111
-	
 	def onKeyboardHookKeyPressed(self, hotkey):
 		if self.hasFocus():
 			if hotkey not in self.Hotkeys:
