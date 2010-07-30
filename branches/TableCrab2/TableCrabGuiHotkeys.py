@@ -53,7 +53,7 @@ class ActionCheckEditor(QtGui.QDialog):
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
 		TableCrabConfig.signalConnect(self.buttonBox, self, 'accepted()', self.accept)
 		TableCrabConfig.signalConnect(self.buttonBox, self, 'rejected()', self.reject)
-		
+				
 		self.labelName = QtGui.QLabel('Action:', self)
 		self.editName = QtGui.QLineEdit(self)
 		self.editName.setText(persistentItem.name)
@@ -335,84 +335,68 @@ class FrameHotkeys(QtGui.QFrame):
 			
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
-				
+			
 		self.actionItemTreeWidget = ActionItemTreeWidget(self)
+		TableCrabConfig.signalConnect(self.actionItemTreeWidget, self, 'itemSelectionChanged()', self.onTreeItemSelectionChanged)
 			
-		self.buttonNew = QtGui.QPushButton('New', self)
-		self.buttonEdit = QtGui.QPushButton('Edit', self)
-		self.buttonUp = QtGui.QPushButton('Up', self)
-		self.buttonDown = QtGui.QPushButton('Down', self)
-		self.buttonRemove = QtGui.QPushButton('Remove', self)
-		self.buttonHelp = QtGui.QPushButton('Help', self)
-		self.menuNewAction = QtGui.QMenu(self)
+		self.toolBar = QtGui.QToolBar(self)
 		
-		self.buttonBox = QtGui.QDialogButtonBox(self)
-		self.buttonBox.addButton(self.buttonNew, self.buttonBox.ActionRole)
-		self.buttonBox.addButton(self.buttonEdit, self.buttonBox.ActionRole)
-		self.buttonBox.addButton(self.buttonUp, self.buttonBox.ActionRole)
-		self.buttonBox.addButton(self.buttonDown, self.buttonBox.ActionRole)
-		self.buttonBox.addButton(self.buttonRemove, self.buttonBox.ActionRole)
-		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)	
-			
-		#
+		menu = QtGui.QMenu(self)
 		for actionItemProto, _ in Editors:
 			action = self.ActionNewHotkey(actionItemProto, parent=self)
 			TableCrabConfig.signalConnect(action, self, 'triggered(bool)', self.onActionNewTriggered)
-			self.menuNewAction.addAction(action)
-		self.buttonNew.setMenu(self.menuNewAction)
-			
-		# init buttons
-		TableCrabConfig.signalConnect(self.actionItemTreeWidget, self, 'itemSelectionChanged()', self.onTreeItemSelectionChanged)
-		TableCrabConfig.signalConnect(self.buttonUp, self, 'clicked(bool)', self.onButtonUpClicked)
-		self.buttonUp.setEnabled(False)
-		TableCrabConfig.signalConnect(self.buttonDown, self, 'clicked(bool)', self.onButtonDownClicked)
-		self.buttonDown.setEnabled(False)
-		self.buttonNew.setEnabled(TableCrabConfig.actionItemManager.canAddItem() )
-		TableCrabConfig.signalConnect(self.buttonRemove, self, 'clicked(bool)', self.onButtonRemoveClicked)
-		self.buttonRemove.setEnabled(False)
-		TableCrabConfig.signalConnect(self.buttonEdit, self, 'clicked(bool)', self.onButtonEditClicked)
-		self.buttonEdit.setEnabled(False)
-		TableCrabConfig.signalConnect(self.buttonHelp, self, 'clicked(bool)', self.onButtonHelpClicked)
-
+			menu.addAction(action)
+		self.actionNew = TableCrabConfig.TableCrabAction(
+				parent=self,
+				text='New',
+				menu=menu,
+				)
+		self.toolBar.addAction(self.actionNew)
+		
+		self.actionEdit = TableCrabConfig.TableCrabAction(
+				parent=self,
+				text='Edit..',
+				slot=self.onActionEditTriggered,
+				)
+		self.toolBar.addAction(self.actionEdit)
+		
+		self.actionUp = TableCrabConfig.TableCrabAction(
+				parent=self,
+				text='Up',
+				slot=self.onActionUpTriggered,
+				)
+		self.toolBar.addAction(self.actionUp)
+		
+		self.actionDown = TableCrabConfig.TableCrabAction(
+				parent=self,
+				text='Down',
+				slot=self.onActionDownTriggered,
+				)
+		self.toolBar.addAction(self.actionDown)
+		
+		self.actionRemove = TableCrabConfig.TableCrabAction(
+				parent=self,
+				text='Remove',
+				slot=self.onActionRemoveTriggered,
+				)
+		self.toolBar.addAction(self.actionRemove)
+		
+		self.actionHelp = TableCrabConfig.TableCrabAction(
+				parent=self,
+				text='Help',
+				slot=self.onActionHelpTriggered,
+				)
+		self.toolBar.addAction(self.actionHelp)
+				
+		self.adjustActions()
 		self.layout()
+		
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
-		grid.addWidget(self.actionItemTreeWidget, 0, 0)
-		grid.addWidget(self.buttonBox, 1, 0)
-		
-		
-	def onButtonUpClicked(self, checked):
-		item = self.actionItemTreeWidget.currentItem()
-		if item is None:
-			self.buttonUp.setEnabled(False)
-			return
-		TableCrabConfig.actionItemManager.moveItemUp(item.persistentItem)
-	
-	def onButtonDownClicked(self, checked):
-		item = self.actionItemTreeWidget.currentItem()
-		if item is None:
-			self.buttonDown.setEnabled(False)
-			return
-		TableCrabConfig.actionItemManager.moveItemDown(item.persistentItem)
-	
-	def onButtonRemoveClicked(self, checked):
-		item = self.actionItemTreeWidget.currentItem()
-		if item is None:
-			self.buttonRemove.setEnabled(False)
-			return
-		TableCrabConfig.actionItemManager.removeItem(item.persistentItem)
-		
-	def onButtonEditClicked(self, checked):
-		item = self.actionItemTreeWidget.currentItem()
-		if item is None:
-			self.buttonEdit.setEnabled(False)
-			return
-		self.actionItemTreeWidget.editItem(item)
-		
-	def onTreeItemSelectionChanged(self):
-		self._adjustButtons()
-	
-	def _adjustButtons(self):
+		grid.addWidget(self.toolBar, 0, 0)
+		grid.addWidget(self.actionItemTreeWidget, 1, 0)
+			
+	def adjustActions(self):
 		item = self.actionItemTreeWidget.currentItem()
 		if item is None:
 			persistentItem = None
@@ -421,20 +405,51 @@ class FrameHotkeys(QtGui.QFrame):
 		else:
 			persistentItem = item.parent().persistentItem
 		if persistentItem is None:
-			self.buttonUp.setEnabled(False)
-			self.buttonDown.setEnabled(False)
-			self.buttonRemove.setEnabled(False)
-			self.buttonEdit.setEnabled(False)
+			self.actionUp.setEnabled(False)
+			self.actionDown.setEnabled(False)
+			self.actionRemove.setEnabled(False)
+			self.actionEdit.setEnabled(False)
 		else:
-			self.buttonUp.setEnabled(TableCrabConfig.actionItemManager.canMoveItemUp(persistentItem) )
-			self.buttonDown.setEnabled(TableCrabConfig.actionItemManager.canMoveItemDown(persistentItem) )
-			self.buttonRemove.setEnabled(True)
-			self.buttonEdit.setEnabled(True)
-			
+			self.actionUp.setEnabled(TableCrabConfig.actionItemManager.canMoveItemUp(persistentItem) )
+			self.actionDown.setEnabled(TableCrabConfig.actionItemManager.canMoveItemDown(persistentItem) )
+			self.actionRemove.setEnabled(True)
+			self.actionEdit.setEnabled(True)
+	
+	def onActionUpTriggered(self):
+		item = self.actionItemTreeWidget.currentItem()
+		if item is None:
+			self.actionUp.setEnabled(False)
+			return
+		TableCrabConfig.actionItemManager.moveItemUp(item.persistentItem)
+	
+	def onActionDownTriggered(self):
+		item = self.actionItemTreeWidget.currentItem()
+		if item is None:
+			self.actionDown.setEnabled(False)
+			return
+		TableCrabConfig.actionItemManager.moveItemDown(item.persistentItem)
+	
+	def onActionRemoveTriggered(self):
+		item = self.actionItemTreeWidget.currentItem()
+		if item is None:
+			self.actionRemove.setEnabled(False)
+			return
+		TableCrabConfig.actionItemManager.removeItem(item.persistentItem)
+		
+	def onActionEditTriggered(self):
+		item = self.actionItemTreeWidget.currentItem()
+		if item is None:
+			self.actionEdit.setEnabled(False)
+			return
+		self.actionItemTreeWidget.editItem(item)
+		
+	def onTreeItemSelectionChanged(self):
+		self.adjustActions()
+	
 	def onActionNewTriggered(self, checked):
 		self.actionItemTreeWidget.createPersistentItem(self.sender().actionItemProto)
 		
-	def onButtonHelpClicked(self, checked):
+	def onActionHelpTriggered(self):
 		TableCrabGuiHelp.dialogHelp('hotkeys', parent=self)
 		
 #**********************************************************************************************

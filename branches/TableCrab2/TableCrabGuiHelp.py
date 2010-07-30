@@ -94,15 +94,18 @@ class NetworkAccessManager(QtNetwork.QNetworkAccessManager):
 		self.setProxyFactory(oldManager.proxyFactory())
 	def createRequest(self, operation, request, data):
 		
+		#NOTE: from previous versions of Qt i found we can not keep the url bcause Qt nulls it on return
+		url = QtCore.QUrl(request.url())
+			
 		# serve local files from our resource modules
-		if request.url().scheme() == "file" and operation == self.GetOperation:
-			fileInfo = QtCore.QFileInfo(request.url().path())
+		if url.scheme() == "file" and operation == self.GetOperation:
+			fileInfo = QtCore.QFileInfo(url.path())
 			name = str(fileInfo.baseName() )		#NOTE: we need to string it ..getattr() crasches otherwise
 			ext = fileInfo.suffix()
 			
 			buffer = ByteArrayBuffer()
 			reply = TableCrabReply(buffer, parent=self)
-			reply.setUrl(request.url() )
+			reply.setUrl(url)
 			
 			if ext == 'html':
 				reply.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader, QtCore.QVariant("text/html; charset=UTF-8"))
@@ -141,26 +144,44 @@ class NetworkAccessManager(QtNetwork.QNetworkAccessManager):
 #**********************************************************************************************
 #
 #**********************************************************************************************
-class FrameHelpTree(QtGui.QFrame):
+
+class FrameHelpView(QtGui.QFrame):
+	def __init__(self, parent=None):
+		QtGui.QFrame.__init__(self, parent)
+		self.webView = QtWebKit.QWebView(self)
+		self.webView.setUrl(QtCore.QUrl(''))
+		self.webView.setZoomFactor( TableCrabConfig.settingsValue('Gui/Help/ZoomFactor',  self.webView.zoomFactor() ).toDouble()[0] )
+		oldManager = self.webView.page().networkAccessManager()
+		self.networkAccessManager = NetworkAccessManager(oldManager, parent=self)
+		self.webView.page().setNetworkAccessManager(self.networkAccessManager)
+		##self.webView.page().setForwardUnsupportedContent(True)
+		
+		self.layout()
+	def layout(self):
+		box = TableCrabConfig.GridBox(self)
+		box.addWidget(self.webView, 0, 0)
+	def setUrl(self, url):
+		self.webView.setUrl(url)
+	
+
+class FrameHelp(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 		
-		self.webView = QtWebKit.QWebView(self)
-		self.webView.setUrl(QtCore.QUrl(''))
+		self.frameHelpView = FrameHelpView(self)
 		self.tree = QtGui.QTreeWidget(self)
 		self.splitter = QtGui.QSplitter(self)
 		self.splitter.addWidget(self.tree)
-		self.splitter.addWidget(self.webView)
+		self.splitter.addWidget(self.frameHelpView)
 				
 		self.tree.setExpandsOnDoubleClick(False)
 		self.tree.setRootIsDecorated(False)
 		self.tree.header().setVisible(False)
-		
-		oldManager = self.webView.page().networkAccessManager()
-		self.networkAccessManager = NetworkAccessManager(oldManager, parent=self)
-		##self.webView.page().setForwardUnsupportedContent(True)
-		self.webView.page().setNetworkAccessManager(self.networkAccessManager)
-		
+			
+		self.toolBar = TableCrabConfig.TableCrabWebViewToolBar(self.frameHelpView.webView,
+				settingsKeyZoomFactor='Gui/Help/ZoomFactor',
+				settingsKeyZoomIncrement='Gui/WebView/ZoomIncrement',
+				)
 		
 		#
 		lastTopic = TableCrabConfig.settingsValue('Gui/Help/Topic', '').toString()
@@ -184,8 +205,7 @@ class FrameHelpTree(QtGui.QFrame):
 				lastTopicItem = item
 			if firstTopicItem is None:
 				firstTopicItem = item
-				
-		self.webView.setZoomFactor( TableCrabConfig.settingsValue('Gui/Help/ZoomFactor',  self.webView.zoomFactor() ).toDouble()[0] )
+			
 		TableCrabConfig.signalConnect(self.tree, self, 'itemSelectionChanged()', self.onItemSelectionChanged)
 		TableCrabConfig.signalConnect(self.tree, self, 'itemActivated(QTreeWidgetItem*, int)', self.onItemSelectionChanged)
 		
@@ -200,19 +220,8 @@ class FrameHelpTree(QtGui.QFrame):
 		
 	def layout(self):
 		box = TableCrabConfig.GridBox(self)
-		box.addWidget(self.splitter, 0, 0)
-	
-	def zoomIn(self,):
-		zoomIncrement = TableCrabConfig.settingsValue('Gui/WebView/ZoomIncrement', 0.1).toDouble()[0]
-		self.webView.setZoomFactor(self.webView.zoomFactor() + zoomIncrement)
-		TableCrabConfig.settingsSetValue('Gui/Help/ZoomFactor', self.webView.zoomFactor())
-			
-	def zoomOut(self):
-		zoomIncrement = TableCrabConfig.settingsValue('Gui/WebView/ZoomIncrement', 0.1).toDouble()[0]
-		zoom = self.webView.zoomFactor() - zoomIncrement
-		if zoom > 0:
-			self.webView.setZoomFactor(zoom)
-			TableCrabConfig.settingsSetValue('Gui/Help/ZoomFactor', self.webView.zoomFactor() )
+		box.addWidget(self.toolBar, 0, 0)
+		box.addWidget(self.splitter, 1, 0)
 		
 	def onItemSelectionChanged(self):
 		items = self.tree.selectedItems()
@@ -221,32 +230,11 @@ class FrameHelpTree(QtGui.QFrame):
 		topic = item.data(0, QtCore.Qt.UserRole).toString()
 		#url = QtCore.QUrl('TableCrab://HtmlPage/%s' % topic)
 		url = QtCore.QUrl('%s.html' % topic)
-		self.webView.setUrl(url)
+		self.frameHelpView.setUrl(url)
 		TableCrabConfig.settingsSetValue('Gui/Help/Topic', topic)
 		
 	def onCloseEvent(self, event):
 		TableCrabConfig.settingsSetValue('Gui/Help/SplitterState', self.splitter.saveState() )
-
-
-
-class FrameHelp(QtGui.QFrame):
-	def __init__(self, parent=None):
-		QtGui.QFrame.__init__(self, parent)
-		
-		self.frameHelpTree = FrameHelpTree(parent=self)
-		
-		self.buttonZoomIn = QtGui.QPushButton('Zoom+',self)
-		TableCrabConfig.signalConnect(self.buttonZoomIn, self, 'clicked(bool)', self.frameHelpTree.zoomIn)
-		self.buttonZoomOut = QtGui.QPushButton('Zoom-',self)
-		TableCrabConfig.signalConnect(self.buttonZoomOut, self, 'clicked(bool)', self.frameHelpTree.zoomOut)
-		
-		self.layout()
-	def layout(self):
-		box = TableCrabConfig.GridBox(self)
-		box.addWidget(self.frameHelpTree, 0, 0, 1, 6)
-		box.addWidget(self.buttonZoomIn, 1,0)
-		box.addWidget(self.buttonZoomOut, 1, 1)
-		box.addLayout(TableCrabConfig.HStretch(), 1, 5)
 
 
 
@@ -258,23 +246,11 @@ class _DialogHelp(QtGui.QDialog):
 		self.setWindowIcon( QtGui.QIcon(TableCrabConfig.Pixmaps.tableCrab()) )
 		
 		TableCrabConfig.settingsSetValue('Gui/Help/Topic', topic)
-		self.frameHelpTree = FrameHelpTree(parent=self)
+		self.frameHelp = FrameHelp(parent=self)
 			
-		self.buttonZoomIn = QtGui.QPushButton('Zoom+',self)
-		TableCrabConfig.signalConnect(self.buttonZoomIn, self, 'clicked(bool)', self.frameHelpTree.zoomIn)
-		self.buttonZoomOut = QtGui.QPushButton('Zoom-',self)
-		TableCrabConfig.signalConnect(self.buttonZoomOut, self, 'clicked(bool)', self.frameHelpTree.zoomOut)
-		
-		self.buttonBox = QtGui.QDialogButtonBox(self)
-		self.buttonBox.setStandardButtons(self.buttonBox.Ok)
-		self.buttonBox.addButton(self.buttonZoomIn, self.buttonBox.ActionRole)
-		self.buttonBox.addButton(self.buttonZoomOut, self.buttonBox.ActionRole)
-		self.connect(self.buttonBox, QtCore.SIGNAL('accepted()'), self.accept)
-		self.layout()
-				
 	def layout(self):
 		box = TableCrabConfig.GridBox(self)
-		box.addWidget(self.frameHelpTree, 0, 0)
+		box.addWidget(self.frameHelp, 0, 0)
 		box.addWidget(TableCrabConfig.HLine(self), 1, 0)
 		box.addWidget(self.buttonBox, 2, 0)
 

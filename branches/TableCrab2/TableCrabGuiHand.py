@@ -11,11 +11,11 @@ import TableCrabGuiHelp
 class FrameHand(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
-		 
-		
-		self.lastHand = None
+			
+		self._hasHand = False
 		self.webView = QtWebKit.QWebView(self)
 		self.webView.setUrl(QtCore.QUrl(''))
+		self.webView.setZoomFactor( TableCrabConfig.settingsValue('Gui/Hand/ZoomFactor',  self.webView.zoomFactor() ).toDouble()[0] )
 		self.psHandGrabber = PSHandGrabber.HandGrabber(
 				PSHandGrabber.HandParser(),
 				PSHandGrabber.HandFormatterHtmlTabular(),
@@ -23,60 +23,52 @@ class FrameHand(QtGui.QFrame):
 				)
 		TableCrabConfig.signalConnect(self.psHandGrabber, self, 'handGrabbed(QObject*, QString)', self.onPShandGrabberHandGrabbed)
 		self.psHandGrabber.start()
-		
 		TableCrabConfig.signalConnect(None, self, 'closeEvent(QEvent*)', self.onCloseEvent)
-		self.webView.setZoomFactor(TableCrabConfig.settingsValue('Gui/Hand/ZoomFactor', 1.0).toDouble()[0])
-				
 		self.webView.setZoomFactor( TableCrabConfig.settingsValue('Gui/Hand/ZoomFactor',  self.webView.zoomFactor() ).toDouble()[0] )
 		
-		self.buttonZoomIn = QtGui.QPushButton('Zoom+',self)
-		TableCrabConfig.signalConnect(self.buttonZoomIn, self, 'clicked(bool)', self.onButtonZoomInClicked)
-		self.buttonZoomOut = QtGui.QPushButton('Zoom-',self)
-		TableCrabConfig.signalConnect(self.buttonZoomOut, self, 'clicked(bool)', self.onButtonZoomOutClicked)
-		self.buttonOpen = QtGui.QPushButton('Open..',self)
-		TableCrabConfig.signalConnect(self.buttonOpen, self, 'clicked(bool)', self.onButtonOpenClicked)
-		self.buttonSave = QtGui.QPushButton('Save..',self)
-		TableCrabConfig.signalConnect(self.buttonSave, self, 'clicked(bool)', self.onButtonSaveClicked)
-		self.buttonHelp = QtGui.QPushButton('Help', self)
-		TableCrabConfig.signalConnect(self.buttonHelp, self, 'clicked(bool)', self.onButtonHelpClicked)
+		self.toolBar = TableCrabConfig.TableCrabWebViewToolBar(self.webView,
+				settingsKeyZoomFactor='Gui/Hand/ZoomFactor',
+				settingsKeyZoomIncrement='Gui/WebView/ZoomIncrement',
+				)
 		
-		self.buttonBox = QtGui.QDialogButtonBox(self)
-		self.buttonBox.addButton(self.buttonZoomIn, self.buttonBox.ActionRole)
-		self.buttonBox.addButton(self.buttonZoomOut, self.buttonBox.ActionRole)
-		self.buttonBox.addButton(self.buttonOpen, self.buttonBox.ActionRole)
-		self.buttonBox.addButton(self.buttonSave, self.buttonBox.ActionRole)
-		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
+		self.actionOpen = TableCrabConfig.TableCrabAction(
+				parent=self.toolBar,
+				text='Open..',
+				slot=self.onActionOpenTriggered
+				)
+		self.toolBar.addAction(self.actionOpen)
+		
+		self.actionSave = TableCrabConfig.TableCrabAction(
+				parent=self.toolBar,
+				text='Save..',
+				slot=self.onActionSaveTriggered
+				)
+		self.toolBar.addAction(self.actionSave)
+		
+		self.actionHelp = TableCrabConfig.TableCrabAction(
+				parent=self.toolBar,
+				text='Help',
+				slot=self.onActionHelpTriggered
+				)
+		self.toolBar.addAction(self.actionHelp)
 				
-		
-		self.adjustButtons()
+		self.adjustActions()
 		self.layout()
 		
 	def layout(self):
 		box = TableCrabConfig.GridBox(self)
-		box.addWidget(self.webView, 0, 0)
-		box.addWidget(self.buttonBox, 1,0)
+		box.addWidget(self.toolBar, 0,0)
+		box.addWidget(self.webView, 1, 0)
 		
 	def onCloseEvent(self, event):
 		self.psHandGrabber.stop()
 	
-	def adjustButtons(self):
-		self.buttonZoomIn.setEnabled(bool(self.lastHand))
-		self.buttonZoomOut.setEnabled(bool(self.lastHand))
-		self.buttonSave.setEnabled(bool(self.lastHand))
+	def adjustActions(self):
+		self.toolBar.actionZoomIn.setEnabled(bool(self._hasHand))
+		self.toolBar.actionZoomOut.setEnabled(bool(self._hasHand))
+		self.actionSave.setEnabled(bool(self._hasHand))
 	
-	def onButtonZoomInClicked(self, checked):
-		zoomIncrement = TableCrabConfig.settingsValue('Gui/WebView/ZoomIncrement', 0.1).toDouble()[0]
-		self.webView.setZoomFactor(self.webView.zoomFactor() + zoomIncrement)
-		TableCrabConfig.settingsSetValue('Gui/Hand/ZoomFactor', self.webView.zoomFactor())
-			
-	def onButtonZoomOutClicked(self, checked):
-		zoomIncrement = TableCrabConfig.settingsValue('Gui/WebView/ZoomIncrement', 0.1).toDouble()[0]
-		zoom = self.webView.zoomFactor() - zoomIncrement
-		if zoom > 0:
-			self.webView.setZoomFactor(zoom)
-			TableCrabConfig.settingsSetValue('Gui/Hand/ZoomFactor', self.webView.zoomFactor() )
-	
-	def onButtonOpenClicked(self, checked):
+	def onActionOpenTriggered(self):
 		dlg = QtGui.QFileDialog(self)
 		imageFormats = [QtCore.QString(i).toLower() for i in  QtGui.QImageReader.supportedImageFormats()]
 		dlg.setFileMode(dlg.AnyFile)
@@ -95,8 +87,10 @@ class FrameHand(QtGui.QFrame):
 		fp = open(fileName, 'r')
 		try:	self.webView.setHtml(fp.read() )
 		finally: fp.close()
+		self._hasHand = true
+		self.adjustActions()
 		
-	def onButtonSaveClicked(self, checked):
+	def onActionSaveTriggered(self):
 		dlg = QtGui.QFileDialog(self)
 		dlg.setWindowTitle('Save Hand..')
 		dlg.setFileMode(dlg.AnyFile)
@@ -115,19 +109,16 @@ class FrameHand(QtGui.QFrame):
 		fp = open(fileName, 'w')
 		try: fp.write(self.webView.page().mainFrame().toHtml())
 		finally: fp.close()
-			
+	
+	def onActionHelpTriggered(self, checked):
+		TableCrabGuiHelp.dialogHelp('hand', parent=self)		
+	
 	def onPShandGrabberHandGrabbed(self, hand, data):
-		self.lastHand = hand
 		self.webView.setHtml(data)
+		self._hasHand = True
 		self.adjustButtons()
 	
-	def onConfigSettingChanged(self):
-		if self.lastHand is not None:
-			data = Config.psHandGrabber.handFormatter.dump(self.lastHand)
-			self.webView.setHtml(data)
-			
-	def onButtonHelpClicked(self, checked):
-		TableCrabGuiHelp.dialogHelp('hand', parent=self)
+	
 
 #**********************************************************************************************
 #

@@ -46,7 +46,7 @@ class TablePokerStarsTreeWidgetItem(QtGui.QTreeWidgetItem):
 		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemAttrChanged(QObject*, QString)', self.onPersistentItemAttrChanged)
 		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemMovedUp(QObject*, int)', self.onPersistentItemMovedUp)
 		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemMovedDown(QObject*, int)', self.onPersistentItemMovedDown)
-		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemRem1oved(QObject*)', self.onPersistentItemRemoved)
+		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemRemoved(QObject*)', self.onPersistentItemRemoved)
 		
 		#TODO: bit of a hack here to disable child items initially
 		TableCrabConfig.signalEmit(None, 'widgetScreenshotQuery()')
@@ -184,38 +184,72 @@ class FramePersistentItems(QtGui.QFrame):
 			
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
+		self._actions = []
 		self.persistentItemTreeWidget = PersistentItemTreeWidget(self)
-		self.buttonUp = QtGui.QPushButton('Up', self)
-		self.buttonDown = QtGui.QPushButton('Down', self)
-		self.buttonNew = QtGui.QPushButton('New', self)
-		self.buttonRemove = QtGui.QPushButton('Remove', self)
-		self.menuNewPersistentItem = QtGui.QMenu(self)
-		
-		#
+		TableCrabConfig.signalConnect(None, self, 'widgetScreenshotDoubleClicked(QPixmap*, QPoint*)', self.onWidgetScreenshotDoubleClicked)
+		TableCrabConfig.signalConnect(self.persistentItemTreeWidget, self, 'itemSelectionChanged()', self.onTreeItemSelectionChanged)
+			
+		menu = QtGui.QMenu(self)
 		for persistentItemProto in TableCrabConfig.SetupWidgetItems:
 			persistentItem = self.ActionNewPersistentItem(persistentItemProto, parent=self)
 			TableCrabConfig.signalConnect(persistentItem, self, 'triggered(bool)', self.onPersistentItemNewTriggered)
-			self.menuNewPersistentItem.addAction(persistentItem)
-		self.buttonNew.setMenu(self.menuNewPersistentItem)
+			menu.addAction(persistentItem)
+		self.actionNew = TableCrabConfig.TableCrabAction(
+				parent=self,
+				text='New',
+				menu=menu
+				)
+		self._actions.append(self.actionNew)
 			
-		#
-		TableCrabConfig.signalConnect(None, self, 'widgetScreenshotDoubleClicked(QPixmap*, QPoint*)', self.onWidgetScreenshotDoubleClicked)
-		TableCrabConfig.signalConnect(self.persistentItemTreeWidget, self, 'itemSelectionChanged()', self.onTreeItemSelectionChanged)
-		TableCrabConfig.signalConnect(self.buttonUp, self, 'clicked(bool)', self.onButtonUpClicked)
-		TableCrabConfig.signalConnect(self.buttonDown, self, 'clicked(bool)', self.onButtonDownClicked)
-		self.buttonNew.setEnabled(TableCrabConfig.setupWidgetItemManager.canAddItem() )
-		TableCrabConfig.signalConnect(self.buttonRemove, self, 'clicked(bool)', self.onButtonRemoveClicked)
+		self.actionUp = TableCrabConfig.TableCrabAction(
+				parent=self,
+				text='Up',
+				slot=self.onActionUpTriggered,
+				)
+		self._actions.append(self.actionUp)
 		
-		self._adjustButtons()
+		self.actionDown = TableCrabConfig.TableCrabAction(
+				parent=self,
+				text='Down',
+				slot=self.onActionDownTriggered,
+				)
+		self._actions.append(self.actionDown)
+		
+		self.actionRemove = TableCrabConfig.TableCrabAction(
+				parent=self,
+				text='remove',
+				slot=self.onActionRemoveTriggered,
+				)
+		self._actions.append(self.actionRemove)
+			
+		self.adjustActions()
 		self.layout()
+	
+	def adjustActions(self):
+		self.actionNew.setEnabled(TableCrabConfig.setupWidgetItemManager.canAddItem() )
+		item = self.persistentItemTreeWidget.currentItem()
+		if item is None:
+			persistentItem = None
+		elif item.parent() is None:
+			persistentItem = item.persistentItem
+		else:
+			persistentItem = item.parent().persistentItem
+		if persistentItem is None:
+			self.actionUp.setEnabled(False)
+			self.actionDown.setEnabled(False)
+			self.actionRemove.setEnabled(False)
+		else:
+			self.actionUp.setEnabled(TableCrabConfig.setupWidgetItemManager.canMoveItemUp(persistentItem) )
+			self.actionDown.setEnabled(TableCrabConfig.setupWidgetItemManager.canMoveItemDown(persistentItem) )
+			self.actionRemove.setEnabled(True)
+	
+	def actions(self):
+		return self._actions
+	
 	def layout(self):
 		box = TableCrabConfig.GridBox(self)
-		box.addWidget(self.persistentItemTreeWidget, 0, 0, 1, 2)
-		box.addWidget(self.buttonUp, 1, 0)
-		box.addWidget(self.buttonDown, 1, 1)
-		box.addWidget(self.buttonNew, 2, 0)
-		box.addWidget(self.buttonRemove, 2, 1)
-		
+		box.addWidget(self.persistentItemTreeWidget, 0, 0)
+			
 	def onWidgetScreenshotDoubleClicked(self, pixmap, point):
 		item = self.persistentItemTreeWidget.currentItem()
 		if item is None:
@@ -230,49 +264,31 @@ class FramePersistentItems(QtGui.QFrame):
 		TableCrabConfig.setupWidgetItemManager.setItemAttrs(persistentItem, {item.attrName: point, 'size': pixmap.size()})
 		return True
 		
-	def onButtonUpClicked(self, checked):
+	def onActionUpTriggered(self):
 		item = self.persistentItemTreeWidget.currentItem()
 		if item is None:
-			self.buttonUp.setEnabled(False)
+			self.actionUp.setEnabled(False)
 			return
 		persistentItem= item.persistentItem if item.parent() is None else item.parent().persistentItem
 		TableCrabConfig.setupWidgetItemManager.moveItemUp(persistentItem)
 	
-	def onButtonDownClicked(self, checked):
+	def onActionDownTriggered(self):
 		item = self.persistentItemTreeWidget.currentItem()
 		if item is None:
-			self.buttonDown.setEnabled(False)
+			self.actionDown.setEnabled(False)
 			return
 		persistentItem = item.persistentItem if item.parent() is None else item.parent().persistentItem
 		TableCrabConfig.setupWidgetItemManager.moveItemDown(persistentItem)
 	
-	def onButtonRemoveClicked(self, checked):
+	def onActionRemoveTriggered(self):
 		item = self.persistentItemTreeWidget.currentItem()
 		if item is None:
 			self.buttonRemove.setEnabled(False)
 			return
-		persistentItem = item.persistentItem if item.parent() is None else item.parent().persistentItem
 		TableCrabConfig.setupWidgetItemManager.removeItem(persistentItem)
 		
 	def onTreeItemSelectionChanged(self):
-		self._adjustButtons()
-	
-	def _adjustButtons(self):
-		item = self.persistentItemTreeWidget.currentItem()
-		if item is None:
-			persistentItem = None
-		elif item.parent() is None:
-			persistentItem = item.persistentItem
-		else:
-			persistentItem = item.parent().persistentItem
-		if persistentItem is None:
-			self.buttonUp.setEnabled(False)
-			self.buttonDown.setEnabled(False)
-			self.buttonRemove.setEnabled(False)
-		else:
-			self.buttonUp.setEnabled(TableCrabConfig.setupWidgetItemManager.canMoveItemUp(persistentItem) )
-			self.buttonDown.setEnabled(TableCrabConfig.setupWidgetItemManager.canMoveItemDown(persistentItem) )
-			self.buttonRemove.setEnabled(True)
+		self.adjustActions()
 		
 	def onPersistentItemNewTriggered(self, checked):
 		self.persistentItemTreeWidget.createPersistentItem(self.sender().persistentItemProto)
@@ -323,37 +339,54 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
-		self.scrollArea = QtGui.QScrollArea(self)
+		
+		self._lastInfo = None
+		
 		self.label = self.MyLabel('Screenshot')
 		self.label.setScaledContents(True)
-		self.buttonOpen = QtGui.QPushButton('Open..', self)
-		self.buttonSave = QtGui.QPushButton('Save..', self)
-		self.buttonInfo = QtGui.QPushButton('Info..', self)
-		self.buttonHelp = QtGui.QPushButton('Help', self)
+		self.label.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
 		
-		self.buttonBox = QtGui.QDialogButtonBox(self)
-		self.buttonBox.addButton(self.buttonOpen, self.buttonBox.ActionRole)
-		self.buttonBox.addButton(self.buttonSave, self.buttonBox.ActionRole)
-		self.buttonBox.addButton(self.buttonInfo, self.buttonBox.ActionRole)
-		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)	
-			
-		self.lastInfo = None
-		
-		TableCrabConfig.signalConnect(None, self, 'widgetScreenshotQuery()', self.onWidgetScreenshotQuery)
-		TableCrabConfig.signalConnect(None, self, 'widgetScreenshot(int, QPixmap*)', self.onWidgetScreenshot)
-		self.buttonSave.setEnabled(False)
-		TableCrabConfig.signalConnect(self.buttonOpen, self, 'clicked(bool)', self.onButtonOpenClicked)
-		TableCrabConfig.signalConnect(self.buttonSave, self, 'clicked(bool)', self.onButtonSaveClicked)
-		TableCrabConfig.signalConnect(self.buttonInfo, self, 'clicked(bool)', self.onButtonInfoClicked)
-		self.buttonInfo.setEnabled(False)
-		TableCrabConfig.signalConnect(self.buttonHelp, self, 'clicked(bool)', self.onButtonHelpClicked)
-			
+		self.scrollArea = QtGui.QScrollArea(self)
 		self.scrollArea.setBackgroundRole(QtGui.QPalette.Dark)
 		self.scrollArea.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-		self.label.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-		self.scrollArea.setWidget(self.label)
+		self.scrollArea.setWidget(self.label)		
+		
+		self._actions = []
+		
+		self.actionOpen = TableCrabConfig.TableCrabAction(
+				parent=self,
+				text='Open..',
+				slot=self.onActionOpenTriggered,
+				)
+		self._actions.append(self.actionOpen)
+		
+		self.actionSave = TableCrabConfig.TableCrabAction(
+				parent=self,
+				text='save..',
+				slot=self.onActionSaveTriggered,
+				)
+		self._actions.append(self.actionSave)
+		
+		self.actionInfo = TableCrabConfig.TableCrabAction(
+				parent=self,
+				text='Info..',
+				slot=self.onActionInfoTriggered,
+				)
+		self._actions.append(self.actionInfo)
+			
+		TableCrabConfig.signalConnect(None, self, 'widgetScreenshotQuery()', self.onWidgetScreenshotQuery)
+		TableCrabConfig.signalConnect(None, self, 'widgetScreenshot(int, QPixmap*)', self.onWidgetScreenshot)
+				
+		self.adjustActions()
 		self.layout()
 		
+	def actions(self):
+		return self._actions
+	
+	def adjustActions(self):
+		self.actionSave.setEnabled(self.label.pixmap() is not None)
+		self.actionInfo.setEnabled(self._lastInfo is not None)
+	
 	def onWidgetScreenshotQuery(self):
 		pixmap = self.label.pixmap()
 		if pixmap is None:
@@ -368,14 +401,12 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		if selfParent == otherParent:
 			return
 		self.gatherWindowInfo(hwnd)		
-		self.buttonInfo.setEnabled(True)
 		self.setScreenshot(pixmap)
+		self.adjustActions()
 		
 	def setScreenshot(self, pixmap=None, screenshotName='Screenshot'):
-		if self.label.setScreenshot(pixmap=pixmap, screenshotName=screenshotName):
-			self.buttonSave.setEnabled(True)
-		else:
-			self.buttonSave.setEnabled(False)
+		self.label.setScreenshot(pixmap=pixmap, screenshotName=screenshotName)
+		self.adjustActions()
 		
 	def 	gatherWindowInfo(self, hwnd):
 		def windowInfo(hwnd, level=0):
@@ -402,33 +433,32 @@ class FrameTablesScreenshot(QtGui.QFrame):
 			p += '%sHwnd: %s\n' % (indent, hwnd)
 			return p
 			
-		self.lastInfo = ''
-		self.lastInfo += '-----------------------------------------------------------------\n'
-		self.lastInfo += 'Current Window\n'
-		self.lastInfo += '-----------------------------------------------------------------\n'
-		self.lastInfo += windowInfo(hwnd)
+		self._lastInfo = ''
+		self._lastInfo += '-----------------------------------------------------------------\n'
+		self._lastInfo += 'Current Window\n'
+		self._lastInfo += '-----------------------------------------------------------------\n'
+		self._lastInfo += windowInfo(hwnd)
 		
-		self.lastInfo += '-----------------------------------------------------------------\n'
-		self.lastInfo += 'Window Details\n'
-		self.lastInfo += '-----------------------------------------------------------------\n'
+		self._lastInfo += '-----------------------------------------------------------------\n'
+		self._lastInfo += 'Window Details\n'
+		self._lastInfo += '-----------------------------------------------------------------\n'
 		for level, hwnd in TableCrabConfig.windowWalkChildren(hwnd, report=True):
-			 self.lastInfo += windowInfo(hwnd, level=level)
+			 self._lastInfo += windowInfo(hwnd, level=level)
 			
 		hwndParent = TableCrabConfig.windowGetTopLevelParent(hwnd)
 		if hwndParent == hwnd: return
 			
-		self.lastInfo += '-----------------------------------------------------------------\n'
-		self.lastInfo += 'Window Hirarchy\n'
-		self.lastInfo += '-----------------------------------------------------------------\n'
+		self._lastInfo += '-----------------------------------------------------------------\n'
+		self._lastInfo += 'Window Hirarchy\n'
+		self._lastInfo += '-----------------------------------------------------------------\n'
 		for level, hwnd in TableCrabConfig.windowWalkChildren(hwndParent, report=True):
-			 self.lastInfo += windowInfo(hwnd, level=level)
+			 self._lastInfo += windowInfo(hwnd, level=level)
 		
 	def layout(self):
 		box = TableCrabConfig.GridBox(self)
 		box.addWidget(self.scrollArea, 0, 0)
-		box.addWidget(self.buttonBox, 1, 0)
-		
-	def onButtonOpenClicked(self, checked):
+			
+	def onActionOpenTriggered(self):
 		dlg = QtGui.QFileDialog(self)
 		imageFormats = [QtCore.QString(i).toLower() for i in  QtGui.QImageReader.supportedImageFormats()]
 		dlg.setFileMode(dlg.AnyFile)
@@ -453,8 +483,10 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		fileInfo = QtCore.QFileInfo(fileName)
 		screenshotName = fileInfo.baseName()
 		self.setScreenshot(pixmap=pixmap, screenshotName=screenshotName)
+		self._lastInfo = None
+		self.adjustButtons()
 		
-	def onButtonSaveClicked(self, checked):
+	def onActionSaveTriggered(self):
 		if self.label.pixmap() is None:
 			self.buttonSave.setEnabled(False)
 			return
@@ -488,17 +520,16 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		if not self.label.pixmap().save(fileName, format):
 			TableCrabConfig.MsgWarning(self, 'Could Not Save Screenshot')
 		
-	def onButtonInfoClicked(self, checked):
-		if self.lastInfo is None:
-			self.buttonInfo.setEnabled(False)
+	def onActionInfoTriggered(self):
+		if self._lastInfo is None:
+			self.actionInfo.setEnabled(False)
 			return
-		dlg = DialgScreenshotInfo(self.lastInfo, parent=self)
+		dlg = DialgScreenshotInfo(self._lastInfo, parent=self)
 		dlg.restoreGeometry( TableCrabConfig.settingsValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', QtCore.QByteArray()).toByteArray() )
 		dlg.exec_()
 		TableCrabConfig.settingsSetValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', dlg.saveGeometry() )
 	
-	def onButtonHelpClicked(self, checked):
-		TableCrabGuiHelp.dialogHelp('setup', parent=self)
+	
 
 class DialgScreenshotInfo(QtGui.QDialog):
 	def __init__(self, info, parent=None):
@@ -562,12 +593,31 @@ class FrameSetup(QtGui.QFrame):
 		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Setup/SplitterState', QtCore.QByteArray()).toByteArray() )
 		TableCrabConfig.signalConnect(None, self, 'closeEvent(QEvent*)', self.onCloseEvent)
 		
+		self.toolBar = QtGui.QToolBar(self)
+		for action in self.framePersistentItems.actions():
+			self.toolBar.addAction(action)
+		for action in self.frameTablesScreenshot.actions():
+			self.toolBar.addAction(action)
+		
+		self.actionHelp = TableCrabConfig.TableCrabAction(
+				parent=self,
+				text='Help',
+				slot=self.onActionHelpTriggered,
+				)
+		self.toolBar.addAction(self.actionHelp)
+		
+		
 		self.layout()
 	def layout(self):
-		hbox = TableCrabConfig.HBox(self)
-		hbox.addWidget(self.splitter)
+		box = TableCrabConfig.GridBox(self)
+		box.addWidget(self.toolBar, 0, 0)
+		box.addWidget(self.splitter, 1, 0)
+		
 	def onCloseEvent(self, event):
 		TableCrabConfig.settingsSetValue('Gui/Setup/SplitterState', self.splitter.saveState())
+	
+	def onActionHelpTriggered(self):
+		TableCrabGuiHelp.dialogHelp('setup', parent=self)
 
 #**********************************************************************************************
 #
