@@ -1303,6 +1303,7 @@ class TableCrabAction(QtGui.QAction):
 				icon=None,
 				slot=None,
 				isEnabled=True,
+				toolTip=None,
 				):
 		if icon is not None:
 			QtGui.QAction.__init__(self, icon, text, parent)
@@ -1312,7 +1313,7 @@ class TableCrabAction(QtGui.QAction):
 		self.setMenu(menu)
 		if slot is not None and parent is not None: parent.connect(self, QtCore.SIGNAL('triggered(bool)'), slot)
 		self.setEnabled(isEnabled)
-		#if icon is not None: self.setIcon(icon)
+		if toolTip is not None: self.setToolTip(toolTip)
 		
 		
 class TableCrabWebViewToolBar(QtGui.QToolBar):

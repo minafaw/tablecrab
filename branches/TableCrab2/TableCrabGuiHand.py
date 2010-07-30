@@ -34,6 +34,7 @@ class FrameHand(QtGui.QFrame):
 		self.actionOpen = TableCrabConfig.TableCrabAction(
 				parent=self.toolBar,
 				text='Open..',
+				toolTip='Open a hand',
 				slot=self.onActionOpenTriggered
 				)
 		self.toolBar.addAction(self.actionOpen)
@@ -41,6 +42,7 @@ class FrameHand(QtGui.QFrame):
 		self.actionSave = TableCrabConfig.TableCrabAction(
 				parent=self.toolBar,
 				text='Save..',
+				toolTip='save hand',
 				slot=self.onActionSaveTriggered
 				)
 		self.toolBar.addAction(self.actionSave)

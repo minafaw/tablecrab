@@ -24,9 +24,9 @@ Topics = [
 			('hand', 'Hand'),
 			('settings', 'Settings'), [
 				('settingsGlobal', 'Global'),
+				('settingsPokerStars', 'PokerStars'),
 				('settingsHand', 'Hand'),
 				('settingsHandCss', 'Hand-Css'),
-				('settingsPokerStars', 'PokerStars'),
 				],
 			],
 		]

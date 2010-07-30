@@ -198,13 +198,15 @@ class FramePersistentItems(QtGui.QFrame):
 		self.actionNew = TableCrabConfig.TableCrabAction(
 				parent=self,
 				text='New',
-				menu=menu
+				menu=menu,
+				toolTip='Create a new template',
 				)
 		self._actions.append(self.actionNew)
 			
 		self.actionUp = TableCrabConfig.TableCrabAction(
 				parent=self,
 				text='Up',
+				toolTip='Move template up',
 				slot=self.onActionUpTriggered,
 				)
 		self._actions.append(self.actionUp)
@@ -212,6 +214,7 @@ class FramePersistentItems(QtGui.QFrame):
 		self.actionDown = TableCrabConfig.TableCrabAction(
 				parent=self,
 				text='Down',
+				toolTip='Move template down',
 				slot=self.onActionDownTriggered,
 				)
 		self._actions.append(self.actionDown)
@@ -219,6 +222,7 @@ class FramePersistentItems(QtGui.QFrame):
 		self.actionRemove = TableCrabConfig.TableCrabAction(
 				parent=self,
 				text='remove',
+				toolTip='Remove template',
 				slot=self.onActionRemoveTriggered,
 				)
 		self._actions.append(self.actionRemove)
@@ -357,6 +361,7 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		self.actionOpen = TableCrabConfig.TableCrabAction(
 				parent=self,
 				text='Open..',
+				toolTip='Open a screenshot from file',
 				slot=self.onActionOpenTriggered,
 				)
 		self._actions.append(self.actionOpen)
@@ -364,6 +369,7 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		self.actionSave = TableCrabConfig.TableCrabAction(
 				parent=self,
 				text='save..',
+				toolTip='Save screenshot to file',
 				slot=self.onActionSaveTriggered,
 				)
 		self._actions.append(self.actionSave)
@@ -371,6 +377,7 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		self.actionInfo = TableCrabConfig.TableCrabAction(
 				parent=self,
 				text='Info..',
+				toolTip='Detailed screenshot information',
 				slot=self.onActionInfoTriggered,
 				)
 		self._actions.append(self.actionInfo)
@@ -597,6 +604,8 @@ class FrameSetup(QtGui.QFrame):
 		self.toolBar = QtGui.QToolBar(self)
 		for action in self.framePersistentItems.actions():
 			self.toolBar.addAction(action)
+		self.toolBar.addSeparator()
+		self.toolBar.addSeparator()
 		for action in self.frameTablesScreenshot.actions():
 			self.toolBar.addAction(action)
 		

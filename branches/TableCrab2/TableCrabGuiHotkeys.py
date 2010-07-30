@@ -350,6 +350,7 @@ class FrameHotkeys(QtGui.QFrame):
 		self.actionNew = TableCrabConfig.TableCrabAction(
 				parent=self,
 				text='New',
+				toolTip='Create a new hotkey',
 				menu=menu,
 				)
 		self.toolBar.addAction(self.actionNew)
@@ -357,6 +358,7 @@ class FrameHotkeys(QtGui.QFrame):
 		self.actionEdit = TableCrabConfig.TableCrabAction(
 				parent=self,
 				text='Edit..',
+				toolTip='Edit hotkey',
 				slot=self.onActionEditTriggered,
 				)
 		self.toolBar.addAction(self.actionEdit)
@@ -364,6 +366,7 @@ class FrameHotkeys(QtGui.QFrame):
 		self.actionUp = TableCrabConfig.TableCrabAction(
 				parent=self,
 				text='Up',
+				toolTip='Move hotkey up',
 				slot=self.onActionUpTriggered,
 				)
 		self.toolBar.addAction(self.actionUp)
@@ -371,6 +374,7 @@ class FrameHotkeys(QtGui.QFrame):
 		self.actionDown = TableCrabConfig.TableCrabAction(
 				parent=self,
 				text='Down',
+				toolTip='Move hotkey down',
 				slot=self.onActionDownTriggered,
 				)
 		self.toolBar.addAction(self.actionDown)
@@ -378,6 +382,7 @@ class FrameHotkeys(QtGui.QFrame):
 		self.actionRemove = TableCrabConfig.TableCrabAction(
 				parent=self,
 				text='Remove',
+				toolTip='Remove hotkey',
 				slot=self.onActionRemoveTriggered,
 				)
 		self.toolBar.addAction(self.actionRemove)
