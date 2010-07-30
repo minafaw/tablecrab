@@ -32,7 +32,7 @@ class TablePokerStarsTreeWidgetItem(QtGui.QTreeWidgetItem):
 			self.setExpanded(True)
 		self.myChildren = {
 				'itemName': ChildItem('itemName', 'Window:', self.persistentItem.itemName(), parent=self),
-				'size': ChildItem('size', 'Size:', 'None' if self.persistentItem.size.isEmpty() else TableCrabConfig.sizeToString(self.persistentItem.size), parent=self),
+				'size': ChildItem('size', 'Size:', TableCrabConfig.sizeToString(self.persistentItem.size), parent=self),
 				'buttonCheck': ChildItem('buttonCheck', 'ButtonCheck:', TableCrabConfig.pointToString(self.persistentItem.buttonCheck), parent=self),
 				'buttonFold': ChildItem('buttonFold', 'ButtonFold:', TableCrabConfig.pointToString(self.persistentItem.buttonFold), parent=self),
 				'buttonRaise': ChildItem('buttonRaise', 'ButtonRaise:', TableCrabConfig.pointToString(self.persistentItem.buttonRaise), parent=self),
@@ -46,7 +46,7 @@ class TablePokerStarsTreeWidgetItem(QtGui.QTreeWidgetItem):
 		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemAttrChanged(QObject*, QString)', self.onPersistentItemAttrChanged)
 		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemMovedUp(QObject*, int)', self.onPersistentItemMovedUp)
 		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemMovedDown(QObject*, int)', self.onPersistentItemMovedDown)
-		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemRemoved(QObject*)', self.onPersistentItemRemoved)
+		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemRem1oved(QObject*)', self.onPersistentItemRemoved)
 		
 		#TODO: bit of a hack here to disable child items initially
 		TableCrabConfig.signalEmit(None, 'widgetScreenshotQuery()')
@@ -281,9 +281,32 @@ class FramePersistentItems(QtGui.QFrame):
 class FrameTablesScreenshot(QtGui.QFrame):
 	
 	class MyLabel(QtGui.QLabel):
+		ScreenshotName = 'Screenshot'
 		def __init__(self, *args):
 			QtGui.QLabel.__init__(self, *args)
 			self.setMouseTracking(True)
+			self._screenshotName = self.ScreenshotName
+		def setScreenshot(self, pixmap=None, screenshotName=None):
+			self._screenshotName = self.ScreenshotName if screenshotName is None else screenshotName
+			result = False
+			self.setPixmap(pixmap)
+			if pixmap is None:
+				self.setScaledContents(True)
+				self.setText(self._screenshotName)
+				pixmap = QtGui.QPixmap()
+			else:
+				# manually set size of the label so we get the correct coordiantes of the mouse cursor
+				self.setScaledContents(False)
+				self.resize(pixmap.size())
+				point = QtGui.QCursor.pos()
+				point = self.mapFromGlobal(point)
+				if point.x() < 0 or point.y() < 0:
+					point = QtCore.QPoint()
+				self._giveFeedback(pixmap,  point)
+				result = True
+			# emit global signal
+			TableCrabConfig.signalEmit(None, 'widgetScreenshotSet(QPixmap*)', pixmap)
+			return result
 		def mouseDoubleClickEvent(self, event):
 			if event.button() == QtCore.Qt.LeftButton:
 				pixmap = self.pixmap()
@@ -292,9 +315,11 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		def mouseMoveEvent(self, event):
 			pixmap = self.pixmap()
 			if pixmap is not None:
-				point = event.pos()
-				p = 'Screenshot - Size %sx%s Mouse %s, %s' % (pixmap.width(), pixmap.height(), point.x(), point.y() )
-				TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', p )
+				self._giveFeedback(pixmap, event.pos())
+		def _giveFeedback(self, pixmap, point):
+			p = '%s - Size %s Mouse %s' % (self._screenshotName, TableCrabConfig.sizeToString(pixmap.size()), TableCrabConfig.pointToString(point) )
+			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', p )
+		
 		
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -346,20 +371,11 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		self.buttonInfo.setEnabled(True)
 		self.setScreenshot(pixmap)
 		
-	def setScreenshot(self, pixmap=None):
-		self.label.setPixmap(pixmap)
-		if pixmap is None:
-			self.label.setScaledContents(True)
-			self.label.setText('Screenshot')
-			self.buttonSave.setEnabled(False)
-			pixmap = QtGui.QPixmap()
-		else:
-			# manually set size of the label so we get the correct coordiantes of the mouse cursor
-			self.label.setScaledContents(False)
-			self.label.resize(pixmap.size())
+	def setScreenshot(self, pixmap=None, screenshotName='Screenshot'):
+		if self.label.setScreenshot(pixmap=pixmap, screenshotName=screenshotName):
 			self.buttonSave.setEnabled(True)
-		# emit global signal
-		TableCrabConfig.signalEmit(None, 'widgetScreenshotSet(QPixmap*)', pixmap)
+		else:
+			self.buttonSave.setEnabled(False)
 		
 	def 	gatherWindowInfo(self, hwnd):
 		def windowInfo(hwnd, level=0):
@@ -433,7 +449,10 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		if not pixmap.load(fileName):
 			TableCrabConfig.MsgWarning(self, 'Could not open screenshot')
 			return
-		self.setScreenshot(pixmap)
+		
+		fileInfo = QtCore.QFileInfo(fileName)
+		screenshotName = fileInfo.baseName()
+		self.setScreenshot(pixmap=pixmap, screenshotName=screenshotName)
 		
 	def onButtonSaveClicked(self, checked):
 		if self.label.pixmap() is None:
@@ -459,10 +478,12 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		fileName = dlg.selectedFiles()[0]
 		fileInfo = QtCore.QFileInfo(fileName)
 		format = fileInfo.suffix().toLower()
+		# default save format to to "png"
 		for tmp_format in imageFormats:
 			if tmp_format == format:
 				break
 		else:
+			fileName = fileName + '.png'
 			format = 'png'
 		if not self.label.pixmap().save(fileName, format):
 			TableCrabConfig.MsgWarning(self, 'Could Not Save Screenshot')
