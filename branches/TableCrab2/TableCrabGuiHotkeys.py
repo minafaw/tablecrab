@@ -34,7 +34,7 @@ class HotkeyComboBox(QtGui.QComboBox):
 	
 	def onKeyboardHookKeyPressed(self, hotkey):
 		if self.hasFocus():
-			if hotkey not in Hotkeys:
+			if hotkey not in self.Hotkeys:
 				if self.currentIndex() == 0:
 					self.setItemText(0, hotkey)
 	def hotkey(self):
