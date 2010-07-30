@@ -4,7 +4,7 @@ _cache = {}
 def hotkeys():
 	arr = _cache.get("hotkeys", None)
 	if arr is None:
-		arr = QtCore.QByteArray.fromBase64("SG90a2V5cwoK")
+		arr = QtCore.QByteArray.fromBase64("PGh0bWw+CjxoZWFkPgo8TElOSyBSRUw9U3R5bGVTaGVldCBIUkVGPSJkZWZhdWx0LmNzcyIgVFlQRT0idGV4dC9jc3MiIE1FRElBPXNjcmVlbj4KPC9oZWFkPgo8Ym9keT4KPHRhYmxlIGNsYXNzPSJiYW5uZXIiIHdpZHRoPSIxMDAlIj48dHI+PHRkPjxpbWcgc3JjPSIuLi9QaXhtYXBzL3RhYmxlQ3JhYi5wbmciPjwvdGQ+PHRkPjxzcGFuIGNsYXNzPSJiYW5uZXJUZXh0Ij5UYWJsZUNyYWI8L3NwYW4+PC90ZD48L3RyPjwvdGFibGU+CgoKPGRpdiBjbGFzcz0idGV4dEJveCI+Cgk8ZGl2IGNsYXNzPSJoZWFkZXJCb3giPkhvdGtleXM8L2Rpdj4KCgk8ZGl2IGNsYXNzPSJub3RlQm94Ij5Ob3RlOiB0aGlzIGFuZCB0aGF0PC9kaXY+Cgo8L2Rpdj4KCgoKCgo8L2JvZHk+PC9odG1sPgoK")
 		_cache["hotkeys"] = arr
 	return QtCore.QString(arr)
 def hotkeyAlterBetAmount():
@@ -40,13 +40,13 @@ def settingsHand():
 def index():
 	arr = _cache.get("index", None)
 	if arr is None:
-		arr = QtCore.QByteArray.fromBase64("PGh0bWw+CjxoZWFkPgo8TElOSyBSRUw9U3R5bGVTaGVldCBIUkVGPSJkZWZhdWx0LmNzcyIgVFlQRT0idGV4dC9jc3MiIE1FRElBPXNjcmVlbj4KPC9oZWFkPgo8Ym9keT4KPHRhYmxlIGNsYXNzPSJiYW5uZXIiIHdpZHRoPSIxMDAlIj4KCTx0cj4KCQk8dGQ+PGltZyBzcmM9Ii4uL1BpeG1hcHMvdGFibGVDcmFiLnBuZyI+PC90ZD4KCQk8dGQ+PHNwYW4gY2xhc3M9ImJhbm5lclRleHQiPlRhYmxlQ3JhYjwvc3Bhbj48L3RkPgoJPC90cj4KPC90YWJsZT4KCgo8ZGl2IGNsYXNzPSJ0ZXh0Qm94Ij4KCTxkaXYgY2xhc3M9ImhlYWRlckJveCI+TXlIZWFkZXI8L2Rpdj4KCglXZWxjb21lIHRvIFRhYmxlQ3JhYi4gCgkKCVlvdSBmaXJzdCBoYXZlIHRvIHNldHVwIFRhYmxlQ3JhYiB0byBnZXQgaXQgd29yayB3aXRoIHlvdXIgdGFibGVzLiAKCgoKCTxkaXYgY2xhc3M9Im5vdGVCb3giPk5vdGU6IHRoaXMgYW5kIHRoYXQ8L2Rpdj4KCjwvZGl2PgoKCgo8L2JvZHk+PC9odG1sPgo=")
+		arr = QtCore.QByteArray.fromBase64("PGh0bWw+CjxoZWFkPgo8TElOSyBSRUw9U3R5bGVTaGVldCBIUkVGPSJkZWZhdWx0LmNzcyIgVFlQRT0idGV4dC9jc3MiIE1FRElBPXNjcmVlbj4KPC9oZWFkPgo8Ym9keT4KPHRhYmxlIGNsYXNzPSJiYW5uZXIiIHdpZHRoPSIxMDAlIj48dHI+PHRkPjxpbWcgc3JjPSIuLi9QaXhtYXBzL3RhYmxlQ3JhYi5wbmciPjwvdGQ+PHRkPjxzcGFuIGNsYXNzPSJiYW5uZXJUZXh0Ij5UYWJsZUNyYWI8L3NwYW4+PC90ZD48L3RyPjwvdGFibGU+CgoKPGRpdiBjbGFzcz0idGV4dEJveCI+Cgk8ZGl2IGNsYXNzPSJoZWFkZXJCb3giPk15SGVhZGVyPC9kaXY+CgoJV2VsY29tZSB0byBUYWJsZUNyYWIuIAoJCglZb3UgZmlyc3QgaGF2ZSB0byBzZXR1cCBUYWJsZUNyYWIgdG8gZ2V0IGl0IHdvcmsgd2l0aCB5b3VyIHRhYmxlcy4gCgoKCgk8ZGl2IGNsYXNzPSJub3RlQm94Ij5Ob3RlOiB0aGlzIGFuZCB0aGF0PC9kaXY+Cgo8L2Rpdj4KCgoKPC9ib2R5PjwvaHRtbD4K")
 		_cache["index"] = arr
 	return QtCore.QString(arr)
 def hotkeyScreenshot():
 	arr = _cache.get("hotkeyScreenshot", None)
 	if arr is None:
-		arr = QtCore.QByteArray.fromBase64("SG90a2V5U2NyZWVuc2hvdA==")
+		arr = QtCore.QByteArray.fromBase64("PGh0bWw+CjxoZWFkPgo8TElOSyBSRUw9U3R5bGVTaGVldCBIUkVGPSJkZWZhdWx0LmNzcyIgVFlQRT0idGV4dC9jc3MiIE1FRElBPXNjcmVlbj4KPC9oZWFkPgo8Ym9keT4KPHRhYmxlIGNsYXNzPSJiYW5uZXIiIHdpZHRoPSIxMDAlIj48dHI+PHRkPjxpbWcgc3JjPSIuLi9QaXhtYXBzL3RhYmxlQ3JhYi5wbmciPjwvdGQ+PHRkPjxzcGFuIGNsYXNzPSJiYW5uZXJUZXh0Ij5UYWJsZUNyYWI8L3NwYW4+PC90ZD48L3RyPjwvdGFibGU+CgoKPGRpdiBjbGFzcz0idGV4dEJveCI+Cgk8ZGl2IGNsYXNzPSJoZWFkZXJCb3giPkhvdGtleSBTY3JlZW5zaG90PC9kaXY+CgoJd2hlbmV2ZXIgeW91IGhpdCB0aGlzIGtleSB5b3Ugd2lsbCBtYWtlIGEgU2NyZWVuc2hvdCBvZiB0aGUgY3VycmVudCB3aWRnZXQgdGhhdGdldHMgZHVtcGVkIHRvIHRoZSBzY3JlZW5zaG90IHdpZGdldCBvZiB0aGUgPGEgaHJlZj0ic2V0dXAuaHRtbCI+U2V0dXA8L2E+IHRhYi4KCQoJPGRpdiBjbGFzcz0ibm90ZUJveCI+CgkJPHVsPgoJCTxsaT5saW51eCB1c2VyczogeW91IGNhbiBvbmx5IHRha2Ugc2NyZWVuc2hvdHMgb2Ygd2lkZ2V0cyBjb3Ryb2xsZWQgYnkgd2luZS4gVGFibGVDcmFiIGlzIGEgd2luZSB3aWRnZXQgYW5kIHdpbmUgd2luZGdldHMgZG9uJ3Qga25vdyBhbnl0aGluZyAKCQkJCWFib3V0IHRoZSBsaW51eCB0aGV5IGFyZSBydW5uaW5nIHVwb24KCQk8L3VsPgoJPC9kaXY+Cgo8L2Rpdj4KCgoKCgo8L2JvZHk+PC9odG1sPg==")
 		_cache["hotkeyScreenshot"] = arr
 	return QtCore.QString(arr)
 def screenshotInfo():
@@ -61,11 +61,11 @@ def hotkeyInstantHandHistory():
 		arr = QtCore.QByteArray.fromBase64("SG90a2V5SW5zdGFudEhhbmRIaXN0b3J5")
 		_cache["hotkeyInstantHandHistory"] = arr
 	return QtCore.QString(arr)
-def widgets():
-	arr = _cache.get("widgets", None)
+def setup():
+	arr = _cache.get("setup", None)
 	if arr is None:
-		arr = QtCore.QByteArray.fromBase64("V2lkZ2V0cwo=")
-		_cache["widgets"] = arr
+		arr = QtCore.QByteArray.fromBase64("U2V0dXA=")
+		_cache["setup"] = arr
 	return QtCore.QString(arr)
 def settingsGlobal():
 	arr = _cache.get("settingsGlobal", None)
@@ -108,10 +108,4 @@ def hotkeyFold():
 	if arr is None:
 		arr = QtCore.QByteArray.fromBase64("SG90a2V5Rm9sZA==")
 		_cache["hotkeyFold"] = arr
-	return QtCore.QString(arr)
-def Index():
-	arr = _cache.get("Index", None)
-	if arr is None:
-		arr = QtCore.QByteArray.fromBase64("PGh0bWw+Cgo8aGVhZD4KCTxMSU5LIFJFTD1TdHlsZVNoZWV0IEhSRUY9ImRlZmF1bHQuY3NzIiBUWVBFPSJ0ZXh0L2NzcyIgTUVESUE9c2NyZWVuPgo8L2hlYWQ+Cjxib2R5PgpJbmRleAoKPGltZyBzcmM9Ii4uL1BpeG1hcHMvdGFibGVDcmFiLnBuZyI+Cgo8L2JvZHk+PC9odG1sPgo=")
-		_cache["Index"] = arr
 	return QtCore.QString(arr)
