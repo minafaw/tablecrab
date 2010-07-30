@@ -7,26 +7,44 @@ import TableCrabGuiHelp
 #**********************************************************************************************
 #
 #**********************************************************************************************
-
-#NOTE: we have to hard code hotkeys reserved for dialog box and comboBox keyboard handling 
-Hotkeys = ('', TableCrabConfig.MouseWheelUp, TableCrabConfig.MouseWheelDown, '<ENTER>',  '<ESCAPE>','<DOWN>', '<UP>')
-ValueNone = 'None'
 	
 class HotkeyComboBox(QtGui.QComboBox):
+	#NOTE: we can not enter certain hotkeys into the box - mouse wheel and keys triggering widget actions
+	Hotkeys = (		# hotkey --> displayName
+				('', '<Enter Hotkey>'),
+				('<DOWN>', 'DOWN'),
+				('<ENTER>', 'ENTER'),
+				('<ESCAPE>', 'ESCAPE'),
+				('<UP>', 'UP'),
+				(TableCrabConfig.MouseWheelUp, 'MouseWheelUp'),
+				(TableCrabConfig.MouseWheelDown, 'MouseWheelDown'),
+			)
 	def __init__(self, hotkey, parent=None):
 		QtGui.QComboBox.__init__(self, parent=None)
-		self.addItems(Hotkeys)
-		if hotkey in Hotkeys[1:]:
-			self.setCurrentIndex(Hotkeys.index(hotkey))
+		self.addItems( [i[1] for i in self.Hotkeys] )
+		##for i in self.Hotkeys: print i
+		for i, (tmpHotkey, _) in enumerate(self.Hotkeys):
+			if hotkey == tmpHotkey:
+				self.setCurrentIndex(i)
+				break
 		else:
 			self.setItemText(0, hotkey)
 		TableCrabConfig.signalConnect(TableCrabConfig.keyboardHook, self, 'keyPressed(QString)', self.onKeyboardHookKeyPressed)
+	def popup(self, *args):
+		print 11111111111111111
+	
 	def onKeyboardHookKeyPressed(self, hotkey):
-		#print hotkey
 		if self.hasFocus():
 			if hotkey not in Hotkeys:
 				if self.currentIndex() == 0:
 					self.setItemText(0, hotkey)
+	def hotkey(self):
+		text = self.currentText()
+		for hotkey, displayName in self.Hotkeys:
+			if text == displayName:
+				return hotkey
+		return text
+			
 	
 
 class ActionCheckEditor(QtGui.QDialog):
@@ -76,7 +94,7 @@ class ActionCheckEditor(QtGui.QDialog):
 	def accept(self):
 		TableCrabConfig.actionItemManager.setItemAttrs(self.persistentItem, {
 				'name': self.editName.text(),
-				'hotkey': self.comboHotkey.currentText(),
+				'hotkey': self.comboHotkey.hotkey(),
 				'hotkeyName': self.editHotkeyName.text(),
 				})
 		QtGui.QDialog.accept(self)
