@@ -22,7 +22,6 @@ class HotkeyComboBox(QtGui.QComboBox):
 	def __init__(self, hotkey, parent=None):
 		QtGui.QComboBox.__init__(self, parent=None)
 		self.addItems( [i[1] for i in self.Hotkeys] )
-		##for i in self.Hotkeys: print i
 		for i, (tmpHotkey, _) in enumerate(self.Hotkeys):
 			if hotkey == tmpHotkey:
 				self.setCurrentIndex(i)
