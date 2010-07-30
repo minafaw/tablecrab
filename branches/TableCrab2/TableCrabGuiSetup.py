@@ -120,6 +120,7 @@ class PersistentItemTreeWidget(QtGui.QTreeWidget):
 		##self.setAlternatingRowColors(True)
 		self.setColumnCount(2)
 		self.setExpandsOnDoubleClick(False)
+		self.setSelectionBehavior(self.SelectRows)
 		self.header().setVisible(False)
 		self.header().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
 		self.header().setResizeMode(1, QtGui.QHeaderView.ResizeToContents)
@@ -484,7 +485,7 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		screenshotName = fileInfo.baseName()
 		self.setScreenshot(pixmap=pixmap, screenshotName=screenshotName)
 		self._lastInfo = None
-		self.adjustButtons()
+		self.adjustActions()
 		
 	def onActionSaveTriggered(self):
 		if self.label.pixmap() is None:

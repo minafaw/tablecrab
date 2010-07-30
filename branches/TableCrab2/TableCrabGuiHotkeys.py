@@ -275,6 +275,7 @@ class ActionItemTreeWidget(QtGui.QTreeWidget):
 		
 		self.setColumnCount(2)
 		self.setRootIsDecorated(False)
+		self.setSelectionBehavior(self.SelectRows)
 		self.header().setVisible(False)
 		self.header().setResizeMode (0, QtGui.QHeaderView.ResizeToContents)
 		self.header().setResizeMode (1, QtGui.QHeaderView.ResizeToContents)
