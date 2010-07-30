@@ -169,7 +169,11 @@ class FrameHelp(QtGui.QFrame):
 		QtGui.QFrame.__init__(self, parent)
 		
 		self.frameHelpView = FrameHelpView(self)
+		
 		self.tree = QtGui.QTreeWidget(self)
+		self.tree.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
+		TableCrabConfig.signalConnect(None, self, 'settingAlternatingRowColorsChanged(bool)', self.onSettingAlternatingRowColorsChanged)
+		
 		self.splitter = QtGui.QSplitter(self)
 		self.splitter.addWidget(self.tree)
 		self.splitter.addWidget(self.frameHelpView)
@@ -236,7 +240,8 @@ class FrameHelp(QtGui.QFrame):
 	def onCloseEvent(self, event):
 		TableCrabConfig.settingsSetValue('Gui/Help/SplitterState', self.splitter.saveState() )
 
-
+	def onSettingAlternatingRowColorsChanged(self, flag):
+		self.tree.setAlternatingRowColors(flag)
 
 class _DialogHelp(QtGui.QDialog):
 	def __init__(self, topic, parent=None):
