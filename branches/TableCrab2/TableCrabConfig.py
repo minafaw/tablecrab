@@ -1430,9 +1430,11 @@ def MsgCritical(msg):
 # type converters
 #***********************************************************************************
 def pointToString(qPoint):
-	return '%s, %s' % (qPoint.x(), qPoint.y())
+	return '%s,%s' % (qPoint.x(), qPoint.y())
 
 def sizeToString(qSize):
+	if qSize.isEmpty():
+		return 'None'
 	return '%sx%s' % (qSize.width(), qSize.height())
 
 #***********************************************************************************
