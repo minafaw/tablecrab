@@ -1040,7 +1040,6 @@ class _SiteManager(QtCore.QObject):
 		if not hwnd:
 			return False
 			
-		#		return 
 		for actionItem in actionItemManager:
 			if not actionItem.hotkey: continue
 			if not actionItem.hotkey == input: continue
@@ -1201,7 +1200,7 @@ class _SiteManager(QtCore.QObject):
 		data = pokerStarsTableReadData(hwnd)
 		if not data['hwndBetAmountBox']: return
 		if not data['betAmountBoxIsVisible']: return
-		c = windowGetRect(data['hwndBetAmountBox'])
+		rc = windowGetRect(data['hwndBetAmountBox'])
 		mouseClickLeftDouble( (rc[0] +3, rc[1] +3) )
 	
 	def pokerStarsTableReplayer(self, actionItem, widgetItem, hwnd):
