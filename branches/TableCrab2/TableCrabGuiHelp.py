@@ -8,7 +8,7 @@ from PyQt4 import QtCore, QtGui, QtWebKit, QtNetwork
 
 Topics = [
 		('index', 'TableCrab'), [
-			('widgets', 'Widgets'), [
+			('setup', 'Setup'), [
 				('screenshotInfo', 'Screenshot Info Dialog'),
 				],
 			('hotkeys', 'Hotkeys'), [
@@ -187,6 +187,8 @@ class FrameHelpTree(QtGui.QFrame):
 				
 		self.webView.setZoomFactor( TableCrabConfig.settingsValue('Gui/Help/ZoomFactor',  self.webView.zoomFactor() ).toDouble()[0] )
 		TableCrabConfig.signalConnect(self.tree, self, 'itemSelectionChanged()', self.onItemSelectionChanged)
+		TableCrabConfig.signalConnect(self.tree, self, 'itemActivated(QTreeWidgetItem*, int)', self.onItemSelectionChanged)
+		
 		TableCrabConfig.signalConnect(None, self, 'closeEvent(QEvent*)', self.onCloseEvent)
 		if lastTopicItem is not None:
 			self.tree.setCurrentItem(lastTopicItem)

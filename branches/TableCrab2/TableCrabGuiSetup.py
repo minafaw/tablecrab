@@ -498,7 +498,7 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		TableCrabConfig.settingsSetValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', dlg.saveGeometry() )
 	
 	def onButtonHelpClicked(self, checked):
-		TableCrabGuiHelp.dialogHelp('widgets', parent=self)
+		TableCrabGuiHelp.dialogHelp('setup', parent=self)
 
 class DialgScreenshotInfo(QtGui.QDialog):
 	def __init__(self, info, parent=None):
