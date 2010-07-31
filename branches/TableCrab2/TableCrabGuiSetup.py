@@ -403,7 +403,10 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		
 	def onWidgetScreenshot(self, hwnd, pixmap):
 		# make shure to not take screenshot of self
-		selfHwnd = int(self.effectiveWinId())	# NOTE: effectiveWinId() returns <sip.voidptr>
+		wid = self.effectiveWinId()	# NOTE: effectiveWinId() returns <sip.voidptr> and may be None
+		if not wid:
+			return
+		selfHwnd = int(wid)
 		selfParent = TableCrabConfig.windowGetTopLevelParent(selfHwnd)
 		otherParent = TableCrabConfig.windowGetTopLevelParent(hwnd)
 		if selfParent == otherParent:
