@@ -15,7 +15,6 @@ class FrameHand(QtGui.QFrame):
 		self._hasHand = False
 		self.webView = QtWebKit.QWebView(self)
 		self.webView.setUrl(QtCore.QUrl(''))
-		self.webView.setZoomFactor( TableCrabConfig.settingsValue('Gui/Hand/ZoomFactor',  self.webView.zoomFactor() ).toDouble()[0] )
 		self.psHandGrabber = PSHandGrabber.HandGrabber(
 				PSHandGrabber.HandParser(),
 				PSHandGrabber.HandFormatterHtmlTabular(),

@@ -150,7 +150,6 @@ class FrameHelpView(QtGui.QFrame):
 		QtGui.QFrame.__init__(self, parent)
 		self.webView = QtWebKit.QWebView(self)
 		self.webView.setUrl(QtCore.QUrl(''))
-		self.webView.setZoomFactor( TableCrabConfig.settingsValue('Gui/Help/ZoomFactor',  self.webView.zoomFactor() ).toDouble()[0] )
 		oldManager = self.webView.page().networkAccessManager()
 		self.networkAccessManager = NetworkAccessManager(oldManager, parent=self)
 		self.webView.page().setNetworkAccessManager(self.networkAccessManager)

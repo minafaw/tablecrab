@@ -1336,6 +1336,7 @@ class TableCrabAction(QtGui.QAction):
 				slot=None,
 				isEnabled=True,
 				toolTip=None,
+				autoRepeat=True,
 				):
 		if icon is not None:
 			QtGui.QAction.__init__(self, icon, text, parent)
@@ -1346,15 +1347,21 @@ class TableCrabAction(QtGui.QAction):
 		if slot is not None and parent is not None: parent.connect(self, QtCore.SIGNAL('triggered(bool)'), slot)
 		self.setEnabled(isEnabled)
 		if toolTip is not None: self.setToolTip(toolTip)
+		self.setAutoRepeat(autoRepeat)
 		
 		
 class TableCrabWebViewToolBar(QtGui.QToolBar):
 	ZoomIncrement = 0.1
+	MaxZoom = 7
+	MinZoom = 0.5
 	def __init__(self, webView, settingsKeyZoomFactor=None, settingsKeyZoomIncrement=None):
 		QtGui.QToolBar.__init__(self, webView)
 		self.webView = webView
 		self.settingsKeyZoomFactor = settingsKeyZoomFactor
 		self.settingsKeyZoomIncrement = settingsKeyZoomIncrement
+		
+		if self.settingsKeyZoomFactor is not None:
+			self.webView.setZoomFactor( settingsValue(settingsKeyZoomFactor, self.webView.zoomFactor() ).toDouble()[0] )
 		
 		self.addAction( self.webView.pageAction(QtWebKit.QWebPage.Back) )
 		self.addAction( self.webView.pageAction(QtWebKit.QWebPage.Forward) )
@@ -1363,6 +1370,7 @@ class TableCrabWebViewToolBar(QtGui.QToolBar):
 				parent=self,
 				text='Zoom+',
 				icon=QtGui.QIcon(Pixmaps.magnifierPlus() ),
+				autoRepeat=True,
 				slot=self.onActionZoomInTriggered,
 				)
 		self.addAction(self.actionZoomIn)
@@ -1371,31 +1379,40 @@ class TableCrabWebViewToolBar(QtGui.QToolBar):
 				parent=self,
 				text='Zoom-',
 				icon=QtGui.QIcon(Pixmaps.magnifierMinus() ),
+				autoRepeat=True,
 				slot=self.onActionZoomOutTriggered,
 				)
 		self.addAction(self.actionZoomOut)
+		
+		self.adjustActions()
+	
+	def _zoomIncrement(self):
+		if self.settingsKeyZoomIncrement is not None:
+			return settingsValue(self.settingsKeyZoomIncrement, self.ZoomIncrement).toDouble()[0]
+		return self.ZoomIncrement
+	
+	def adjustActions(self):
+		self.actionZoomIn.setEnabled(self.webView.zoomFactor() + self._zoomIncrement() < self.MaxZoom)
+		self.actionZoomOut.setEnabled(self.webView.zoomFactor() -  + self._zoomIncrement() > self.MinZoom)
 	
 	def onActionZoomInTriggered(self):
-		zoomIncrement = self.ZoomIncrement
-		if self.settingsKeyZoomIncrement is not None:
-			zoomIncrement = settingsValue(self.settingsKeyZoomIncrement, self.ZoomIncrement).toDouble()[0]
-		self.webView.setZoomFactor(self.webView.zoomFactor() + zoomIncrement)
-		if self.settingsKeyZoomFactor is not None:
-			settingsSetValue(self.settingsKeyZoomFactor, self.webView.zoomFactor())
-		#TODO: what is MaxZoom?
-		self.actionZoomOut.setEnabled(True)
-	
-	def onActionZoomOutTriggered(self):
-		zoomIncrement = self.ZoomIncrement
-		if self.settingsKeyZoomIncrement is not None:
-			zoomIncrement = settingsValue(self.settingsKeyZoomIncrement, self.ZoomIncrement).toDouble()[0]
-		zoom = self.webView.zoomFactor() - zoomIncrement
-		if zoom > 0:
+		zoomIncrement = self._zoomIncrement()
+		zoom = self.webView.zoomFactor() + zoomIncrement
+		if zoom <= self.MaxZoom:
 			self.webView.setZoomFactor(zoom)
 			if self.settingsKeyZoomFactor is not None:
 				settingsSetValue(self.settingsKeyZoomFactor, self.webView.zoomFactor())
-		else:
-			self.actionZoomOut.setEnabled(False)
+		self.adjustActions()
+		
+	def onActionZoomOutTriggered(self):
+		zoomIncrement = self._zoomIncrement()
+		zoom = self.webView.zoomFactor() - zoomIncrement
+		if zoom >= self.MinZoom:
+			self.webView.setZoomFactor(zoom)
+			if self.settingsKeyZoomFactor is not None:
+				settingsSetValue(self.settingsKeyZoomFactor, self.webView.zoomFactor())
+		self.adjustActions()
+			
 	
 #TODO: rename to TableCrab...
 class LineEdit(QtGui.QLineEdit):
