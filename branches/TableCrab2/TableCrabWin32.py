@@ -9,6 +9,8 @@ kernel32 = windll.kernel32
 #
 #**************************************************************
 
+ERROR_INVALID_HANDLE = 183
+
 BM_GETSTATE = 242
 BST_CHECKED	= 1
 

@@ -55,7 +55,7 @@ sys.excepthook = _excepthook
 #************************************************************************************
 #
 #************************************************************************************
-import posixpath, thread, time, re
+import posixpath, thread, time, re, atexit
 from PyQt4 import QtCore, QtGui, QtWebKit
 
 import TableCrabWin32
@@ -75,6 +75,22 @@ if '--config' in sys.argv:
 			_qSettings = QtCore.QSettings(fileName, QtCore.QSettings.IniFormat)
 if _qSettings is None:
 	_qSettings = QtCore.QSettings(TableCrabAuthor, TableCrabApplicationName)
+
+#***********************************************************************************
+# enshure we run a single application instance only
+#***********************************************************************************
+class _SingleApp(object):
+	def __init__(self):
+		self.hMutex = TableCrabWin32.kernel32.CreateMutexA(None, 1, 'Local\\73524668475460800279396959888864133024')
+		atexit.register(self.close)
+		if TableCrabWin32.GetLastError() == TableCrabWin32.ERROR_INVALID_HANDLE:
+			#TODO: we could try to find the app holding the mutex (hopefuly TableCrab) and activate it 
+			# gut feeling it is be better to raise and log here, so we get at least some information in case someone blocks our mutex
+			##sys.exit(1)
+			raise RuntimeError('TableCrab is already running')
+	def close(self, closeFunc=TableCrabWin32.kernel32.CloseHandle):	# need to hold reference to CloseHandle here. we get garbage collected otherwise
+		closeFunc(self.hMutex)
+_singleApp = _SingleApp()
 
 #***********************************************************************************
 # global QSettings
@@ -1590,6 +1606,7 @@ class MainWindow(QtGui.QMainWindow):
 		application.exec_()
 	
 application = QtGui.QApplication(sys.argv)
+
 
 #***********************************************************************************
 #
