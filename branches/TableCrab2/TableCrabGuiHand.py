@@ -22,7 +22,6 @@ class FrameHand(QtGui.QFrame):
 				parent=self,
 				)
 		TableCrabConfig.signalConnect(self.psHandGrabber, self, 'handGrabbed(QObject*, QString)', self.onPShandGrabberHandGrabbed)
-		self.psHandGrabber.start()
 		TableCrabConfig.signalConnect(None, self, 'closeEvent(QEvent*)', self.onCloseEvent)
 		self.webView.setZoomFactor( TableCrabConfig.settingsValue('Gui/Hand/ZoomFactor',  self.webView.zoomFactor() ).toDouble()[0] )
 		
@@ -53,9 +52,10 @@ class FrameHand(QtGui.QFrame):
 				slot=self.onActionHelpTriggered
 				)
 		self.toolBar.addAction(self.actionHelp)
-				
+		
 		self.adjustActions()
 		self.layout()
+		self.psHandGrabber.start()
 		
 	def layout(self):
 		box = TableCrabConfig.GridBox(self)
@@ -64,7 +64,7 @@ class FrameHand(QtGui.QFrame):
 		
 	def onCloseEvent(self, event):
 		self.psHandGrabber.stop()
-	
+		
 	def adjustActions(self):
 		self.toolBar.actionZoomIn.setEnabled(bool(self._hasHand))
 		self.toolBar.actionZoomOut.setEnabled(bool(self._hasHand))
@@ -118,7 +118,7 @@ class FrameHand(QtGui.QFrame):
 	def onPShandGrabberHandGrabbed(self, hand, data):
 		self.webView.setHtml(data)
 		self._hasHand = True
-		self.adjustButtons()
+		self.adjustActions()
 	
 	
 
