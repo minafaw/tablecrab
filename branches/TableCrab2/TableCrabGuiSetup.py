@@ -37,6 +37,7 @@ class TablePokerStarsTreeWidgetItem(QtGui.QTreeWidgetItem):
 				'buttonFold': ChildItem('buttonFold', 'ButtonFold:', TableCrabConfig.pointToString(self.persistentItem.buttonFold), parent=self),
 				'buttonRaise': ChildItem('buttonRaise', 'ButtonRaise:', TableCrabConfig.pointToString(self.persistentItem.buttonRaise), parent=self),
 				'checkboxFold': ChildItem('checkboxFold', 'CheckboxFold:', TableCrabConfig.pointToString(self.persistentItem.checkboxFold), parent=self),
+				'checkboxCheckFold': ChildItem('checkboxCheckFold', 'CheckboxCheckFold:', TableCrabConfig.pointToString(self.persistentItem.checkboxCheckFold), parent=self),
 				'instantHandHistory': ChildItem('instantHandHistory', 'InstantHandHistory:', TableCrabConfig.pointToString(self.persistentItem.instantHandHistory), parent=self),
 				'replayer': ChildItem('replayer', 'Replayer:', TableCrabConfig.pointToString(self.persistentItem.replayer), parent=self),
 				}

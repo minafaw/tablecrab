@@ -12,10 +12,15 @@ class HotkeyComboBox(QtGui.QComboBox):
 	#NOTE: we can not enter certain hotkeys into the box - mouse wheel and keys triggering widget actions
 	Hotkeys = (		# hotkey --> displayName
 				('', '<Enter Hotkey>'),
-				('<DOWN>', 'DOWN'),
 				('<ENTER>', 'ENTER'),
 				('<ESCAPE>', 'ESCAPE'),
 				('<UP>', 'UP'),
+				('<DOWN>', 'DOWN'),
+				('<PRIOR>', 'PRIOR'),
+				('<NEXT>', 'NEXT'),
+				('<HOME>', 'HOME'),
+				('<END>', 'END'),
+				
 				(TableCrabConfig.MouseWheelUp, 'MouseWheelUp'),
 				(TableCrabConfig.MouseWheelDown, 'MouseWheelDown'),
 			)
@@ -30,6 +35,7 @@ class HotkeyComboBox(QtGui.QComboBox):
 			self.setItemText(0, hotkey)
 		TableCrabConfig.signalConnect(TableCrabConfig.keyboardHook, self, 'keyPressed(QString)', self.onKeyboardHookKeyPressed)
 	def onKeyboardHookKeyPressed(self, hotkey):
+		print hotkey
 		if self.hasFocus():
 			if hotkey not in self.Hotkeys:
 				if self.currentIndex() == 0:

@@ -955,6 +955,7 @@ class SetupWidgetItemTablePokerStars(PersistentItem):
 			('buttonFold', QtCore.QPoint),
 			('buttonRaise', QtCore.QPoint),
 			('checkboxFold', QtCore.QPoint),
+			('checkboxCheckFold', QtCore.QPoint),
 			('instantHandHistory', QtCore.QPoint),
 			('replayer', QtCore.QPoint),
 			('itemIsExpanded', CallableBool(False)),
@@ -974,10 +975,11 @@ class SetupWidgetItemTablePokerStars(PersistentItem):
 		instantHandHistory = settingsValue(settingsKeyJoin(key, 'InstantHandHistory'), pointNone).toPoint()
 		replayer = settingsValue(settingsKeyJoin(key, 'Replayer'), pointNone).toPoint()
 		checkboxFold = settingsValue(settingsKeyJoin(key, 'CheckboxFold'), pointNone).toPoint()
+		checkboxCheckFold = settingsValue(settingsKeyJoin(key, 'CheckboxCheckFold'), pointNone).toPoint()
 		itemIsExpanded = settingsValue(settingsKeyJoin(key, 'ItemIsExpanded'), False).toBool()
 		return klass(name=name, size=size, buttonCheck=buttonCheck, 
 				buttonFold=buttonFold, buttonRaise=buttonRaise, replayer=replayer, instantHandHistory=instantHandHistory, 
-				checkboxFold=checkboxFold, itemIsExpanded=itemIsExpanded)
+				checkboxFold=checkboxFold, checkboxCheckFold=checkboxCheckFold, itemIsExpanded=itemIsExpanded)
 	def toConfig(self, key):
 		settingsSetValue( settingsKeyJoin(key, 'ItemName'), self.itemName() )
 		settingsSetValue(settingsKeyJoin(key, 'Name'), self.name)
@@ -986,6 +988,7 @@ class SetupWidgetItemTablePokerStars(PersistentItem):
 		settingsSetValue(settingsKeyJoin(key, 'ButtonFold'), self.buttonFold)
 		settingsSetValue(settingsKeyJoin(key, 'ButtonRaise'), self.buttonRaise)
 		settingsSetValue(settingsKeyJoin(key, 'CheckboxFold'), self.checkboxFold)
+		settingsSetValue(settingsKeyJoin(key, 'CheckboxCheckFold'), self.checkboxCheckFold)
 		settingsSetValue(settingsKeyJoin(key, 'Replayer'), self.replayer)
 		settingsSetValue(settingsKeyJoin(key, 'InstantHandHistory'), self.instantHandHistory)
 		settingsSetValue(settingsKeyJoin(key, 'ItemIsExpanded'), self.itemIsExpanded)
@@ -1073,7 +1076,7 @@ class _SiteManager(QtCore.QObject):
 					if self.windowIsPokerStarsTable(hwnd):
 						widgetItem = self.pokerStarsGetTableWidgetItem(hwnd)	
 						if widgetItem is not None:
-							self.pokerStarsTableHandleCheck(actionItem, widgetItem, hwnd)
+							self.pokerStarsTableHandleCheck(actionItem, widgetItem, hwnd, nSteps=nSteps)
 				return True
 					
 			elif actionName == ActionFold.itemName():
@@ -1081,7 +1084,7 @@ class _SiteManager(QtCore.QObject):
 					if self.windowIsPokerStarsTable(hwnd):
 						widgetItem = self.pokerStarsGetTableWidgetItem(hwnd)	
 						if widgetItem is not None:
-							self.pokerStarsTableHandleFold(actionItem, widgetItem, hwnd)
+							self.pokerStarsTableHandleFold(actionItem, widgetItem, hwnd, nSteps=nSteps)
 				return True		
 			
 			elif actionName == ActionRaise.itemName():
@@ -1089,7 +1092,7 @@ class _SiteManager(QtCore.QObject):
 					if self.windowIsPokerStarsTable(hwnd):
 						widgetItem = self.pokerStarsGetTableWidgetItem(hwnd)	
 						if widgetItem is not None:
-							self.pokerStarsTableHandleRaise(actionItem, widgetItem, hwnd)
+							self.pokerStarsTableHandleRaise(actionItem, widgetItem, hwnd, nSteps=nSteps)
 				return True	
 			
 			elif actionName == ActionAlterBetAmount.itemName():
@@ -1097,7 +1100,7 @@ class _SiteManager(QtCore.QObject):
 					if self.windowIsPokerStarsTable(hwnd):
 						widgetItem = self.pokerStarsGetTableWidgetItem(hwnd)	
 						if widgetItem is not None:
-							self.pokerStarsTableHandleAlterBetAmount(actionItem, widgetItem, hwnd)
+							self.pokerStarsTableHandleAlterBetAmount(actionItem, widgetItem, hwnd, nSteps=nSteps)
 				return True	
 			
 			elif actionName == ActionHilightBetAmount.itemName():
@@ -1113,7 +1116,7 @@ class _SiteManager(QtCore.QObject):
 					if self.windowIsPokerStarsTable(hwnd):
 						widgetItem = self.pokerStarsGetTableWidgetItem(hwnd)	
 						if widgetItem is not None:
-							self.pokerStarsTableHandleReplayer(actionItem, widgetItem, hwnd)
+							self.pokerStarsTableHandleReplayer(actionItem, widgetItem, hwnd, nSteps=nSteps)
 				return True
 			
 			elif actionName == ActionInstantHandHistory.itemName():
@@ -1121,7 +1124,7 @@ class _SiteManager(QtCore.QObject):
 					if self.windowIsPokerStarsTable(hwnd):
 						widgetItem = self.pokerStarsGetTableWidgetItem(hwnd)	
 						if widgetItem is not None:
-							self.pokerStarsTableHandleInstantHandHistory(actionItem, widgetItem, hwnd)
+							self.pokerStarsTableHandleInstantHandHistory(actionItem, widgetItem, hwnd, nSteps=nSteps)
 				return True
 			
 		return False
@@ -1143,13 +1146,14 @@ class _SiteManager(QtCore.QObject):
 	def pokerStarsTableReadData(self, hwnd):
 		data = {}
 		text = windowGetText(hwnd)
+		if not text: return data
 		match = self.PokerStarsPatAmountSB.match(text)
 		if match is None:
-			raise ValueError('could not determine smallBlind: %s' % text)
+			raise ValueError('could not determine smallBlind: %r' % text)
 		data['smallBlind'] = float(match.group(1))
 		match = self.PokerStarsPatAmountBB.match(text)
 		if match is None:
-			raise ValueError('could not determine smallBlind: %s' % text)
+			raise ValueError('could not determine smallBlind: %r' % text)
 		data['bigBlind'] = float(match.group(1))
 		hwndBetAmountBox = windowFindChild(hwnd, self.PokerStarsClassTableBetAmountBox)
 		data['hwndBetAmountBox'] =  hwndBetAmountBox
@@ -1162,8 +1166,9 @@ class _SiteManager(QtCore.QObject):
 			except ValueError: pass
 		return data
 		
-	def pokerStarsTableHandleCheck(self, actionItem, widgetItem, hwnd):
+	def pokerStarsTableHandleCheck(self, actionItem, widgetItem, hwnd, nSteps=None):
 		data = self.pokerStarsTableReadData(hwnd)
+		if not data: return
 		if not data['hwndBetAmountBox']: return
 		if not data['betAmountBoxIsVisible']: return
 		point = widgetItem.buttonCheck
@@ -1171,19 +1176,28 @@ class _SiteManager(QtCore.QObject):
 			pt = windowClientPointToScreenPoint(hwnd, (point.x(), point.y()) )
 			mouseClickLeft(pt)
 		
-	def pokerStarsTableHandleFold(self, actionItem, widgetItem, hwnd):
+	def pokerStarsTableHandleFold(self, actionItem, widgetItem, hwnd, nSteps=None):
 		data = self.pokerStarsTableReadData(hwnd)
+		if not data: return
 		if not data['hwndBetAmountBox']: return
 		if data['betAmountBoxIsVisible']:
 			point = widgetItem.buttonFold
 		else:
+			#NOTE: there is no way to find out what chackboxes are displayed. ao we hit both (chevkboxFold
+			#				AND checkboxCheckFold) if point checkboxCheckFold is set
+			point = widgetItem.checkboxCheckFold
+			if not point.isNull():
+				pt = windowClientPointToScreenPoint(hwnd, (point.x(), point.y()) )
+				mouseClickLeft(pt)
 			point = widgetItem.checkboxFold
 		if not point.isNull():
 			pt = windowClientPointToScreenPoint(hwnd, (point.x(), point.y()) )
 			mouseClickLeft(pt)
+			
 	
-	def pokerStarsTableHandleRaise(self, actionItem, widgetItem, hwnd):
+	def pokerStarsTableHandleRaise(self, actionItem, widgetItem, hwnd, nSteps=None):
 		data = self.pokerStarsTableReadData(hwnd)
+		if not data: return
 		if not data['hwndBetAmountBox']: return
 		if not data['betAmountBoxIsVisible']: return
 		point = widgetItem.buttonRaise
@@ -1193,6 +1207,7 @@ class _SiteManager(QtCore.QObject):
 	
 	def pokerStarsTableHandleAlterBetAmount(self, actionItem, widgetItem, hwnd, nSteps=None):
 		data = self.pokerStarsTableReadData(hwnd)
+		if not data: return
 		if not data['hwndBetAmountBox']: return
 		if not data['betAmountBoxIsVisible']: return
 		if data['betAmount'] is None: return
@@ -1214,14 +1229,15 @@ class _SiteManager(QtCore.QObject):
 		newBetAmount = 0 if newBetAmount < 0 else newBetAmount
 		windowSetText(data['hwndBetAmountBox'], text=newBetAmount)
 		
-	def pokerStarsTableHandleHiligthBetAmount(self, actionItem, widgetItem, hwnd):
-		data = pokerStarsTableReadData(hwnd)
+	def pokerStarsTableHandleHilightBetAmount(self, actionItem, widgetItem, hwnd, nSteps=None):
+		data = self.pokerStarsTableReadData(hwnd)
+		if not data: return
 		if not data['hwndBetAmountBox']: return
 		if not data['betAmountBoxIsVisible']: return
-		x, y = windowClientPointToScreenPoint(hwnd, (0, 0) )
+		x, y = windowClientPointToScreenPoint(data['hwndBetAmountBox'], (0, 0) )
 		mouseClickLeftDouble( (x, y) )	#TODO: maybe we need to add a bit of an offset
 		
-	def pokerStarsTableReplayer(self, actionItem, widgetItem, hwnd):
+	def pokerStarsTableHandleReplayer(self, actionItem, widgetItem, hwnd, nSteps=None):
 		point = widgetItem.replayer
 		if not point.isNull():
 			pt = windowClientPointToScreenPoint(hwnd, (point.x(), point.y()) )
@@ -1229,7 +1245,7 @@ class _SiteManager(QtCore.QObject):
 			pt = windowClientPointToScreenPoint(hwnd, (0, 0) )
 			mouseClickLeft(pt)
 		
-	def pokerStarsTableHandleInstantHandHistory(self, actionItem, widgetItem, hwnd):
+	def pokerStarsTableHandleInstantHandHistory(self, actionItem, widgetItem, hwnd, nSteps=None):
 		point = widgetItem.instantHandHistory
 		if not point.isNull():
 			pt = windowClientPointToScreenPoint(hwnd, (point.x(), point.y()) )
