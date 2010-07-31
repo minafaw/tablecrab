@@ -61,6 +61,23 @@ from PyQt4 import QtCore, QtGui, QtWebKit
 import TableCrabWin32
 from TableCrabRes import Pixmaps, HtmlPages, StyleSheets
 
+
+# grab settings from commandline if possible
+_qSettings = None
+if '--config' in sys.argv:
+	i = sys.argv.index('--config')
+	del sys.argv[i]
+	try:
+		fileName = sys.argv[i]
+	except IndexError: pass
+	else:
+		if os.path.isfile(fileName) or os.path.islink(fileName):
+			del sys.argv[i]
+			_qSettings = QtCore.QSettings(fileName, QtCore.QSettings.IniFormat)
+if _qSettings is None:
+	_qSettings = QtCore.QSettings(TableCrabAuthor, TableCrabApplicationName)
+
+
 #***********************************************************************************
 # global QSettings
 #***********************************************************************************
@@ -69,7 +86,8 @@ def settingsKeyJoin(*keys):
 	keys = [(str(key) if isinstance(key, QtCore.QString) else key) for key in keys]
 	return QtCore.QString( posixpath.join(*keys) )
 
-_qSettings = QtCore.QSettings(TableCrabAuthor, TableCrabApplicationName)
+def settings():
+	return _qSettings
 def settingsValue(key, default):
 	return _qSettings.value( settingsKeyJoin(configKey, key), default)
 def settingsSetValue(key, value):

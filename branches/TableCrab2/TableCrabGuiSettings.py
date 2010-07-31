@@ -12,6 +12,11 @@ import TableCrabGuiHelp
 class FrameSettingsGlobal(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
+		
+		self.labelBackup = QtGui.QLabel('Backup TableCrab:', self)
+		self.buttonBackup = QtGui.QPushButton('..', self)
+		TableCrabConfig.signalConnect(self.buttonBackup, self, 'clicked(bool)', self.onButtonBackupClicked)
+		
 		self.labelGuiStyle = QtGui.QLabel('Global Style:', self)
 		self.comboGuiStyle = TableCrabConfig.ComboBox(
 				[style for style in QtGui.QStyleFactory().keys()] , 
@@ -51,27 +56,72 @@ class FrameSettingsGlobal(QtGui.QFrame):
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
 		
-		grid.addWidget(self.labelGuiStyle, 0, 0)
-		grid.addWidget(self.comboGuiStyle, 0, 1)
+		grid.addWidget(self.labelBackup, 0, 0)
+		grid.addWidget(self.buttonBackup, 0, 1)
 		grid.addLayout(TableCrabConfig.HStretch(), 0, 2)
 		
-		grid.addWidget(self.labelGuiFont, 1, 0)
-		grid.addWidget(self.buttonGuiFont, 1, 1)
+		grid.addWidget(self.labelGuiStyle, 1, 0)
+		grid.addWidget(self.comboGuiStyle, 1, 1)
 		grid.addLayout(TableCrabConfig.HStretch(), 1, 2)
-				
-		grid.addWidget(self.labelZoomIncrement, 2, 0)
-		grid.addWidget(self.spinZoomIncrement, 2, 1)
-		grid.addLayout(TableCrabConfig.HStretch(), 2, 2)
-			
-		grid.addWidget(self.checkAlternatingRowColors, 3, 0)
-		grid.addWidget(self.checkChildItemIndicators, 4, 0)
 		
-		grid.addLayout(TableCrabConfig.VStretch(), 5, 0)
-		grid.addWidget(TableCrabConfig.HLine(self), 6, 0, 1, 3)
+		grid.addWidget(self.labelGuiFont, 2, 0)
+		grid.addWidget(self.buttonGuiFont, 2, 1)
+		grid.addLayout(TableCrabConfig.HStretch(), 2, 2)
+				
+		grid.addWidget(self.labelZoomIncrement, 3, 0)
+		grid.addWidget(self.spinZoomIncrement, 3, 1)
+		grid.addLayout(TableCrabConfig.HStretch(), 3, 2)
+			
+		grid.addWidget(self.checkAlternatingRowColors, 4, 0)
+		grid.addWidget(self.checkChildItemIndicators, 5, 0)
+		
+		grid.addLayout(TableCrabConfig.VStretch(), 6, 0)
+		grid.addWidget(TableCrabConfig.HLine(self), 7, 0, 1, 3)
 			
 		grid2 = TableCrabConfig.GridBox()
-		grid.addLayout(grid2, 7, 0, 1, 3)
+		grid.addLayout(grid2, 8, 0, 1, 3)
 		grid2.addWidget(self.buttonBox, 0, 0)
+		
+	def onButtonBackupClicked(self, checked):
+		dlg = QtGui.QFileDialog(self)
+		dlg.setWindowTitle('Backup tableCrab To Config File..')
+		dlg.setFileMode(dlg.AnyFile)
+		dlg.setAcceptMode(dlg.AcceptSave)
+		dlg.setConfirmOverwrite(True)
+		filters = QtCore.QStringList()
+		filters << 'Config Files (*.ini *.cfg)'
+		filters << 'All Files (*)'
+		dlg.setNameFilters(filters)
+		dlg.restoreState( TableCrabConfig.settingsValue('Gui/Settings/DialogBackup/State', QtCore.QByteArray()).toByteArray() )
+		result = dlg.exec_()
+		TableCrabConfig.settingsSetValue('Gui/Settings/DialogBackup/State', dlg.saveState() )
+		if result != dlg.Accepted:
+			return
+			
+		fileName = dlg.selectedFiles()[0]
+		fileInfo = QtCore.QFileInfo(fileName)
+		format = fileInfo.suffix().toLower()
+		# default save format to to ".ini"
+		if not format:
+			fileName = fileName + '.ini'
+		
+		#NOTE: looks like Qt is only checking for write protect anything else may or may not pass ..and we don't get any IO errors
+		# 		 so we try in advance. obv there are still loopholes
+		fp = None
+		try: fp = open(fileName, 'w').close()
+		except Exception, d:
+			TableCrabConfig.MsgWarning(self, 'Could Not Open Config File\n\n%s' % d)
+			return
+		finally:
+			if fp is not None: fp.close()
+		
+		newSettings = QtCore.QSettings(fileName, QtCore.QSettings.IniFormat)
+		if not newSettings.isWritable:
+			TableCrabConfig.MsgWarning(self, 'Config File Is Not Writable')
+			return
+		settings = TableCrabConfig.settings()
+		for key in settings.allKeys():
+			newSettings.setValue(key, settings.value(key) )
 		
 	def onButtonHelpClicked(self, checked):
 		TableCrabGuiHelp.dialogHelp('settingsGlobal', parent=self)
