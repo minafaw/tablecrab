@@ -290,6 +290,7 @@ class FramePersistentItems(QtGui.QFrame):
 		if item is None:
 			self.buttonRemove.setEnabled(False)
 			return
+		persistentItem= item.persistentItem if item.parent() is None else item.parent().persistentItem
 		TableCrabConfig.setupWidgetItemManager.removeItem(persistentItem)
 		
 	def onTreeItemSelectionChanged(self):
