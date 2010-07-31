@@ -221,7 +221,7 @@ class FramePersistentItems(QtGui.QFrame):
 		
 		self.actionRemove = TableCrabConfig.TableCrabAction(
 				parent=self,
-				text='remove',
+				text='Remove',
 				toolTip='Remove template',
 				slot=self.onActionRemoveTriggered,
 				)
@@ -361,7 +361,7 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		
 		self.actionOpen = TableCrabConfig.TableCrabAction(
 				parent=self,
-				text='Open..',
+				text='Open screenshot..',
 				toolTip='Open a screenshot from file',
 				slot=self.onActionOpenTriggered,
 				)
@@ -369,7 +369,7 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		
 		self.actionSave = TableCrabConfig.TableCrabAction(
 				parent=self,
-				text='save..',
+				text='Save screenshot..',
 				toolTip='Save screenshot to file',
 				slot=self.onActionSaveTriggered,
 				)
