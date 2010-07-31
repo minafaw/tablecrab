@@ -427,15 +427,15 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	PrefixCheck = 'ck'
 	PrefixFold = 'f'
 	MaxPlayerName = -1
-	Css = '''.handHistoryBody{
+	Css = '''.handBody{
         margin-left: 0px;
         margin-top: 0px;
         }
-.handHistoryTable{
+.handTable{
         border-spacing: 0px; 
         border-collapse: collapse;
         }
-.handHistorySource{margin-top: 10em;}
+.handSource{margin-top: 10em;}
 .playerCell{
         vertical-align: top; 
         border: 1px solid black; 
@@ -592,8 +592,8 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		p | '<style type="text/css"><!-- %s --></style>' % TableCrabConfig.settingsValue('PsHandGrabber/HandFornmatterHtmlTabular/Css', self.Css).toString()
 		p << '</head>'
 		
-		p >> '<body class="handHistoryBody">'
-		p >> '<table class="handHistoryTable">'
+		p >> '<body class="handBody">'
+		p >> '<table class="handTable">'
 		
 		for player in hand.seats:
 			if player is None: continue
@@ -693,7 +693,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		
 		# dump html to file
 		p << '</table>'
-		p | '<pre class="handHistorySource">%s</pre>' % self.htmlEscapeString(hand.handHistory, spaces=False)
+		p | '<pre class="handSource">%s</pre>' % self.htmlEscapeString(hand.handHistory, spaces=False)
 		p << '</body>'
 		p << '</html>'
 		
@@ -740,16 +740,9 @@ if sys.platform == 'win32':
 					break
 				break
 			if self._isRunning:
-				timer = QtCore.QTimer(self)
-				timer.setSingleShot(True)
-				timer.setInterval(TableCrabConfig.settingsValue('PsHandGrabber/GrabTimeout', self.GrabTimeout).toFloat()[0] * 1000)
-				TableCrabConfig.signalConnect(timer, self, 'timeout()', self._run)
-				timer.start()
-				#QtCore.QTimer.singleShot(
-				#	TableCrabConfig.settingsValue('PsHandGrabber/GrabTimeout', self.GrabTimeout).toFloat()[0] * 1000, 
-				#	self._run
-				#	)	
-			
-
+				QtCore.QTimer.singleShot(
+					TableCrabConfig.settingsValue('PsHandGrabber/GrabTimeout', self.GrabTimeout).toFloat()[0] * 1000, 
+					self._run
+					)	
 	
 	
