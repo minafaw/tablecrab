@@ -61,7 +61,6 @@ from PyQt4 import QtCore, QtGui, QtWebKit
 import TableCrabWin32
 from TableCrabRes import Pixmaps, HtmlPages, StyleSheets
 
-
 # grab settings from commandline if possible
 _qSettings = None
 if '--config' in sys.argv:
@@ -76,7 +75,6 @@ if '--config' in sys.argv:
 			_qSettings = QtCore.QSettings(fileName, QtCore.QSettings.IniFormat)
 if _qSettings is None:
 	_qSettings = QtCore.QSettings(TableCrabAuthor, TableCrabApplicationName)
-
 
 #***********************************************************************************
 # global QSettings
@@ -1527,7 +1525,7 @@ class TreeWidgetItemIterator(QtGui.QTreeWidgetItemIterator):
 def MsgWarning(parent, msg):
 	QtGui.QMessageBox.critical(parent, TableCrabApplicationName, msg)
 
-def MsgCritical(msg):
+def MsgCritical(parent, msg):
 	QtGui.QMessageBox.critical(parent, TableCrabApplicationName, msg)
 
 #***********************************************************************************
