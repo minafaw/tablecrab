@@ -3,6 +3,7 @@ import TableCrabConfig
 from PyQt4 import QtCore, QtGui
 
 import TableCrabGuiHelp
+import TableCrabWin32
 
 #**********************************************************************************************
 #
@@ -407,8 +408,8 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		if not wid:
 			return
 		selfHwnd = int(wid)
-		selfParent = TableCrabConfig.windowGetTopLevelParent(selfHwnd)
-		otherParent = TableCrabConfig.windowGetTopLevelParent(hwnd)
+		selfParent = TableCrabWin32.windowGetTopLevelParent(selfHwnd)
+		otherParent = TableCrabWin32.windowGetTopLevelParent(hwnd)
 		if selfParent == otherParent:
 			return
 		self.gatherWindowInfo(hwnd)		
@@ -421,18 +422,18 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		
 	def 	gatherWindowInfo(self, hwnd):
 		def windowInfo(hwnd, level=0):
-			title = TableCrabConfig.windowGetText(hwnd).replace('\r', '')
+			title = TableCrabWin32.windowGetText(hwnd).replace('\r', '')
 			if '\n' in title: title = title.split('\n', 1)[0]
-			className = TableCrabConfig.windowGetClassName(hwnd)
-			buttons = sorted( TableCrabConfig.windowGetButtons(hwnd).keys() )
+			className = TableCrabWin32.windowGetClassName(hwnd)
+			buttons = sorted( TableCrabWin32.windowGetButtons(hwnd).keys() )
 			if not buttons:
 				buttons = ''
 			elif len(buttons) == 1:
 				buttons = "'%s'" % buttons[0]
 			else:
 				buttons = "'%s'" % ', '.join(["'%s'" % i for i in buttons] )
-			isVisible = TableCrabConfig.windowIsVisible(hwnd)
-			isEnabled = TableCrabConfig.windowIsEnabled(hwnd)
+			isVisible = TableCrabWin32.windowIsVisible(hwnd)
+			isEnabled = TableCrabWin32.windowIsEnabled(hwnd)
 			
 			indent = '\x20\x20\x20\x20' *level
 			p = ''
@@ -453,16 +454,16 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		self._lastInfo += '-----------------------------------------------------------------\n'
 		self._lastInfo += 'Window Details\n'
 		self._lastInfo += '-----------------------------------------------------------------\n'
-		for level, hwnd in TableCrabConfig.windowWalkChildren(hwnd, report=True):
+		for level, hwnd in TableCrabWin32.windowWalkChildren(hwnd, report=True):
 			 self._lastInfo += windowInfo(hwnd, level=level)
 			
-		hwndParent = TableCrabConfig.windowGetTopLevelParent(hwnd)
+		hwndParent = TableCrabWin32.windowGetTopLevelParent(hwnd)
 		if hwndParent == hwnd: return
 			
 		self._lastInfo += '-----------------------------------------------------------------\n'
 		self._lastInfo += 'Window Hirarchy\n'
 		self._lastInfo += '-----------------------------------------------------------------\n'
-		for level, hwnd in TableCrabConfig.windowWalkChildren(hwndParent, report=True):
+		for level, hwnd in TableCrabWin32.windowWalkChildren(hwndParent, report=True):
 			 self._lastInfo += windowInfo(hwnd, level=level)
 		
 	def layout(self):
