@@ -970,6 +970,8 @@ class SetupWidgetItemTablePokerStars(PersistentItem):
 			('buttonRaise', QtCore.QPoint),
 			('checkboxFold', QtCore.QPoint),
 			('checkboxCheckFold', QtCore.QPoint),
+			('betSliderStart', QtCore.QPoint),
+			('betSliderEnd', QtCore.QPoint),
 			('instantHandHistory', QtCore.QPoint),
 			('replayer', QtCore.QPoint),
 			('itemIsExpanded', CallableBool(False)),
@@ -990,10 +992,13 @@ class SetupWidgetItemTablePokerStars(PersistentItem):
 		replayer = settingsValue(settingsKeyJoin(key, 'Replayer'), pointNone).toPoint()
 		checkboxFold = settingsValue(settingsKeyJoin(key, 'CheckboxFold'), pointNone).toPoint()
 		checkboxCheckFold = settingsValue(settingsKeyJoin(key, 'CheckboxCheckFold'), pointNone).toPoint()
+		betSliderStart = settingsValue(settingsKeyJoin(key, 'BetSliderStart'), pointNone).toPoint()
+		betSliderEnd = settingsValue(settingsKeyJoin(key, 'BetSliderStart'), pointNone).toPoint()
 		itemIsExpanded = settingsValue(settingsKeyJoin(key, 'ItemIsExpanded'), False).toBool()
 		return klass(name=name, size=size, buttonCheck=buttonCheck, 
 				buttonFold=buttonFold, buttonRaise=buttonRaise, replayer=replayer, instantHandHistory=instantHandHistory, 
-				checkboxFold=checkboxFold, checkboxCheckFold=checkboxCheckFold, itemIsExpanded=itemIsExpanded)
+				checkboxFold=checkboxFold, checkboxCheckFold=checkboxCheckFold, itemIsExpanded=itemIsExpanded,
+				betSliderStart=betSliderStart, betSliderEnd=betSliderEnd)
 	def toConfig(self, key):
 		settingsSetValue( settingsKeyJoin(key, 'ItemName'), self.itemName() )
 		settingsSetValue(settingsKeyJoin(key, 'Name'), self.name)
@@ -1003,6 +1008,8 @@ class SetupWidgetItemTablePokerStars(PersistentItem):
 		settingsSetValue(settingsKeyJoin(key, 'ButtonRaise'), self.buttonRaise)
 		settingsSetValue(settingsKeyJoin(key, 'CheckboxFold'), self.checkboxFold)
 		settingsSetValue(settingsKeyJoin(key, 'CheckboxCheckFold'), self.checkboxCheckFold)
+		settingsSetValue(settingsKeyJoin(key, 'BetSliderStart'), self.betSliderStart)
+		settingsSetValue(settingsKeyJoin(key, 'BetSliderEnd'), self.betSliderEnd)
 		settingsSetValue(settingsKeyJoin(key, 'Replayer'), self.replayer)
 		settingsSetValue(settingsKeyJoin(key, 'InstantHandHistory'), self.instantHandHistory)
 		settingsSetValue(settingsKeyJoin(key, 'ItemIsExpanded'), self.itemIsExpanded)
@@ -1185,7 +1192,10 @@ class _SiteManager(QtCore.QObject):
 		if not data: return
 		if not data['hwndBetAmountBox']: return
 		if not data['betAmountBoxIsVisible']: return
-		point = widgetItem.buttonCheck
+		if data['betAmountBoxIsVisible']:
+			point = widgetItem.buttonCheck
+		else:
+			point = widgetItem.checkboxCheckFold
 		if not point.isNull():
 			pt = windowClientPointToScreenPoint(hwnd, (point.x(), point.y()) )
 			mouseClickLeft(pt)
@@ -1197,12 +1207,6 @@ class _SiteManager(QtCore.QObject):
 		if data['betAmountBoxIsVisible']:
 			point = widgetItem.buttonFold
 		else:
-			#NOTE: there is no way to find out what chackboxes are displayed. ao we hit both (chevkboxFold
-			#				AND checkboxCheckFold) if point checkboxCheckFold is set
-			point = widgetItem.checkboxCheckFold
-			if not point.isNull():
-				pt = windowClientPointToScreenPoint(hwnd, (point.x(), point.y()) )
-				mouseClickLeft(pt)
 			point = widgetItem.checkboxFold
 		if not point.isNull():
 			pt = windowClientPointToScreenPoint(hwnd, (point.x(), point.y()) )
@@ -1571,6 +1575,8 @@ def MsgCritical(parent, msg):
 # type converters
 #***********************************************************************************
 def pointToString(qPoint):
+	if qPoint.x() <= 0 or qPoint.y() < 0:
+		return 'None'
 	return '%s,%s' % (qPoint.x(), qPoint.y())
 
 def sizeToString(qSize):

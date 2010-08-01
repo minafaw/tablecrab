@@ -38,6 +38,8 @@ class TablePokerStarsTreeWidgetItem(QtGui.QTreeWidgetItem):
 				'buttonRaise': ChildItem('buttonRaise', 'ButtonRaise:', TableCrabConfig.pointToString(self.persistentItem.buttonRaise), parent=self),
 				'checkboxFold': ChildItem('checkboxFold', 'CheckboxFold:', TableCrabConfig.pointToString(self.persistentItem.checkboxFold), parent=self),
 				'checkboxCheckFold': ChildItem('checkboxCheckFold', 'CheckboxCheckFold:', TableCrabConfig.pointToString(self.persistentItem.checkboxCheckFold), parent=self),
+				'betSliderStart': ChildItem('betSliderStart', 'BetSliderStart:', TableCrabConfig.pointToString(self.persistentItem.betSliderStart), parent=self),
+				'betSliderEnd': ChildItem('betSliderEnd', 'BetSliderEnd:', TableCrabConfig.pointToString(self.persistentItem.betSliderEnd), parent=self),
 				'instantHandHistory': ChildItem('instantHandHistory', 'InstantHandHistory:', TableCrabConfig.pointToString(self.persistentItem.instantHandHistory), parent=self),
 				'replayer': ChildItem('replayer', 'Replayer:', TableCrabConfig.pointToString(self.persistentItem.replayer), parent=self),
 				}
@@ -100,11 +102,7 @@ class TablePokerStarsTreeWidgetItem(QtGui.QTreeWidgetItem):
 		for attrName, child in self.myChildren.items():
 			if attrName == 'itemName': continue
 			if attrName == 'size':
-				# enable only if size is available as slot
-				if not pixmap.isNull() and self.persistentItem.size.isEmpty():
-					child.setDisabled(False)
-				else:
-					child.setDisabled(True)
+				child.setDisabled(True)
 				continue
 			if pixmap.isNull():
 				child.setDisabled(True)
