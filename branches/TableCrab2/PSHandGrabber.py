@@ -724,13 +724,13 @@ if sys.platform == 'win32':
 			self._run()
 		def _run(self):
 			# find "instant hand history" dialog
-			for hwnd in TableCrabConfig.windowChildren(None):
-				if TableCrabConfig.windowGetClassName(hwnd) != self.WindowClassName: continue
-				if TableCrabConfig.windowGetText(hwnd) != self.WindowTitle: continue
+			for hwnd in TableCrabWin32.windowChildren(None):
+				if TableCrabWin32.windowGetClassName(hwnd) != self.WindowClassName: continue
+				if TableCrabWin32.windowGetText(hwnd) != self.WindowTitle: continue
 				# find hand history in dialog
-				for hwnd in TableCrabConfig.windowChildren(hwnd):
-					if TableCrabConfig.windowGetClassName(hwnd) != self.WidgetClassName: continue
-					handHistory = TableCrabConfig.windowGetText(hwnd)
+				for hwnd in TableCrabWin32.windowChildren(hwnd):
+					if TableCrabWin32.windowGetClassName(hwnd) != self.WidgetClassName: continue
+					handHistory = TableCrabWin32.windowGetText(hwnd)
 					if handHistory != self._lastHandHistory:
 						self._lastHandHistory = handHistory
 						hand = self.handParser.parse(handHistory)
