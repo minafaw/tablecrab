@@ -28,7 +28,7 @@ def hotkeyReplayer():
 def hotkeyRaise():
 	arr = _cache.get("hotkeyRaise", None)
 	if arr is None:
-		arr = QtCore.QByteArray.fromBase64("SG90a2V5UmFpc2U=")
+		arr = QtCore.QByteArray.fromBase64("PGh0bWw+CjxoZWFkPgo8TElOSyBSRUw9U3R5bGVTaGVldCBIUkVGPSJkZWZhdWx0LmNzcyIgVFlQRT0idGV4dC9jc3MiIE1FRElBPXNjcmVlbj4KPC9oZWFkPgo8Ym9keT4KCjxkaXYgY2xhc3M9InRleHRCb3giPgoJPGRpdiBjbGFzcz0iaGVhZGVyQm94Ij5Ib3RrZXkgUmFpc2U8L2Rpdj4KCgl3aGVuZXZlciB5b3UgaGl0IHRoaXMga2V5IFRhYmxlQ3JhYiB3aWxsIHJhaXNlIHRoZSBoYW5kIGZvciB5b3UuIHRoYXQgaXMgLSBpdCBlaXRoZXIgaGl0cyB0aGUgPGk+IlJhaXNlL0NhbGwiPC9pPiBidXR0b24uCgkKPC9kaXY+CgoKPC9ib2R5PjwvaHRtbD4=")
 		_cache["hotkeyRaise"] = arr
 	return QtCore.QString(arr)
 def settingsHand():
@@ -76,7 +76,7 @@ def settingsGlobal():
 def hotkeyCheck():
 	arr = _cache.get("hotkeyCheck", None)
 	if arr is None:
-		arr = QtCore.QByteArray.fromBase64("SG90a2V5Q2hlY2s=")
+		arr = QtCore.QByteArray.fromBase64("PGh0bWw+CjxoZWFkPgo8TElOSyBSRUw9U3R5bGVTaGVldCBIUkVGPSJkZWZhdWx0LmNzcyIgVFlQRT0idGV4dC9jc3MiIE1FRElBPXNjcmVlbj4KPC9oZWFkPgo8Ym9keT4KCjxkaXYgY2xhc3M9InRleHRCb3giPgoJPGRpdiBjbGFzcz0iaGVhZGVyQm94Ij5Ib3RrZXkgQ2hlY2s8L2Rpdj4KCgl3aGVuZXZlciB5b3UgaGl0IHRoaXMga2V5IFRhYmxlQ3JhYiB3aWxsIGNoZWNrIHRoZSBoYW5kIGZvciB5b3UuIHRoYXQgaXMgLSBpdCBlaXRoZXIgaGl0cyB0aGUgPGk+IkNoZWNrIjwvaT4gYnV0dG9uIG9yIGNoZWNrcyB0aGUgPGk+IkNoZWNrL0ZvbGQiPC9pPiBjaGVja2JveC4KCQo8L2Rpdj4KCgo8L2JvZHk+PC9odG1sPg==")
 		_cache["hotkeyCheck"] = arr
 	return QtCore.QString(arr)
 def settingsPokerStars():
@@ -106,6 +106,6 @@ def settingsHandCss():
 def hotkeyFold():
 	arr = _cache.get("hotkeyFold", None)
 	if arr is None:
-		arr = QtCore.QByteArray.fromBase64("PGh0bWw+CjxoZWFkPgo8TElOSyBSRUw9U3R5bGVTaGVldCBIUkVGPSJkZWZhdWx0LmNzcyIgVFlQRT0idGV4dC9jc3MiIE1FRElBPXNjcmVlbj4KPC9oZWFkPgo8Ym9keT4KCjxkaXYgY2xhc3M9InRleHRCb3giPgoJPGRpdiBjbGFzcz0iaGVhZGVyQm94Ij5Ib3RrZXkgRm9sZDwvZGl2PgoKCXdoZW5ldmVyIHlvdSBoaXQgdGhpcyBrZXkgVGFibGVDcmFiIHdpbGwgZm9sZCB0aGUgaGFuZCBmb3IgeW91LiB0aGF0IGlzIC0gaXQgZWl0aGVyIGhpdHMgdGhlIDxpPiJGb2xkIjwvaT4gYnV0dG9uIG9yIGNoZWNrcyB0aGUgPGk+IkZvbGQiPC9pPiBjaGVja2JveC4KCWlmIHlvdSBmaWxsZWQgaW4gPGk+ImNoZWNrYm94Q2hlY2tGb2xkIjwvaT4gaW4gdGhlIHRlbXBsYXRlIG9uIHRoZSA8YSBocmVmPSJzZXR1cC5odG1sIj5TZXR1cDwvYT4gdGFiIFRhYmxlQ3JhYiB3aWxsIGNoZWNrIHRoZSAiQ2hlY2svRm9sZCIKCWNoZWNrYm94LiBvdGhlcndpc2Ugbm90LiAKCQo8L2Rpdj4KCgo8L2JvZHk+PC9odG1sPg==")
+		arr = QtCore.QByteArray.fromBase64("PGh0bWw+CjxoZWFkPgo8TElOSyBSRUw9U3R5bGVTaGVldCBIUkVGPSJkZWZhdWx0LmNzcyIgVFlQRT0idGV4dC9jc3MiIE1FRElBPXNjcmVlbj4KPC9oZWFkPgo8Ym9keT4KCjxkaXYgY2xhc3M9InRleHRCb3giPgoJPGRpdiBjbGFzcz0iaGVhZGVyQm94Ij5Ib3RrZXkgRm9sZDwvZGl2PgoKCXdoZW5ldmVyIHlvdSBoaXQgdGhpcyBrZXkgVGFibGVDcmFiIHdpbGwgZm9sZCB0aGUgaGFuZCBmb3IgeW91LiB0aGF0IGlzIC0gaXQgZWl0aGVyIGhpdHMgdGhlIDxpPiJGb2xkIjwvaT4gYnV0dG9uIG9yIGNoZWNrcyB0aGUgPGk+IkZvbGQiPC9pPiBjaGVja2JveC4KCQo8L2Rpdj4KCgo8L2JvZHk+PC9odG1sPg==")
 		_cache["hotkeyFold"] = arr
 	return QtCore.QString(arr)
