@@ -3,28 +3,27 @@ import TableCrabConfig
 from PyQt4 import QtCore, QtGui
 
 import TableCrabGuiHelp
+import TableCrabWin32
 
 #**********************************************************************************************
 #
 #**********************************************************************************************
 	
-class HotkeyComboBox(QtGui.QComboBox):
-	#NOTE: we can not enter certain hotkeys into the box - mouse wheel and keys triggering widget actions
+#TODO: we have to ignore <TAB> cos it tabs away from the hotkey box
+class HotkeyWidget(QtGui.QComboBox):
+	#NOTE: bit of a hack this combo
+	# x) pretty much disbled all standart keybindings for the combo. except ESCAPE and SPACE (ESCAPE
+	#     mut be handled internally cos it is working without our help)
+	# x) we added a space to each displayName to trrick the combo popup search feature
 	Hotkeys = (		# hotkey --> displayName
 				('', '<Enter Hotkey>'),
-				('<ENTER>', 'ENTER'),
-				('<ESCAPE>', 'ESCAPE'),
-				('<UP>', 'UP'),
-				('<DOWN>', 'DOWN'),
-				('<PRIOR>', 'PRIOR'),
-				('<NEXT>', 'NEXT'),
-				('<HOME>', 'HOME'),
-				('<END>', 'END'),
-				
-				(TableCrabConfig.MouseWheelUp, 'MouseWheelUp'),
-				(TableCrabConfig.MouseWheelDown, 'MouseWheelDown'),
+				('<ESCAPE>', ' ESCAPE'),
+				('<SPACE>', ' SPACE'),
+				('<TAB>', ' TAB'),
+				(TableCrabWin32.MouseWheelUp, ' MouseWheelUp'),
+				(TableCrabWin32.MouseWheelDown, ' MouseWheelDown'),
 			)
-	def __init__(self, hotkey, parent=None):
+	def __init__(self, hotkey=None, parent=None):
 		QtGui.QComboBox.__init__(self, parent=None)
 		self.addItems( [i[1] for i in self.Hotkeys] )
 		for i, (tmpHotkey, _) in enumerate(self.Hotkeys):
@@ -32,22 +31,30 @@ class HotkeyComboBox(QtGui.QComboBox):
 				self.setCurrentIndex(i)
 				break
 		else:
-			self.setItemText(0, hotkey)
+			if hotkey is not None:
+				self.setItemText(0, hotkey)
 		TableCrabConfig.signalConnect(TableCrabConfig.keyboardHook, self, 'keyPressed(QString)', self.onKeyboardHookKeyPressed)
-	def onKeyboardHookKeyPressed(self, hotkey):
-		print hotkey
+	def keyPressEvent(self, event):
+		if event.key() == QtCore.Qt.Key_Space and not event.modifiers():
+			QtGui.QComboBox.keyPressEvent(self, event)
+	def keyReleaseEvent(self, event):
+		if event.key() == QtCore.Qt.Key_Space and not event.modifiers():
+			QtGui.QComboBox.keyPressEvent(self, event)
+	def onKeyboardHookKeyPressed(self, key):
+		if not key: return
 		if self.hasFocus():
-			if hotkey not in self.Hotkeys:
-				if self.currentIndex() == 0:
-					self.setItemText(0, hotkey)
+			if self.currentIndex() == 0:
+				for (myKey, _) in self.Hotkeys:
+					if key == myKey:
+						break
+				else:
+					self.setItemText(0, key)
 	def hotkey(self):
 		text = self.currentText()
-		for hotkey, displayName in self.Hotkeys:
+		for key, displayName in self.Hotkeys:
 			if text == displayName:
-				return hotkey
+				return key
 		return text
-			
-	
 
 class ActionCheckEditor(QtGui.QDialog):
 	def __init__(self, persistentItem, parent=None):
@@ -66,7 +73,7 @@ class ActionCheckEditor(QtGui.QDialog):
 		self.editName.setEnabled(False)
 		
 		self.labelHotkey = QtGui.QLabel('Hotkey:', self)
-		self.comboHotkey = HotkeyComboBox(self.persistentItem.hotkey, parent=self)
+		self.hotkeyWidget = HotkeyWidget(hotkey=self.persistentItem.hotkey, parent=self)
 		self.labelHotkeyName = QtGui.QLabel('HotkeyName:', self)
 		self.editHotkeyName = QtGui.QLineEdit(self)
 		self.editHotkeyName.setText(persistentItem.hotkeyName)
@@ -81,7 +88,7 @@ class ActionCheckEditor(QtGui.QDialog):
 		grid.addWidget(self.editName, 0, 1)
 			
 		grid.addWidget(self.labelHotkey, 1, 0)
-		grid.addWidget(self.comboHotkey, 1, 1)
+		grid.addWidget(self.hotkeyWidget, 1, 1)
 		
 		grid.addWidget(self.labelHotkeyName, 2, 0)
 		grid.addWidget(self.editHotkeyName, 2, 1)
@@ -96,7 +103,7 @@ class ActionCheckEditor(QtGui.QDialog):
 	def accept(self):
 		TableCrabConfig.actionItemManager.setItemAttrs(self.persistentItem, {
 				'name': self.editName.text(),
-				'hotkey': self.comboHotkey.hotkey(),
+				'hotkey': self.hotkeyWidget.hotkey(),
 				'hotkeyName': self.editHotkeyName.text(),
 				})
 		QtGui.QDialog.accept(self)
@@ -121,7 +128,7 @@ class ActionAlterBetAmountEditor(QtGui.QDialog):
 		self.editName.setEnabled(False)
 		
 		self.labelHotkey = QtGui.QLabel('Hotkey:', self)
-		self.comboHotkey = HotkeyComboBox(self.persistentItem.hotkey, parent=self)
+		self.hotkeyWidget = HotkeyWidget(hotkey=self.persistentItem.hotkey, parent=self)
 		
 		self.labelHotkeyName = QtGui.QLabel('HotkeyName:', self)
 		self.editHotkeyName = QtGui.QLineEdit(self)
@@ -144,7 +151,7 @@ class ActionAlterBetAmountEditor(QtGui.QDialog):
 		grid.addWidget(self.editName, 0, 1)
 			
 		grid.addWidget(self.labelHotkey, 1, 0)
-		grid.addWidget(self.comboHotkey, 1, 1)
+		grid.addWidget(self.hotkeyWidget, 1, 1)
 		
 		grid.addWidget(self.labelHotkeyName, 2, 0)
 		grid.addWidget(self.editHotkeyName, 2, 1)
@@ -165,7 +172,7 @@ class ActionAlterBetAmountEditor(QtGui.QDialog):
 	def accept(self):
 		TableCrabConfig.actionItemManager.setItemAttrs(self.persistentItem, {
 				'name': self.editName.text(),
-				'hotkey': self.comboHotkey.currentText(),
+				'hotkey': self.hotkeyWidget.hotkey(),
 				'hotkeyName': self.editHotkeyName.text(),
 				'baseValue': self.comboBaseValue.currentText(),
 				'multiplier': self.spinMultiplier.value(),
@@ -225,6 +232,7 @@ Editors = (
 		(TableCrabConfig.ActionCheck, ActionCheckEditor),
 		(TableCrabConfig.ActionFold, ActionCheckEditor),
 		(TableCrabConfig.ActionRaise, ActionCheckEditor),
+		(TableCrabConfig.ActionAllIn, ActionCheckEditor),
 		(TableCrabConfig.ActionAlterBetAmount, ActionAlterBetAmountEditor),
 		(TableCrabConfig.ActionHilightBetAmount, ActionCheckEditor),
 		(TableCrabConfig.ActionReplayer, ActionCheckEditor),
