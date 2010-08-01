@@ -1,9 +1,12 @@
 
+import time
 from ctypes import *
 from ctypes.wintypes import *
 
 user32 = windll.user32
 kernel32 = windll.kernel32
+
+from PyQt4 import QtCore, QtGui
 
 #**************************************************************
 #
@@ -507,4 +510,601 @@ def setKeyDown(vkCode, flag):
 	elif vkCode in (VK_LSHIFT, VK_RSHIFT): _keyboardState[VK_SHIFT] = value
 
 #HACK:(1)
+
+#****************************************************************************************************
+# window methods
+#****************************************************************************************************
+class WindowForegroundHook(QtCore.QObject):
+	Timeout = 0.2
+	def __init__(self, parent=None):
+		QtCore.QObject.__init__(self, parent)		
+		self._lastWindowForeground = 0
+		self._isStarted = False
+	def lastWindowForeground(self):
+		return self._lastWindowForeground
+	def start(self):
+		if not self._isStarted:
+			self._isStarted = True
+			thread.start_new_thread(self._hookProc, ())
+		return self
+	def stop(self):
+		self._isStarted = False
+	def isStarted(self): 
+		return self._isStarted
+	def _hookProc(self):
+		while self._isStarted:
+			hwnd = user32.GetForegroundWindow()
+			if hwnd != self._lastWindowForeground:
+				self.emit(QtCore.SIGNAL('windowGainedForeground(int)'), hwnd)
+				self._lastWindowForeground = hwnd
+			time.sleep(self.Timeout)
+
+class WindowHook(QtCore.QObject):
+	Timeout = 0.2
+	def __init__(self, parent=None):
+		QtCore.QObject.__init__(self, parent)		
+		self._isRunning = False
+		self._hwndForeground = 0
+		self._hwnds = []
+	def stop(self):
+		self._isStarted = False
+	def start(self):
+		if self._isRunning: raise ValueError('window hook already started')
+		self._isRunning = True
+		self._run()
+	def _run(self):
+		hwnds = [hwnd for hwnd in windowChildren(None)]
+		hwndsDestroyed = [hwnd for hwnd in self._hwnds if hwnd not in hwnds]
+		hwndsCreated = [hwnd for hwnd in hwnds if hwnd not in self._hwnds]
+		self._hwnds = hwnds
+		for hwnd in hwndsDestroyed:
+			self.emit(QtCore.SIGNAL('windowDestroyed(int)'), hwnd)
+		for hwnd in hwndsCreated:
+			self.emit(QtCore.SIGNAL('windowCreated(int)'), hwnd)
+		hwnd = windowForeground()
+		if hwnd in self._hwnds and hwnd != self._hwndForeground:
+			self.emit(QtCore.SIGNAL('windowGainedForeground(int)'), hwnd)
+			self._hwndForeground = hwnd
+		if self._isRunning:
+			timer = QtCore.QTimer(self)
+			timer.setSingleShot(True)
+			timer.setInterval(self.Timeout * 1000)
+			self.connect(timer, QtCore.SIGNAL('timeout()'), self._run)
+			timer.start()
+			#QtCore.QTimer.singleShot(
+			#		self.Timeout * 1000, 
+			#		self._run
+			#		)
+
+def windowChildren(hwndParent=None):
+	"""returns a the list of child windows of a window
+	@param hwndParent: handle of the window or None to list all toplevel windows
+	@return: (list) of windows of the specified parent
+	"""
+	L= []
+	def f(hwnd, lp):
+		L.append(hwnd)
+		return TRUE
+	p = ENUMWINDOWSPROC(f)
+	user32.EnumWindows(p, 0) if not hwndParent else user32.EnumChildWindows(hwndParent, p, 0)
+	return L
+
+def windowWalkChildren(hwnd=None, report=False):
+	"""walks over all child windows of a window
+	@param report: (bool) if True report the current recursion level
+	@return: if report is True, tuple(level, hwnd) for the next window in turn, else the hwnd in turn
+	"""
+	def walker(hwnd, level=0):
+		if hwnd:
+			yield level, hwnd if report else hwnd
+		children = windowChildren(hwnd)
+		hwnd=0 if hwnd is None else hwnd
+		for child in children:
+			if user32.GetParent(child) == hwnd:
+				for x in walker(child, level +1):
+					yield x
+	return walker(hwnd)
+
+def windowGetText(hwnd):
+	"""returns the window title of the specified window
+	@param hwnd: handle of the window
+	@return: (str)
+	"""
+	if not hwnd: return ''
+	n = user32.GetWindowTextLengthW(hwnd)
+	if n:		
+		result = DWORD()
+		p = create_unicode_buffer(n+ 1)
+		#
+		user32.SendMessageTimeoutW(
+				hwnd, 
+				WM_GETTEXT, 
+				sizeof(p), 
+				p, 
+				SMTO_ABORTIFHUNG, 
+				MY_SMTO_TIMEOUT, 
+				byref(result)
+				)
+		if not p.value:
+			user32.GetWindowTextW(hwnd, p, sizeof(p))
+		return p.value
+	return ''
+
+def windowGetClassName(hwnd):
+	"""returns the class name of the specified window
+	@param hwnd: handle of the window
+	@return: (str)
+	"""
+	if not hwnd: return ''
+	p = create_unicode_buffer(MY_MAX_CLASS_NAME)
+	if not user32.GetClassNameW(hwnd, p, sizeof(p)):
+		#NOTE: GetClassName() sometimes fails for some unknown reason, so we return '' here
+		return ''
+	return p.value
+
+def windowGetRect(hwnd):
+	"""returns the window rect of the specified window
+	@param hwnd: handle of the window
+	@return: (QRect)
+	"""
+	if not hwnd: return QtCore.QRect(-1, -1, -1, -1)
+	rc = RECT()
+	user32.GetWindowRect(hwnd, byref(rc))
+	return QtCore.QRect(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top)
+
+def windowGetClientRect(hwnd):
+	"""returns the window rect of the specified window
+	@param hwnd: handle of the window
+	@return: (QRect)
+	"""
+	if not hwnd: return QtCore.QRect(-1, -1, -1, -1)
+	rc = RECT()
+	user32.GetClientRect(hwnd, byref(rc))
+	return QtCore.QRect(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top)
+
+def windowGetParent(hwnd):
+	return user32.GetParent(hwnd)
+
+def windowGetTopLevelParent(hwnd):
+	parent = hwnd
+	while True:
+		tmp_parent = user32.GetParent(parent)
+		if not tmp_parent:	break
+		parent = tmp_parent
+	return parent
+
+def windowScreenPointToClientPoint(hwnd, point):
+	"""converts a point in screen coordiantes to point in window client coordinates
+	@param pt: (QPOint)
+	@return: (QPoint)
+	"""
+	pt = POINT( point.x(), point.y() )
+	user32.ScreenToClient(hwnd, byref(pt) )
+	return QtCore.QPoint(pt.x, pt.y) 
+
+def windowClientPointToScreenPoint(hwnd, point):
+		"""converts a point in client coordiantes of a window screen coordinates
+		@param pt: (QPoint)
+		@return: (QPoint)
+		"""
+		pt = POINT( point.x(), point.y() )
+		user32.ClientToScreen(hwnd, byref(pt) )
+		return QtCore.QPoint(pt.x, pt.y) 
+
+def windowIsVisible(hwnd):
+	return bool(user32.IsWindowVisible(hwnd))
+
+def windowIsEnabled(hwnd):
+	return bool(user32.IsWindowEnabled(hwnd))
+
+def windowFromPoint(point):
+	"""returns the handl of the window at the specified point"""
+	return user32.WindowFromPoint( POINT( point.x(), point.y() ) )
+
+def windowForeground():
+	return user32.GetForegroundWindow()
+
+def windowGetButtons(hwnd):
+	"""returns a dict containing buttons of a window
+	@param hwnd: handle of the window
+	@return: (dict) buttonName --> hwnd
+	@note: if the window contains multiple buttons with the same text, the first button with this text is returned
+	"""
+	buttons = {}
+	for hwnd in windowChildren(hwnd):
+			if windowGetClassName(hwnd) == 'Button':
+				text = windowGetText(hwnd)
+				if text not in buttons:
+					buttons[text] = hwnd
+	return buttons
+
+def windowClickButton(hwndButton):
+		"""clicks a button in the window
+		@param hwnd: handle of the button
+		@return: (bool) True if the button was clicked successfuly, False otherwise
+		"""
+		if user32.SendNotifyMessageW(hwndButton, BM_CLICK, 0, 0): 
+			return True
+		return False
+
+def windowFindChild(hwnd, className):
+	"""finds a child window of a window
+	@return: hwnd of the child window or None
+	@todo: for some reason user32.FindWindowEx() always fails with an "Access Denied" error, so we use our own impl here 
+	"""
+	for hwnd in windowChildren(hwnd):
+		if windowGetClassName(hwnd) == className:
+			return hwnd
+	return None
+
+def windowSetText(hwnd, text=''):
+		"""returns the window title of the specified window
+		@param hwnd: handle of the window
+		@todo: we currently send ANSI text only. 
+		@return: (str)
+		"""
+		if not hwnd: raise ValueError('can not set text of desktop window')
+		result = DWORD()
+		#TODO: user32.IsWindowUnicode(hwnd)
+		user32.SendMessageTimeoutA(
+				hwnd, 
+				WM_SETTEXT, 
+				0, 
+				text, 
+				SMTO_ABORTIFHUNG, 
+				MY_SMTO_TIMEOUT, 
+				byref(result)
+				)
+
+def windowClose(hwnd):
+	"""closes the specified window
+	@param hwnd: handle of the window
+	@return: None
+	"""
+	if not hwnd: raise ValueError('can not close desktop window')
+	result = DWORD()
+	user32.SendMessageTimeoutW(
+			hwnd, 
+			WM_SYSCOMMAND, 
+			SC_CLOSE, 
+			0, 
+			SMTO_ABORTIFHUNG, 
+			MY_SMTO_TIMEOUT, 
+			byref(result)
+			)
+
+def windowCheckboxIsChecked(hwnd):
+	result = DWORD()
+	user32.SendMessageTimeoutW(
+			hwnd, 
+			BM_GETSTATE, 
+			0, 
+			0, 
+			SMTO_ABORTIFHUNG, 
+			MY_SMTO_TIMEOUT, 
+			byref(result)
+			)
+	return bool( result.value & BST_CHECKED )
+	
+def windowScreenshot(hwnd):
+	pixmap = QtGui.QPixmap.grabWindow(hwnd, 0, 0, -1,-1)
+	signalEmit(None, 'widgetScreenshot(int, QPixmap*)', hwnd, pixmap)
+
+
+#****************************************************************************************************
+# mouse methods
+#****************************************************************************************************
+MouseButtonLeft = 'left'
+MouseButtonRight = 'right'
+MouseButtonMiddle = 'middle'
+MouseWheelUp = '<MouseWheelUp>'
+MouseWheelDown = '<MouseWheelDown>'
+
+#NOTE: wine dies not orovide this info so we have to keep track ourselves
+_mouseButtonsDown = []
+def mouseButtonsDown():
+	return _mouseButtonsDown[:]
+	
+def mouseButtonIsDown(button):
+	return button in _mouseButtonsDown
+
+def mousePressButton(button):
+	"""presses the specified mouse button at the current mouse position
+	@param button: (Button*)
+	"""
+	# determine button to set down
+	if mouseButtonIsDown(button): return
+	if button == MouseButtonLeft:
+		bt = MOUSEEVENTF_LEFTDOWN
+	elif button == MouseButtonRight:
+		bt = MOUSEEVENTF_RIGHTDOWN
+	elif button == MouseButtonMiddle:
+		bt = MOUSEEVENTF_MIDDLEDOWN
+	else:
+		raise ValueError('no such mouse button: %s' % button) 
+	point = mouseGetPos()
+	user32.mouse_event(bt | MOUSEEVENTF_ABSOLUTE, point.x(), point.y(), 0, None)
+
+def mouseReleaseButton(button):
+	"""releases the specified mouse button at the current mouse position
+	@param button: (Button)
+	"""
+	# determine button to set up
+	if button not in _mouseButtonsDown: return
+	if button == MouseButtonLeft:
+		bt = MOUSEEVENTF_LEFTUP
+	elif button == MouseButtonRight:
+		bt = MOUSEEVENTF_RIGHTUP
+	elif button == MouseButtonMiddle:
+		bt = MOUSEEVENTF_MIDDLEUP
+	else:
+		raise ValueError('no such mouse button: %s' % button) 
+	point = mouseGetPos()
+	user32.mouse_event(bt | MOUSEEVENTF_ABSOLUTE, point.x(), point.y(), 0, None)	
+
+def mouseClickPoint(button, nClicks=1, point=None):
+	'''clicks a point with the desired mouse button
+	@param button: (str) button to click: (Button*)
+	@param nClicks: (int) number of times to click (2 for a double-click)
+	@param pt: (QPoint) absolute coordinates to click. if None, the current cursor pos is taken
+	@return: None	
+	@todo: impl proper double click delay. GetSystemMetrics could do the trick if there is something like a min-double-click-interval defined
+	@NOTE: the mouse is moved to the specified position in the call
+	'''
+	if _mouseButtonsDown: return
+	# move mouse to point
+	if point is not None:
+		mouseSetPos(point)
+	# click button
+	rng = list(range(nClicks))
+	while rng:
+		rng.pop()
+		mousePressButton(button)
+		mouseReleaseButton(button)
+		if rng:
+			time.sleep(0.1)
+	
+def mouseClickLeft(point):
+	"""clicks the left mouse button at the specified point"""
+	return mouseClickPoint(MouseButtonLeft, point=point, nClicks=1)
+def mouseClickLeftDouble(point):
+	"""double clicks the left mouse button at the specified point"""
+	return mouseClickPoint(MouseButtonLeft, point=point, nClicks=2)
+def mouseClickRight(point):
+	"""clicks the right mouse button at the specified point"""
+	return mouseClickPoint(MouseButtonRight, point=point, nClicks=1)
+def mouseClickRightDouble(point):
+	"""double clicks the right mouse button at the specified point"""
+	return mouseClickPoint(MouseButtonRight, point=point, nClicks=2)
+def mouseClickMiddle(pt):
+	"""clicks the middle mouse button at the specified point"""
+	return self.mouseClickPoint(MouseButtonMiddle, point=point, nClicks=1)
+def mouseClickMiddleDouble(point):
+	"""double clicks the middle mouse button at the specified point"""
+	return mouseClickPoint(MouseButtonMiddle, point=point, nClicks=2)
+
+def mouseGetPos():
+	'''returns the current position of the mouse pointer
+	@return: (QPoint) coordinates of the mouse cursor
+	'''
+	pt = POINT()
+	user32.GetCursorPos(byref(pt))
+	return QtCore.QPoint(pt.x, pt.y)
+
+def mouseSetPos(point, timeout=0):
+	"""moves the mouse pointer to the specified position
+	@param pt: (tuple) point containing the coordiantes to move the mouse pointer to (in screen coordiantes)
+	"""
+	#NOTE: for some reason neither user32.mouse_event() not user32.SendInput() have any effect here (linux/wine).
+	#           the only way i can get this to work is to move the cursor stepwise to its destination?!?
+	step = 4
+	ptX, ptY = point.x(), point.y()
+	point2 = mouseGetPos()
+	curX, curY = point2.x(), point2.y()
+	pt = POINT()
+	while curX != ptX or curY != ptY:
+		if curX < ptX: 
+			curX += step
+			if curX > ptX: curX = ptX
+		elif curX == ptX: pass
+		else: 
+			curX -= step
+			if curX < ptX: curX = ptX
+		if curY < ptY: 
+			curY += step
+			if curY > ptY: curY = ptY
+		elif curY == ptY: pass
+		else: 
+			curY -= step
+			if curY < ptY: curY = ptY
+		pt.x, pt.y = curX, curY
+		user32.SetCursorPos(pt)
+		if timeout:
+			time.sleep(timeout)
+
+#TODO: not working!!
+def mouseDragLeft(pointStart, pointEnd):
+	if mouseButtonIsDown(MouseButtonRight): return
+	if mouseButtonIsDown(MouseButtonLeft): return
+	if mouseButtonIsDown(MouseButtonMiddle): return
+	mouseSetPos(pointStart)
+	mousePressButton(MouseButtonLeft)
+	mouseSetPos(pointEnd, timeout=0.1)
+	mouseReleaseButton(MouseButtonLeft)
+			
+	
+
+class MouseHook(QtCore.QObject):
+	"""win32 keyboard manager implementation
+	@event EvtMouseButtonUp: event triggerered when a mouse  button is pressed. arg = Button*
+	@event EvtMouseButtonDown: event triggerered when a mosue button is released. arg = Button*
+	@event EvtMouseWheelScrolled: event triggerered when the mosue wheel is scrolled. arg = stepsScrolled
+	"""
+	
+	def __init__(self, parent=None, eventHandler=None):
+		"""
+		@param cb: (function) event handler
+		"""
+		QtCore.QObject.__init__(self, parent)
+		self._isStarted = False
+		self._hHook = None
+		self._pHookProc = MOUSEHOOKPROCLL(self._hookProc)
+		self._eventHandler = eventHandler
+		
+	def setEventhandler(self, eventHandler):
+		self._eventHandler = eventHandler
+	
+	def _hookProc(self, code, wParam, lParam):
+		"""private method, MOUSEHOOKPROCLL implementation"""
+		
+		if code == HC_ACTION:
+			if wParam == WM_LBUTTONDOWN:
+				if MouseButtonLeft not in _mouseButtonsDown:
+					_mouseButtonsDown.append(MouseButtonLeft)
+			elif wParam == WM_RBUTTONDOWN:
+				if MouseButtonRight not in _mouseButtonsDown:
+					_mouseButtonsDown.append(MouseButtonRight)
+			elif wParam == WM_MBUTTONDOWN:
+				if MouseButtonMiddle not in _mouseButtonsDown:
+					_mouseButtonsDown.append(MouseButtonMiddle)
+			elif wParam == WM_LBUTTONUP:
+				if MouseButtonLeft in _mouseButtonsDown:
+					_mouseButtonsDown.remove(MouseButtonLeft)
+			elif wParam == WM_RBUTTONUP:
+				if MouseButtonRight in _mouseButtonsDown:
+					_mouseButtonsDown.remove(MouseButtonRight)
+			elif wParam == WM_MBUTTONUP:
+				if MouseButtonMiddle in _mouseButtonsDown:
+					_mouseButtonsDown.remove(MouseButtonMiddle)
+					
+			elif wParam == WM_MOUSEWHEEL:
+				mouseInfo = MSLLHOOKSTRUCT.from_address(lParam)
+				wheelDelta = GET_WHEEL_DELTA_WPARAM(mouseInfo.mouseData)
+				nSteps = wheelDelta / WHEEL_DELTA
+				if self._eventHandler is not None:
+					if  self._eventHandler.handleInput(MouseWheelUp if nSteps >= 0 else MouseWheelDown, nSteps=nSteps):
+						return TRUE
+		return user32.CallNextHookEx(self._hHook, code, wParam, lParam)
+	
+	def isStarted(self): 
+		"""cheks if the mouse manager is started"""
+		return self._isStarted
+	
+	def start(self):
+		"""starts the mouse manager"""
+		if self._hHook is None:
+			self._hHook = user32.SetWindowsHookExW(
+				WH_MOUSE_LL, 
+				self._pHookProc, 
+				kernel32.GetModuleHandleA(None), 
+				0
+				)
+			if not self._hHook:
+				self._hHook = None
+				raise WindowsError(GetLastError())
+				
+	def stop(self):
+		"""stops the mouse manager"""
+		if self._hHook is not None:
+			hHook, self._hHook = self._hHook, None
+			if not user32.UnhookWindowsHookEx(hHook):
+				raise WindowsError(GetLastError())
+
+#***********************************************************************************
+# keyboard methods
+#***********************************************************************************
+def keyboardLayoutName():
+	"""returns the name of the current keyboard layout
+	@return: (str) layout name or 'unknown'
+	"""
+	return KEYBOARD_LAYOUT_NAMES.get(kernel32.GetOEMCP(), 'unknown')
+	
+class KeyboardHook(QtCore.QObject):
+	"""win32 keyboard hook implementation"""
+	def __init__(self, parent=None, eventHandler=None):
+		"""
+		@param cb: (function) event handler
+		"""
+		QtCore.QObject.__init__(self, parent)
+		self._isStarted = False
+		self._hHook = None
+		self._pHookProc = KEYBHOOKPROCLL(self._hookProc)
+		self._eventHandler = eventHandler
+		
+	def setEventhandler(self, eventHandler):
+		self._eventHandler = eventHandler
+	
+	def _hookProc(self, code, wParam, lParam):
+		"""private method, KEYBHOOKPROCLL implementation"""
+		if code == HC_ACTION:
+			keyInfo = KBDLLHOOKSTRUCT.from_address(lParam)
+			#HACK:(1)
+			if wParam in (WM_KEYDOWN, WM_SYSKEYDOWN):
+				setKeyDown(keyInfo.vkCode, True)
+			#<--HACK:(1)
+			
+			keyboardState = (c_ubyte*256)()
+			user32.GetKeyboardState(byref(keyboardState))
+			key = self._keyFromKeyboardState(keyboardState=keyboardState)
+			keydown = wParam in (WM_KEYDOWN, WM_SYSKEYDOWN)
+			if keydown:
+				self.emit(QtCore.SIGNAL('keyPressed(QString)'), key)
+			else:
+				self.emit(QtCore.SIGNAL('keyReleased(QString)'), key)
+			
+			#HACK:(1)
+			if wParam in (WM_KEYUP, WM_SYSKEYUP):
+				setKeyDown(keyInfo.vkCode, False)
+			#<--HACK:(1)
+			
+			if self._eventHandler is not None:
+				if  self._eventHandler.handleInput(key, keydown=keydown, nSteps=None):
+					return TRUE
+		return user32.CallNextHookEx(self._hHook, code, wParam, lParam)
+		
+	def _keyFromKeyboardState(self, keyboardState=None):
+		"""@param keyboardState: (c_ubyte*256) holding a keyboar state or None"""
+		value = ''
+		if keyboardState:		
+			for vkCode, tmp_value in enumerate(keyboardState):
+				if tmp_value:
+					if vkCode in (		# ignore these keys
+							VK_CONTROL,
+							VK_MENU,
+							VK_SHIFT,
+							VK_SCROLL,
+							VK_CAPITAL,
+							VK_NUMLOCK,
+							):
+						continue
+					if value:
+						value += ' %s' % KEY_NAMES[vkCode]
+					else:
+						value = KEY_NAMES[vkCode]
+		return '<%s>' % value
+	
+	def isStarted(self): 
+		"""cheks if the keyboard manager is started"""
+		return self._isStarted
+	
+	def start(self):
+		"""starts the keyboard manager"""
+		if self._hHook is None:
+			self._hHook = user32.SetWindowsHookExW(
+				WH_KEYBOARD_LL, 
+				self._pHookProc, 
+				kernel32.GetModuleHandleA(None), 
+				0
+				)
+			if not self._hHook:
+				self._hHook = None
+				raise WindowsError(GetLastError())
+			
+	def stop(self):
+		"""stops the keyboard manager"""
+		if self._hHook is not None:
+			hHook, self._hHook = self._hHook, None
+			if not user32.UnhookWindowsHookEx(hHook):
+				raise WindowsError(GetLastError())
+
 
