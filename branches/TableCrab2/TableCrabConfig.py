@@ -1353,6 +1353,7 @@ class TableCrabAction(QtGui.QAction):
 				isEnabled=True,
 				toolTip=None,
 				autoRepeat=True,
+				shortcut=None,
 				):
 		if icon is not None:
 			QtGui.QAction.__init__(self, icon, text, parent)
@@ -1364,6 +1365,9 @@ class TableCrabAction(QtGui.QAction):
 		self.setEnabled(isEnabled)
 		if toolTip is not None: self.setToolTip(toolTip)
 		self.setAutoRepeat(autoRepeat)
+		if shortcut is not None:
+			self.setShortcut(QtGui.QKeySequence(shortcut) )
+			
 		
 		
 class TableCrabWebViewToolBar(QtGui.QToolBar):
@@ -1387,6 +1391,7 @@ class TableCrabWebViewToolBar(QtGui.QToolBar):
 				text='Zoom+',
 				icon=QtGui.QIcon(Pixmaps.magnifierPlus() ),
 				autoRepeat=True,
+				shortcut=QtGui.QKeySequence.ZoomIn,
 				slot=self.onActionZoomInTriggered,
 				)
 		self.addAction(self.actionZoomIn)
@@ -1396,6 +1401,7 @@ class TableCrabWebViewToolBar(QtGui.QToolBar):
 				text='Zoom-',
 				icon=QtGui.QIcon(Pixmaps.magnifierMinus() ),
 				autoRepeat=True,
+				shortcut=QtGui.QKeySequence.ZoomOut,
 				slot=self.onActionZoomOutTriggered,
 				)
 		self.addAction(self.actionZoomOut)
