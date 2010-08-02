@@ -142,8 +142,8 @@ SiteNamePokerStars = 'PokerStars'
 #***********************************************************************************
 # types
 #***********************************************************************************
-pointNone = QtCore.QPoint()
-sizeNone = QtCore.QSize()
+PointNone = QtCore.QPoint(-1, -1)
+SizeNone = QtCore.QSize(-1, -1)
 
 class CallableString(QtCore.QString):
 	def __call__(self):
@@ -410,16 +410,36 @@ class SetupWidgetItemTablePokerStars(PersistentItem):
 		itemName = settingsValue( settingsKeyJoin(key, 'ItemName'), ValueNone).toString()
 		if itemName != klass.itemName(): return None
 		name = settingsValue(settingsKeyJoin(key, 'Name'), 'None').toString()
-		size = settingsValue(settingsKeyJoin(key, 'Size'), sizeNone).toSize()
-		buttonCheck = settingsValue(settingsKeyJoin(key, 'ButtonCheck'), pointNone).toPoint()
-		buttonFold = settingsValue(settingsKeyJoin(key, 'ButtonFold'), pointNone).toPoint()
-		buttonRaise = settingsValue(settingsKeyJoin(key, 'ButtonRaise'), pointNone).toPoint()
-		instantHandHistory = settingsValue(settingsKeyJoin(key, 'InstantHandHistory'), pointNone).toPoint()
-		replayer = settingsValue(settingsKeyJoin(key, 'Replayer'), pointNone).toPoint()
-		checkboxFold = settingsValue(settingsKeyJoin(key, 'CheckboxFold'), pointNone).toPoint()
-		checkboxCheckFold = settingsValue(settingsKeyJoin(key, 'CheckboxCheckFold'), pointNone).toPoint()
-		betSliderStart = settingsValue(settingsKeyJoin(key, 'BetSliderStart'), pointNone).toPoint()
-		betSliderEnd = settingsValue(settingsKeyJoin(key, 'BetSliderEnd'), pointNone).toPoint()
+		size = settingsValue(settingsKeyJoin(key, 'Size'), SizeNone).toSize()
+		if not size.isValid():
+			size = SizeNone
+		buttonCheck = settingsValue(settingsKeyJoin(key, 'ButtonCheck'), PointNone).toPoint()
+		if not pointInSize(size, buttonCheck):
+			buttonCheck = PointNone
+		buttonFold = settingsValue(settingsKeyJoin(key, 'ButtonFold'), PointNone).toPoint()
+		if not pointInSize(size, buttonFold):
+			buttonFold = PointNone
+		buttonRaise = settingsValue(settingsKeyJoin(key, 'ButtonRaise'), PointNone).toPoint()
+		if not pointInSize(size, buttonRaise):
+			buttonRaise = PointNone
+		instantHandHistory = settingsValue(settingsKeyJoin(key, 'InstantHandHistory'), PointNone).toPoint()
+		if not pointInSize(size, instantHandHistory):
+			instantHandHistory = PointNone
+		replayer = settingsValue(settingsKeyJoin(key, 'Replayer'), PointNone).toPoint()
+		if not pointInSize(size, replayer):
+			replayer = PointNone
+		checkboxFold = settingsValue(settingsKeyJoin(key, 'CheckboxFold'), PointNone).toPoint()
+		if not pointInSize(size, checkboxFold):
+			checkboxFold = PointNone
+		checkboxCheckFold = settingsValue(settingsKeyJoin(key, 'CheckboxCheckFold'), PointNone).toPoint()
+		if not pointInSize(size, checkboxCheckFold):
+			checkboxCheckFold = PointNone
+		betSliderStart = settingsValue(settingsKeyJoin(key, 'BetSliderStart'), PointNone).toPoint()
+		if not pointInSize(size, betSliderStart):
+			betSliderStart = PointNone
+		betSliderEnd = settingsValue(settingsKeyJoin(key, 'BetSliderEnd'), PointNone).toPoint()
+		if not pointInSize(size, betSliderEnd):
+			betSliderEnd = PointNone
 		itemIsExpanded = settingsValue(settingsKeyJoin(key, 'ItemIsExpanded'), False).toBool()
 		return klass(name=name, size=size, buttonCheck=buttonCheck, 
 				buttonFold=buttonFold, buttonRaise=buttonRaise, replayer=replayer, instantHandHistory=instantHandHistory, 
@@ -454,6 +474,8 @@ setupWidgetItemManager = _SetupWidgetItemManager()
 #***********************************************************************************
 # 
 #***********************************************************************************
+
+#TODO: sometime ..maybe ..make user adjustable: 'Gui/RestoreMousePosition'
 class _SiteManager(QtCore.QObject):
 	def __init__(self, parent=None):
 		QtCore.QObject.__init__(self, parent)
@@ -510,16 +532,24 @@ class _SiteManager(QtCore.QObject):
 		if not hwnd:
 			return False
 			
+		if self.windowIsPokerStarsTable(hwnd):
+			return self.pokerStarsTableHandleInput(hwnd, input, keydown=keydown, nSteps=nSteps)
+		return False
+			
+		
+	def pokerStarsTableHandleInput(self, hwnd, input, keydown=None, nSteps=None):
+		if not self.pokerStarsTableHotkeysEnabled(hwnd):
+			return False
+		
 		# swallow key release events we handle
 		if keydown is False:
 			for actionItem in actionItemManager:
 				if not actionItem.hotkey: continue
 				if not actionItem.hotkey == input: continue
-				if self.windowIsPokerStarsTable(hwnd):
-					widgetItem = self.pokerStarsGetTableWidgetItem(hwnd)
-					if widgetItem is not None:
-						return True
-				return False
+				widgetItem = self.pokerStarsGetTableWidgetItem(hwnd)
+				if widgetItem is not None:
+					return True
+			return False
 			
 		for actionItem in actionItemManager:
 			if not actionItem.hotkey: continue
@@ -600,48 +630,107 @@ class _SiteManager(QtCore.QObject):
 			except ValueError: pass
 		return data
 		
+	PokerStarsClassChatEditor = 'PokerStarsChatEditorClass'
+	PokerStarsClassNoteEditor = 'PokerStarsNoteEditorClass'
+	#NOTE: "Edit" is actually a child widget of 'PokerStarsNoteSelectorClass', so we could add more tests in code below if required
+	PokerStarsClassNoteEditorBox = 'Edit'
+	def pokerStarsTableHotkeysEnabled(self, hwnd):
+		point = TableCrabWin32.mouseGetPos()
+		hwndUnderMouse = TableCrabWin32.windowFromPoint(point)
+		className = TableCrabWin32.windowGetClassName(hwndUnderMouse)
+		if className in (self.PokerStarsClassNoteEditor, self.PokerStarsClassChatEditor, self.PokerStarsClassNoteEditorBox):
+			return False
+		return True
+		
 	def pokerStarsTableHandleCheck(self, actionItem, widgetItem, hwnd, nSteps=None):
 		data = self.pokerStarsTableReadData(hwnd)
 		if not data: return
 		if not data['hwndBetAmountBox']: return
+		pointCurrent = TableCrabWin32.mouseGetPos()
 		if data['betAmountBoxIsVisible']:
 			point = widgetItem.buttonCheck
+			if point == PointNone: return
+			mi = TableCrabWin32.MouseInput()
+			mi.move(point, hwnd=hwnd)
+			mi.leftClick(point, hwnd=hwnd)
 		else:
 			point = widgetItem.checkboxCheckFold
-		if not point.isNull():
-			point = TableCrabWin32.windowClientPointToScreenPoint(hwnd, point)
-			TableCrabWin32.mouseClickLeft(point)
+			if point == PointNone: return
+			mi = TableCrabWin32.MouseInput()
+			mi.move(point, hwnd=hwnd)
+			# looks like we have to double click here
+			mi.leftClick(point, hwnd=hwnd)
+			mi.leftClick(point, hwnd=hwnd)
+		if settingsValue('Gui/RestoreMousePosition', False).toBool():
+			mi.move(pointCurrent, hwnd=None)
+		mi.send()
 		
 	def pokerStarsTableHandleFold(self, actionItem, widgetItem, hwnd, nSteps=None):
 		data = self.pokerStarsTableReadData(hwnd)
 		if not data: return
 		if not data['hwndBetAmountBox']: return
+		pointCurrent = TableCrabWin32.mouseGetPos()
 		if data['betAmountBoxIsVisible']:
 			point = widgetItem.buttonFold
+			if point == PointNone: return
+			mi = TableCrabWin32.MouseInput()
+			mi.move(point, hwnd=hwnd)
+			mi.leftClick(point, hwnd=hwnd)
 		else:
 			point = widgetItem.checkboxFold
-		if not point.isNull():
-			point = TableCrabWin32.windowClientPointToScreenPoint(hwnd, point)
-			TableCrabWin32.mouseClickLeft(point)
-			
-	
+			if point == PointNone: return
+			mi = TableCrabWin32.MouseInput()
+			mi.move(point, hwnd=hwnd)
+			# looks like we have to double click here
+			mi.leftClick(point, hwnd=hwnd)
+			mi.leftClick(point, hwnd=hwnd)
+		if settingsValue('Gui/RestoreMousePosition', False).toBool():
+			mi.move(pointCurrent, hwnd=None)
+		mi.send()
+		
 	def pokerStarsTableHandleRaise(self, actionItem, widgetItem, hwnd, nSteps=None):
 		data = self.pokerStarsTableReadData(hwnd)
 		if not data: return
 		if not data['hwndBetAmountBox']: return
 		if not data['betAmountBoxIsVisible']: return
 		point = widgetItem.buttonRaise
-		if not point.isNull():
-			point = TableCrabWin32.windowClientPointToScreenPoint(hwnd, point)
-			TableCrabWin32.mouseClickLeft(point)
-	
+		if point == PointNone: return
+		pointCurrent = TableCrabWin32.mouseGetPos()
+		mi = TableCrabWin32.MouseInput()
+		mi.move(point, hwnd=hwnd)
+		mi.leftClick(point, hwnd=hwnd)
+		if settingsValue('Gui/RestoreMousePosition', False).toBool():
+			mi.move(pointCurrent, hwnd=None)
+		mi.send()
+		
+	#NOTE: there is another way to handle all-in. no reliable one but could be a fallback. looks like bet amount box accepts
+	# values up to some hard coded PS wide maximum. if this maximum is exceeded the bet box resets to 0.
+	# played a bit around with this:
+	# 20.000.000 ok
+	# 21.000.000 ok
+	# 24.000.000 reset
+	# funny enough you can enter up to 9 digits into the box when the maximum is actually located somewhere in the 8 digits region.
+	# either a bug or feature that is. 
 	def pokerStarsTableHandleAllIn(self, actionItem, widgetItem, hwnd, nSteps=None):
 		data = self.pokerStarsTableReadData(hwnd)
 		if not data: return
 		if not data['hwndBetAmountBox']: return
 		if not data['betAmountBoxIsVisible']: return
-		if widgetItem.betSliderStart.isNull(): return
-		if widgetItem.betSliderEnd.isNull(): return
+		pointStart = widgetItem.betSliderStart
+		if pointStart == PointNone: return
+		pointEnd = widgetItem.betSliderEnd
+		if pointEnd == PointNone: return
+		pointCurrent = TableCrabWin32.mouseGetPos()
+		mi = TableCrabWin32.MouseInput()
+		mi.move(pointStart, hwnd=hwnd)
+		mi.leftDown(pointStart, hwnd=hwnd)
+		mi.move(pointEnd, hwnd=hwnd)
+		mi.leftUp(pointEnd, hwnd=hwnd)
+		if settingsValue('Gui/RestoreMousePosition', False).toBool():
+			mi.move(pointCurrent, hwnd=None)
+		mi.send()
+		
+		return
 		pointStart = TableCrabWin32.windowClientPointToScreenPoint(hwnd, widgetItem.betSliderStart)
 		#TableCrabWin32.mouseClickLeft(pointStart)
 		pointEnd = TableCrabWin32.windowClientPointToScreenPoint(hwnd, widgetItem.betSliderEnd)
@@ -666,7 +755,6 @@ class _SiteManager(QtCore.QObject):
 		else: raise ValueError('unknown baseVale: %s' %actionItem.baseVale)
 			
 		newBetAmount = round(data['betAmount'] + (baseValue * actionItem.multiplier * nSteps), 2)
-		print newBetAmount, int(newBetAmount)
 		if int(newBetAmount) == newBetAmount:
 			newBetAmount = int(newBetAmount)
 		newBetAmount = str( 0 if newBetAmount < 0 else newBetAmount )
@@ -675,34 +763,51 @@ class _SiteManager(QtCore.QObject):
 	def pokerStarsTableHandleHilightBetAmount(self, actionItem, widgetItem, hwnd, nSteps=None):
 		data = self.pokerStarsTableReadData(hwnd)
 		if not data: return
-		if not data['hwndBetAmountBox']: return
+		##if not data['hwndBetAmountBox']: return
+		##if not data['betAmountBoxIsVisible']: return
+		##point = TableCrabWin32.windowClientPointToScreenPoint(data['hwndBetAmountBox'], QtCore.QPoint(0, 0) )
+		##TableCrabWin32.mouseClickLeftDouble(point)	#TODO: maybe we need to add a bit of an offset
+			
+		hwndBetAmountBox = data['hwndBetAmountBox']
+		if not hwndBetAmountBox: return
 		if not data['betAmountBoxIsVisible']: return
-		point = TableCrabWin32.windowClientPointToScreenPoint(data['hwndBetAmountBox'], QtCore.QPoint(0, 0) )
-		TableCrabWin32.mouseClickLeftDouble(point)	#TODO: maybe we need to add a bit of an offset
+			
+		pointCurrent = TableCrabWin32.mouseGetPos()
+		point = QtCore.QPoint(2, 2)
+		mi = TableCrabWin32.MouseInput()
+		mi.move(point, hwnd=hwndBetAmountBox)
+		mi.leftClick(point, hwnd=hwndBetAmountBox)
+		mi.leftClick(point, hwnd=hwndBetAmountBox)
+		if settingsValue('Gui/RestoreMousePosition', False).toBool():
+			mi.move(pointCurrent, hwnd=None)
+		mi.send()
 		
-	#NOTE: as a hack we click (0, 0) to reactivate the window cos the dialogs are set to the foreground 
-	# and on linux/wine SetForegroundWindow() does not work. 
+	def _pokerStarsTableClickRestoreFocus(self, hwnd, point):
+		if point == PointNone: return
+		pointCurrent = TableCrabWin32.mouseGetPos()
+		# click point
+		mi = TableCrabWin32.MouseInput()
+		mi.move(point, hwnd=hwnd)
+		mi.leftClick(point, hwnd=hwnd)
+		mi.send()
+		# replayer gains focus, so we have to wait a bit and send another click to reactivate the table. 
+		#TODO: for some reason we never regain focus when the replayer is opend for the first time
+		#TODO: maybe we have to make timeout user adjustable
+		time.sleep(0.1)
+		mi = TableCrabWin32.MouseInput()
+		#TODO: maybe we have make this point user adjustable
+		mi.move(QtCore.QPoint(1, 1), hwnd=hwnd)
+		mi.leftClick(point, hwnd=hwnd)
+		if settingsValue('Gui/RestoreMousePosition', False).toBool():
+			#NOTE: the mouse will move around a bit for SndInput() being inacurate)
+			mi.move(pointCurrent, hwnd=None)
+		mi.send()
+		
 	def pokerStarsTableHandleReplayer(self, actionItem, widgetItem, hwnd, nSteps=None):
-		point = widgetItem.replayer
-		if not point.isNull():
-			point = TableCrabWin32.windowClientPointToScreenPoint(hwnd, point)
-			TableCrabWin32.mouseClickLeft(point)
-			# click neutral point to reactivate the table
-			point2 = TableCrabWin32.windowClientPointToScreenPoint(hwnd, QtCore.QPoint(0, 0) )
-			TableCrabWin32.mouseClickLeft(point2)
-			# move mouse back to its former position
-			TableCrabWin32.mouseSetPos(point)
+		self._pokerStarsTableClickRestoreFocus(hwnd, widgetItem.replayer)
 		
 	def pokerStarsTableHandleInstantHandHistory(self, actionItem, widgetItem, hwnd, nSteps=None):
-		point = widgetItem.instantHandHistory
-		if not point.isNull():
-			point = TableCrabWin32.windowClientPointToScreenPoint(hwnd, point)
-			TableCrabWin32.mouseClickLeft(point)
-			# click neutral point to reactivate the table
-			point2 = TableCrabWin32.windowClientPointToScreenPoint(hwnd, QtCore.QPoint(0, 0) )
-			TableCrabWin32.mouseClickLeft(point2)
-			# move mouse back to its former position
-			TableCrabWin32.mouseSetPos(point)
+		self._pokerStarsTableClickRestoreFocus(hwnd, widgetItem.instantHandHistory)
 		
 	#NOTE: not easy to determine if a window is a PokerStarswindow. i don't feel like messing around with psapi.dll to get the exefilename.
 	# so ..i use a hack. we identify a window as being a stars window if it (or one of its parents) contains a widget classname.startswith('PokerStars')
@@ -1011,7 +1116,7 @@ def MsgCritical(parent, msg):
 # type converters
 #***********************************************************************************
 def pointToString(qPoint):
-	if qPoint.x() <= 0 or qPoint.y() < 0:
+	if qPoint.x() < 0 or qPoint.y() < 0:
 		return 'None'
 	return '%s,%s' % (qPoint.x(), qPoint.y())
 
@@ -1020,9 +1125,13 @@ def sizeToString(qSize):
 		return 'None'
 	return '%sx%s' % (qSize.width(), qSize.height())
 
-def isClientPoint(point):
-	return point.x() >= 0 and point.y() >= 0
-	
+def pointInSize(size, point):
+	if not size.isValid():
+		return False
+	if point.y() >= 0 and point.y() >= 0:
+		if point.x() <= size.width() and point.y() <= size.height():
+			return True
+	return False
 
 def widgetScreenshot(hwnd):
 	pixmap = QtGui.QPixmap.grabWindow(hwnd, 0, 0, -1,-1)
