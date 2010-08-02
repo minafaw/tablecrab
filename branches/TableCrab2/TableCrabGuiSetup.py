@@ -426,6 +426,8 @@ class FrameTablesScreenshot(QtGui.QFrame):
 			if '\n' in title: title = title.split('\n', 1)[0]
 			className = TableCrabWin32.windowGetClassName(hwnd)
 			buttons = sorted( TableCrabWin32.windowGetButtons(hwnd).keys() )
+			size = TableCrabWin32.windowGetRect(hwnd).size()
+			pos = TableCrabWin32.windowGetPos(hwnd)
 			if not buttons:
 				buttons = ''
 			elif len(buttons) == 1:
@@ -439,6 +441,8 @@ class FrameTablesScreenshot(QtGui.QFrame):
 			p = ''
 			p += '%sTitle: %s\n' % (indent, title)
 			p += '%sClassName: %s\n' % (indent, className)
+			p += '%sPos: %s,%s\n' % (indent, pos.x(), pos.y() )
+			p += '%sSize: %sx%s\n' % (indent, size.width(), size.height() )
 			p += '%sButtons: %s\n' % (indent, buttons)
 			p += '%sVisible: %s\n' % (indent, isVisible)
 			p += '%sEnabled: %s\n' % (indent, isEnabled)
@@ -538,7 +542,7 @@ class FrameTablesScreenshot(QtGui.QFrame):
 			return
 		dlg = DialgScreenshotInfo(self._lastInfo, parent=self)
 		dlg.restoreGeometry( TableCrabConfig.settingsValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', QtCore.QByteArray()).toByteArray() )
-		dlg.exec_()
+		dlg.show()
 		TableCrabConfig.settingsSetValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', dlg.saveGeometry() )
 	
 	
