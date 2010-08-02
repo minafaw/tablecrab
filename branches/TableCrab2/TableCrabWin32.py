@@ -32,17 +32,7 @@ WM_MBUTTONDOWN = 519
 WM_MBUTTONUP = 520
 WM_MOUSEWHEEL = 522
 
-MOUSEEVENTF_MOVE = 1
-MOUSEEVENTF_LEFTDOWN = 2
-MOUSEEVENTF_LEFTUP = 4
-MOUSEEVENTF_RIGHTDOWN = 8
-MOUSEEVENTF_RIGHTUP = 16
-MOUSEEVENTF_MIDDLEDOWN = 32
-MOUSEEVENTF_MIDDLEUP = 64
-MOUSEEVENTF_WHEEL = 0x0800
-MOUSEEVENTF_ABSOLUTE = 32768
-
-WHEEL_DELTA =120
+WHEEL_DELTA = 120
 	
 class MSLLHOOKSTRUCT(Structure):
 	_fields_ = [
@@ -461,6 +451,9 @@ MY_MAX_CLASS_NAME = 64
 
 BM_CLICK =245
 
+HORZRES = 8
+VERTRES = 10
+
 #****************************************************************************************************
 #
 #****************************************************************************************************
@@ -660,7 +653,7 @@ def windowGetClientRect(hwnd):
 	if not hwnd: return QtCore.QRect(-1, -1, -1, -1)
 	rc = RECT()
 	user32.GetClientRect(hwnd, byref(rc))
-	return QtCore.QRect(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top)
+	return QtCore.QRect(rc.left, rc.top, abs(rc.right - rc.left), abs(rc.bottom - rc.top) )
 
 def windowGetParent(hwnd):
 	return user32.GetParent(hwnd)
@@ -786,10 +779,14 @@ def windowCheckboxIsChecked(hwnd):
 			)
 	return bool( result.value & BST_CHECKED )
 	
-def windowScreenshot(hwnd):
-	pixmap = QtGui.QPixmap.grabWindow(hwnd, 0, 0, -1,-1)
-	signalEmit(None, 'widgetScreenshot(int, QPixmap*)', hwnd, pixmap)
-
+def windowGetPos(hwnd):
+	if not hwnd:
+		return QtCore.QPoint(0, 0)
+	hwndParent = windowGetParent(hwnd)
+	if not hwndParent:
+		return windowGetRect(hwnd).topLeft()
+	point = windowClientPointToScreenPoint(hwnd, QtCore.QPoint(0, 0) )
+	return windowScreenPointToClientPoint(hwndParent, point)
 
 #****************************************************************************************************
 # mouse methods
@@ -802,6 +799,142 @@ MouseWheelDown = '<MouseWheelDown>'
 
 #NOTE: wine dies not orovide this info so we have to keep track ourselves
 _mouseButtonsDown = []
+
+#***********************************************************************************
+# SendInput in all its glory
+#
+# we have to use SendInput() to simulate mouse events cos PokerStars bet slider
+# seems to ignore everything send via user32.mouse_event(). we are not removing
+# all the user32.mouse_event() methods because we may if we need them at some 
+# point. 
+#***********************************************************************************
+MOUSEEVENTF_MOVE = 0x1
+MOUSEEVENTF_LEFTDOWN = 0x2
+MOUSEEVENTF_LEFTUP = 0x4
+MOUSEEVENTF_RIGHTDOWN = 0x8
+MOUSEEVENTF_RIGHTUP = 0x10
+MOUSEEVENTF_MIDDLEDOWN = 0x20
+MOUSEEVENTF_MIDDLEUP = 0x40
+MOUSEEVENTF_XDOWN = 0x80
+MOUSEEVENTF_XDOWN = 0x100
+MOUSEEVENTF_WHEEL = 0x800
+MOUSEEVENTF_MOVE_NOCOALESCE = 0x2000
+MOUSEEVENTF_VIRTUALDESK = 0x4000
+MOUSEEVENTF_ABSOLUTE = 0x8000
+
+INPUT_MOUSE = 0x0
+INPUT_KEYBOARD = 0x1
+INPUT_HARDWARE = 0x2
+
+SM_CXSCREEN = 0
+SM_CYSCREEN = 1
+
+class MOUSEINPUT(Structure):
+	_fields_ = [
+		('dx', LONG),
+		('dy', LONG),
+		('mouseData', DWORD),
+		('dwFlags', DWORD),
+		('time', DWORD),
+		('dwExtraInfo', POINTER(ULONG))
+		]
+class KEYBDINPUT(Structure):
+	_fields_ = [
+		('wVk', WORD),
+		('wScan', WORD),
+		('dwFlags', DWORD),
+		('time', DWORD),
+		('dwExtraInfo', POINTER(ULONG))
+		]
+class HARDWAREINPUT(Structure):
+	_fields_ = [
+		('uMsg', DWORD),
+		('wParamL', WORD),
+		('wParamH', WORD),
+		]
+class _U(Union):
+	_fields_ = [
+		('mi', MOUSEINPUT),
+		('ki', KEYBDINPUT),
+		('hi', HARDWAREINPUT)
+		]
+class INPUT(Structure):
+	_fields_ = [
+		('type', DWORD),
+		('u', _U),
+		]
+	_anonymous_ = ("u",)
+
+class MouseInput(object):
+	def __init__(self):
+		self._input = []
+		
+	def _addMousePoint(self, event, point, hwnd=None):
+		x, y = point.x(), point.y()
+		if hwnd:
+			pt = POINT( point.x(), point.y() )
+			user32.ClientToScreen(hwnd, byref(pt) )
+			x, y = pt.x, pt.y
+		x, y = self._worldCoords(x, y)
+		mi = MOUSEINPUT(
+				dx=x,
+				dy=y,
+				dwFlags= event | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE_NOCOALESCE,
+				)
+		input = INPUT()
+		input.type = INPUT_MOUSE
+		input.mi = mi
+		self._input.append(input)
+	
+	def _worldCoords(self, x, y):
+		x = float(x * 0xFFFF) / user32.GetSystemMetrics(SM_CXSCREEN)
+		y = float(y * 0xFFFF) / user32.GetSystemMetrics(SM_CYSCREEN)
+		return (
+				int( round(x, 0) ),
+				int( round(y, 0) ),
+				)
+	
+	def send(self):
+		if not self._input:
+			raise ValueError('No input to send')
+		arr = (INPUT*len(self._input))(*self._input)
+		self._input = []
+		return user32.SendInput(len(arr), arr, sizeof(INPUT))
+		
+	def leftDown(self, point, hwnd=None):
+		self._addMousePoint(MOUSEEVENTF_LEFTDOWN, point, hwnd=hwnd)
+	def leftUp(self, point, hwnd=None):
+		self._addMousePoint(MOUSEEVENTF_LEFTUP, point, hwnd=hwnd)
+	def leftClick(self, point, hwnd=None):
+		self.leftDown(point, hwnd=hwnd)
+		self.leftUp(point, hwnd=hwnd)
+	def rightDown(self, point, hwnd=None):
+		self._addMousePoint(MOUSEEVENTF_RIGHTDOWN, point, hwnd=hwnd)
+	def rightUp(self, point, hwnd=None):
+		self._addMousePoint(MOUSEEVENTF_RIGHTTUP, point, hwnd=hwnd)
+	def rightClick(self, point, hwnd=None):
+		self.rightDown(point, hwnd=hwnd)
+		self.rightUp(point, hwnd=hwnd)
+	def middleDown(self, point, hwnd=None):
+		self._addMousePoint(MOUSEEVENTF_MIDDLEDOWN, point, hwnd=hwnd)
+	def middleUp(self, point, hwnd=None):
+		self._addMousePoint(MOUSEEVENTF_MIDDLETUP, point, hwnd=hwnd)
+	def middleClick(self, point, hwnd=None):
+		self.middleDown(point, hwnd=hwnd)
+		self.middleUp(point, hwnd=hwnd)	
+	def move(self, point, hwnd=None):
+		self._addMousePoint(MOUSEEVENTF_MOVE, point, hwnd=hwnd)
+	#TODO: not tested
+	def wheelScroll(self, nSteps):
+		mi = MOUSEINPUT(
+				dwFlags= MOUSEEVENTF_WHEEL | MOUSEEVENTF_ABSOLUTE,
+				mouseData=nSteps,
+				)
+		input = INPUT()
+		input.type = INPUT_MOUSE
+		input.mi = mi
+		self._input.append(input)
+
 def mouseButtonsDown():
 	return _mouseButtonsDown[:]
 	
@@ -891,13 +1024,12 @@ def mouseGetPos():
 	user32.GetCursorPos(byref(pt))
 	return QtCore.QPoint(pt.x, pt.y)
 
-def mouseSetPos(point, timeout=0):
+def mouseSetPos(point, step=4):
 	"""moves the mouse pointer to the specified position
 	@param pt: (tuple) point containing the coordiantes to move the mouse pointer to (in screen coordiantes)
 	"""
 	#NOTE: for some reason neither user32.mouse_event() not user32.SendInput() have any effect here (linux/wine).
 	#           the only way i can get this to work is to move the cursor stepwise to its destination?!?
-	step = 4
 	ptX, ptY = point.x(), point.y()
 	point2 = mouseGetPos()
 	curX, curY = point2.x(), point2.y()
@@ -919,20 +1051,7 @@ def mouseSetPos(point, timeout=0):
 			if curY < ptY: curY = ptY
 		pt.x, pt.y = curX, curY
 		user32.SetCursorPos(pt)
-		if timeout:
-			time.sleep(timeout)
-
-#TODO: not working!!
-def mouseDragLeft(pointStart, pointEnd):
-	if mouseButtonIsDown(MouseButtonRight): return
-	if mouseButtonIsDown(MouseButtonLeft): return
-	if mouseButtonIsDown(MouseButtonMiddle): return
-	mouseSetPos(pointStart)
-	mousePressButton(MouseButtonLeft)
-	mouseSetPos(pointEnd, timeout=0.1)
-	mouseReleaseButton(MouseButtonLeft)
-			
-	
+		
 
 class MouseHook(QtCore.QObject):
 	"""win32 keyboard manager implementation
