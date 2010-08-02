@@ -740,9 +740,14 @@ if sys.platform == 'win32':
 					break
 				break
 			if self._isRunning:
-				QtCore.QTimer.singleShot(
-					TableCrabConfig.settingsValue('PsHandGrabber/GrabTimeout', self.GrabTimeout).toFloat()[0] * 1000, 
-					self._run
-					)	
+				timer = QtCore.QTimer(self)
+				timer.setSingleShot(True)
+				timer.setInterval( TableCrabConfig.settingsValue('PsHandGrabber/GrabTimeout', self.GrabTimeout).toFloat()[0] * 1000 )
+				self.connect(timer, QtCore.SIGNAL('timeout()'), self._run)
+				timer.start()
+				##QtCore.QTimer.singleShot(
+				##	TableCrabConfig.settingsValue('PsHandGrabber/GrabTimeout', self.GrabTimeout).toFloat()[0] * 1000, 
+				##	self._run
+				##	)	
 	
 	
