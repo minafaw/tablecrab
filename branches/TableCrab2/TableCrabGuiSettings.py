@@ -290,34 +290,107 @@ class FrameSettingsHand(QtGui.QFrame):
 class FrameSettingsHandCss(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
-		self.editCss = TableCrabConfig.PlainTextEdit(
+		self.edit = TableCrabConfig.PlainTextEdit(
 				settingsKey='PsHandGrabber/handFornmatterHtmlTabular/Css', 
 				default=PokerStarsHandGrabber.HandFormatterHtmlTabular.Css
 				)
+		
+		self.buttonBox = QtGui.QDialogButtonBox(self)
+		
 		self.buttonRestoreDefault = QtGui.QPushButton('Restore Default', self)
 		TableCrabConfig.signalConnect(self.buttonRestoreDefault, self, 'clicked(bool)', self.onButtonRestoreDefaultClicked)
+		self.buttonBox.addButton(self.buttonRestoreDefault, self.buttonBox.ResetRole)
+		
+		self.buttonOpen = QtGui.QPushButton('Open..', self)
+		TableCrabConfig.signalConnect(self.buttonOpen, self, 'clicked(bool)', self.onButtonOpenClicked)
+		self.buttonBox.addButton(self.buttonOpen, self.buttonBox.ActionRole)
+		
+		self.buttonSave = QtGui.QPushButton('Save..', self)
+		TableCrabConfig.signalConnect(self.buttonSave, self, 'clicked(bool)', self.onButtonSaveClicked)
+		self.buttonBox.addButton(self.buttonSave, self.buttonBox.ActionRole)
+		
+		
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		TableCrabConfig.signalConnect(self.buttonHelp, self, 'clicked(bool)', self.onButtonHelpClicked)
-		self.buttonBox = QtGui.QDialogButtonBox(self)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
-		self.buttonBox.addButton(self.buttonRestoreDefault, self.buttonBox.ResetRole)
+		
 		
 		self.layout()
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
-		grid.addWidget(self.editCss, 0, 0)
+		grid.addWidget(self.edit, 0, 0)
 		
 		grid.addWidget(TableCrabConfig.HLine(self), 1, 0)
 		grid2 = TableCrabConfig.GridBox()
 		grid.addLayout(grid2, 2, 0)
 		grid2.addWidget(self.buttonBox, 0, 0)
 			
+	def onButtonOpenClicked(self, checked):
+		dlg = QtGui.QFileDialog(self)
+		dlg.setFileMode(dlg.AnyFile)
+		dlg.setWindowTitle('Open Stylesheet..')
+		dlg.setAcceptMode(dlg.AcceptOpen)
+		filters = QtCore.QStringList()
+		filters << 'Stylesheets (*.css)'
+		filters << 'All Files (*)'
+		dlg.setNameFilters(filters)
+		dlg.restoreState( TableCrabConfig.settingsValue(  'Gui/Settings/HandCss/DialogOpen/State', QtCore.QByteArray()).toByteArray() )
+		result = dlg.exec_()
+		TableCrabConfig.settingsSetValue('Gui/Settings/HandCss/DialogOpen/State', dlg.saveState() )
+		if result != dlg.Accepted:
+			return
+			
+		fileName = dlg.selectedFiles()[0]
+		fp = None
+		try:
+			fp = open(fileName, 'r')
+			self.edit.setPlainText(fp.read() )
+		except Exception, d:
+			TableCrabConfig.MsgWarning(self, 'Could Not Open Stylesheet\n\n%s' % d)
+		finally: 
+			if fp is not None: fp.close()
+	
+		
+	def onButtonSaveClicked(self, checked):
+		dlg = QtGui.QFileDialog(self)
+		dlg.setWindowTitle('Save Stylesheet..')
+		dlg.setFileMode(dlg.AnyFile)
+		dlg.setAcceptMode(dlg.AcceptSave)
+		dlg.setConfirmOverwrite(True)
+		filters = QtCore.QStringList()
+		filters << 'Styleshhets (*.css)'
+		filters << 'All Files (*)'
+		dlg.setNameFilters(filters)
+		dlg.restoreState( TableCrabConfig.settingsValue('Gui/Settings/HandCss/DialogSave/State', QtCore.QByteArray()).toByteArray() )
+		result = dlg.exec_()
+		TableCrabConfig.settingsSetValue('Gui/Settings/HandCss/DialogSave/State', dlg.saveState() )
+		if result != dlg.Accepted:
+			return
+			
+		fileName = dlg.selectedFiles()[0]
+		# default to '.css'
+		fileInfo = QtCore.QFileInfo(fileName)
+		format = fileInfo.suffix().toLower()
+		if not format:
+			fileName = fileName + '.css'
+		fp = None
+		try:
+			fp = open(fileName, 'w')
+			fp.write(self.edit.toPlainText() )
+		except Exception, d:
+			TableCrabConfig.MsgWarning(self, 'Could Not Save Stylesheet\n\n%s' % d)
+		finally: 
+			if fp is not None: fp.close()
+		
+			
+			
+	
 	def onButtonHelpClicked(self, checked):
 		TableCrabGuiHelp.dialogHelp('settingsHandCss', parent=self)
 				
 	#TODO: resetting document jumps to top of widget. store/restore position would be nice
 	def onButtonRestoreDefaultClicked(self):
-		self.editCss.setPlainText(PokerStarsHandGrabber.HandFormatterHtmlTabular.Css)
+		self.edit.setPlainText(PokerStarsHandGrabber.HandFormatterHtmlTabular.Css)
 
 
 class FrameSettings(QtGui.QFrame):
