@@ -6,7 +6,7 @@
 #
 #NOTE: if an exception occurs an error.log will be placed in the current directory. good or not?
 #***************************************************************************************
-import sys, os, traceback, logging
+import sys, os, traceback, logging, platform
 from logging import handlers
 
 TableCrabApplicationName = 'TableCrab2'
@@ -26,12 +26,13 @@ def _excepthook(type, value, tb,
 			sys=sys, 
 			traceback=traceback, 
 			logger=logger,
-			tableCrabReleaseName=TableCrabReleaseName
+			tableCrabReleaseName=TableCrabReleaseName,
+			platform=platform,
 			):
 	# as failsave as possible
 	p = ''
 	p += 'TableCrab: %s\n' % tableCrabReleaseName
-	p += 'Platform: %s\n' % sys.platform
+	p += 'Platform: %s %s\n' % (platform.system(), platform.release() )
 	p += 'PythonVersion: %s\n' % sys.version.split()[0]
 	try:
 		from PyQt4.QtCore import qVersion, PYQT_VERSION_STR
