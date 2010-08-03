@@ -7,6 +7,8 @@ import TableCrabActionHandler
 import TableCrabPokerStars
 
 from PyQt4 import QtCore
+import thread
+
 #****************************************************************************************
 #
 #**************************************************************************************
@@ -14,6 +16,7 @@ from PyQt4 import QtCore
 class SiteManager(QtCore.QObject):
 	def __init__(self, parent=None):
 		QtCore.QObject.__init__(self, parent)
+		self._lock = thread.allocate_lock()
 		
 		TableCrabConfig.mouseHook.setEventHandler(self)
 		TableCrabConfig.keyboardHook.setEventHandler(self)
@@ -32,35 +35,55 @@ class SiteManager(QtCore.QObject):
 		return self._tableCrabActionHandler
 		
 	def onWindowDestroyed(self, hwnd):
-		for handler in self._handlers:
-			if handler.handleWindowDestroyed(hwnd):
-				return
+		self._lock.acquire()
+		try:
+			for handler in self._handlers:
+				if handler.handleWindowDestroyed(hwnd):
+					return
+		finally:
+			self._lock.release()
 	
 	def onWindowCreated(self, hwnd):
-		for handler in self._handlers:
-			if handler.handleWindowCreated(hwnd):
-				return
+		self._lock.acquire()
+		try:
+			for handler in self._handlers:
+				if handler.handleWindowCreated(hwnd):
+					return
+		finally:
+			self._lock.release()
 		
 	def onWindowGainedForeground(self, hwnd):
-		for handler in self._handlers:
-			if handler.handleWindowGainedForeground(hwnd):
-				return
+		self._lock.acquire()
+		try:
+			for handler in self._handlers:
+				if handler.handleWindowGainedForeground(hwnd):
+					return
+		finally:
+			self._lock.release()
 	
 	def onWindowLostForeground(self, hwnd):
-		for handler in self._handlers:
-			if handler.handleWindowLostForeground(hwnd):
-				return
+		self._lock.acquire()
+		try:
+			for handler in self._handlers:
+				if handler.handleWindowLostForeground(hwnd):
+					return
+		finally:
+			self._lock.release()
 	
 	def handleInput(self, input, keydown=None, nSteps=None):
-		hwnd = TableCrabWin32.windowForeground()
-		if hwnd:
-			for actionItem in TableCrabConfig.actionManager.items():
-				if not actionItem.hotkey or actionItem.hotkey != input: 
-					continue
-				for handler in self._handlers:
-					if handler.handleInput(hwnd, actionItem, keydown=keydown, nSteps=nSteps):
-						return True
-		return False
+		self._lock.acquire()
+		try:
+			hwnd = TableCrabWin32.windowForeground()
+			if hwnd:
+				for actionItem in TableCrabConfig.actionManager.items():
+					if not actionItem.hotkey or actionItem.hotkey != input: 
+						continue
+					for handler in self._handlers:
+						if handler.handleInput(hwnd, actionItem, keydown=keydown, nSteps=nSteps):
+							return True
+			return False
+		finally:
+			self._lock.release()
 		
 		
 
