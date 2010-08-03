@@ -583,6 +583,11 @@ class DialgScreenshotInfo(QtGui.QDialog):
 			return
 			
 		fileName = dlg.selectedFiles()[0]
+		# default to '.txt'
+		fileInfo = QtCore.QFileInfo(fileName)
+		format = fileInfo.suffix().toLower()
+		if not format:
+			fileName = fileName + '.txt'
 		fp = None
 		try:
 			fp = open(fileName, 'w')
