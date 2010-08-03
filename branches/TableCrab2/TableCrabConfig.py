@@ -229,7 +229,7 @@ class PersistentItemManager(QtCore.QObject):
 	def items(self):
 		self._lock.acquire()
 		try:
-			items = self._items[:]
+			items = self._items[:]		#TODO: we should copy these items
 		finally:
 			self._lock.release()
 		return items
