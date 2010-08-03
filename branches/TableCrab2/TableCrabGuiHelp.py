@@ -181,7 +181,7 @@ class FrameHelp(QtGui.QFrame):
 		self.tree.setRootIsDecorated(False)
 		self.tree.header().setVisible(False)
 			
-		self.toolBar = TableCrabConfig.TableCrabWebViewToolBar(self.frameHelpView.webView,
+		self.toolBar = TableCrabConfig.WebViewToolBar(self.frameHelpView.webView,
 				settingsKeyZoomFactor='Gui/Help/ZoomFactor',
 				settingsKeyZoomIncrement='Gui/WebView/ZoomIncrement',
 				)
@@ -246,16 +246,16 @@ class _DialogHelp(QtGui.QDialog):
 	def __init__(self, topic, parent=None):
 		QtGui.QDialog.__init__(self, parent)
 		
-		self.setWindowTitle(TableCrabConfig.TableCrabApplicationName + ' - Help')
+		self.setWindowTitle(TableCrabConfig.ApplicationName + ' - Help')
 		self.setWindowIcon( QtGui.QIcon(TableCrabConfig.Pixmaps.tableCrab()) )
 		
 		TableCrabConfig.settingsSetValue('Gui/Help/Topic', topic)
 		self.frameHelp = FrameHelp(parent=self)
 			
 	def layout(self):
-		box = TableCrabConfig.GridBox(self)
+		box = GridBox(self)
 		box.addWidget(self.frameHelp, 0, 0)
-		box.addWidget(TableCrabConfig.HLine(self), 1, 0)
+		box.addWidget(HLine(self), 1, 0)
 		box.addWidget(self.buttonBox, 2, 0)
 
 

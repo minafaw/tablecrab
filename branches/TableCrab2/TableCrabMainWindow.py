@@ -13,7 +13,7 @@ class MainWindow(QtGui.QMainWindow):
 		self._singleApplication = TableCrabConfig.SingleApplication()
 			
 		QtGui.QMainWindow.__init__(self)
-		self.setWindowTitle(TableCrabConfig.TableCrabReleaseName)
+		self.setWindowTitle(TableCrabConfig.ReleaseName)
 		self.setWindowIcon( QtGui.QIcon(TableCrabConfig.Pixmaps.tableCrab()) )
 		font = QtGui.QFont()
 		if font.fromString(TableCrabConfig.settingsValue('Gui/Font', '').toString() ):

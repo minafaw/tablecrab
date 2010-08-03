@@ -195,7 +195,7 @@ class FramePersistentItems(QtGui.QFrame):
 			persistentItem = self.ActionNewPersistentItem(persistentItemProto, parent=self)
 			TableCrabConfig.signalConnect(persistentItem, self, 'triggered(bool)', self.onPersistentItemNewTriggered)
 			menu.addAction(persistentItem)
-		self.actionNew = TableCrabConfig.TableCrabAction(
+		self.actionNew = TableCrabConfig.Action(
 				parent=self,
 				text='New',
 				menu=menu,
@@ -203,7 +203,7 @@ class FramePersistentItems(QtGui.QFrame):
 				)
 		self._actions.append(self.actionNew)
 			
-		self.actionUp = TableCrabConfig.TableCrabAction(
+		self.actionUp = TableCrabConfig.Action(
 				parent=self,
 				text='Up',
 				toolTip='Move template up',
@@ -211,7 +211,7 @@ class FramePersistentItems(QtGui.QFrame):
 				)
 		self._actions.append(self.actionUp)
 		
-		self.actionDown = TableCrabConfig.TableCrabAction(
+		self.actionDown = TableCrabConfig.Action(
 				parent=self,
 				text='Down',
 				toolTip='Move template down',
@@ -219,7 +219,7 @@ class FramePersistentItems(QtGui.QFrame):
 				)
 		self._actions.append(self.actionDown)
 		
-		self.actionRemove = TableCrabConfig.TableCrabAction(
+		self.actionRemove = TableCrabConfig.Action(
 				parent=self,
 				text='Remove',
 				toolTip='Remove template',
@@ -357,7 +357,7 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		
 		self._actions = []
 		
-		self.actionOpen = TableCrabConfig.TableCrabAction(
+		self.actionOpen = TableCrabConfig.Action(
 				parent=self,
 				text='Open screenshot..',
 				toolTip='Open a screenshot from file',
@@ -365,7 +365,7 @@ class FrameTablesScreenshot(QtGui.QFrame):
 				)
 		self._actions.append(self.actionOpen)
 		
-		self.actionSave = TableCrabConfig.TableCrabAction(
+		self.actionSave = TableCrabConfig.Action(
 				parent=self,
 				text='Save screenshot..',
 				toolTip='Save screenshot to file',
@@ -373,7 +373,7 @@ class FrameTablesScreenshot(QtGui.QFrame):
 				)
 		self._actions.append(self.actionSave)
 		
-		self.actionInfo = TableCrabConfig.TableCrabAction(
+		self.actionInfo = TableCrabConfig.Action(
 				parent=self,
 				text='Info..',
 				toolTip='Detailed screenshot information',
@@ -474,27 +474,20 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		box.addWidget(self.scrollArea, 0, 0)
 			
 	def onActionOpenTriggered(self):
-		dlg = QtGui.QFileDialog(self)
 		imageFormats = [QtCore.QString(i).toLower() for i in  QtGui.QImageReader.supportedImageFormats()]
-		dlg.setFileMode(dlg.AnyFile)
-		dlg.setWindowTitle('Open Screenshot..')
-		dlg.setAcceptMode(dlg.AcceptOpen)
-		filters = QtCore.QStringList()
-		filters << 'Images (%s)' % ' '.join(['*.%s' % i for i in imageFormats])
-		filters << 'All Files (*)'
-		dlg.setNameFilters(filters)
-		dlg.restoreState( TableCrabConfig.settingsValue(  'Gui/Screenshot/DialogOpen/State', QtCore.QByteArray()).toByteArray() )
-		result = dlg.exec_()
-		TableCrabConfig.settingsSetValue('Gui/Screenshot/DialogOpen/State', dlg.saveState() )
-		if result != dlg.Accepted:
+		fileName = TableCrabConfig.dlgOpenSaveFile(
+				parent=self,
+				openFile=True,
+				title='Open Screenshot..',
+				fileFilters=('Images (%s)' % ' '.join(['*.%s' % i for i in imageFormats]), 'All Files (*)'), 
+				settingsKey='Gui/Screenshot/DialogOpen/State',
+				)
+		if fileName is None:
 			return
-			
-		fileName = dlg.selectedFiles()[0]
 		pixmap = QtGui.QPixmap()
 		if not pixmap.load(fileName):
-			TableCrabConfig.MsgWarning(self, 'Could not open screenshot')
+			TableCrabConfig.msgWarning(self, 'Could not open screenshot')
 			return
-		
 		fileInfo = QtCore.QFileInfo(fileName)
 		screenshotName = fileInfo.baseName()
 		self.setScreenshot(pixmap=pixmap, screenshotName=screenshotName)
@@ -505,24 +498,16 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		if self.label.pixmap() is None:
 			self.buttonSave.setEnabled(False)
 			return
-			
-		dlg = QtGui.QFileDialog(self)
-		dlg.setWindowTitle('Save Screenshot..')
 		imageFormats = [QtCore.QString(i).toLower() for i in  QtGui.QImageWriter.supportedImageFormats()]
-		dlg.setFileMode(dlg.AnyFile)
-		dlg.setAcceptMode(dlg.AcceptSave)
-		dlg.setConfirmOverwrite(True)
-		filters = QtCore.QStringList()
-		filters << 'Images (%s)' % ' '.join(['*.%s' % i for i in imageFormats])
-		filters << 'All Files (*)'
-		dlg.setNameFilters(filters)
-		dlg.restoreState( TableCrabConfig.settingsValue('Gui/Screenshot/DialogSave/State', QtCore.QByteArray()).toByteArray() )
-		result = dlg.exec_()
-		TableCrabConfig.settingsSetValue('Gui/Screenshot/DialogSave/State', dlg.saveState() )
-		if result != dlg.Accepted:
+		fileName = TableCrabConfig.dlgOpenSaveFile(
+				parent=self,
+				openFile=False,
+				title='Save Screenshot..',
+				fileFilters=('Images (%s)' % ' '.join(['*.%s' % i for i in imageFormats]), 'All Files (*)'), 
+				settingsKey='Gui/Screenshot/DialogSave/State',
+				)
+		if fileName is None:
 			return
-			
-		fileName = dlg.selectedFiles()[0]
 		fileInfo = QtCore.QFileInfo(fileName)
 		format = fileInfo.suffix().toLower()
 		# default save format to to "png"
@@ -533,7 +518,7 @@ class FrameTablesScreenshot(QtGui.QFrame):
 			fileName = fileName + '.png'
 			format = 'png'
 		if not self.label.pixmap().save(fileName, format):
-			TableCrabConfig.MsgWarning(self, 'Could Not Save Screenshot')
+			TableCrabConfig.msgWarning(self, 'Could Not Save Screenshot')
 		
 	def onActionInfoTriggered(self):
 		if self._lastInfo is None:
@@ -543,7 +528,6 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		dlg.restoreGeometry( TableCrabConfig.settingsValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', QtCore.QByteArray()).toByteArray() )
 		dlg.show()
 		TableCrabConfig.settingsSetValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', dlg.saveGeometry() )
-	
 	
 
 class DialgScreenshotInfo(QtGui.QDialog):
@@ -566,23 +550,18 @@ class DialgScreenshotInfo(QtGui.QDialog):
 		grid.addWidget(self.edit, 0, 0)
 		grid.addWidget(TableCrabConfig.HLine(self), 1, 0)
 		grid.addWidget(self.buttonBox, 2, 0)
+	
+	
 	def onButtonSaveClicked(self, checked):
-		dlg = QtGui.QFileDialog(self)
-		dlg.setWindowTitle('Save Screenshot Info..')
-		dlg.setFileMode(dlg.AnyFile)
-		dlg.setAcceptMode(dlg.AcceptSave)
-		dlg.setConfirmOverwrite(True)
-		filters = QtCore.QStringList()
-		filters << 'TextFiles (*.txt)'
-		filters << 'All Files (*)'
-		dlg.setNameFilters(filters)
-		dlg.restoreState( TableCrabConfig.settingsValue('Gui/Screenshot/DialogScreenshotInfo/DialogSave/State', QtCore.QByteArray()).toByteArray() )
-		result = dlg.exec_()
-		TableCrabConfig.settingsSetValue('Gui/Screenshot/DialogScreenshotInfo/DialogSave/State', dlg.saveState() )
-		if result != dlg.Accepted:
+		fileName = TableCrabConfig.dlgOpenSaveFile(
+				parent=self,
+				openFile=False,
+				title='Save Screenshot Info..',
+				fileFilters=('TextFiles (*.txt)', 'All Files (*)'), 
+				settingsKey='Gui/Screenshot/DialogScreenshotInfo/DialogSave/State',
+				)
+		if fileName is None:
 			return
-			
-		fileName = dlg.selectedFiles()[0]
 		# default to '.txt'
 		fileInfo = QtCore.QFileInfo(fileName)
 		format = fileInfo.suffix().toLower()
@@ -593,7 +572,7 @@ class DialgScreenshotInfo(QtGui.QDialog):
 			fp = open(fileName, 'w')
 			fp.write(self.edit.toPlainText() )
 		except Exception, d:
-			TableCrabConfig.MsgWarning(self, 'Could Not Save Screenshot Info\n\n%s' % d)
+			TableCrabConfig.msgWarning(self, 'Could Not Save Screenshot Info\n\n%s' % d)
 		finally: 
 			if fp is not None: fp.close()
 		
@@ -621,7 +600,7 @@ class FrameSetup(QtGui.QFrame):
 		for action in self.frameTablesScreenshot.actions():
 			self.toolBar.addAction(action)
 		
-		self.actionHelp = TableCrabConfig.TableCrabAction(
+		self.actionHelp = TableCrabConfig.Action(
 				parent=self,
 				text='Help',
 				slot=self.onActionHelpTriggered,

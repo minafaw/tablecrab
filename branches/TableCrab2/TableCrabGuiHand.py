@@ -25,12 +25,12 @@ class FrameHand(QtGui.QFrame):
 		TableCrabConfig.signalConnect(None, self, 'closeEvent(QEvent*)', self.onCloseEvent)
 		self.webView.setZoomFactor( TableCrabConfig.settingsValue('Gui/Hand/ZoomFactor',  self.webView.zoomFactor() ).toDouble()[0] )
 		
-		self.toolBar = TableCrabConfig.TableCrabWebViewToolBar(self.webView,
+		self.toolBar = TableCrabConfig.WebViewToolBar(self.webView,
 				settingsKeyZoomFactor='Gui/Hand/ZoomFactor',
 				settingsKeyZoomIncrement='Gui/WebView/ZoomIncrement',
 				)
 		
-		self.actionOpen = TableCrabConfig.TableCrabAction(
+		self.actionOpen = TableCrabConfig.Action(
 				parent=self.toolBar,
 				text='Open..',
 				toolTip='Open a hand',
@@ -38,7 +38,7 @@ class FrameHand(QtGui.QFrame):
 				)
 		self.toolBar.addAction(self.actionOpen)
 		
-		self.actionSave = TableCrabConfig.TableCrabAction(
+		self.actionSave = TableCrabConfig.Action(
 				parent=self.toolBar,
 				text='Save..',
 				toolTip='save hand',
@@ -46,7 +46,7 @@ class FrameHand(QtGui.QFrame):
 				)
 		self.toolBar.addAction(self.actionSave)
 		
-		self.actionHelp = TableCrabConfig.TableCrabAction(
+		self.actionHelp = TableCrabConfig.Action(
 				parent=self.toolBar,
 				text='Help',
 				slot=self.onActionHelpTriggered

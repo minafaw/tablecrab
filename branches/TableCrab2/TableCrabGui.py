@@ -48,7 +48,7 @@ class Gui(TableCrabMainWindow .MainWindow):
 	def onFeedbackException(self):
 		self.labelStatus.setText('Error: ')
 		#TODO: user checks errlog (if he finds it) and is lost from there on
-		self.labelCurrentObjectData.setText('an error occured. check "%s" for details' % TableCrabConfig.TableCrabErrorLogName)
+		self.labelCurrentObjectData.setText('an error occured. check "%s" for details' % TableCrabConfig.ErrorLogName)
 	
 	def onFeedbackCurrentObject(self, qString):
 		self.labelStatus.setText('Ready: ')

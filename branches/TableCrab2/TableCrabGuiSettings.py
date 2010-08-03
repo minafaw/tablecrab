@@ -110,14 +110,14 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		fp = None
 		try: fp = open(fileName, 'w').close()
 		except Exception, d:
-			TableCrabConfig.MsgWarning(self, 'Could Not Open Config File\n\n%s' % d)
+			TableCrabConfig.msgWarning(self, 'Could Not Open Config File\n\n%s' % d)
 			return
 		finally:
 			if fp is not None: fp.close()
 		
 		newSettings = QtCore.QSettings(fileName, QtCore.QSettings.IniFormat)
 		if not newSettings.isWritable:
-			TableCrabConfig.MsgWarning(self, 'Config File Is Not Writable')
+			TableCrabConfig.msgWarning(self, 'Config File Is Not Writable')
 			return
 		settings = TableCrabConfig.settings()
 		for key in settings.allKeys():
@@ -326,48 +326,34 @@ class FrameSettingsHandCss(QtGui.QFrame):
 		grid2.addWidget(self.buttonBox, 0, 0)
 			
 	def onButtonOpenClicked(self, checked):
-		dlg = QtGui.QFileDialog(self)
-		dlg.setFileMode(dlg.AnyFile)
-		dlg.setWindowTitle('Open Stylesheet..')
-		dlg.setAcceptMode(dlg.AcceptOpen)
-		filters = QtCore.QStringList()
-		filters << 'Stylesheets (*.css)'
-		filters << 'All Files (*)'
-		dlg.setNameFilters(filters)
-		dlg.restoreState( TableCrabConfig.settingsValue(  'Gui/Settings/HandCss/DialogOpen/State', QtCore.QByteArray()).toByteArray() )
-		result = dlg.exec_()
-		TableCrabConfig.settingsSetValue('Gui/Settings/HandCss/DialogOpen/State', dlg.saveState() )
-		if result != dlg.Accepted:
+		fileName = TableCrabConfig.dlgOpenSaveFile(
+				parent=self,
+				openFile=True,
+				title='Open Stylesheet..',
+				fileFilters=('Stylesheets (*.css)', 'All Files (*)'), 
+				settingsKey='Gui/Settings/HandCss/DialogOpen/State',
+				)
+		if fileName is None:
 			return
-			
-		fileName = dlg.selectedFiles()[0]
 		fp = None
 		try:
 			fp = open(fileName, 'r')
 			self.edit.setPlainText(fp.read() )
 		except Exception, d:
-			TableCrabConfig.MsgWarning(self, 'Could Not Open Stylesheet\n\n%s' % d)
+			TableCrabConfig.msgWarning(self, 'Could Not Open Stylesheet\n\n%s' % d)
 		finally: 
 			if fp is not None: fp.close()
-	
-		
-	def onButtonSaveClicked(self, checked):
-		dlg = QtGui.QFileDialog(self)
-		dlg.setWindowTitle('Save Stylesheet..')
-		dlg.setFileMode(dlg.AnyFile)
-		dlg.setAcceptMode(dlg.AcceptSave)
-		dlg.setConfirmOverwrite(True)
-		filters = QtCore.QStringList()
-		filters << 'Styleshhets (*.css)'
-		filters << 'All Files (*)'
-		dlg.setNameFilters(filters)
-		dlg.restoreState( TableCrabConfig.settingsValue('Gui/Settings/HandCss/DialogSave/State', QtCore.QByteArray()).toByteArray() )
-		result = dlg.exec_()
-		TableCrabConfig.settingsSetValue('Gui/Settings/HandCss/DialogSave/State', dlg.saveState() )
-		if result != dlg.Accepted:
-			return
 			
-		fileName = dlg.selectedFiles()[0]
+	def onButtonSaveClicked(self, checked):
+		fileName = TableCrabConfig.dlgOpenSaveFile(
+				parent=self,
+				openFile=False,
+				title='Save Stylesheet..',
+				fileFilters=('Stylesheets (*.css)', 'All Files (*)'), 
+				settingsKey='Gui/Settings/HandCss/DialogSave/State',
+				)
+		if fileName is None:
+			return
 		# default to '.css'
 		fileInfo = QtCore.QFileInfo(fileName)
 		format = fileInfo.suffix().toLower()
@@ -378,13 +364,10 @@ class FrameSettingsHandCss(QtGui.QFrame):
 			fp = open(fileName, 'w')
 			fp.write(self.edit.toPlainText() )
 		except Exception, d:
-			TableCrabConfig.MsgWarning(self, 'Could Not Save Stylesheet\n\n%s' % d)
+			TableCrabConfig.msgWarning(self, 'Could Not Save Stylesheet\n\n%s' % d)
 		finally: 
 			if fp is not None: fp.close()
 		
-			
-			
-	
 	def onButtonHelpClicked(self, checked):
 		TableCrabGuiHelp.dialogHelp('settingsHandCss', parent=self)
 				

@@ -9,15 +9,15 @@
 import sys, os, traceback, logging, platform
 from logging import handlers
 
-TableCrabApplicationName = 'TableCrab2'
-TableCrabVersion = '0.1.0'
-TableCrabReleaseName = '%s-%s' % (TableCrabApplicationName, TableCrabVersion)
-TableCrabAuthor = 'JuergenUrner'
-TableCrabErrorLogName = TableCrabApplicationName + '-Error.log'
+ApplicationName = 'TableCrab2'
+Version = '0.1.0'
+ReleaseName = '%s-%s' % (ApplicationName, Version)
+Author = 'JuergenUrner'
+ErrorLogName = ApplicationName + '-Error.log'
 
-logger = logging.getLogger(TableCrabApplicationName)
+logger = logging.getLogger(ApplicationName)
 logger.addHandler(handlers.RotatingFileHandler(
-		os.path.join(os.getcwd(), TableCrabErrorLogName),
+		os.path.join(os.getcwd(), ErrorLogName),
 		mode='a',
 		maxBytes=32000,
 		backupCount=0,
@@ -26,12 +26,12 @@ def _excepthook(type, value, tb,
 			sys=sys, 
 			traceback=traceback, 
 			logger=logger,
-			tableCrabReleaseName=TableCrabReleaseName,
+			releaseName=ReleaseName,
 			platform=platform,
 			):
 	# as failsave as possible
 	p = ''
-	p += 'TableCrab: %s\n' % tableCrabReleaseName
+	p += ': %s\n' % releaseName
 	p += 'Platform: %s %s\n' % (platform.system(), platform.release() )
 	p += 'PythonVersion: %s\n' % sys.version.split()[0]
 	try:
@@ -80,7 +80,7 @@ if '--config' in sys.argv:
 			del sys.argv[i]
 			_qSettings = QtCore.QSettings(fileName, QtCore.QSettings.IniFormat)
 if _qSettings is None:
-	_qSettings = QtCore.QSettings(TableCrabAuthor, TableCrabApplicationName)
+	_qSettings = QtCore.QSettings(Author, ApplicationName)
 
 #***********************************************************************************
 # enshure we run a single application instance only
@@ -90,10 +90,10 @@ class SingleApplication(object):
 		self.hMutex = TableCrabWin32.kernel32.CreateMutexA(None, 1, 'Local\\73524668475460800279396959888864133024')
 		atexit.register(self.close)
 		if TableCrabWin32.GetLastError() == TableCrabWin32.ERROR_INVALID_HANDLE:
-			#TODO: we could try to find the app holding the mutex (hopefuly TableCrab) and activate it 
+			#TODO: we could try to find the app holding the mutex (hopefuly ) and activate it 
 			# gut feeling it is be better to raise and log here, so we get at least some information in case someone blocks our mutex
 			##sys.exit(1)
-			raise RuntimeError('TableCrab is already running')
+			raise RuntimeError(' is already running')
 	def close(self, closeFunc=TableCrabWin32.kernel32.CloseHandle):	# need to hold reference to CloseHandle here. we get garbage collected otherwise
 		closeFunc(self.hMutex)
 
@@ -460,7 +460,7 @@ keyboardHook = TableCrabWin32.KeyboardHook(parent=None)
 #***********************************************************************************
 # Qt widgets
 #***********************************************************************************
-class TableCrabAction(QtGui.QAction):
+class Action(QtGui.QAction):
 	def __init__(self, 
 				parent=None,
 				text='', 
@@ -485,7 +485,7 @@ class TableCrabAction(QtGui.QAction):
 		if shortcut is not None:
 			self.setShortcut(QtGui.QKeySequence(shortcut) )
 		
-class TableCrabWebViewToolBar(QtGui.QToolBar):
+class WebViewToolBar(QtGui.QToolBar):
 	ZoomIncrement = 0.1
 	MaxZoom = 7
 	MinZoom = 0.5
@@ -501,7 +501,7 @@ class TableCrabWebViewToolBar(QtGui.QToolBar):
 		self.addAction( self.webView.pageAction(QtWebKit.QWebPage.Back) )
 		self.addAction( self.webView.pageAction(QtWebKit.QWebPage.Forward) )
 		
-		self.actionZoomIn = TableCrabAction(
+		self.actionZoomIn = Action(
 				parent=self,
 				text='Zoom+',
 				icon=QtGui.QIcon(Pixmaps.magnifierPlus() ),
@@ -511,7 +511,7 @@ class TableCrabWebViewToolBar(QtGui.QToolBar):
 				)
 		self.addAction(self.actionZoomIn)
 		
-		self.actionZoomOut = TableCrabAction(
+		self.actionZoomOut = Action(
 				parent=self,
 				text='Zoom-',
 				icon=QtGui.QIcon(Pixmaps.magnifierMinus() ),
@@ -551,7 +551,6 @@ class TableCrabWebViewToolBar(QtGui.QToolBar):
 		self.adjustActions()
 			
 	
-#TODO: rename to TableCrab...
 class LineEdit(QtGui.QLineEdit):
 	def __init__(self, default='', settingsKey=None, parent=None):
 		QtGui.QLineEdit.__init__(self, parent)
@@ -663,6 +662,7 @@ class VStretch(VBox):
 		VBox.__init__(self, *args)
 		self.addStretch(999)
 
+
 class TreeWidgetItemIterator(QtGui.QTreeWidgetItemIterator):
 	def __init__(self, *args):
 		QtGui.QTreeWidgetItemIterator.__init__(self, *args)
@@ -676,11 +676,41 @@ class TreeWidgetItemIterator(QtGui.QTreeWidgetItemIterator):
 				break
 		raise StopIteration
 
-def MsgWarning(parent, msg):
-	QtGui.QMessageBox.critical(parent, TableCrabApplicationName, msg)
+def msgWarning(parent, msg):
+	QtGui.QMessageBox.critical(parent, ApplicationName, msg)
 
-def MsgCritical(parent, msg):
-	QtGui.QMessageBox.critical(parent, TableCrabApplicationName, msg)
+def msgCritical(parent, msg):
+	QtGui.QMessageBox.critical(parent, ApplicationName, msg)
+
+def dlgOpenSaveFile(
+			parent=None,
+			openFile=True,
+			title='',
+			fileFilters=None,
+			settingsKey=None,
+			):
+	pass
+	
+	dlg = QtGui.QFileDialog(parent)
+	dlg.setAcceptMode(dlg.AcceptOpen if openFile else dlg.AcceptSave)
+	dlg.setWindowTitle(title)
+	if fileFilters:
+		p = QtCore.QStringList()
+		for i in fileFilters:
+			p << i
+		dlg.setNameFilters(p)
+	if not openFile:
+		dlg.setConfirmOverwrite(True)
+	if settingsKey is not None:
+		dlg.restoreState( settingsValue(settingsKey, QtCore.QByteArray()).toByteArray() )
+	
+	
+	result = dlg.exec_()
+	if settingsKey is not None:
+		settingsSetValue(settingsKey, dlg.saveState() )
+	if result == dlg.Accepted:
+		return dlg.selectedFiles()[0]
+	return None
 
 #***********************************************************************************
 # type converters
