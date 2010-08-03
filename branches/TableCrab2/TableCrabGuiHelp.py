@@ -271,7 +271,8 @@ def dialogHelp(topic, parent=None):
 #
 #**********************************************************************************************
 if __name__ == '__main__':
-	g = TableCrabConfig.MainWindow()
+	import TableCrabMainWindow
+	g = TableCrabMainWindow.MainWindow()
 	g.setCentralWidget(FrameHelp(g))
 	g.start()
 	

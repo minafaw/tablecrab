@@ -1,9 +1,9 @@
 
 import TableCrabConfig
-from PyQt4 import QtCore, QtGui
-
-import PSHandGrabber
+import PokerStarsHandGrabber
 import TableCrabGuiHelp
+
+from PyQt4 import QtCore, QtGui
 
 #**********************************************************************************************
 #
@@ -214,14 +214,14 @@ class FrameSettingsHand(QtGui.QFrame):
 		for actionPrefix, actionName, actionPostfix in actionSettings:
 			editPrefix = TableCrabConfig.LineEdit(
 					settingsKey='PsHandGrabber/handFornmatterHtmlTabular/%s' % actionPrefix, 
-					default=getattr(PSHandGrabber.HandFormatterHtmlTabular, actionPrefix), 
+					default=getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, actionPrefix), 
 					parent=self
 					)
 			labelAction = QtGui.QLabel(actionName, self)
 			if actionPostfix is not None:
 				editPostfix = TableCrabConfig.LineEdit(
 						settingsKey='PsHandGrabber/handFornmatterHtmlTabular/%s' % actionPostfix, 
-						default=getattr(PSHandGrabber.HandFormatterHtmlTabular, actionPostfix),  
+						default=getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, actionPostfix),  
 						parent=self
 						)
 			else:
@@ -231,7 +231,7 @@ class FrameSettingsHand(QtGui.QFrame):
 		self.labelMaxPlayerName = QtGui.QLabel('MaxPlayerName:', self)
 		self.spinMaxPlayerName = TableCrabConfig.SpinBox(
 				settingsKey='PsHandGrabber/HandFornmatterHtmlTabular/MaxPlayerName', 
-				default=PSHandGrabber.HandFormatterHtmlTabular.MaxPlayerName, 
+				default=PokerStarsHandGrabber.HandFormatterHtmlTabular.MaxPlayerName, 
 				minimum=-1, 
 				maximum=999, 
 				parent=self
@@ -239,7 +239,7 @@ class FrameSettingsHand(QtGui.QFrame):
 		self.labelGrabTimeout = QtGui.QLabel('GrabTimeout:', self)
 		self.spinGrabTimeout = TableCrabConfig.DoubleSpinBox(
 				settingsKey='PsHandGrabber/GrabTimeout', 
-				default=PSHandGrabber.HandGrabber.GrabTimeout,
+				default=PokerStarsHandGrabber.HandGrabber.GrabTimeout,
 				minimum=0.2, 
 				maximum=4.9,
 				precision=1,
@@ -292,7 +292,7 @@ class FrameSettingsHandCss(QtGui.QFrame):
 		QtGui.QFrame.__init__(self, parent)
 		self.editCss = TableCrabConfig.PlainTextEdit(
 				settingsKey='PsHandGrabber/handFornmatterHtmlTabular/Css', 
-				default=PSHandGrabber.HandFormatterHtmlTabular.Css
+				default=PokerStarsHandGrabber.HandFormatterHtmlTabular.Css
 				)
 		self.buttonRestoreDefault = QtGui.QPushButton('Restore Default', self)
 		TableCrabConfig.signalConnect(self.buttonRestoreDefault, self, 'clicked(bool)', self.onButtonRestoreDefaultClicked)
@@ -317,7 +317,7 @@ class FrameSettingsHandCss(QtGui.QFrame):
 				
 	#TODO: resetting document jumps to top of widget. store/restore position would be nice
 	def onButtonRestoreDefaultClicked(self):
-		self.editCss.setPlainText(PSHandGrabber.HandFormatterHtmlTabular.Css)
+		self.editCss.setPlainText(PokerStarsHandGrabber.HandFormatterHtmlTabular.Css)
 
 
 class FrameSettings(QtGui.QFrame):
@@ -383,7 +383,8 @@ class FrameSettings(QtGui.QFrame):
 #
 #**********************************************************************************************
 if __name__ == '__main__':
-	g = TableCrabConfig.MainWindow()
+	import TableCrabMainWindow
+	g = TableCrabMainWindow.MainWindow()
 	g.setCentralWidget(FrameSettings(g))
 	g.start()
 	

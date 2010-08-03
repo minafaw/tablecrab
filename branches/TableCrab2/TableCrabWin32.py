@@ -556,6 +556,7 @@ class WindowHook(QtCore.QObject):
 			self.emit(QtCore.SIGNAL('windowCreated(int)'), hwnd)
 		hwnd = windowForeground()
 		if hwnd in self._hwnds and hwnd != self._hwndForeground:
+			self.emit(QtCore.SIGNAL('windowLostForeground(int)'), self._hwndForeground)
 			self.emit(QtCore.SIGNAL('windowGainedForeground(int)'), hwnd)
 			self._hwndForeground = hwnd
 		if self._isRunning:
@@ -899,31 +900,41 @@ class MouseInput(object):
 			raise ValueError('No input to send')
 		arr = (INPUT*len(self._input))(*self._input)
 		self._input = []
-		return user32.SendInput(len(arr), arr, sizeof(INPUT))
-		
+		user32.SendInput(len(arr), byref(arr), sizeof(INPUT))
+		return self
 	def leftDown(self, point, hwnd=None):
 		self._addMousePoint(MOUSEEVENTF_LEFTDOWN, point, hwnd=hwnd)
+		return self
 	def leftUp(self, point, hwnd=None):
 		self._addMousePoint(MOUSEEVENTF_LEFTUP, point, hwnd=hwnd)
+		return self
 	def leftClick(self, point, hwnd=None):
 		self.leftDown(point, hwnd=hwnd)
 		self.leftUp(point, hwnd=hwnd)
+		return self
 	def rightDown(self, point, hwnd=None):
 		self._addMousePoint(MOUSEEVENTF_RIGHTDOWN, point, hwnd=hwnd)
+		return self
 	def rightUp(self, point, hwnd=None):
 		self._addMousePoint(MOUSEEVENTF_RIGHTTUP, point, hwnd=hwnd)
+		return self
 	def rightClick(self, point, hwnd=None):
 		self.rightDown(point, hwnd=hwnd)
 		self.rightUp(point, hwnd=hwnd)
+		return self
 	def middleDown(self, point, hwnd=None):
 		self._addMousePoint(MOUSEEVENTF_MIDDLEDOWN, point, hwnd=hwnd)
+		return self
 	def middleUp(self, point, hwnd=None):
 		self._addMousePoint(MOUSEEVENTF_MIDDLETUP, point, hwnd=hwnd)
+		return self
 	def middleClick(self, point, hwnd=None):
 		self.middleDown(point, hwnd=hwnd)
 		self.middleUp(point, hwnd=hwnd)	
+		return self
 	def move(self, point, hwnd=None):
 		self._addMousePoint(MOUSEEVENTF_MOVE, point, hwnd=hwnd)
+		return self
 	#TODO: not tested
 	def wheelScroll(self, nSteps):
 		mi = MOUSEINPUT(
@@ -934,6 +945,7 @@ class MouseInput(object):
 		input.type = INPUT_MOUSE
 		input.mi = mi
 		self._input.append(input)
+		return self
 
 def mouseButtonsDown():
 	return _mouseButtonsDown[:]
@@ -975,7 +987,7 @@ def mouseReleaseButton(button):
 	point = mouseGetPos()
 	user32.mouse_event(bt | MOUSEEVENTF_ABSOLUTE, point.x(), point.y(), 0, None)	
 
-def mouseClickPoint(button, nClicks=1, point=None):
+def mouseClickPoint(button, nClicks=1, point=None, hwnd=None):
 	'''clicks a point with the desired mouse button
 	@param button: (str) button to click: (Button*)
 	@param nClicks: (int) number of times to click (2 for a double-click)
@@ -987,7 +999,7 @@ def mouseClickPoint(button, nClicks=1, point=None):
 	if _mouseButtonsDown: return
 	# move mouse to point
 	if point is not None:
-		mouseSetPos(point)
+		mouseSetPos(point, hwnd=hwnd)
 	# click button
 	rng = list(range(nClicks))
 	while rng:
@@ -997,24 +1009,24 @@ def mouseClickPoint(button, nClicks=1, point=None):
 		if rng:
 			time.sleep(0.1)
 	
-def mouseClickLeft(point):
+def mouseClickLeft(point, hwnd=None):
 	"""clicks the left mouse button at the specified point"""
-	return mouseClickPoint(MouseButtonLeft, point=point, nClicks=1)
-def mouseClickLeftDouble(point):
+	return mouseClickPoint(MouseButtonLeft, point=point, nClicks=1, hwnd=hwnd)
+def mouseClickLeftDouble(point, hwnd=None):
 	"""double clicks the left mouse button at the specified point"""
-	return mouseClickPoint(MouseButtonLeft, point=point, nClicks=2)
-def mouseClickRight(point):
+	return mouseClickPoint(MouseButtonLeft, point=point, nClicks=2, hwnd=hwnd)
+def mouseClickRight(point, hwnd=None):
 	"""clicks the right mouse button at the specified point"""
-	return mouseClickPoint(MouseButtonRight, point=point, nClicks=1)
-def mouseClickRightDouble(point):
+	return mouseClickPoint(MouseButtonRight, point=point, nClicks=1, hwnd=hwnd)
+def mouseClickRightDouble(point, hwnd=None):
 	"""double clicks the right mouse button at the specified point"""
-	return mouseClickPoint(MouseButtonRight, point=point, nClicks=2)
-def mouseClickMiddle(pt):
+	return mouseClickPoint(MouseButtonRight, point=point, nClicks=2, hwnd=hwnd)
+def mouseClickMiddle(point, hwnd=None):
 	"""clicks the middle mouse button at the specified point"""
-	return self.mouseClickPoint(MouseButtonMiddle, point=point, nClicks=1)
-def mouseClickMiddleDouble(point):
+	return self.mouseClickPoint(MouseButtonMiddle, point=point, nClicks=1, hwnd=None)
+def mouseClickMiddleDouble(point, hwnd=None):
 	"""double clicks the middle mouse button at the specified point"""
-	return mouseClickPoint(MouseButtonMiddle, point=point, nClicks=2)
+	return mouseClickPoint(MouseButtonMiddle, point=point, nClicks=2, hwnd=hwnd)
 
 def mouseGetPos():
 	'''returns the current position of the mouse pointer
@@ -1024,12 +1036,14 @@ def mouseGetPos():
 	user32.GetCursorPos(byref(pt))
 	return QtCore.QPoint(pt.x, pt.y)
 
-def mouseSetPos(point, step=4):
+def mouseSetPos(point, step=4, hwnd=None):
 	"""moves the mouse pointer to the specified position
 	@param pt: (tuple) point containing the coordiantes to move the mouse pointer to (in screen coordiantes)
 	"""
 	#NOTE: for some reason neither user32.mouse_event() not user32.SendInput() have any effect here (linux/wine).
 	#           the only way i can get this to work is to move the cursor stepwise to its destination?!?
+	if hwnd is not None:
+		point = windowClientPointToScreenPoint(hwnd, point)
 	ptX, ptY = point.x(), point.y()
 	point2 = mouseGetPos()
 	curX, curY = point2.x(), point2.y()
@@ -1070,7 +1084,7 @@ class MouseHook(QtCore.QObject):
 		self._pHookProc = MOUSEHOOKPROCLL(self._hookProc)
 		self._eventHandler = eventHandler
 		
-	def setEventhandler(self, eventHandler):
+	def setEventHandler(self, eventHandler):
 		self._eventHandler = eventHandler
 	
 	def _hookProc(self, code, wParam, lParam):
@@ -1150,7 +1164,7 @@ class KeyboardHook(QtCore.QObject):
 		self._pHookProc = KEYBHOOKPROCLL(self._hookProc)
 		self._eventHandler = eventHandler
 		
-	def setEventhandler(self, eventHandler):
+	def setEventHandler(self, eventHandler):
 		self._eventHandler = eventHandler
 	
 	def _hookProc(self, code, wParam, lParam):
@@ -1176,9 +1190,10 @@ class KeyboardHook(QtCore.QObject):
 				setKeyDown(keyInfo.vkCode, False)
 			#<--HACK:(1)
 			
-			if self._eventHandler is not None:
-				if  self._eventHandler.handleInput(key, keydown=keydown, nSteps=None):
-					return TRUE
+			if key:
+				if self._eventHandler is not None:
+					if  self._eventHandler.handleInput(key, keydown=keydown, nSteps=None):
+						return TRUE
 		return user32.CallNextHookEx(self._hHook, code, wParam, lParam)
 		
 	def _keyFromKeyboardState(self, keyboardState=None):
@@ -1200,7 +1215,9 @@ class KeyboardHook(QtCore.QObject):
 						value += ' %s' % KEY_NAMES[vkCode]
 					else:
 						value = KEY_NAMES[vkCode]
-		return '<%s>' % value
+		if value:
+			return '<%s>' % value
+		return value
 	
 	def isStarted(self): 
 		"""cheks if the keyboard manager is started"""

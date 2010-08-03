@@ -1,9 +1,9 @@
 
 import TableCrabConfig
-from PyQt4 import QtCore, QtGui
-
-import TableCrabGuiHelp
 import TableCrabWin32
+import TableCrabGuiHelp
+
+from PyQt4 import QtCore, QtGui
 
 #**********************************************************************************************
 #
@@ -130,7 +130,7 @@ class PersistentItemTreeWidget(QtGui.QTreeWidget):
 		TableCrabConfig.signalConnect(None, self, 'settingChildItemIndicatorsChanged(bool)', self.onSettingChildItemIndicatorsChanged)	
 		
 		#NOTE: we have to connect after adding the initial tables cos QTreeWidget informs us about every* itemChange
-		TableCrabConfig.signalConnect(TableCrabConfig.setupWidgetItemManager, self, 'itemRead(QObject*)', self.onPersistentItemManagerItemRead)
+		TableCrabConfig.signalConnect(TableCrabConfig.templateManager, self, 'itemRead(QObject*)', self.onPersistentItemManagerItemRead)
 		TableCrabConfig.signalConnect(self, self, 'itemChanged(QTreeWidgetItem*, int)', self.onTreeItemChanged)
 		TableCrabConfig.signalConnect(self, self, 'itemDoubleClicked(QTreeWidgetItem*)',self.editItem)
 		TableCrabConfig.signalConnect(self, self, 'itemExpanded(QTreeWidgetItem*)',self.onItemExpanded)
@@ -148,28 +148,28 @@ class PersistentItemTreeWidget(QtGui.QTreeWidget):
 		item = TablePokerStarsTreeWidgetItem(persistentItem, parent=self)
 		self.addTopLevelItem(item)
 		self.setCurrentItem(item)
-		TableCrabConfig.setupWidgetItemManager.setItemAttr(persistentItem, 'itemIsExpanded', True)
+		TableCrabConfig.templateManager.setItemAttr(persistentItem, 'itemIsExpanded', True)
 	def onTreeItemChanged(self, item, column):
-		if not TableCrabConfig.setupWidgetItemManager.readFinished():
+		if not TableCrabConfig.templateManager.readFinished():
 			return
 		if item.attrName == 'name':
 			if item.text(0) != item.persistentItem.name:	#NOTE: special handling for in-place editing
-				TableCrabConfig.setupWidgetItemManager.setItemAttr(item.persistentItem, 'name', item.text(0))
+				TableCrabConfig.templateManager.setItemAttr(item.persistentItem, 'name', item.text(0))
 	def onPersistentItemManagerItemRead(self, persistentItem):
 		item = TablePokerStarsTreeWidgetItem(persistentItem, parent=self)
 		self.addTopLevelItem(item)
 	def onItemExpanded(self, item):
-		if not TableCrabConfig.setupWidgetItemManager.readFinished():
+		if not TableCrabConfig.templateManager.readFinished():
 			return
-		TableCrabConfig.setupWidgetItemManager.setItemAttr(item.persistentItem, 'itemIsExpanded', True)
+		TableCrabConfig.templateManager.setItemAttr(item.persistentItem, 'itemIsExpanded', True)
 	def onItemCollapsed(self, item):
-		if not TableCrabConfig.setupWidgetItemManager.readFinished():
+		if not TableCrabConfig.templateManager.readFinished():
 			return
-		TableCrabConfig.setupWidgetItemManager.setItemAttr(item.persistentItem, 'itemIsExpanded', False)
+		TableCrabConfig.templateManager.setItemAttr(item.persistentItem, 'itemIsExpanded', False)
 	def createPersistentItem(self, persistentItemProto):
 		persistentItem = persistentItemProto(name=persistentItemProto.itemName())
 		TableCrabConfig.signalConnect(persistentItem, self, 'itemAdded(QObject*)', self.onPersistentItemAdded)
-		TableCrabConfig.setupWidgetItemManager.addItem(persistentItem)
+		TableCrabConfig.templateManager.addItem(persistentItem)
 	def onSettingAlternatingRowColorsChanged(self, flag):
 		self.setAlternatingRowColors(flag)
 	def onSettingChildItemIndicatorsChanged(self, flag):
@@ -191,7 +191,7 @@ class FramePersistentItems(QtGui.QFrame):
 		TableCrabConfig.signalConnect(self.persistentItemTreeWidget, self, 'itemSelectionChanged()', self.onTreeItemSelectionChanged)
 			
 		menu = QtGui.QMenu(self)
-		for persistentItemProto in TableCrabConfig.SetupWidgetItems:
+		for persistentItemProto in TableCrabConfig.templateManager.itemProtos():
 			persistentItem = self.ActionNewPersistentItem(persistentItemProto, parent=self)
 			TableCrabConfig.signalConnect(persistentItem, self, 'triggered(bool)', self.onPersistentItemNewTriggered)
 			menu.addAction(persistentItem)
@@ -231,7 +231,7 @@ class FramePersistentItems(QtGui.QFrame):
 		self.layout()
 	
 	def adjustActions(self):
-		self.actionNew.setEnabled(TableCrabConfig.setupWidgetItemManager.canAddItem() )
+		self.actionNew.setEnabled(TableCrabConfig.templateManager.canAddItem() )
 		item = self.persistentItemTreeWidget.currentItem()
 		if item is None:
 			persistentItem = None
@@ -244,8 +244,8 @@ class FramePersistentItems(QtGui.QFrame):
 			self.actionDown.setEnabled(False)
 			self.actionRemove.setEnabled(False)
 		else:
-			self.actionUp.setEnabled(TableCrabConfig.setupWidgetItemManager.canMoveItemUp(persistentItem) )
-			self.actionDown.setEnabled(TableCrabConfig.setupWidgetItemManager.canMoveItemDown(persistentItem) )
+			self.actionUp.setEnabled(TableCrabConfig.templateManager.canMoveItemUp(persistentItem) )
+			self.actionDown.setEnabled(TableCrabConfig.templateManager.canMoveItemDown(persistentItem) )
 			self.actionRemove.setEnabled(True)
 	
 	def actions(self):
@@ -266,7 +266,7 @@ class FramePersistentItems(QtGui.QFrame):
 			pass
 		elif persistentItem.size != pixmap.size():
 			return False
-		TableCrabConfig.setupWidgetItemManager.setItemAttrs(persistentItem, {item.attrName: point, 'size': pixmap.size()})
+		TableCrabConfig.templateManager.setItemAttrs(persistentItem, {item.attrName: point, 'size': pixmap.size()})
 		return True
 		
 	def onActionUpTriggered(self):
@@ -275,7 +275,7 @@ class FramePersistentItems(QtGui.QFrame):
 			self.actionUp.setEnabled(False)
 			return
 		persistentItem= item.persistentItem if item.parent() is None else item.parent().persistentItem
-		TableCrabConfig.setupWidgetItemManager.moveItemUp(persistentItem)
+		TableCrabConfig.templateManager.moveItemUp(persistentItem)
 	
 	def onActionDownTriggered(self):
 		item = self.persistentItemTreeWidget.currentItem()
@@ -283,7 +283,7 @@ class FramePersistentItems(QtGui.QFrame):
 			self.actionDown.setEnabled(False)
 			return
 		persistentItem = item.persistentItem if item.parent() is None else item.parent().persistentItem
-		TableCrabConfig.setupWidgetItemManager.moveItemDown(persistentItem)
+		TableCrabConfig.templateManager.moveItemDown(persistentItem)
 	
 	def onActionRemoveTriggered(self):
 		item = self.persistentItemTreeWidget.currentItem()
@@ -291,7 +291,7 @@ class FramePersistentItems(QtGui.QFrame):
 			self.buttonRemove.setEnabled(False)
 			return
 		persistentItem= item.persistentItem if item.parent() is None else item.parent().persistentItem
-		TableCrabConfig.setupWidgetItemManager.removeItem(persistentItem)
+		TableCrabConfig.templateManager.removeItem(persistentItem)
 		
 	def onTreeItemSelectionChanged(self):
 		self.adjustActions()
@@ -307,14 +307,12 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		def __init__(self, *args):
 			QtGui.QLabel.__init__(self, *args)
 			self.setMouseTracking(True)
-			self._screenshotName = self.ScreenshotName
-		def setScreenshot(self, pixmap=None, screenshotName=None):
-			self._screenshotName = self.ScreenshotName if screenshotName is None else screenshotName
+		def setScreenshot(self, pixmap=None):
 			result = False
 			self.setPixmap(pixmap)
 			if pixmap is None:
 				self.setScaledContents(True)
-				self.setText(self._screenshotName)
+				self.setText(self.ScreenshotName)
 				pixmap = QtGui.QPixmap()
 			else:
 				# manually set size of the label so we get the correct coordiantes of the mouse cursor
@@ -339,8 +337,8 @@ class FrameTablesScreenshot(QtGui.QFrame):
 			if pixmap is not None:
 				self._giveFeedback(pixmap, event.pos())
 		def _giveFeedback(self, pixmap, point):
-			p = '%s - Size %s Mouse %s' % (self._screenshotName, TableCrabConfig.sizeToString(pixmap.size()), TableCrabConfig.pointToString(point) )
-			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', p )
+			p = 'Size %s Mouse %s' % (TableCrabConfig.sizeToString(pixmap.size()), TableCrabConfig.pointToString(point) )
+			TableCrabConfig.signalEmit(None, 'feedbackCurrentObjectData(QString)', p )
 		
 		
 	def __init__(self, parent=None):
@@ -416,9 +414,10 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		self.setScreenshot(pixmap)
 		self.adjustActions()
 		
-	def setScreenshot(self, pixmap=None, screenshotName='Screenshot'):
-		self.label.setScreenshot(pixmap=pixmap, screenshotName=screenshotName)
+	def setScreenshot(self, pixmap=None, screenshotName='NewScreenshot'):
+		self.label.setScreenshot(pixmap=pixmap)
 		self.adjustActions()
+		TableCrabConfig.signalEmit(None, 'feedbackCurrentObject(QString)', screenshotName)
 		
 	def 	gatherWindowInfo(self, hwnd):
 		def windowInfo(hwnd, level=0):
@@ -641,7 +640,8 @@ class FrameSetup(QtGui.QFrame):
 #
 #**********************************************************************************************
 if __name__ == '__main__':
-	g = TableCrabConfig.MainWindow()
+	import TableCrabMainWindow
+	g = TableCrabMainWindow.MainWindow()
 	g.setCentralWidget(FrameSetup(g))
 	g.start()
 	

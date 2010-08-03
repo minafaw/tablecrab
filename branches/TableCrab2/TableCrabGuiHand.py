@@ -1,8 +1,9 @@
 
-from PyQt4 import QtCore, QtGui, QtWebKit
 import TableCrabConfig
-import PSHandGrabber
+import PokerStarsHandGrabber
 import TableCrabGuiHelp
+
+from PyQt4 import QtCore, QtGui, QtWebKit
 
 #*******************************************************************************************
 #
@@ -15,12 +16,12 @@ class FrameHand(QtGui.QFrame):
 		self._hasHand = False
 		self.webView = QtWebKit.QWebView(self)
 		self.webView.setUrl(QtCore.QUrl(''))
-		self.psHandGrabber = PSHandGrabber.HandGrabber(
-				PSHandGrabber.HandParser(),
-				PSHandGrabber.HandFormatterHtmlTabular(),
+		self.pokerStarsHandGrabber = PokerStarsHandGrabber.HandGrabber(
+				PokerStarsHandGrabber.HandParser(),
+				PokerStarsHandGrabber.HandFormatterHtmlTabular(),
 				parent=self,
 				)
-		TableCrabConfig.signalConnect(self.psHandGrabber, self, 'handGrabbed(QObject*, QString)', self.onPShandGrabberHandGrabbed)
+		TableCrabConfig.signalConnect(self.pokerStarsHandGrabber, self, 'handGrabbed(QObject*, QString)', self.onPShandGrabberHandGrabbed)
 		TableCrabConfig.signalConnect(None, self, 'closeEvent(QEvent*)', self.onCloseEvent)
 		self.webView.setZoomFactor( TableCrabConfig.settingsValue('Gui/Hand/ZoomFactor',  self.webView.zoomFactor() ).toDouble()[0] )
 		
@@ -54,7 +55,7 @@ class FrameHand(QtGui.QFrame):
 		
 		self.adjustActions()
 		self.layout()
-		self.psHandGrabber.start()
+		self.pokerStarsHandGrabber.start()
 		
 	def layout(self):
 		box = TableCrabConfig.GridBox(self)
@@ -62,7 +63,7 @@ class FrameHand(QtGui.QFrame):
 		box.addWidget(self.webView, 1, 0)
 		
 	def onCloseEvent(self, event):
-		self.psHandGrabber.stop()
+		self.pokerStarsHandGrabber.stop()
 		
 	def adjustActions(self):
 		self.toolBar.actionZoomIn.setEnabled(bool(self._hasHand))
@@ -125,7 +126,8 @@ class FrameHand(QtGui.QFrame):
 #
 #**********************************************************************************************
 if __name__ == '__main__':
-	g = TableCrabConfig.MainWindow()
+	import TableCrabMainWindow
+	g = TableCrabMainWindow.MainWindow()
 	g.setCentralWidget(FrameHand(g))
 	g.start()
 	

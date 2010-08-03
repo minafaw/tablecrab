@@ -1,9 +1,9 @@
 
 import TableCrabConfig
-from PyQt4 import QtCore, QtGui
-
-import TableCrabGuiHelp
 import TableCrabWin32
+import TableCrabGuiHelp
+
+from PyQt4 import QtCore, QtGui
 
 #**********************************************************************************************
 #
@@ -101,7 +101,7 @@ class ActionCheckEditor(QtGui.QDialog):
 		TableCrabGuiHelp.dialogHelp('hotkey%s' % self.persistentItem.itemName(), parent=self)
 	
 	def accept(self):
-		TableCrabConfig.actionItemManager.setItemAttrs(self.persistentItem, {
+		TableCrabConfig.actionManager.setItemAttrs(self.persistentItem, {
 				'name': self.editName.text(),
 				'hotkey': self.hotkeyWidget.hotkey(),
 				'hotkeyName': self.editHotkeyName.text(),
@@ -170,7 +170,7 @@ class ActionAlterBetAmountEditor(QtGui.QDialog):
 		TableCrabGuiHelp.dialogHelp('hotkey%s' % self.persistentItem.itemName(), parent=self)
 	
 	def accept(self):
-		TableCrabConfig.actionItemManager.setItemAttrs(self.persistentItem, {
+		TableCrabConfig.actionManager.setItemAttrs(self.persistentItem, {
 				'name': self.editName.text(),
 				'hotkey': self.hotkeyWidget.hotkey(),
 				'hotkeyName': self.editHotkeyName.text(),
@@ -285,7 +285,7 @@ class ActionItemTreeWidget(QtGui.QTreeWidget):
 	def __init__(self, parent=None):
 		QtGui.QTreeWidget.__init__(self, parent)
 		TableCrabConfig.signalConnect(self, self, 'itemDoubleClicked(QTreeWidgetItem*, int)', self.editItem)
-		TableCrabConfig.signalConnect(TableCrabConfig.actionItemManager, self, 'itemRead(QObject*)', self.onPersistentItemManagerItemRead)
+		TableCrabConfig.signalConnect(TableCrabConfig.actionManager, self, 'itemRead(QObject*)', self.onPersistentItemManagerItemRead)
 		
 		self.setColumnCount(2)
 		self.setRootIsDecorated(False)
@@ -325,7 +325,7 @@ class ActionItemTreeWidget(QtGui.QTreeWidget):
 		result = dlg.exec_()
 		TableCrabConfig.settingsSetValue('Gui/DialogHotkeyEditor/Geometry', dlg.saveGeometry() )
 		if result ==dlg.Accepted:
-			TableCrabConfig.actionItemManager.dump()
+			TableCrabConfig.actionManager.dump()
 		
 	def createPersistentItem(self, actionItemProto):
 		persistentItem = actionItemProto()
@@ -338,7 +338,7 @@ class ActionItemTreeWidget(QtGui.QTreeWidget):
 		TableCrabConfig.settingsSetValue('Gui/DialogHotkeyEditor/Geometry', dlg.saveGeometry() )
 		if result == QtGui.QDialog.Accepted:
 			TableCrabConfig.signalConnect(persistentItem, self, 'itemAdded(QObject*)', self.onPersistentItemAdded)
-			TableCrabConfig.actionItemManager.addItem(persistentItem)
+			TableCrabConfig.actionManager.addItem(persistentItem)
 	
 class FrameHotkeys(QtGui.QFrame):
 	
@@ -430,8 +430,8 @@ class FrameHotkeys(QtGui.QFrame):
 			self.actionRemove.setEnabled(False)
 			self.actionEdit.setEnabled(False)
 		else:
-			self.actionUp.setEnabled(TableCrabConfig.actionItemManager.canMoveItemUp(persistentItem) )
-			self.actionDown.setEnabled(TableCrabConfig.actionItemManager.canMoveItemDown(persistentItem) )
+			self.actionUp.setEnabled(TableCrabConfig.actionManager.canMoveItemUp(persistentItem) )
+			self.actionDown.setEnabled(TableCrabConfig.actionManager.canMoveItemDown(persistentItem) )
 			self.actionRemove.setEnabled(True)
 			self.actionEdit.setEnabled(True)
 	
@@ -440,21 +440,21 @@ class FrameHotkeys(QtGui.QFrame):
 		if item is None:
 			self.actionUp.setEnabled(False)
 			return
-		TableCrabConfig.actionItemManager.moveItemUp(item.persistentItem)
+		TableCrabConfig.actionManager.moveItemUp(item.persistentItem)
 	
 	def onActionDownTriggered(self):
 		item = self.actionItemTreeWidget.currentItem()
 		if item is None:
 			self.actionDown.setEnabled(False)
 			return
-		TableCrabConfig.actionItemManager.moveItemDown(item.persistentItem)
+		TableCrabConfig.actionManager.moveItemDown(item.persistentItem)
 	
 	def onActionRemoveTriggered(self):
 		item = self.actionItemTreeWidget.currentItem()
 		if item is None:
 			self.actionRemove.setEnabled(False)
 			return
-		TableCrabConfig.actionItemManager.removeItem(item.persistentItem)
+		TableCrabConfig.actionManager.removeItem(item.persistentItem)
 		
 	def onActionEditTriggered(self):
 		item = self.actionItemTreeWidget.currentItem()
@@ -476,7 +476,8 @@ class FrameHotkeys(QtGui.QFrame):
 #
 #**********************************************************************************************
 if __name__ == '__main__':
-	g = TableCrabConfig.MainWindow()
+	import TableCrabMainWindow
+	g = TableCrabMainWindow.MainWindow()
 	g.setCentralWidget(FrameHotkeys(g))
 	g.start()
 	
