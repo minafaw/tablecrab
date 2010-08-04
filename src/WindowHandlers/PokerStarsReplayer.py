@@ -154,7 +154,9 @@ class PokerStarsReplayer(object):		#NOTE: we do not register this class as Windo
 		elif key == self.cli.config['pokerstars-replayer']['key-button-last']:
 			if self.cli.application.windowManager.windowGetClientSize(self.hWindow) == self.cli.config['pokerstars-replayer']['size']:
 				return True
-		return False	
+		return False
 		
+	def handleMouseWheelScrolled(self, cli, nSteps):
+		return False
 
 PokerStarsReplayer.Type = Registry.WindowHandlerMeta.createTypeName(PokerStarsReplayer)
