@@ -33,12 +33,13 @@ class ActionHandler(object):
 			return True
 		return False
 		
-	def handleInput(self, hwnd, actionItem, keydown=None, nSteps=None):
+	def handleInputEvent(self, hwnd, hotkey, inputEvent):
 		if hwnd == self._hwndMain:
 			return True
-		if actionItem.itemName() == TableCrabConfig.ActionScreenshot.itemName():
-			if keydown is True:
+		if hotkey.itemName() == TableCrabConfig.HotkeyScreenshot.itemName():
+			if inputEvent.keyIsDown or inputEvent.mouseSteps:
 				TableCrabConfig.widgetScreenshot(hwnd)
+				inputEvent.accept = True
 			return True
 		return False
 		

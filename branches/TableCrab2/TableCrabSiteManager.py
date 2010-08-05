@@ -24,6 +24,8 @@ class SiteManager(QtCore.QObject):
 		TableCrabConfig.signalConnect(TableCrabConfig.windowHook, self, 'windowDestroyed(int)', self.onWindowDestroyed)
 		TableCrabConfig.signalConnect(TableCrabConfig.windowHook, self, 'windowGainedForeground(int)', self.onWindowGainedForeground)
 		TableCrabConfig.signalConnect(TableCrabConfig.windowHook, self, 'windowLostForeground(int)', self.onWindowLostForeground)
+		TableCrabConfig.signalConnect(TableCrabConfig.keyboardHook, self, 'inputEvent(QObject*)', self.onInputEvent)
+		TableCrabConfig.signalConnect(TableCrabConfig.mouseHook, self, 'inputEvent(QObject*)', self.onInputEvent)
 		
 		self._tableCrabActionHandler = TableCrabActionHandler.ActionHandler()
 		self._handlers = (
@@ -35,56 +37,36 @@ class SiteManager(QtCore.QObject):
 		return self._tableCrabActionHandler
 		
 	def onWindowDestroyed(self, hwnd):
-		self._lock.acquire()
-		try:
-			for handler in self._handlers:
-				if handler.handleWindowDestroyed(hwnd):
-					return
-		finally:
-			self._lock.release()
-	
+		for handler in self._handlers:
+			if handler.handleWindowDestroyed(hwnd):
+				return
+			
 	def onWindowCreated(self, hwnd):
-		self._lock.acquire()
-		try:
-			for handler in self._handlers:
-				if handler.handleWindowCreated(hwnd):
-					return
-		finally:
-			self._lock.release()
+		for handler in self._handlers:
+			if handler.handleWindowCreated(hwnd):
+				return
 		
 	def onWindowGainedForeground(self, hwnd):
-		self._lock.acquire()
-		try:
-			for handler in self._handlers:
-				if handler.handleWindowGainedForeground(hwnd):
-					return
-		finally:
-			self._lock.release()
-	
+		for handler in self._handlers:
+			if handler.handleWindowGainedForeground(hwnd):
+				return
+			
 	def onWindowLostForeground(self, hwnd):
-		self._lock.acquire()
-		try:
-			for handler in self._handlers:
-				if handler.handleWindowLostForeground(hwnd):
-					return
-		finally:
-			self._lock.release()
-	
-	def handleInput(self, input, keydown=None, nSteps=None):
-		self._lock.acquire()
-		try:
-			hwnd = TableCrabWin32.windowForeground()
-			if hwnd:
-				for actionItem in TableCrabConfig.actionManager.items():
-					if not actionItem.hotkey or actionItem.hotkey != input: 
-						continue
-					for handler in self._handlers:
-						if handler.handleInput(hwnd, actionItem, keydown=keydown, nSteps=nSteps):
-							return True
-			return False
-		finally:
-			self._lock.release()
+		for handler in self._handlers:
+			if handler.handleWindowLostForeground(hwnd):
+				return
 		
-		
+	def onInputEvent(self, inputEvent):
+		hwnd = TableCrabWin32.windowForeground()
+		if hwnd:
+			for hotkey in TableCrabConfig.hotkeyManager.items():
+				if not hotkey.hotkey or hotkey.hotkey != inputEvent.key: 
+					continue
+				for handler in self._handlers:
+					if handler.handleInputEvent(hwnd, hotkey, inputEvent):
+						return
+						
+						
+
 
 

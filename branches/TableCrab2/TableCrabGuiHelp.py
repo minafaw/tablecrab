@@ -12,10 +12,12 @@ Topics = [
 				('screenshotInfo', 'Screenshot Info Dialog'),
 				],
 			('hotkeys', 'Hotkeys'), [
-				('hotkeyAlterBetAmount', 'AlterBetAmount'),
 				('hotkeyCheck', 'Check'),
 				('hotkeyFold', 'Fold'),
 				('hotkeyHilightBetAmount', 'HilightBetAmount'),
+				('hotkeyAddToBetAmount', 'AddToBetAmount'),
+				('hotkeySubtractFromBetAmount', 'SubtractFromBetAmount'),
+				('hotkeyMultiplyBetAmount', 'MultiplyBetAmount'),
 				('hotkeyInstantHandHistory', 'InstantHandHistory'),
 				('hotkeyRaise', 'Raise'),
 				('hotkeyReplayer', 'Replayer'),

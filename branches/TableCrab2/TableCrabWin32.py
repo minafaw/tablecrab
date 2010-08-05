@@ -6,7 +6,7 @@ from ctypes.wintypes import *
 user32 = windll.user32
 kernel32 = windll.kernel32
 
-from PyQt4 import QtCore, QtGui
+from PyQt4 import QtCore
 
 #**************************************************************
 #
@@ -503,6 +503,23 @@ def setKeyDown(vkCode, flag):
 	elif vkCode in (VK_LSHIFT, VK_RSHIFT): _keyboardState[VK_SHIFT] = value
 
 #HACK:(1)
+
+#****************************************************************************************************
+#
+#****************************************************************************************************
+class InputEvent(QtCore.QObject):
+	def __init__(self, 
+				key=None, 
+				keyIsDown=False, 
+				mouseSteps=0,
+				accept=False, 
+				parent=None
+				):
+		QtCore.QObject.__init__(self, parent)
+		self.key = key
+		self.keyIsDown = keyIsDown
+		self.mouseSteps = mouseSteps
+		self.accept = accept
 
 #****************************************************************************************************
 # window methods
@@ -1114,8 +1131,11 @@ class MouseHook(QtCore.QObject):
 				mouseInfo = MSLLHOOKSTRUCT.from_address(lParam)
 				wheelDelta = GET_WHEEL_DELTA_WPARAM(mouseInfo.mouseData)
 				nSteps = wheelDelta / WHEEL_DELTA
-				if self._eventHandler is not None:
-					if  self._eventHandler.handleInput(MouseWheelUp if nSteps >= 0 else MouseWheelDown, nSteps=nSteps):
+				if nSteps:
+					key = MouseWheelUp if nSteps >= 0 else MouseWheelDown
+					e = InputEvent(key=key, mouseSteps=abs(nSteps), accept=False, parent=self)
+					self.emit(QtCore.SIGNAL('inputEvent(QObject*)'), e)
+					if e.accept:
 						return TRUE
 		return user32.CallNextHookEx(self._hHook, code, wParam, lParam)
 	
@@ -1180,20 +1200,18 @@ class KeyboardHook(QtCore.QObject):
 			user32.GetKeyboardState(byref(keyboardState))
 			key = self._keyFromKeyboardState(keyboardState=keyboardState)
 			keydown = wParam in (WM_KEYDOWN, WM_SYSKEYDOWN)
-			if keydown:
-				self.emit(QtCore.SIGNAL('keyPressed(QString)'), key)
-			else:
-				self.emit(QtCore.SIGNAL('keyReleased(QString)'), key)
-			
+						
 			#HACK:(1)
 			if wParam in (WM_KEYUP, WM_SYSKEYUP):
 				setKeyDown(keyInfo.vkCode, False)
 			#<--HACK:(1)
 			
-			if key:
-				if self._eventHandler is not None:
-					if  self._eventHandler.handleInput(key, keydown=keydown, nSteps=None):
-						return TRUE
+			if key and keydown:
+				e = InputEvent(key=key, keyIsDown=keydown, accept=False, parent=self)
+				self.emit(QtCore.SIGNAL('inputEvent(QObject*)'), e)
+				if e.accept:
+					return TRUE
+		
 		return user32.CallNextHookEx(self._hHook, code, wParam, lParam)
 		
 	def _keyFromKeyboardState(self, keyboardState=None):

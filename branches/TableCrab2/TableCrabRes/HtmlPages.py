@@ -7,11 +7,23 @@ def hotkeys():
 		arr = QtCore.QByteArray.fromBase64("PGh0bWw+CjxoZWFkPgo8TElOSyBSRUw9U3R5bGVTaGVldCBIUkVGPSJkZWZhdWx0LmNzcyIgVFlQRT0idGV4dC9jc3MiIE1FRElBPXNjcmVlbj4KPC9oZWFkPgo8Ym9keT4KCjxkaXYgY2xhc3M9InRleHRCb3giPgoJPGRpdiBjbGFzcz0iaGVhZGVyQm94Ij5Ib3RrZXlzPC9kaXY+CgoJPGRpdiBjbGFzcz0ibm90ZUJveCI+Tm90ZTogdGhpcyBhbmQgdGhhdDwvZGl2PgoKPC9kaXY+CgoKCgoKPC9ib2R5PjwvaHRtbD4KCg==")
 		_cache["hotkeys"] = arr
 	return QtCore.QString(arr)
-def hotkeyAlterBetAmount():
-	arr = _cache.get("hotkeyAlterBetAmount", None)
+def hotkeySubtractFromBetAmount():
+	arr = _cache.get("hotkeySubtractFromBetAmount", None)
 	if arr is None:
-		arr = QtCore.QByteArray.fromBase64("SG90a2V5QWx0ZXJCZXRBbW91bnQ=")
-		_cache["hotkeyAlterBetAmount"] = arr
+		arr = QtCore.QByteArray.fromBase64("aG90a2V5U3VidHJhY3RGcm9tQmV0YW1vdW50")
+		_cache["hotkeySubtractFromBetAmount"] = arr
+	return QtCore.QString(arr)
+def hotkeyMultiplyBetAmount():
+	arr = _cache.get("hotkeyMultiplyBetAmount", None)
+	if arr is None:
+		arr = QtCore.QByteArray.fromBase64("SG90a2V5TXVsdGlwbHlCZXRBbW91bnQK")
+		_cache["hotkeyMultiplyBetAmount"] = arr
+	return QtCore.QString(arr)
+def hotkeyAddToBetAmount():
+	arr = _cache.get("hotkeyAddToBetAmount", None)
+	if arr is None:
+		arr = QtCore.QByteArray.fromBase64("SG90a2V5QWRkVG9CZXRBbW91bnQ=")
+		_cache["hotkeyAddToBetAmount"] = arr
 	return QtCore.QString(arr)
 def hand():
 	arr = _cache.get("hand", None)

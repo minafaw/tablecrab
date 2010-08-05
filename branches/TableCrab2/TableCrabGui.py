@@ -59,11 +59,9 @@ class Gui(TableCrabMainWindow .MainWindow):
 		self.labelCurrentObjectData.setText(qString)
 	
 	def onFeedbackMessage(self, qString):
-		self.statusBar().showMessage(qString, 2000)
-		
+		self.statusBar().showMessage(qString, 2000)		
 	
-		
-	
+
 #***********************************************************************************
 #
 #***********************************************************************************

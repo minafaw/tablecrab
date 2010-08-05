@@ -1,4 +1,4 @@
-
+ 
 import TableCrabConfig
 import TableCrabWin32
 import TableCrabGuiHelp
@@ -17,40 +17,36 @@ class ChildItem(QtGui.QTreeWidgetItem):
 		self.setText(1, value)
 
 
-class TablePokerStarsTreeWidgetItem(QtGui.QTreeWidgetItem):
-	def __init__(self, persistentItem, parent=None):
+class PokerStarsTemplateTreeWidgetItem(QtGui.QTreeWidgetItem):
+	def __init__(self, template, parent=None):
 		QtGui.QTreeWidgetItem.__init__(self, parent)
-		self.persistentItem = persistentItem
+		self.template = template
 		self.attrName = 'name'
-		self.setText(0, self.persistentItem.name)
+		self.setText(0, self.template.name)
 		self.setFirstColumnSpanned(True)
 		self.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
 		self.setIcon(0, QtGui.QIcon(TableCrabConfig.Pixmaps.stars()) )
 		font = self.font(0)
 		font.setBold(True)
 		self.setFont(0, font)
-		if self.persistentItem.itemIsExpanded:
+		if self.template.itemIsExpanded:
 			self.setExpanded(True)
 		self.myChildren = {
-				'itemName': ChildItem('itemName', 'Window:', self.persistentItem.itemName(), parent=self),
-				'size': ChildItem('size', 'Size:', TableCrabConfig.sizeToString(self.persistentItem.size), parent=self),
-				'buttonCheck': ChildItem('buttonCheck', 'ButtonCheck:', TableCrabConfig.pointToString(self.persistentItem.buttonCheck), parent=self),
-				'buttonFold': ChildItem('buttonFold', 'ButtonFold:', TableCrabConfig.pointToString(self.persistentItem.buttonFold), parent=self),
-				'buttonRaise': ChildItem('buttonRaise', 'ButtonRaise:', TableCrabConfig.pointToString(self.persistentItem.buttonRaise), parent=self),
-				'checkboxFold': ChildItem('checkboxFold', 'CheckboxFold:', TableCrabConfig.pointToString(self.persistentItem.checkboxFold), parent=self),
-				'checkboxCheckFold': ChildItem('checkboxCheckFold', 'CheckboxCheckFold:', TableCrabConfig.pointToString(self.persistentItem.checkboxCheckFold), parent=self),
-				'betSliderStart': ChildItem('betSliderStart', 'BetSliderStart:', TableCrabConfig.pointToString(self.persistentItem.betSliderStart), parent=self),
-				'betSliderEnd': ChildItem('betSliderEnd', 'BetSliderEnd:', TableCrabConfig.pointToString(self.persistentItem.betSliderEnd), parent=self),
-				'instantHandHistory': ChildItem('instantHandHistory', 'InstantHandHistory:', TableCrabConfig.pointToString(self.persistentItem.instantHandHistory), parent=self),
-				'replayer': ChildItem('replayer', 'Replayer:', TableCrabConfig.pointToString(self.persistentItem.replayer), parent=self),
+				'itemName': ChildItem('itemName', 'Window:', self.template.itemName(), parent=self),
+				'size': ChildItem('size', 'Size:', TableCrabConfig.sizeToString(self.template.size), parent=self),
+				'buttonCheck': ChildItem('buttonCheck', 'ButtonCheck:', TableCrabConfig.pointToString(self.template.buttonCheck), parent=self),
+				'buttonFold': ChildItem('buttonFold', 'ButtonFold:', TableCrabConfig.pointToString(self.template.buttonFold), parent=self),
+				'buttonRaise': ChildItem('buttonRaise', 'ButtonRaise:', TableCrabConfig.pointToString(self.template.buttonRaise), parent=self),
+				'checkboxFold': ChildItem('checkboxFold', 'CheckboxFold:', TableCrabConfig.pointToString(self.template.checkboxFold), parent=self),
+				'checkboxCheckFold': ChildItem('checkboxCheckFold', 'CheckboxCheckFold:', TableCrabConfig.pointToString(self.template.checkboxCheckFold), parent=self),
+				'betSliderStart': ChildItem('betSliderStart', 'BetSliderStart:', TableCrabConfig.pointToString(self.template.betSliderStart), parent=self),
+				'betSliderEnd': ChildItem('betSliderEnd', 'BetSliderEnd:', TableCrabConfig.pointToString(self.template.betSliderEnd), parent=self),
+				'instantHandHistory': ChildItem('instantHandHistory', 'InstantHandHistory:', TableCrabConfig.pointToString(self.template.instantHandHistory), parent=self),
+				'replayer': ChildItem('replayer', 'Replayer:', TableCrabConfig.pointToString(self.template.replayer), parent=self),
 				}
 		self.myChildren['itemName'].setDisabled(True)
 		
-		TableCrabConfig.signalConnect(None, self.persistentItem, 'widgetScreenshotSet(QPixmap*)', self.onWidgetScreenshotSet)
-		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemAttrChanged(QObject*, QString)', self.onPersistentItemAttrChanged)
-		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemMovedUp(QObject*, int)', self.onPersistentItemMovedUp)
-		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemMovedDown(QObject*, int)', self.onPersistentItemMovedDown)
-		TableCrabConfig.signalConnect(self.persistentItem, self.persistentItem, 'itemRemoved(QObject*)', self.onPersistentItemRemoved)
+		TableCrabConfig.signalConnect(None, self.template, 'widgetScreenshotSet(QPixmap*)', self.onWidgetScreenshotSet)
 		
 		#TODO: bit of a hack here to disable child items initially
 		TableCrabConfig.signalEmit(None, 'widgetScreenshotQuery()')
@@ -63,41 +59,25 @@ class TablePokerStarsTreeWidgetItem(QtGui.QTreeWidgetItem):
 				return child
 		raise valueError('nosuch child: %s' % attrName)
 		
-	def onPersistentItemMovedUp(self, action, index):
-		treeWidget = self.treeWidget()
-		treeWidget.takeTopLevelItem(treeWidget.indexOfTopLevelItem(self))
-		treeWidget.insertTopLevelItem(index, self)
-		treeWidget.setCurrentItem(self)
-		self.setExpanded(True)
-	def onPersistentItemMovedDown(self, action, index):
-		treeWidget = self.treeWidget()
-		treeWidget.takeTopLevelItem(treeWidget.indexOfTopLevelItem(self))
-		treeWidget.insertTopLevelItem(index, self)
-		treeWidget.setCurrentItem(self)
-		self.setExpanded(True)
-	def onPersistentItemRemoved(self, action):
-		treeWidget = self.treeWidget()
-		self.persistentItem = None
-		treeWidget.takeTopLevelItem(treeWidget.indexOfTopLevelItem(self))
-	def onPersistentItemAttrChanged(self, persistentItem, attrName):
+	def onPersistentItemAttrChanged(self, template, attrName):
 		attrName = str(attrName)	#NOTE: we can not pass python strings, so we have to type convert here
 		if attrName == 'name':
-			self.setText(0, self.persistentItem.name)
+			self.setText(0, self.template.name)
 		elif attrName == 'itemName':
 			child = self.myChildren[attrName]
-			child.setText(1,self.persistentItem.itemName() )
+			child.setText(1,self.template.itemName() )
 		elif attrName == 'size':
 			child = self.myChildren[attrName]
-			if self.persistentItem.size.isEmpty():
+			if self.template.size.isEmpty():
 				child.setText(1, 'None')
 			else:
-				child.setText(1, TableCrabConfig.sizeToString(self.persistentItem.size))
+				child.setText(1, TableCrabConfig.sizeToString(self.template.size))
 				child.setDisabled(True)
 		elif attrName == 'itemIsExpanded':
-			self.setExpanded(self.persistentItem.itemIsExpanded)
+			self.setExpanded(self.template.itemIsExpanded)
 		else:
 			child = self.myChildren[attrName]
-			child.setText(1, TableCrabConfig.pointToString( getattr(self.persistentItem, attrName) ) )
+			child.setText(1, TableCrabConfig.pointToString( getattr(self.template, attrName) ) )
 	
 	def onWidgetScreenshotSet(self, pixmap):
 		for attrName, child in self.myChildren.items():
@@ -107,17 +87,26 @@ class TablePokerStarsTreeWidgetItem(QtGui.QTreeWidgetItem):
 				continue
 			if pixmap.isNull():
 				child.setDisabled(True)
-			elif self.persistentItem.size == pixmap.size():
+			elif self.template.size == pixmap.size():
 				child.setDisabled(False)
-			elif self.persistentItem.size.isEmpty():
+			elif self.template.size.isEmpty():
 				child.setDisabled(False)
 			else:
 				child.setDisabled(True)
 	
-class PersistentItemTreeWidget(QtGui.QTreeWidget):
+class TemplatesWidget(QtGui.QTreeWidget):
+	
+	class ActionNewTemplate(QtGui.QAction):
+		def __init__(self, templateProto, parent=None):
+			QtGui.QAction.__init__(self, parent)
+			self.templateProto = templateProto
+			self.setText(self.templateProto.itemName())
+			TableCrabConfig.signalConnect(self, self, 'triggered(bool)', self.onTriggered)
+		def onTriggered(self):
+			self.parent().createTemplate(self.templateProto)
+			
 	def __init__(self, parent=None):
 		QtGui.QTreeWidget.__init__(self, parent)
-		##self.setAlternatingRowColors(True)
 		self.setColumnCount(2)
 		self.setExpandsOnDoubleClick(False)
 		self.setSelectionBehavior(self.SelectRows)
@@ -125,16 +114,91 @@ class PersistentItemTreeWidget(QtGui.QTreeWidget):
 		self.header().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
 		self.header().setResizeMode(1, QtGui.QHeaderView.ResizeToContents)
 		self.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
-		TableCrabConfig.signalConnect(None, self, 'settingAlternatingRowColorsChanged(bool)', self.onSettingAlternatingRowColorsChanged)	
 		self.setRootIsDecorated( TableCrabConfig.settingsValue('Gui/ChildItemIndicators', True).toBool() )
-		TableCrabConfig.signalConnect(None, self, 'settingChildItemIndicatorsChanged(bool)', self.onSettingChildItemIndicatorsChanged)	
 		
-		#NOTE: we have to connect after adding the initial tables cos QTreeWidget informs us about every* itemChange
-		TableCrabConfig.signalConnect(TableCrabConfig.templateManager, self, 'itemRead(QObject*)', self.onPersistentItemManagerItemRead)
-		TableCrabConfig.signalConnect(self, self, 'itemChanged(QTreeWidgetItem*, int)', self.onTreeItemChanged)
-		TableCrabConfig.signalConnect(self, self, 'itemDoubleClicked(QTreeWidgetItem*)',self.editItem)
-		TableCrabConfig.signalConnect(self, self, 'itemExpanded(QTreeWidgetItem*)',self.onItemExpanded)
-		TableCrabConfig.signalConnect(self, self, 'itemCollapsed(QTreeWidgetItem*)',self.onItemCollapsed)
+		# setup actions
+		self._actions = []
+		
+		menu = QtGui.QMenu(self)
+		for templateProto in TableCrabConfig.templateManager.itemProtos():
+			template = self.ActionNewTemplate(templateProto, parent=self)
+			menu.addAction(template)
+		self.actionNew = TableCrabConfig.Action(
+				parent=self,
+				text='New',
+				menu=menu,
+				toolTip='Create a new template',
+				)
+		self._actions.append(self.actionNew)
+		self.actionDown = TableCrabConfig.Action(
+				parent=self,
+				text='Down',
+				toolTip='Move template down',
+				slot=self.moveTemplateDown,
+				)
+		self._actions.append(self.actionDown)
+		self.actionUp = TableCrabConfig.Action(
+				parent=self,
+				text='Up',
+				toolTip='Move template up',
+				slot=self.moveTemplateUp,
+				)
+		self._actions.append(self.actionUp)
+		self.actionRemove = TableCrabConfig.Action(
+				parent=self,
+				text='Remove',
+				toolTip='Remove template',
+				slot=self.removeTemplate,
+				)
+		self._actions.append(self.actionRemove)
+				
+		# connect to global signals	
+		TableCrabConfig.signalsConnect(None, self,
+				('settingAlternatingRowColorsChanged(bool)', self.onSettingAlternatingRowColorsChanged),
+				('settingChildItemIndicatorsChanged(bool)', self.onSettingChildItemIndicatorsChanged),
+				('widgetScreenshotDoubleClicked(QPixmap*, QPoint*)', self.onWidgetScreenshotDoubleClicked),
+				)
+			
+		# connect to TreeWidget signals
+		TableCrabConfig.signalsConnect(self, self,
+				('itemChanged(QTreeWidgetItem*, int)', self.onTreeItemChanged),
+				('itemDoubleClicked(QTreeWidgetItem*)',self.editItem),
+				('itemExpanded(QTreeWidgetItem*)',self.onItemExpanded),
+				('itemCollapsed(QTreeWidgetItem*)',self.onItemCollapsed),
+				('itemSelectionChanged()', self.adjustActions),
+				)
+		
+		# connect to TemplateManager signals
+		TableCrabConfig.signalsConnect(TableCrabConfig.templateManager, self,
+				('itemAdded(QObject*)', self.onTemplateAdded),
+				('itemMovedUp(QObject*, int)', self.onTemplateMovedUp),
+				('itemMovedDown(QObject*, int)', self.onTemplateMovedDown),
+				('itemRemoved(QObject*)', self.onTemplateRemoved),
+				)
+		
+		self.adjustActions()
+		
+	def actions(self):
+		return self._actions
+	
+	def adjustActions(self):
+		self.actionNew.setEnabled(TableCrabConfig.templateManager.canAddItem() )
+		item = self.currentItem()
+		if item is None:
+			template = None
+		elif item.parent() is None:
+			template = item.template
+		else:
+			template = item.parent().template
+		if template is None:
+			self.actionUp.setEnabled(False)
+			self.actionDown.setEnabled(False)
+			self.actionRemove.setEnabled(False)
+		else:
+			self.actionUp.setEnabled(TableCrabConfig.templateManager.canMoveItemUp(template) )
+			self.actionDown.setEnabled(TableCrabConfig.templateManager.canMoveItemDown(template) )
+			self.actionRemove.setEnabled(True)
+		
 	def keyReleaseEvent(self, event):
 		#TODO: for some reason the first enter when the widget is created is not accepted
 		if event.key() == QtCore.Qt.Key_Return and not event.modifiers():
@@ -144,163 +208,104 @@ class PersistentItemTreeWidget(QtGui.QTreeWidget):
 				self.editItem(item)
 			return
 		return QtGui.QTreeWidget.keyReleaseEvent(self, event)
-	def onPersistentItemAdded(self, persistentItem):
-		item = TablePokerStarsTreeWidgetItem(persistentItem, parent=self)
-		self.addTopLevelItem(item)
-		self.setCurrentItem(item)
-		TableCrabConfig.templateManager.setItemAttr(persistentItem, 'itemIsExpanded', True)
+	
 	def onTreeItemChanged(self, item, column):
 		if not TableCrabConfig.templateManager.readFinished():
 			return
 		if item.attrName == 'name':
-			if item.text(0) != item.persistentItem.name:	#NOTE: special handling for in-place editing
-				TableCrabConfig.templateManager.setItemAttr(item.persistentItem, 'name', item.text(0))
-	def onPersistentItemManagerItemRead(self, persistentItem):
-		item = TablePokerStarsTreeWidgetItem(persistentItem, parent=self)
-		self.addTopLevelItem(item)
+			if item.text(0) != item.template.name:	#NOTE: special handling for in-place editing
+				TableCrabConfig.templateManager.setItemAttr(item.template, 'name', item.text(0))
+	
 	def onItemExpanded(self, item):
 		if not TableCrabConfig.templateManager.readFinished():
 			return
-		TableCrabConfig.templateManager.setItemAttr(item.persistentItem, 'itemIsExpanded', True)
+		TableCrabConfig.templateManager.setItemAttr(item.template, 'itemIsExpanded', True)
+	
 	def onItemCollapsed(self, item):
 		if not TableCrabConfig.templateManager.readFinished():
 			return
-		TableCrabConfig.templateManager.setItemAttr(item.persistentItem, 'itemIsExpanded', False)
-	def createPersistentItem(self, persistentItemProto):
-		persistentItem = persistentItemProto(name=persistentItemProto.itemName())
-		TableCrabConfig.signalConnect(persistentItem, self, 'itemAdded(QObject*)', self.onPersistentItemAdded)
-		TableCrabConfig.templateManager.addItem(persistentItem)
+		TableCrabConfig.templateManager.setItemAttr(item.template, 'itemIsExpanded', False)
+	
 	def onSettingAlternatingRowColorsChanged(self, flag):
 		self.setAlternatingRowColors(flag)
+	
 	def onSettingChildItemIndicatorsChanged(self, flag):
 		self.setRootIsDecorated(flag)
-
-class FramePersistentItems(QtGui.QFrame):
 	
-	class ActionNewPersistentItem(QtGui.QAction):
-		def __init__(self, persistentItemProto, parent=None):
-			QtGui.QAction.__init__(self, parent)
-			self.persistentItemProto = persistentItemProto
-			self.setText(self.persistentItemProto.itemName())
-			
-	def __init__(self, parent=None):
-		QtGui.QFrame.__init__(self, parent)
-		self._actions = []
-		self.persistentItemTreeWidget = PersistentItemTreeWidget(self)
-		TableCrabConfig.signalConnect(None, self, 'widgetScreenshotDoubleClicked(QPixmap*, QPoint*)', self.onWidgetScreenshotDoubleClicked)
-		TableCrabConfig.signalConnect(self.persistentItemTreeWidget, self, 'itemSelectionChanged()', self.onTreeItemSelectionChanged)
-			
-		menu = QtGui.QMenu(self)
-		for persistentItemProto in TableCrabConfig.templateManager.itemProtos():
-			persistentItem = self.ActionNewPersistentItem(persistentItemProto, parent=self)
-			TableCrabConfig.signalConnect(persistentItem, self, 'triggered(bool)', self.onPersistentItemNewTriggered)
-			menu.addAction(persistentItem)
-		self.actionNew = TableCrabConfig.Action(
-				parent=self,
-				text='New',
-				menu=menu,
-				toolTip='Create a new template',
-				)
-		self._actions.append(self.actionNew)
-			
-		self.actionUp = TableCrabConfig.Action(
-				parent=self,
-				text='Up',
-				toolTip='Move template up',
-				slot=self.onActionUpTriggered,
-				)
-		self._actions.append(self.actionUp)
-		
-		self.actionDown = TableCrabConfig.Action(
-				parent=self,
-				text='Down',
-				toolTip='Move template down',
-				slot=self.onActionDownTriggered,
-				)
-		self._actions.append(self.actionDown)
-		
-		self.actionRemove = TableCrabConfig.Action(
-				parent=self,
-				text='Remove',
-				toolTip='Remove template',
-				slot=self.onActionRemoveTriggered,
-				)
-		self._actions.append(self.actionRemove)
-			
-		self.adjustActions()
-		self.layout()
-	
-	def adjustActions(self):
-		self.actionNew.setEnabled(TableCrabConfig.templateManager.canAddItem() )
-		item = self.persistentItemTreeWidget.currentItem()
-		if item is None:
-			persistentItem = None
-		elif item.parent() is None:
-			persistentItem = item.persistentItem
-		else:
-			persistentItem = item.parent().persistentItem
-		if persistentItem is None:
-			self.actionUp.setEnabled(False)
-			self.actionDown.setEnabled(False)
-			self.actionRemove.setEnabled(False)
-		else:
-			self.actionUp.setEnabled(TableCrabConfig.templateManager.canMoveItemUp(persistentItem) )
-			self.actionDown.setEnabled(TableCrabConfig.templateManager.canMoveItemDown(persistentItem) )
-			self.actionRemove.setEnabled(True)
-	
-	def actions(self):
-		return self._actions
-	
-	def layout(self):
-		box = TableCrabConfig.GridBox(self)
-		box.addWidget(self.persistentItemTreeWidget, 0, 0)
-			
 	def onWidgetScreenshotDoubleClicked(self, pixmap, point):
-		item = self.persistentItemTreeWidget.currentItem()
+		item = self.currentItem()
 		if item is None:
 			return False
-		persistentItem= item.persistentItem if item.parent() is None else item.parent().persistentItem
-		if type(getattr(persistentItem, item.attrName)) != QtCore.QPoint:
+		template= item.template if item.parent() is None else item.parent().template
+		if type(getattr(template, item.attrName)) != QtCore.QPoint:
 			return False
-		if persistentItem.size.isEmpty():
+		if template.size.isEmpty():
 			pass
-		elif persistentItem.size != pixmap.size():
+		elif template.size != pixmap.size():
 			return False
-		TableCrabConfig.templateManager.setItemAttrs(persistentItem, {item.attrName: point, 'size': pixmap.size()})
+		TableCrabConfig.templateManager.setItemAttrs(template, {item.attrName: point, 'size': pixmap.size()})
 		return True
-		
-	def onActionUpTriggered(self):
-		item = self.persistentItemTreeWidget.currentItem()
+	
+	def createTemplate(self, templateProto):
+		template = templateProto(name=templateProto.itemName())
+		TableCrabConfig.templateManager.addItem(template)
+	
+	def onTemplateAdded(self, template):
+		item = PokerStarsTemplateTreeWidgetItem(template, parent=self)
+		template.setUserData(item)
+		self.addTopLevelItem(item)
+		if TableCrabConfig.templateManager.readFinished():
+			self.setCurrentItem(item)
+			item.setExpanded(True)
+			TableCrabConfig.templateManager.setItemAttr(template, 'itemIsExpanded', True)
+	
+	def moveTemplateUp(self):
+		item = self.currentItem()
 		if item is None:
 			self.actionUp.setEnabled(False)
 			return
-		persistentItem= item.persistentItem if item.parent() is None else item.parent().persistentItem
-		TableCrabConfig.templateManager.moveItemUp(persistentItem)
+		template= item.template if item.parent() is None else item.parent().template
+		TableCrabConfig.templateManager.moveItemUp(template)
 	
-	def onActionDownTriggered(self):
-		item = self.persistentItemTreeWidget.currentItem()
+	def onTemplateMovedUp(self, template, index):
+		item = template.userData()
+		self.takeTopLevelItem(self.indexOfTopLevelItem(item))
+		self.insertTopLevelItem(index, item)
+		self.setCurrentItem(item)
+		#NOTE: for some reason Qt collapses items on TakeItem()
+		item.setExpanded(template.itemIsExpanded)
+		
+	def moveTemplateDown(self):
+		item = self.currentItem()
 		if item is None:
 			self.actionDown.setEnabled(False)
 			return
-		persistentItem = item.persistentItem if item.parent() is None else item.parent().persistentItem
-		TableCrabConfig.templateManager.moveItemDown(persistentItem)
-	
-	def onActionRemoveTriggered(self):
-		item = self.persistentItemTreeWidget.currentItem()
+		template = item.template if item.parent() is None else item.parent().template
+		TableCrabConfig.templateManager.moveItemDown(template)
+		
+	def onTemplateMovedDown(self, template, index):
+		item = template.userData()
+		self.takeTopLevelItem(self.indexOfTopLevelItem(item))
+		self.insertTopLevelItem(index, item)
+		self.setCurrentItem(item)
+		#NOTE: for some reason Qt collapses items on TakeItem()
+		item.setExpanded(template.itemIsExpanded)
+		
+	def removeTemplate(self):
+		item = self.currentItem()
 		if item is None:
 			self.buttonRemove.setEnabled(False)
 			return
-		persistentItem= item.persistentItem if item.parent() is None else item.parent().persistentItem
-		TableCrabConfig.templateManager.removeItem(persistentItem)
+		template= item.template if item.parent() is None else item.parent().template
+		TableCrabConfig.templateManager.removeItem(template)
+	
+	def onTemplateRemoved(self, template):
+		item = template.userData()
+		item.template = None
+		self.takeTopLevelItem(self.indexOfTopLevelItem(item))
+	
 		
-	def onTreeItemSelectionChanged(self):
-		self.adjustActions()
-		
-	def onPersistentItemNewTriggered(self, checked):
-		self.persistentItemTreeWidget.createPersistentItem(self.sender().persistentItemProto)
-		
-		
-class FrameTablesScreenshot(QtGui.QFrame):
+class ScreenshotWidget(QtGui.QScrollArea):
 	
 	class MyLabel(QtGui.QLabel):
 		ScreenshotName = 'Screenshot'
@@ -339,10 +344,10 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		def _giveFeedback(self, pixmap, point):
 			p = 'Size %s Mouse %s' % (TableCrabConfig.sizeToString(pixmap.size()), TableCrabConfig.pointToString(point) )
 			TableCrabConfig.signalEmit(None, 'feedbackCurrentObjectData(QString)', p )
-		
-		
+	
+	
 	def __init__(self, parent=None):
-		QtGui.QFrame.__init__(self, parent)
+		QtGui.QScrollArea.__init__(self, parent)
 		
 		self._lastInfo = None
 		
@@ -350,11 +355,11 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		self.label.setScaledContents(True)
 		self.label.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
 		
-		self.scrollArea = QtGui.QScrollArea(self)
-		self.scrollArea.setBackgroundRole(QtGui.QPalette.Dark)
-		self.scrollArea.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-		self.scrollArea.setWidget(self.label)		
-		
+		self.setBackgroundRole(QtGui.QPalette.Dark)
+		self.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+		self.setWidget(self.label)		
+
+		# setup actions
 		self._actions = []
 		
 		self.actionOpen = TableCrabConfig.Action(
@@ -381,11 +386,13 @@ class FrameTablesScreenshot(QtGui.QFrame):
 				)
 		self._actions.append(self.actionInfo)
 			
-		TableCrabConfig.signalConnect(None, self, 'widgetScreenshotQuery()', self.onWidgetScreenshotQuery)
-		TableCrabConfig.signalConnect(None, self, 'widgetScreenshot(int, QPixmap*)', self.onWidgetScreenshot)
+		# connect global signals
+		TableCrabConfig.signalsConnect(None, self, 
+				('widgetScreenshotQuery()', self.onWidgetScreenshotQuery),
+				('widgetScreenshot(int, QPixmap*)', self.onWidgetScreenshot),
+				)
 				
 		self.adjustActions()
-		self.layout()
 		
 	def actions(self):
 		return self._actions
@@ -468,10 +475,6 @@ class FrameTablesScreenshot(QtGui.QFrame):
 		self._lastInfo += '-----------------------------------------------------------------\n'
 		for level, hwnd in TableCrabWin32.windowWalkChildren(hwndParent, report=True):
 			 self._lastInfo += windowInfo(hwnd, level=level)
-		
-	def layout(self):
-		box = TableCrabConfig.GridBox(self)
-		box.addWidget(self.scrollArea, 0, 0)
 			
 	def onActionOpenTriggered(self):
 		imageFormats = [QtCore.QString(i).toLower() for i in  QtGui.QImageReader.supportedImageFormats()]
@@ -584,20 +587,20 @@ class FrameSetup(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 		self.splitter = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
-		self.framePersistentItems = FramePersistentItems(parent=self)
-		self.frameTablesScreenshot = FrameTablesScreenshot(parent=self)
+		self.templatesWidget = TemplatesWidget(parent=self)
+		self.screenshotWidget =ScreenshotWidget(parent=self)
 		
-		self.splitter.addWidget(self.framePersistentItems)
-		self.splitter.addWidget(self.frameTablesScreenshot)
+		self.splitter.addWidget(self.templatesWidget)
+		self.splitter.addWidget(self.screenshotWidget)
 		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Setup/SplitterState', QtCore.QByteArray()).toByteArray() )
 		TableCrabConfig.signalConnect(None, self, 'closeEvent(QEvent*)', self.onCloseEvent)
 		
 		self.toolBar = QtGui.QToolBar(self)
-		for action in self.framePersistentItems.actions():
+		for action in self.templatesWidget.actions():
 			self.toolBar.addAction(action)
 		self.toolBar.addSeparator()
 		self.toolBar.addSeparator()
-		for action in self.frameTablesScreenshot.actions():
+		for action in self.screenshotWidget.actions():
 			self.toolBar.addAction(action)
 		
 		self.actionHelp = TableCrabConfig.Action(

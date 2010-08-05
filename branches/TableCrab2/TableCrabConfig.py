@@ -149,6 +149,10 @@ def signalConnect(sender, receiver, signal, slot):
 	if sender is None: receiver.connect(_qObject, QtCore.SIGNAL(signal), slot)
 	else: receiver.connect(sender, QtCore.SIGNAL(signal), slot)
 
+def signalsConnect(sender, receiver, *signals):
+	for signal, slot in signals:
+		signalConnect(sender, receiver, signal, slot)
+
 #***********************************************************************************
 # types
 #***********************************************************************************
@@ -197,6 +201,13 @@ class PersistentItemManager(QtCore.QObject):
 				if item.toConfig(key):
 					slot += 1
 	
+	def dump(self):
+		self._lock.acquire()
+		try:
+			self._dump()
+		finally:
+			self._lock.release()
+	
 	def read(self):
 		# read items
 		if self._readFinished:
@@ -214,7 +225,7 @@ class PersistentItemManager(QtCore.QObject):
 							newItems.append( (slot, newItem) )
 				for _, item in sorted(newItems):
 					self._items.append(item)
-					signalEmit(self, 'itemRead(QObject*)', item)
+					signalEmit(self, 'itemAdded(QObject*)', item)
 				self._dump()
 				self._readFinished = True
 		finally:
@@ -255,7 +266,8 @@ class PersistentItemManager(QtCore.QObject):
 			self._dump()
 		finally:
 			self._lock.release()
-		signalEmit(item,'itemAdded(QObject*)', item)
+		signalEmit(self, 'itemAdded(QObject*)', item)
+		
 	def removeItem(self, item):
 		self._lock.acquire()
 		try:
@@ -263,7 +275,7 @@ class PersistentItemManager(QtCore.QObject):
 			self._dump()
 		finally:
 			self._lock.release()
-		signalEmit(item, 'itemRemoved(QObject*)', item)
+		signalEmit(self, 'itemRemoved(QObject*)', item)
 	def canMoveItemUp(self, item):
 		self._lock.acquire()
 		try:
@@ -289,7 +301,7 @@ class PersistentItemManager(QtCore.QObject):
 			self._dump()
 		finally:
 			self._lock.release()
-		signalEmit(item, 'itemMovedUp(QObject*, int)', item, i -1)
+		signalEmit(self, 'itemMovedUp(QObject*, int)', item, i -1)
 	def moveItemDown(self, item):
 		self._lock.acquire()
 		try:
@@ -301,7 +313,7 @@ class PersistentItemManager(QtCore.QObject):
 			self._dump()
 		finally:
 			self._lock.release()
-		signalEmit(item, 'itemMovedDown(QObject*, int)', item, i +1)
+		signalEmit(self, 'itemMovedDown(QObject*, int)', item, i +1)
 	def readFinished(self):
 		return self._readFinished
 	def setItemAttr(self, item, name, value):
@@ -328,11 +340,14 @@ class PersistentItem(QtCore.QObject):
 			if value is None:
 				value= valueType()
 			setattr(self, name, value)
+		
+		self._userData = None
+	def userData(self): return self._userData
+	def setUserData(self, data): self._userData = data
 
-
-class ActionCheck(PersistentItem):
+class HotkeyCheck(PersistentItem):
 	Attrs = (
-			('name', QtCore.QString),
+			('action', QtCore.QString),
 			('hotkey', QtCore.QString),
 			('hotkeyName', QtCore.QString),
 			)
@@ -345,64 +360,67 @@ class ActionCheck(PersistentItem):
 		if itemName != klass.itemName(): return None
 		hotkey = settingsValue( (key, 'Hotkey'), HotkeyNone).toString()
 		if hotkey == HotkeyNone: return None
-		name = settingsValue( (key, 'Name'), '').toString()
+		action = settingsValue( (key, 'Action'), '').toString()
 		hotkeyName = settingsValue( (key, 'HotkeyName'), '').toString()
-		return klass(name=name, hotkey=hotkey, hotkeyName=hotkeyName)
+		return klass(action=action, hotkey=hotkey, hotkeyName=hotkeyName)
 	def toConfig(self, key):
 		settingsSetValue( (key, 'ItemName'), self.itemName() )
-		settingsSetValue( (key, 'Name'), self.name)
+		settingsSetValue( (key, 'Action'), self.action)                                            
 		settingsSetValue((key, 'Hotkey'), self.hotkey)
 		settingsSetValue( (key, 'HotkeyName'), self.hotkeyName)
 		return True
-
-class ActionFold(ActionCheck):
+	
+class HotkeyFold(HotkeyCheck):
 	@classmethod
 	def itemName(klass):
 		return 'Fold'
-
-class ActionRaise(ActionCheck):
+	
+class HotkeyRaise(HotkeyCheck):
 	@classmethod
 	def itemName(klass):
 		return 'Raise'
-
-class ActionScreenshot(ActionCheck):
+		
+class HotkeyScreenshot(HotkeyCheck):
 	@classmethod
 	def itemName(klass):
 		return 'Screenshot'
-		
-class ActionHilightBetAmount(ActionCheck):
+			
+class HotkeyHilightBetAmount(HotkeyCheck):
 	@classmethod
 	def itemName(klass):
 		return 'HilightBetAmount'
 
-class ActionReplayer(ActionCheck):
+class HotkeyReplayer(HotkeyCheck):
 	@classmethod
 	def itemName(klass):
 		return 'Replayer'
 
-class ActionInstantHandHistory(ActionCheck):
+class HotkeyInstantHandHistory(HotkeyCheck):
 	@classmethod
 	def itemName(klass):
 		return 'InstantHandHistory'
 
-class ActionAllIn(ActionCheck):
+class HotkeyAllIn(HotkeyCheck):
 	@classmethod
 	def itemName(klass):
 		return 'All-In'
 
 
-class ActionAlterBetAmount(PersistentItem):
-	BaseValues = ('BigBlind', 'SmallBlind', 'CurrentBet')
+class HotkeyAddToBetAmount(PersistentItem):
+	BaseValues = ('BigBlind', 'SmallBlind')
+	MultiplierMax = 99.0
+	MultiplierMin = 0.0
+	MultiplierDefault = 1.0
 	Attrs = (
-			('name', QtCore.QString),
+			('action', QtCore.QString),
 			('hotkey', QtCore.QString),
 			('hotkeyName', QtCore.QString),
 			('baseValue', CallableString('BigBlind') ),
-			('multiplier', CallableFloat(1.0)),
+			('multiplier', CallableFloat(MultiplierDefault)),
 			)
 	@classmethod
 	def itemName(klass):
-		return 'AlterBetAmount'
+		return 'AddToBetAmount'
 	@classmethod
 	def fromConfig(klass, key):
 		itemName = settingsValue( (key, 'ItemName'), '').toString()
@@ -412,37 +430,78 @@ class ActionAlterBetAmount(PersistentItem):
 		hotkeyName = settingsValue( (key, 'HotkeyName'), '').toString()
 		baseValue = settingsValue( (key, 'BaseValue'), '').toString()
 		if baseValue not in klass.BaseValues: return None
-		multiplier, ok = settingsValue( (key, 'Multiplier'), 1.0).toDouble()
+		multiplier, ok = settingsValue( (key, 'Multiplier'), -1.0).toDouble()
 		if not ok: return None
-		name = settingsValue( (key, 'Name'), '').toString()
-		return klass(name=name, hotkey=hotkey, hotkeyName=hotkeyName, baseValue = baseValue, multiplier=multiplier)
+		if multiplier > klass.MultiplierMax or multiplier < klass.MultiplierMin: return None
+		action = settingsValue( (key, 'Action'), '').toString()
+		return klass(action=action, hotkey=hotkey, hotkeyName=hotkeyName, baseValue = baseValue, multiplier=multiplier)
 	def toConfig(self, key):
 		settingsSetValue( (key, 'ItemName'), self.itemName() )
-		settingsSetValue( (key, 'Name'), self.name)
+		settingsSetValue( (key, 'Action'), self.action)
 		settingsSetValue( (key, 'HotkeyName'), self.hotkeyName)
 		settingsSetValue( (key, 'Hotkey'), self.hotkey)
 		settingsSetValue( (key, 'BaseValue'), self.baseValue)
 		settingsSetValue( (key, 'Multiplier'), self.multiplier)
 		return  True
 
+class HotkeySubtractFromBetAmount(HotkeyAddToBetAmount):
+	@classmethod
+	def itemName(klass):
+		return 'SubtractFomBetAmount'
+
+class HotkeyMultiplyBetAmount(PersistentItem):
+	MultiplierMax = 99.0
+	MultiplierMin = 1.0
+	MultiplierDefault = 1.0
+	Attrs = (
+			('action', QtCore.QString),
+			('hotkey', QtCore.QString),
+			('hotkeyName', QtCore.QString),
+			('multiplier', CallableFloat(MultiplierDefault)),
+			)
+	@classmethod
+	def itemName(klass):
+		return 'MultiplyBetAmount'
+	@classmethod
+	def fromConfig(klass, key):
+		itemName = settingsValue( (key, 'ItemName'), '').toString()
+		if itemName != klass.itemName(): return None
+		hotkey = settingsValue( (key, 'Hotkey'), HotkeyNone).toString()
+		if hotkey == HotkeyNone: return None
+		hotkeyName = settingsValue( (key, 'HotkeyName'), '').toString()
+		multiplier, ok = settingsValue( (key, 'Multiplier'), -1.0).toDouble()
+		if not ok: return None
+		if multiplier > klass.MultiplierMax or multiplier < klass.MultiplierMin: return None
+		action = settingsValue( (key, 'Action'), '').toString()
+		return klass(action=action, hotkey=hotkey, hotkeyName=hotkeyName, multiplier=multiplier)
+	def toConfig(self, key):
+		settingsSetValue( (key, 'ItemName'), self.itemName() )
+		settingsSetValue( (key, 'Action'), self.action)
+		settingsSetValue( (key, 'HotkeyName'), self.hotkeyName)
+		settingsSetValue( (key, 'Hotkey'), self.hotkey)
+		settingsSetValue( (key, 'Multiplier'), self.multiplier)
+		return  True
+
 #NOTE: we can not use __metaclass__ along with QObject ..so we have to keep track by hand
-Actions = (
-		ActionCheck,
-		ActionFold,
-		ActionRaise,
-		ActionAlterBetAmount,
-		ActionHilightBetAmount,
-		ActionScreenshot,
-		ActionAllIn,
-		ActionReplayer,
-		ActionInstantHandHistory,
+Hotkeys = (
+		HotkeyCheck,
+		HotkeyFold,
+		HotkeyRaise,
+		HotkeyAddToBetAmount,
+		HotkeySubtractFromBetAmount,
+		HotkeyMultiplyBetAmount,
+		HotkeyHilightBetAmount,
+		HotkeyScreenshot,
+		HotkeyAllIn,
+		HotkeyReplayer,
+		HotkeyInstantHandHistory,
 		)
 
-MaxActions = 64
-class _ActionManager(PersistentItemManager):
+MaxHotkeys = 64
+class _HotkeyManager(PersistentItemManager):
 	def __init__(self, parent=None):
-		PersistentItemManager.__init__(self, parent=parent, key='Hotkeys', maxItems=MaxActions, itemProtos=Actions)
-actionManager = _ActionManager()
+		PersistentItemManager.__init__(self, parent=parent, key='Hotkeys', maxItems=MaxHotkeys, itemProtos=Hotkeys)
+hotkeyManager = _HotkeyManager()
 
 MaxTemplateItems = 64
 class _TemplateManager(PersistentItemManager):
@@ -648,7 +707,16 @@ class GridBox(QtGui.QGridLayout):
 	def __init__(self, *args):
 		QtGui.QGridLayout.__init__(self, *args)
 		self.setContentsMargins(contentsMargins)
-		
+	def addFields(self, *fields):
+		row = self.rowCount()
+		for items in fields:
+			for col, item in enumerate(items):
+				if isinstance(item, QtGui.QWidget):
+					self.addWidget(item, row, col)
+				else:
+					self.addLayout(item, row, col)
+			row += 1
+	
 class HLine(QtGui.QFrame):
 	def __init__(self, *args):
 		QtGui.QFrame.__init__(self, *args)
