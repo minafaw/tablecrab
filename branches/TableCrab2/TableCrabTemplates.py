@@ -24,7 +24,7 @@ class ChildItem(QtGui.QTreeWidgetItem):
 	def toplevel(self):
 		return self.parent()
 	
-class TemplateTablePokerStars(QtGui.QTreeWidgetItem):
+class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 	_PointNames = ('buttonCheck', 'buttonFold', 'checkboxFold', 'checkboxCheckFold', 'betSliderStart', 'betSliderEnd', 'instantHandHistory', 'replayer')
 	def __init__(self, parent=None, 
 			name='',
@@ -135,16 +135,16 @@ class TemplateTablePokerStars(QtGui.QTreeWidgetItem):
 		id = TableCrabConfig.settingsValue( (key, 'ID'), '').toString()
 		if id != klassID: return None
 		attrs['name'] = TableCrabConfig.settingsValue( (key, 'Name'), 'None').toString()
-		size = TableCrabConfig.settingsValue( (key, 'Size'), TableCrabConfig.SizeNone).toSize()
+		size = TableCrabConfig.settingsValue( (key, 'Size'), TableCrabConfig.newSizeNone() ).toSize()
 		if not size.isValid():
-			size = TableCrabConfig.SizeNone
+			size = TableCrabConfig.newSizeNone()
 		attrs['size'] = size
 		attrs['itemIsExpanded'] = TableCrabConfig.settingsValue( (key, 'ItemIsExpanded'), False).toBool()	
 		for pointName in klass._PointNames:
 			keyName = pointName[0].upper() + pointName[1:]
-			point = TableCrabConfig.settingsValue( (key, keyName), TableCrabConfig.PointNone).toPoint()
+			point = TableCrabConfig.settingsValue( (key, keyName), TableCrabConfig.newPointNone() ).toPoint()
 			if not TableCrabConfig.pointInSize(size, point):
-				point = TableCrabConfig.PointNone
+				point = TableCrabConfig.newPointNone()
 			attrs[pointName] = point
 		return attrs
 	@classmethod
@@ -162,5 +162,5 @@ class TemplateTablePokerStars(QtGui.QTreeWidgetItem):
 			TableCrabConfig.settingsSetValue( (key, keyName), getattr(self, pointName) )
 		return True
 		
-Templates.append(TemplateTablePokerStars)
+Templates.append(TemplatePokerStarsTable)
 
