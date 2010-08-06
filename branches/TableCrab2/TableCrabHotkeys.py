@@ -192,6 +192,13 @@ class HotkeyAll_In(HotkeyCheck):
 	def menuName(klass): return 'All-In'
 Hotkeys.append(HotkeyAll_In)
 
+class HotkeyHilightBetAmount(HotkeyCheck):
+	@classmethod
+	def id(klass): return 'HilightBetAmount'
+	@classmethod
+	def menuName(klass): return 'Hilight Bet Amount'
+Hotkeys.append(HotkeyHilightBetAmount)
+
 class HotkeyReplayer(HotkeyCheck):
 	@classmethod
 	def id(klass): return 'Replayer'
