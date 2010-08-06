@@ -31,7 +31,7 @@ def _excepthook(type, value, tb,
 			):
 	# as failsave as possible
 	p = ''
-	p += ': %s\n' % releaseName
+	p += 'TableCrab: %s\n' % releaseName
 	p += 'Platform: %s %s\n' % (platform.system(), platform.release() )
 	p += 'PythonVersion: %s\n' % sys.version.split()[0]
 	try:
@@ -46,10 +46,13 @@ def _excepthook(type, value, tb,
 		p += 'SipVersion: %s\n' % sipconfig.Configuration().sip_version_str
 	except:
 		p += 'SipVersion: Unknown\n'
-	try:
-		signalEmit(None, 'feedbackException()')
-	except: pass
 	p += ''.join(traceback.format_exception(type, value, tb))
+	try:
+		lastTraceback = p
+	except: pass
+	try:
+		signalEmit(None, 'feedbackException(QString)', p)
+	except: pass
 	try:	# try to log
 		logger.critical(p)
 	except:	# no success ..write to console
@@ -542,6 +545,29 @@ def pointInSize(size, point):
 def widgetScreenshot(hwnd):
 	pixmap = QtGui.QPixmap.grabWindow(hwnd, 0, 0, -1,-1)
 	signalEmit(None, 'widgetScreenshot(int, QPixmap*)', hwnd, pixmap)
+
+def uniqueName(name, names):
+	i = 0
+	newName = name
+	while newName in names:
+		i += 1
+		newName = name + ' (%s)' % i
+	return newName
+		
+def cleanException(exception):
+	p = QtCore.QString()
+	for line in exception.split('\n'):
+		if line.startsWith('  File "'):
+			start = line.indexOf('"') +1
+			if start < 0:	continue
+			stop = line.lastIndexOf('"')
+			if stop < 0: continue
+			fileName = line[start:stop]
+			fileInfo = QtCore.QFileInfo(fileName)
+			line = QtCore.QString('%1%2%3').arg(line[:start]).arg(fileInfo.fileName()).arg(line[stop:])
+		p += line 
+		p += '\n'
+	return p
 
 #***********************************************************************************
 # global Application object
