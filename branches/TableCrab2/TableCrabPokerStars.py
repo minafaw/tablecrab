@@ -1,6 +1,16 @@
+'''
+TODO:
+
+	- if a table template is defined but not the point for a hotkey ..give feedback? when yes, what?
+
+
+'''
+
 
 import TableCrabConfig
 import TableCrabWin32
+import TableCrabHotkeys
+import TableCrabTemplates
 
 import re, time
 
@@ -53,7 +63,7 @@ class ActionHandler(object):
 		return False
 		
 	def handleWindowGainedForeground(self, hwnd):
-		template = self.tableTemplateItem(hwnd)
+		template = self.tableTemplate(hwnd)
 		if template is not None:
 			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', template.name)
 			return True
@@ -63,7 +73,7 @@ class ActionHandler(object):
 		return False
 	
 	def handleInputEvent(self, hwnd, hotkey, inputEvent):
-		template = self.tableTemplateItem(hwnd)
+		template = self.tableTemplate(hwnd)
 		if template is None:
 			return False
 		if not self.tableHotkeysEnabled(hwnd):
@@ -72,45 +82,46 @@ class ActionHandler(object):
 			inputEvent.accept = True
 			return True
 			
-		actionName = hotkey.itemName()
+		actionID = hotkey.id()
+		print actionID
 		
-		if actionName == TableCrabConfig.HotkeyCheck.itemName():
+		if actionID == TableCrabHotkeys.HotkeyCheck.id():
 			self.tableHandleCheck(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
 			return True
-		elif actionName == TableCrabConfig.HotkeyFold.itemName():
+		elif actionID == TableCrabHotkeys.HotkeyFold.id():
 			self.tableHandleFold(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
 			return True		
-		elif actionName == TableCrabConfig.HotkeyRaise.itemName():
+		elif actionID == TableCrabHotkeys.HotkeyRaise.id():
 			self.tableHandleRaise(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
 			return True	
-		elif actionName == TableCrabConfig.HotkeyAllIn.itemName():
-			self.tableHandleAllIn(hotkey, template, hwnd, inputEvent)
+		elif actionID == TableCrabHotkeys.HotkeyAll_In.id():
+			self.tableHandleAll_In(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
 			return True	
-		elif actionName == TableCrabConfig.HotkeyHilightBetAmount.itemName():
+		elif actionID == TableCrabHotkeys.HotkeyHilightBetAmount.id():
 			self.tableHandleHilightBetAmount(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
 			return True
-		elif actionName == TableCrabConfig.HotkeyAddToBetAmount.itemName():
+		elif actionID == TableCrabHotkeys.HotkeyAddToBetAmount.id():
 			self.tableHandleAddToBetAmount(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
 			return True	
-		elif actionName == TableCrabConfig.HotkeySubtractFromBetAmount.itemName():
+		elif actionID == TableCrabHotkeys.HotkeySubtractFromBetAmount.id():
 			self.tableHandleSubtractFromBetAmount(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
 			return True	
-		elif actionName == TableCrabConfig.HotkeyMultiplyBetAmount.itemName():
+		elif actionID == TableCrabHotkeys.HotkeyMultiplyBetAmount.id():
 			self.tableHandleMultiplyBetAmount(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
 			return True	
-		elif actionName == TableCrabConfig.HotkeyReplayer.itemName():
+		elif actionID == TableCrabHotkeys.HotkeyReplayer.id():
 			self.tableHandleReplayer(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
 			return True
-		elif actionName == TableCrabConfig.HotkeyInstantHandHistory.itemName():
+		elif actionID == TableCrabHotkeys.HotkeyInstantHandHistory.id():
 			self.tableHandleInstantHandHistory(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
 			return True
@@ -186,11 +197,11 @@ class ActionHandler(object):
 		if not self.isLobby(hwndParent): return False
 		return True
 		
-	def tableTemplateItem(self, hwnd):
+	def tableTemplate(self, hwnd):
 		if self.isTable(hwnd):
 			rect = TableCrabWin32.windowGetClientRect(hwnd)
-			for template in TableCrabConfig.templateManager.items():
-				if template.itemName() == 'PokerStarsTable':
+			for template in TableCrabConfig.templateManager:
+				if template.id() == TableCrabTemplates.TemplatePokerStarsTable.id():
 					if template.size == rect.size():
 						return template
 		return None
@@ -249,7 +260,7 @@ class ActionHandler(object):
 			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
 		if TableCrabConfig.settingsValue('Gui/RestoreMousePosition', False).toBool():
 			mi.move(pointCurrent, hwnd=None).send()
-		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name,  hotkey.hotkey))
+		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.memuName(),  hotkey.action() ))
 		
 	def tableHandleFold(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
@@ -268,7 +279,7 @@ class ActionHandler(object):
 			mi.leftClick(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
 		if TableCrabConfig.settingsValue('Gui/RestoreMousePosition', False).toBool():
 			mi.move(pointCurrent, hwnd=None).send()
-		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name,  hotkey.hotkey))
+		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.memuName(),  hotkey.action() ))
 		
 	def tableHandleRaise(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
@@ -282,7 +293,7 @@ class ActionHandler(object):
 		mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
 		if TableCrabConfig.settingsValue('Gui/RestoreMousePosition', False).toBool():
 			mi.move(pointCurrent, hwnd=None).send()
-		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name,  hotkey.hotkey))
+		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.memuName(),  hotkey.action() ))
 		
 	#NOTE: there is another way to handle all-in. no reliable one but could be a fallback. looks like bet amount box accepts
 	# values up to some hard coded PS wide maximum. if this maximum is exceeded the bet box resets to 0.
@@ -292,7 +303,7 @@ class ActionHandler(object):
 	# 24.000.000 reset
 	# funny enough you can enter up to 9 digits into the box when the maximum is actually located somewhere in the 8 digits region.
 	# either a bug or feature that is. 
-	def tableHandleAllIn(self, hotkey, template, hwnd, inputEvent):
+	def tableHandleAll_In(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
 		if not data['hwndBetAmountBox']: return
@@ -306,7 +317,7 @@ class ActionHandler(object):
 		mi.leftDown(pointStart, hwnd=hwnd).move(pointEnd, hwnd=hwnd).leftUp(pointEnd, hwnd=hwnd).send()
 		if TableCrabConfig.settingsValue('Gui/RestoreMousePosition', False).toBool():
 			mi.move(pointCurrent, hwnd=None).send()
-		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name,  hotkey.hotkey))
+		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.memuName(),  hotkey.action() ))
 		
 	def tableHandleAddToBetAmount(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
@@ -327,7 +338,7 @@ class ActionHandler(object):
 			newBetAmount = int(newBetAmount)
 		newBetAmount = str(newBetAmount)
 		TableCrabWin32.windowSetText(data['hwndBetAmountBox'], text=newBetAmount)
-		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name,  hotkey.hotkey))
+		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.memuName(),  hotkey.action() ))
 			
 	def tableHandleSubtractFromBetAmount(self, hotkey, template, hwnd, inputEvent):
 		if not data: return
@@ -347,7 +358,7 @@ class ActionHandler(object):
 			newBetAmount = int(newBetAmount)
 		newBetAmount = str( 0 if newBetAmount < 0 else newBetAmount )
 		TableCrabWin32.windowSetText(data['hwndBetAmountBox'], text=newBetAmount)
-		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name,  hotkey.hotkey))
+		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.memuName(),  hotkey.action() ))
 	
 	def tableHandleMultiplyBetAmount(self, hotkey, template, hwnd, inputEvent):
 		if not data: return
@@ -362,7 +373,7 @@ class ActionHandler(object):
 			newBetAmount = int(newBetAmount)
 		newBetAmount = str(newBetAmount)
 		TableCrabWin32.windowSetText(data['hwndBetAmountBox'], text=newBetAmount)
-		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name,  hotkey.hotkey))
+		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.memuName(),  hotkey.action() ))
 		
 	def tableHandleHilightBetAmount(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
@@ -377,10 +388,11 @@ class ActionHandler(object):
 		mi.leftClick(point, hwnd=hwndBetAmountBox).leftClick(point, hwnd=hwndBetAmountBox).send()
 		if TableCrabConfig.settingsValue('Gui/RestoreMousePosition', False).toBool():
 			mi.move(pointCurrent, hwnd=None).send()
-		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name,  hotkey.hotkey))
+		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.memuName(),  hotkey.action() ))
 		
 	def _tableClickRestoreFocus(self, hwnd, point):
-		if point == TableCrabConfig.PointNone: return
+		if point == TableCrabConfig.PointNone: 
+			return False
 		pointCurrent = TableCrabWin32.mouseGetPos()
 		# click point
 		mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
@@ -393,13 +405,14 @@ class ActionHandler(object):
 		if TableCrabConfig.settingsValue('Gui/RestoreMousePosition', False).toBool():
 			#NOTE: the mouse will move around a bit for SndInput() being inacurate)
 			mi.move(pointCurrent, hwnd=None).send()
+		return True
 		
 	def tableHandleReplayer(self, hotkey, template, hwnd, inputEvent):
-		self._tableClickRestoreFocus(hwnd, template.replayer)
-		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name,  hotkey.hotkey))
+		if self._tableClickRestoreFocus(hwnd, template.replayer):
+			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.menuName(),  hotkey.action() ))
 		
 	def tableHandleInstantHandHistory(self, hotkey, template, hwnd, inputEvent):
-		self._tableClickRestoreFocus(hwnd, template.instantHandHistory)
-		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name,  hotkey.hotkey))
+		if self._tableClickRestoreFocus(hwnd, template.instantHandHistory):
+			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.memuName(),  hotkey.action() ))
 
 
