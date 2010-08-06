@@ -1,4 +1,6 @@
  
+#TODO: check for multiple templates of the same size? currently we are using the first matching encountered that's all.
+ 
 import TableCrabConfig
 import TableCrabWin32
 import TableCrabGuiHelp
