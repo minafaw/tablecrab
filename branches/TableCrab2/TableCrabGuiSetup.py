@@ -89,6 +89,17 @@ class TemplatesWidget(QtGui.QTreeWidget):
 				)
 		self.adjustActions()
 		
+	def keyReleaseEvent(self, event):
+		#TODO: for some reason the first enter when the widget is created is not accepted
+		if event.key() == QtCore.Qt.Key_Return and not event.modifiers():
+			event.accept()
+			item = self.currentItem()
+			if not item is None:
+				if item.toplevel() is item:
+						self.editItem(item)
+			return
+		return QtGui.QTreeWidget.keyReleaseEvent(self, event)
+	
 	def read(self):
 		template = None
 		for template in TableCrabConfig.readPersistentItems('Templates', maxItems=TableCrabTemplates.MaxTemplates, itemProtos=TableCrabTemplates.Templates):
