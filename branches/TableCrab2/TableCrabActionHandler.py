@@ -2,6 +2,8 @@
 
 
 import TableCrabConfig
+import TableCrabHotkeys
+
 #**********************************************************************************************
 #
 #**********************************************************************************************
@@ -36,7 +38,7 @@ class ActionHandler(object):
 	def handleInputEvent(self, hwnd, hotkey, inputEvent):
 		if hwnd == self._hwndMain:
 			return True
-		if hotkey.itemName() == TableCrabConfig.HotkeyScreenshot.itemName():
+		if hotkey.id() == TableCrabHotkeys.HotkeyScreenshot.id():
 			if inputEvent.keyIsDown or inputEvent.mouseSteps:
 				TableCrabConfig.widgetScreenshot(hwnd)
 				inputEvent.accept = True
