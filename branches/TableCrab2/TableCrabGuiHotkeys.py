@@ -22,7 +22,12 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			self.parent().createHotkey(self.hotkeyProto)
 		
 	def read(self):
+		hotkey = None
 		for hotkey in TableCrabConfig.readPersistentItems('Hotkeys', maxItems=TableCrabHotkeys.MaxHotkeys, itemProtos=TableCrabHotkeys.Hotkeys):
+			self.addTopLevelItem(hotkey)
+		# set at least one hotkey as default
+		if hotkey is None:
+			hotkey = TableCrabHotkeys.HotkeyScreenshot(hotkey='<1 LCONTROL>', hotkeyName='LeftCtrl+1')
 			self.addTopLevelItem(hotkey)
 		
 	def dump(self):
@@ -122,19 +127,18 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			event.accept()
 			hotkey = self.currentItem()
 			if hotkey is not None:
-				self.editHotkey(hotkey)
+				self.editHotkey()
 			return
 		return QtGui.QTreeWidget.keyReleaseEvent(self, event)
 	
 	def onHotkeyDoubleClicked(self, hotkey):
-		self.editHotkey(hotkey)
+		self.editHotkey()
 			
-	def editHotkey(self, hotkey=None):
+	def editHotkey(self):
+		hotkey = self.currentItem()
 		if hotkey is None:
-			hotkey = self.currentItem()
-			if hotkey is None:
-				self.actionEdit.setEnabled(False)
-				return
+			self.actionEdit.setEnabled(False)
+			return
 		hotkey = hotkey.createEditor(parent=self, settingsKey='Gui/DialogHotkeyEditor/Geometry', isEdit=True)
 		if hotkey is not None:
 			self.dump()

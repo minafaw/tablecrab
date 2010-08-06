@@ -90,9 +90,15 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self.adjustActions()
 		
 	def read(self):
+		template = None
 		for template in TableCrabConfig.readPersistentItems('Templates', maxItems=TableCrabTemplates.MaxTemplates, itemProtos=TableCrabTemplates.Templates):
 			self.addTopLevelItem(template)
 			template.setExpanded(template.itemIsExpanded)
+		# set at least one template as default
+		if template is None:
+			template = TableCrabTemplates.TemplateTablePokerStars()
+			self.addTopLevelItem(template)
+			template.setExpanded(True)
 		self._templatesRead = True
 		TableCrabConfig.signalEmit(None, 'widgetScreenshotQuery()')
 		
@@ -283,7 +289,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		self.actionInfo = TableCrabConfig.Action(
 				parent=self,
 				text='Info..',
-				toolTip='Detailed screenshot information',
+				toolTip='Display detailed screenshot information',
 				slot=self.onActionInfoTriggered,
 				)
 		self._actions.append(self.actionInfo)

@@ -177,6 +177,7 @@ def dumpPersistentItems(settigsKey, items):
 				slot += 1
 
 def readPersistentItems(settingsKey, maxItems=0, itemProtos=None):
+	itemProtos = () if itemProtos is None else itemProtos
 	newItems = []
 	for slot in xrange(maxItems):
 		key = settingsKeyJoin(settingsKey, str(slot) )
@@ -203,6 +204,7 @@ def readPersistentItems(settingsKey, maxItems=0, itemProtos=None):
 windowHook = TableCrabWin32.WindowHook(parent=None)
 mouseHook = TableCrabWin32.MouseHook(parent=None)
 keyboardHook = TableCrabWin32.KeyboardHook(parent=None)
+#TODO: not with about this ..both only get set if and when the according widgets are created
 hotkeyManager = None
 templateManager = None
 
@@ -427,7 +429,7 @@ class HotkeyBox(QtGui.QComboBox):
 	#     mut be handled internally cos it is working without our help)
 	# x) we added a space to each displayName to trrick the combo popup search feature
 	Hotkeys = (		# hotkey --> displayName
-				('', '<Enter Hotkey>'),
+				('', '<Type On Your Keyboard>'),
 				('<ESCAPE>', ' ESCAPE'),
 				('<SPACE>', ' SPACE'),
 				('<TAB>', ' TAB'),
