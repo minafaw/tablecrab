@@ -148,6 +148,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		hotkey = hotkey.createEditor(parent=self, settingsKey='Gui/DialogHotkeyEditor/Geometry', isEdit=False)
 		if hotkey is not None:
 			self.addTopLevelItem(hotkey)
+			self.setCurrentItem(hotkey)
 			self.dump()
 		
 	def canMoveHotkeyUp(self):
