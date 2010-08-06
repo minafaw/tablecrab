@@ -11,6 +11,17 @@ from PyQt4 import QtCore, QtGui
 #**********************************************************************************************
 class TemplatesWidget(QtGui.QTreeWidget):
 	
+	
+	class MyDelegate(QtGui.QItemDelegate):
+		def __init__(self, parent=None):
+			QtGui.QItemDelegate.__init__(self, parent)
+		def createEditor(self, parent, option, index):
+			ed = QtGui.QLineEdit(parent)
+			TableCrabConfig.signalConnect(ed, self, 'editingFinished()', self.onEditingFinished)
+			return ed
+		def onEditingFinished(self):
+			TableCrabConfig.signalEmit(self, 'editingFinished()')
+	
 	class ActionNewTemplate(QtGui.QAction):
 		def __init__(self, templateProto, parent=None):
 			QtGui.QAction.__init__(self, parent)
@@ -20,6 +31,12 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		def onTriggered(self):
 			self.parent().createTemplate(self.templateProto)
 			
+	def onTemplateEditingFinished(self):
+		item = self.currentItem()
+		if item is not None:
+			if item.toplevel().handleEditingFinished(item):
+				self.dump()
+		
 	def __init__(self, parent=None):
 		QtGui.QTreeWidget.__init__(self, parent)
 		
@@ -33,6 +50,11 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self.header().setResizeMode(1, QtGui.QHeaderView.ResizeToContents)
 		self.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
 		self.setRootIsDecorated( TableCrabConfig.settingsValue('Gui/ChildItemIndicators', True).toBool() )
+		
+		self.myDelegate = self.MyDelegate(parent=self)
+		self.setItemDelegate(self.myDelegate)
+		TableCrabConfig.signalConnect(self.myDelegate, self, 'editingFinished()', self.onTemplateEditingFinished)
+		
 		
 		self._templatesRead = False
 		
@@ -81,7 +103,6 @@ class TemplatesWidget(QtGui.QTreeWidget):
 			
 		# connect to TreeWidget signals
 		TableCrabConfig.signalsConnect(self, self,
-				('itemChanged(QTreeWidgetItem*, int)', self.onTreeItemChanged),
 				('itemDoubleClicked(QTreeWidgetItem*)',self.editItem),
 				('itemExpanded(QTreeWidgetItem*)',self.onItemExpanded),
 				('itemCollapsed(QTreeWidgetItem*)',self.onItemCollapsed),
@@ -135,12 +156,6 @@ class TemplatesWidget(QtGui.QTreeWidget):
 			self.actionDown.setEnabled(self.canMoveTemplateDown() )
 			self.actionRemove.setEnabled(True)
 		
-	def onTreeItemChanged(self, item, column):
-		if not self._templatesRead:
-			return
-		if item.toplevel().handleItemChanged(item):
-			self.dump()
-	
 	def onItemExpanded(self, item):
 		if not self._templatesRead:
 			return
@@ -165,7 +180,10 @@ class TemplatesWidget(QtGui.QTreeWidget):
 			self.dump()
 	
 	def createTemplate(self, templateProto):
-		template = templateProto()
+		names = [i.name for i in self]
+		name = templateProto.menuName()
+		name = TableCrabConfig.uniqueName(name, names)
+		template = templateProto(parent=self, name=name)
 		self.addTopLevelItem(template)
 		self.setCurrentItem(template)
 		template.setExpanded(True)
