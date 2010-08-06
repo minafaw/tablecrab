@@ -96,7 +96,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 			template.setExpanded(template.itemIsExpanded)
 		# set at least one template as default
 		if template is None:
-			template = TableCrabTemplates.TemplateTablePokerStars()
+			template = TableCrabTemplates.TemplatePokerStarsTable()
 			self.addTopLevelItem(template)
 			template.setExpanded(True)
 		self._templatesRead = True
