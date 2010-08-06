@@ -25,7 +25,7 @@ class ChildItem(QtGui.QTreeWidgetItem):
 		return self.parent()
 	
 class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
-	_PointNames = ('buttonCheck', 'buttonFold', 'checkboxFold', 'checkboxCheckFold', 'betSliderStart', 'betSliderEnd', 'instantHandHistory', 'replayer')
+	_PointNames = ('buttonCheck', 'buttonFold', 'buttonRaise', 'checkboxFold', 'checkboxCheckFold', 'betSliderStart', 'betSliderEnd', 'instantHandHistory', 'replayer')
 	def __init__(self, 
 			parent=None, 
 			name='',
