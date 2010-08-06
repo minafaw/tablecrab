@@ -27,8 +27,10 @@ class MainWindow(QtGui.QMainWindow):
 		TableCrabConfig.mouseHook.start()
 		TableCrabConfig.keyboardHook.start()
 		TableCrabConfig.windowHook.start()
-		TableCrabConfig.hotkeyManager.read()
-		TableCrabConfig.templateManager.read()
+		if TableCrabConfig.hotkeyManager is not None:
+			TableCrabConfig.hotkeyManager.read()
+		if TableCrabConfig.templateManager is not None:
+			TableCrabConfig.templateManager.read()
 		self.siteManager.tableCrabActionHandler().setHwndMain(self.effectiveWinId() )
 	def closeEvent(self, event):
 		TableCrabConfig.signalEmit(None, 'closeEvent(QEvent*)', event)

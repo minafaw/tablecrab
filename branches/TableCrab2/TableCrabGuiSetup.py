@@ -2,111 +2,29 @@
 import TableCrabConfig
 import TableCrabWin32
 import TableCrabGuiHelp
+import TableCrabTemplates
 
 from PyQt4 import QtCore, QtGui
 
 #**********************************************************************************************
 #
 #**********************************************************************************************
-
-class ChildItem(QtGui.QTreeWidgetItem):
-	def __init__(self, attrName, text, value, parent=None):
-		self.attrName = attrName
-		QtGui.QTreeWidgetItem.__init__(self, parent)
-		self.setText(0, text)
-		self.setText(1, value)
-
-
-class PokerStarsTemplateTreeWidgetItem(QtGui.QTreeWidgetItem):
-	def __init__(self, template, parent=None):
-		QtGui.QTreeWidgetItem.__init__(self, parent)
-		self.template = template
-		self.attrName = 'name'
-		self.setText(0, self.template.name)
-		self.setFirstColumnSpanned(True)
-		self.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
-		self.setIcon(0, QtGui.QIcon(TableCrabConfig.Pixmaps.stars()) )
-		font = self.font(0)
-		font.setBold(True)
-		self.setFont(0, font)
-		if self.template.itemIsExpanded:
-			self.setExpanded(True)
-		self.myChildren = {
-				'itemName': ChildItem('itemName', 'Window:', self.template.itemName(), parent=self),
-				'size': ChildItem('size', 'Size:', TableCrabConfig.sizeToString(self.template.size), parent=self),
-				'buttonCheck': ChildItem('buttonCheck', 'ButtonCheck:', TableCrabConfig.pointToString(self.template.buttonCheck), parent=self),
-				'buttonFold': ChildItem('buttonFold', 'ButtonFold:', TableCrabConfig.pointToString(self.template.buttonFold), parent=self),
-				'buttonRaise': ChildItem('buttonRaise', 'ButtonRaise:', TableCrabConfig.pointToString(self.template.buttonRaise), parent=self),
-				'checkboxFold': ChildItem('checkboxFold', 'CheckboxFold:', TableCrabConfig.pointToString(self.template.checkboxFold), parent=self),
-				'checkboxCheckFold': ChildItem('checkboxCheckFold', 'CheckboxCheckFold:', TableCrabConfig.pointToString(self.template.checkboxCheckFold), parent=self),
-				'betSliderStart': ChildItem('betSliderStart', 'BetSliderStart:', TableCrabConfig.pointToString(self.template.betSliderStart), parent=self),
-				'betSliderEnd': ChildItem('betSliderEnd', 'BetSliderEnd:', TableCrabConfig.pointToString(self.template.betSliderEnd), parent=self),
-				'instantHandHistory': ChildItem('instantHandHistory', 'InstantHandHistory:', TableCrabConfig.pointToString(self.template.instantHandHistory), parent=self),
-				'replayer': ChildItem('replayer', 'Replayer:', TableCrabConfig.pointToString(self.template.replayer), parent=self),
-				}
-		self.myChildren['itemName'].setDisabled(True)
-		
-		TableCrabConfig.signalConnect(None, self.template, 'widgetScreenshotSet(QPixmap*)', self.onWidgetScreenshotSet)
-		
-		#TODO: bit of a hack here to disable child items initially
-		TableCrabConfig.signalEmit(None, 'widgetScreenshotQuery()')
-		
-	def childItem(self, attrName):
-		for index in xrange(self.childCount()):
-			child = self.child(index)
-			attr = child.data(0, QtCore.Qt.UserRole).toString()
-			if attr == attrName:
-				return child
-		raise valueError('nosuch child: %s' % attrName)
-		
-	def onPersistentItemAttrChanged(self, template, attrName):
-		attrName = str(attrName)	#NOTE: we can not pass python strings, so we have to type convert here
-		if attrName == 'name':
-			self.setText(0, self.template.name)
-		elif attrName == 'itemName':
-			child = self.myChildren[attrName]
-			child.setText(1,self.template.itemName() )
-		elif attrName == 'size':
-			child = self.myChildren[attrName]
-			if self.template.size.isEmpty():
-				child.setText(1, 'None')
-			else:
-				child.setText(1, TableCrabConfig.sizeToString(self.template.size))
-				child.setDisabled(True)
-		elif attrName == 'itemIsExpanded':
-			self.setExpanded(self.template.itemIsExpanded)
-		else:
-			child = self.myChildren[attrName]
-			child.setText(1, TableCrabConfig.pointToString( getattr(self.template, attrName) ) )
-	
-	def onWidgetScreenshotSet(self, pixmap):
-		for attrName, child in self.myChildren.items():
-			if attrName == 'itemName': continue
-			if attrName == 'size':
-				child.setDisabled(True)
-				continue
-			if pixmap.isNull():
-				child.setDisabled(True)
-			elif self.template.size == pixmap.size():
-				child.setDisabled(False)
-			elif self.template.size.isEmpty():
-				child.setDisabled(False)
-			else:
-				child.setDisabled(True)
-	
 class TemplatesWidget(QtGui.QTreeWidget):
 	
 	class ActionNewTemplate(QtGui.QAction):
 		def __init__(self, templateProto, parent=None):
 			QtGui.QAction.__init__(self, parent)
 			self.templateProto = templateProto
-			self.setText(self.templateProto.itemName())
+			self.setText(self.templateProto.menuName() )
 			TableCrabConfig.signalConnect(self, self, 'triggered(bool)', self.onTriggered)
 		def onTriggered(self):
 			self.parent().createTemplate(self.templateProto)
 			
 	def __init__(self, parent=None):
 		QtGui.QTreeWidget.__init__(self, parent)
+		
+		TableCrabConfig.templateManager = self
+		
 		self.setColumnCount(2)
 		self.setExpandsOnDoubleClick(False)
 		self.setSelectionBehavior(self.SelectRows)
@@ -116,13 +34,14 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
 		self.setRootIsDecorated( TableCrabConfig.settingsValue('Gui/ChildItemIndicators', True).toBool() )
 		
+		self._templatesRead = False
+		
 		# setup actions
 		self._actions = []
 		
 		menu = QtGui.QMenu(self)
-		for templateProto in TableCrabConfig.templateManager.itemProtos():
-			template = self.ActionNewTemplate(templateProto, parent=self)
-			menu.addAction(template)
+		for templateProto in TableCrabTemplates.Templates:
+			menu.addAction(self.ActionNewTemplate(templateProto, parent=self) )
 		self.actionNew = TableCrabConfig.Action(
 				parent=self,
 				text='New',
@@ -154,8 +73,9 @@ class TemplatesWidget(QtGui.QTreeWidget):
 				
 		# connect to global signals	
 		TableCrabConfig.signalsConnect(None, self,
-				('settingAlternatingRowColorsChanged(bool)', self.onSettingAlternatingRowColorsChanged),
-				('settingChildItemIndicatorsChanged(bool)', self.onSettingChildItemIndicatorsChanged),
+				('settingAlternatingRowColorsChanged(bool)', self.setAlternatingRowColors),
+				('settingChildItemIndicatorsChanged(bool)', self.setRootIsDecorated),
+				('widgetScreenshotSet(QPixmap*)', self.onWidgetScreenshotSet),
 				('widgetScreenshotDoubleClicked(QPixmap*, QPoint*)', self.onWidgetScreenshotDoubleClicked),
 				)
 			
@@ -167,144 +87,126 @@ class TemplatesWidget(QtGui.QTreeWidget):
 				('itemCollapsed(QTreeWidgetItem*)',self.onItemCollapsed),
 				('itemSelectionChanged()', self.adjustActions),
 				)
-		
-		# connect to TemplateManager signals
-		TableCrabConfig.signalsConnect(TableCrabConfig.templateManager, self,
-				('itemAdded(QObject*)', self.onTemplateAdded),
-				('itemMovedUp(QObject*, int)', self.onTemplateMovedUp),
-				('itemMovedDown(QObject*, int)', self.onTemplateMovedDown),
-				('itemRemoved(QObject*)', self.onTemplateRemoved),
-				)
-		
 		self.adjustActions()
 		
+	def read(self):
+		for template in TableCrabConfig.readPersistentItems('Templates', maxItems=TableCrabTemplates.MaxTemplates, itemProtos=TableCrabTemplates.Templates):
+			self.addTopLevelItem(template)
+			template.setExpanded(template.itemIsExpanded)
+		self._templatesRead = True
+		TableCrabConfig.signalEmit(None, 'widgetScreenshotQuery()')
+		
+	def dump(self):
+		TableCrabConfig.dumpPersistentItems('Templates', [template for template in self])
+	
+	def __iter__(self):
+		for i in xrange(self.topLevelItemCount()):
+			yield self.topLevelItem(i)
+	
 	def actions(self):
 		return self._actions
 	
 	def adjustActions(self):
-		self.actionNew.setEnabled(TableCrabConfig.templateManager.canAddItem() )
+		self.actionNew.setEnabled(self.topLevelItemCount() < TableCrabTemplates.MaxTemplates)
 		item = self.currentItem()
 		if item is None:
-			template = None
-		elif item.parent() is None:
-			template = item.template
-		else:
-			template = item.parent().template
-		if template is None:
 			self.actionUp.setEnabled(False)
 			self.actionDown.setEnabled(False)
 			self.actionRemove.setEnabled(False)
 		else:
-			self.actionUp.setEnabled(TableCrabConfig.templateManager.canMoveItemUp(template) )
-			self.actionDown.setEnabled(TableCrabConfig.templateManager.canMoveItemDown(template) )
+			self.actionUp.setEnabled(self.canMoveTemplateUp() )
+			self.actionDown.setEnabled(self.canMoveTemplateDown() )
 			self.actionRemove.setEnabled(True)
 		
-	def keyReleaseEvent(self, event):
-		#TODO: for some reason the first enter when the widget is created is not accepted
-		if event.key() == QtCore.Qt.Key_Return and not event.modifiers():
-			event.accept()
-			item = self.currentItem()
-			if item is not None:
-				self.editItem(item)
-			return
-		return QtGui.QTreeWidget.keyReleaseEvent(self, event)
-	
 	def onTreeItemChanged(self, item, column):
-		if not TableCrabConfig.templateManager.readFinished():
+		if not self._templatesRead:
 			return
-		if item.attrName == 'name':
-			if item.text(0) != item.template.name:	#NOTE: special handling for in-place editing
-				TableCrabConfig.templateManager.setItemAttr(item.template, 'name', item.text(0))
+		if item.toplevel().handleItemChanged(item):
+			self.dump()
 	
 	def onItemExpanded(self, item):
-		if not TableCrabConfig.templateManager.readFinished():
+		if not self._templatesRead:
 			return
-		TableCrabConfig.templateManager.setItemAttr(item.template, 'itemIsExpanded', True)
-	
+		if item.toplevel().handleItemExpanded(item):
+			self.dump()
+		
 	def onItemCollapsed(self, item):
-		if not TableCrabConfig.templateManager.readFinished():
+		if not self._templatesRead:
 			return
-		TableCrabConfig.templateManager.setItemAttr(item.template, 'itemIsExpanded', False)
-	
-	def onSettingAlternatingRowColorsChanged(self, flag):
-		self.setAlternatingRowColors(flag)
-	
-	def onSettingChildItemIndicatorsChanged(self, flag):
-		self.setRootIsDecorated(flag)
-	
+		if item.toplevel().handleItemCollapsed(item):
+			self.dump()
+		
+	def onWidgetScreenshotSet(self, pixmap):
+		for template in self:
+			template.handleScreenshotSet(pixmap)
+		
 	def onWidgetScreenshotDoubleClicked(self, pixmap, point):
 		item = self.currentItem()
 		if item is None:
 			return False
-		template= item.template if item.parent() is None else item.parent().template
-		if type(getattr(template, item.attrName)) != QtCore.QPoint:
-			return False
-		if template.size.isEmpty():
-			pass
-		elif template.size != pixmap.size():
-			return False
-		TableCrabConfig.templateManager.setItemAttrs(template, {item.attrName: point, 'size': pixmap.size()})
-		return True
+		if item.toplevel().handleScreenshotDoubleClicked(item, pixmap, point):
+			self.dump()
 	
 	def createTemplate(self, templateProto):
-		template = templateProto(name=templateProto.itemName())
-		TableCrabConfig.templateManager.addItem(template)
-	
-	def onTemplateAdded(self, template):
-		item = PokerStarsTemplateTreeWidgetItem(template, parent=self)
-		template.setUserData(item)
-		self.addTopLevelItem(item)
-		if TableCrabConfig.templateManager.readFinished():
-			self.setCurrentItem(item)
-			item.setExpanded(True)
-			TableCrabConfig.templateManager.setItemAttr(template, 'itemIsExpanded', True)
-	
+		template = templateProto()
+		self.addTopLevelItem(template)
+		self.setCurrentItem(template)
+		template.setExpanded(True)
+		self.dump()
+		TableCrabConfig.signalEmit(None, 'widgetScreenshotQuery()')
+		
+	def canMoveTemplateUp(self):
+		item = self.currentItem()
+		if item is None:
+			self.actionUp.setEnabled(False)
+		else:
+			return self.indexOfTopLevelItem(item.toplevel() ) > 0
+		return False
+		
 	def moveTemplateUp(self):
 		item = self.currentItem()
 		if item is None:
 			self.actionUp.setEnabled(False)
 			return
-		template= item.template if item.parent() is None else item.parent().template
-		TableCrabConfig.templateManager.moveItemUp(template)
-	
-	def onTemplateMovedUp(self, template, index):
-		item = template.userData()
-		self.takeTopLevelItem(self.indexOfTopLevelItem(item))
-		self.insertTopLevelItem(index, item)
-		self.setCurrentItem(item)
+		index = self.indexOfTopLevelItem(item.toplevel() )
+		template = self.takeTopLevelItem(index)
+		self.insertTopLevelItem(index -1, template)
 		#NOTE: for some reason Qt collapses items on TakeItem()
-		item.setExpanded(template.itemIsExpanded)
+		template.setExpanded(template.itemIsExpanded)
+		self.setCurrentItem(template)
+		self.dump()
 		
+	def canMoveTemplateDown(self):
+		item = self.currentItem()
+		if item is None:
+			self.actionUp.setEnabled(False)
+		else:
+			return self.indexOfTopLevelItem(item.toplevel() ) < self.topLevelItemCount() -1
+		return False
+	
 	def moveTemplateDown(self):
 		item = self.currentItem()
 		if item is None:
-			self.actionDown.setEnabled(False)
+			self.actionUp.setEnabled(False)
 			return
-		template = item.template if item.parent() is None else item.parent().template
-		TableCrabConfig.templateManager.moveItemDown(template)
-		
-	def onTemplateMovedDown(self, template, index):
-		item = template.userData()
-		self.takeTopLevelItem(self.indexOfTopLevelItem(item))
-		self.insertTopLevelItem(index, item)
-		self.setCurrentItem(item)
+		index = self.indexOfTopLevelItem(item.toplevel() )
+		template = self.takeTopLevelItem(index)
+		self.insertTopLevelItem(index +1, template)
 		#NOTE: for some reason Qt collapses items on TakeItem()
-		item.setExpanded(template.itemIsExpanded)
-		
+		template.setExpanded(template.itemIsExpanded)
+		self.setCurrentItem(template)
+		self.dump()
+	
 	def removeTemplate(self):
 		item = self.currentItem()
 		if item is None:
-			self.buttonRemove.setEnabled(False)
+			self.actionRemove.setEnabled(False)
 			return
-		template= item.template if item.parent() is None else item.parent().template
-		TableCrabConfig.templateManager.removeItem(template)
+		index = self.indexOfTopLevelItem(item.toplevel() )
+		self.takeTopLevelItem(index)
+		self.dump()
+
 	
-	def onTemplateRemoved(self, template):
-		item = template.userData()
-		item.template = None
-		self.takeTopLevelItem(self.indexOfTopLevelItem(item))
-	
-		
 class ScreenshotWidget(QtGui.QScrollArea):
 	
 	class MyLabel(QtGui.QLabel):

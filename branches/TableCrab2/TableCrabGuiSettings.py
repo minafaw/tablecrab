@@ -213,14 +213,14 @@ class FrameSettingsHand(QtGui.QFrame):
 		self.actionSettings = []
 		for actionPrefix, actionName, actionPostfix in actionSettings:
 			editPrefix = TableCrabConfig.LineEdit(
-					settingsKey='PsHandGrabber/handFornmatterHtmlTabular/%s' % actionPrefix, 
+					settingsKey='PokerStarsHandGrabber/handFornmatterHtmlTabular/%s' % actionPrefix, 
 					default=getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, actionPrefix), 
 					parent=self
 					)
 			labelAction = QtGui.QLabel(actionName, self)
 			if actionPostfix is not None:
 				editPostfix = TableCrabConfig.LineEdit(
-						settingsKey='PsHandGrabber/handFornmatterHtmlTabular/%s' % actionPostfix, 
+						settingsKey='PokerStarsHandGrabber/handFornmatterHtmlTabular/%s' % actionPostfix, 
 						default=getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, actionPostfix),  
 						parent=self
 						)
@@ -230,7 +230,7 @@ class FrameSettingsHand(QtGui.QFrame):
 			
 		self.labelMaxPlayerName = QtGui.QLabel('MaxPlayerName:', self)
 		self.spinMaxPlayerName = TableCrabConfig.SpinBox(
-				settingsKey='PsHandGrabber/HandFornmatterHtmlTabular/MaxPlayerName', 
+				settingsKey='PokerStarsHandGrabber/HandFornmatterHtmlTabular/MaxPlayerName', 
 				default=PokerStarsHandGrabber.HandFormatterHtmlTabular.MaxPlayerName, 
 				minimum=-1, 
 				maximum=999, 
@@ -238,7 +238,7 @@ class FrameSettingsHand(QtGui.QFrame):
 				)
 		self.labelGrabTimeout = QtGui.QLabel('GrabTimeout:', self)
 		self.spinGrabTimeout = TableCrabConfig.DoubleSpinBox(
-				settingsKey='PsHandGrabber/GrabTimeout', 
+				settingsKey='PokerStarsHandGrabber/GrabTimeout', 
 				default=PokerStarsHandGrabber.HandGrabber.GrabTimeout,
 				minimum=0.2, 
 				maximum=4.9,
@@ -249,7 +249,7 @@ class FrameSettingsHand(QtGui.QFrame):
 		
 		self.checkNoFloatingPoint = TableCrabConfig.CheckBox(
 				'Floating Point To Integer', 
-				settingsKey='PsHandGrabber/HandFornmatterHtmlTabular/NoFloatingPoint', 
+				settingsKey='PokerStarsHandGrabber/HandFornmatterHtmlTabular/NoFloatingPoint', 
 					default=False, 
 				parent=self
 				)
@@ -291,7 +291,7 @@ class FrameSettingsHandCss(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 		self.edit = TableCrabConfig.PlainTextEdit(
-				settingsKey='PsHandGrabber/handFornmatterHtmlTabular/Css', 
+				settingsKey='PokerStarsHandGrabber/handFornmatterHtmlTabular/Css', 
 				default=PokerStarsHandGrabber.HandFormatterHtmlTabular.Css
 				)
 		

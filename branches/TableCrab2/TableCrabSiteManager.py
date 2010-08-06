@@ -57,9 +57,11 @@ class SiteManager(QtCore.QObject):
 				return
 		
 	def onInputEvent(self, inputEvent):
+		if TableCrabConfig.hotkeyManager is None or TableCrabConfig.templateManager is None:
+			return
 		hwnd = TableCrabWin32.windowForeground()
 		if hwnd:
-			for hotkey in TableCrabConfig.hotkeyManager.items():
+			for hotkey in TableCrabConfig.hotkeyManager:
 				if not hotkey.hotkey or hotkey.hotkey != inputEvent.key: 
 					continue
 				for handler in self._handlers:

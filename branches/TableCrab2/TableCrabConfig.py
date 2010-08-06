@@ -157,364 +157,54 @@ def signalsConnect(sender, receiver, *signals):
 # types
 #***********************************************************************************
 PointNone = QtCore.QPoint(-1, -1)
+def newPointNone():
+	return QtCore.QPoint(PointNone.x(), PointNone.y() )
 SizeNone = QtCore.QSize(-1, -1)
-HotkeyNone = 'None'
+def newSizeNone():
+	return QtCore.QSize(SizeNone.width(), SizeNone.height() )
 
-class CallableString(QtCore.QString):
-	def __call__(self):
-		return self.__class__(self)
-	
-class CallableFloat(float):
-	def __call__(self):
-		return self
-class CallableBool(object):
-	def __init__(self, value):
-		self.value = value
-	def __call__(self):
-		return self.value
+HotkeyNone = 'None'
 
 #***********************************************************************************
 # persistent items
 #***********************************************************************************
-class PersistentItemManager(QtCore.QObject):
-	#NOTE: we can not use __metaclass__ along with QObject. so we have to track actions by hand
-	def __init__(self, parent=None, key=None, maxItems=0, itemProtos=None):
-		QtCore.QObject.__init__(self, parent)
-		self._items = []
-		self.maxItems = maxItems
-		self.key = key
-		self._itemProtos = [] if itemProtos is None else itemProtos
-		self._readFinished = False
-		self._lock = thread.allocate_lock()
-		
-	def addItemProto(self, itemProto):
-		self._itemProtos.append(itemProto)
-	def itemProtos(self):
-		return self._itemProtos
+def dumpPersistentItems(settigsKey, items):
+		settingsRemoveKey(settigsKey)
+		slot = 0
+		for item in items:
+			key = settingsKeyJoin(settigsKey, str(slot) )
+			if item.toConfig(key):
+				slot += 1
+
+def readPersistentItems(settingsKey, maxItems=0, itemProtos=None):
+	newItems = []
+	for slot in xrange(maxItems):
+		key = settingsKeyJoin(settingsKey, str(slot) )
+		for itemProto in itemProtos:
+			newItem = itemProto.fromConfig(key)
+			if newItem is not None:
+				newItems.append( (slot, newItem) )
+				break
+	lastSlot = -1
+	forceDump = False
+	items = []
+	for slot, item in sorted(newItems):
+		if not forceDump:
+			forceDump = slot != lastSlot +1
+		lastSlot = slot
+		items.append(item)
+	if forceDump:
+		dumpPersistentItems(settignsKey, items)
+	return items
 	
-	def _dump(self):
-		if self.key is not None:
-			settingsRemoveKey(self.key)
-			slot = 0
-			for item in self._items:
-				key = settingsKeyJoin(self.key, str(slot) )
-				if item.toConfig(key):
-					slot += 1
-	
-	def dump(self):
-		self._lock.acquire()
-		try:
-			self._dump()
-		finally:
-			self._lock.release()
-	
-	def read(self):
-		# read items
-		if self._readFinished:
-			raise ValueError('you can read items only once')
-		self._lock.acquire()
-		try:
-			self._items = []
-			if self.key is not None:
-				newItems = []
-				for slot in xrange(self.maxItems):
-					key = settingsKeyJoin(self.key, str(slot) )
-					for itemProto in self._itemProtos:
-						newItem = itemProto.fromConfig(key)
-						if newItem is not None:
-							newItems.append( (slot, newItem) )
-				for _, item in sorted(newItems):
-					self._items.append(item)
-					signalEmit(self, 'itemAdded(QObject*)', item)
-				self._dump()
-				self._readFinished = True
-		finally:
-			self._lock.release()
-		signalEmit(self, 'readFinished()')
-	def __len__(self): 
-		self._lock.acquire()
-		try:
-			n = len(self._items)
-		finally:
-			self._lock.release()
-		return n
-	def items(self):
-		self._lock.acquire()
-		try:
-			items = self._items[:]		#TODO: we should copy these items
-		finally:
-			self._lock.release()
-		return items
-	def index(self, item):
-		self._lock.acquire()
-		try:
-			i = self._items.index(item)
-		finally:
-			self._lock.release()
-		return i
-	def canAddItem(self):
-		self._lock.acquire()
-		try:
-			flag = len(self._items) < self.maxItems
-		finally:
-			self._lock.release()
-		return flag
-	def addItem(self, item):
-		self._lock.acquire()
-		try:
-			self._items.append(item)
-			self._dump()
-		finally:
-			self._lock.release()
-		signalEmit(self, 'itemAdded(QObject*)', item)
-		
-	def removeItem(self, item):
-		self._lock.acquire()
-		try:
-			self._items.remove(item)
-			self._dump()
-		finally:
-			self._lock.release()
-		signalEmit(self, 'itemRemoved(QObject*)', item)
-	def canMoveItemUp(self, item):
-		self._lock.acquire()
-		try:
-			flag = self._items.index(item) > 0
-		finally:
-			self._lock.release()
-		return flag
-	def canMoveItemDown(self, item):
-		self._lock.acquire()
-		try:
-			flag = self._items.index(item) < len(self._items) -1
-		finally:
-			self._lock.release()
-		return flag
-	def moveItemUp(self, item):
-		self._lock.acquire()
-		try:
-			i = self._items.index(item)
-			if i <= 0:
-				raise valueError('can not move item up')
-			self._items.remove(item)
-			self._items.insert(i -1, item)
-			self._dump()
-		finally:
-			self._lock.release()
-		signalEmit(self, 'itemMovedUp(QObject*, int)', item, i -1)
-	def moveItemDown(self, item):
-		self._lock.acquire()
-		try:
-			i = self._items.index(item)
-			if i >= len(self._items) -1:
-				raise valueError('can not move item up')
-			self._items.remove(item)
-			self._items.insert(i +1, item)
-			self._dump()
-		finally:
-			self._lock.release()
-		signalEmit(self, 'itemMovedDown(QObject*, int)', item, i +1)
-	def readFinished(self):
-		return self._readFinished
-	def setItemAttr(self, item, name, value):
-		setattr(item, name, value)
-		self._dump()
-		signalEmit(item, 'itemAttrChanged(QObject*, QString)', item, name)
-	def setItemAttrs(self, item, values):
-		for name, value in values.items():
-			setattr(item, name, value)
-			signalEmit(item, 'itemAttrChanged(QObject*, QString)', item, name)
-		self._dump()
-
-
-class PersistentItem(QtCore.QObject):
-	Attrs = (	# (name, valueType) ..if a kw is None an instance of valuetype is set as default
-			)
-	def __init__(self, 
-			parent=None,
-			**kws 
-			):
-		QtCore.QObject.__init__(self, parent)
-		for name, valueType in self.Attrs:
-			value = kws.get(name, None)
-			if value is None:
-				value= valueType()
-			setattr(self, name, value)
-		
-		self._userData = None
-	def userData(self): return self._userData
-	def setUserData(self, data): self._userData = data
-
-class HotkeyCheck(PersistentItem):
-	Attrs = (
-			('action', QtCore.QString),
-			('hotkey', QtCore.QString),
-			('hotkeyName', QtCore.QString),
-			)
-	@classmethod
-	def itemName(klass):
-		return 'Check'
-	@classmethod
-	def fromConfig(klass, key):
-		itemName = settingsValue( (key, 'ItemName'), '').toString()
-		if itemName != klass.itemName(): return None
-		hotkey = settingsValue( (key, 'Hotkey'), HotkeyNone).toString()
-		if hotkey == HotkeyNone: return None
-		action = settingsValue( (key, 'Action'), '').toString()
-		hotkeyName = settingsValue( (key, 'HotkeyName'), '').toString()
-		return klass(action=action, hotkey=hotkey, hotkeyName=hotkeyName)
-	def toConfig(self, key):
-		settingsSetValue( (key, 'ItemName'), self.itemName() )
-		settingsSetValue( (key, 'Action'), self.action)                                            
-		settingsSetValue((key, 'Hotkey'), self.hotkey)
-		settingsSetValue( (key, 'HotkeyName'), self.hotkeyName)
-		return True
-	
-class HotkeyFold(HotkeyCheck):
-	@classmethod
-	def itemName(klass):
-		return 'Fold'
-	
-class HotkeyRaise(HotkeyCheck):
-	@classmethod
-	def itemName(klass):
-		return 'Raise'
-		
-class HotkeyScreenshot(HotkeyCheck):
-	@classmethod
-	def itemName(klass):
-		return 'Screenshot'
-			
-class HotkeyHilightBetAmount(HotkeyCheck):
-	@classmethod
-	def itemName(klass):
-		return 'HilightBetAmount'
-
-class HotkeyReplayer(HotkeyCheck):
-	@classmethod
-	def itemName(klass):
-		return 'Replayer'
-
-class HotkeyInstantHandHistory(HotkeyCheck):
-	@classmethod
-	def itemName(klass):
-		return 'InstantHandHistory'
-
-class HotkeyAllIn(HotkeyCheck):
-	@classmethod
-	def itemName(klass):
-		return 'All-In'
-
-
-class HotkeyAddToBetAmount(PersistentItem):
-	BaseValues = ('BigBlind', 'SmallBlind')
-	MultiplierMax = 99.0
-	MultiplierMin = 0.0
-	MultiplierDefault = 1.0
-	Attrs = (
-			('action', QtCore.QString),
-			('hotkey', QtCore.QString),
-			('hotkeyName', QtCore.QString),
-			('baseValue', CallableString('BigBlind') ),
-			('multiplier', CallableFloat(MultiplierDefault)),
-			)
-	@classmethod
-	def itemName(klass):
-		return 'AddToBetAmount'
-	@classmethod
-	def fromConfig(klass, key):
-		itemName = settingsValue( (key, 'ItemName'), '').toString()
-		if itemName != klass.itemName(): return None
-		hotkey = settingsValue( (key, 'Hotkey'), HotkeyNone).toString()
-		if hotkey == HotkeyNone: return None
-		hotkeyName = settingsValue( (key, 'HotkeyName'), '').toString()
-		baseValue = settingsValue( (key, 'BaseValue'), '').toString()
-		if baseValue not in klass.BaseValues: return None
-		multiplier, ok = settingsValue( (key, 'Multiplier'), -1.0).toDouble()
-		if not ok: return None
-		if multiplier > klass.MultiplierMax or multiplier < klass.MultiplierMin: return None
-		action = settingsValue( (key, 'Action'), '').toString()
-		return klass(action=action, hotkey=hotkey, hotkeyName=hotkeyName, baseValue = baseValue, multiplier=multiplier)
-	def toConfig(self, key):
-		settingsSetValue( (key, 'ItemName'), self.itemName() )
-		settingsSetValue( (key, 'Action'), self.action)
-		settingsSetValue( (key, 'HotkeyName'), self.hotkeyName)
-		settingsSetValue( (key, 'Hotkey'), self.hotkey)
-		settingsSetValue( (key, 'BaseValue'), self.baseValue)
-		settingsSetValue( (key, 'Multiplier'), self.multiplier)
-		return  True
-
-class HotkeySubtractFromBetAmount(HotkeyAddToBetAmount):
-	@classmethod
-	def itemName(klass):
-		return 'SubtractFomBetAmount'
-
-class HotkeyMultiplyBetAmount(PersistentItem):
-	MultiplierMax = 99.0
-	MultiplierMin = 1.0
-	MultiplierDefault = 1.0
-	Attrs = (
-			('action', QtCore.QString),
-			('hotkey', QtCore.QString),
-			('hotkeyName', QtCore.QString),
-			('multiplier', CallableFloat(MultiplierDefault)),
-			)
-	@classmethod
-	def itemName(klass):
-		return 'MultiplyBetAmount'
-	@classmethod
-	def fromConfig(klass, key):
-		itemName = settingsValue( (key, 'ItemName'), '').toString()
-		if itemName != klass.itemName(): return None
-		hotkey = settingsValue( (key, 'Hotkey'), HotkeyNone).toString()
-		if hotkey == HotkeyNone: return None
-		hotkeyName = settingsValue( (key, 'HotkeyName'), '').toString()
-		multiplier, ok = settingsValue( (key, 'Multiplier'), -1.0).toDouble()
-		if not ok: return None
-		if multiplier > klass.MultiplierMax or multiplier < klass.MultiplierMin: return None
-		action = settingsValue( (key, 'Action'), '').toString()
-		return klass(action=action, hotkey=hotkey, hotkeyName=hotkeyName, multiplier=multiplier)
-	def toConfig(self, key):
-		settingsSetValue( (key, 'ItemName'), self.itemName() )
-		settingsSetValue( (key, 'Action'), self.action)
-		settingsSetValue( (key, 'HotkeyName'), self.hotkeyName)
-		settingsSetValue( (key, 'Hotkey'), self.hotkey)
-		settingsSetValue( (key, 'Multiplier'), self.multiplier)
-		return  True
-
-#NOTE: we can not use __metaclass__ along with QObject ..so we have to keep track by hand
-Hotkeys = (
-		HotkeyCheck,
-		HotkeyFold,
-		HotkeyRaise,
-		HotkeyAddToBetAmount,
-		HotkeySubtractFromBetAmount,
-		HotkeyMultiplyBetAmount,
-		HotkeyHilightBetAmount,
-		HotkeyScreenshot,
-		HotkeyAllIn,
-		HotkeyReplayer,
-		HotkeyInstantHandHistory,
-		)
-
-MaxHotkeys = 64
-class _HotkeyManager(PersistentItemManager):
-	def __init__(self, parent=None):
-		PersistentItemManager.__init__(self, parent=parent, key='Hotkeys', maxItems=MaxHotkeys, itemProtos=Hotkeys)
-hotkeyManager = _HotkeyManager()
-
-MaxTemplateItems = 64
-class _TemplateManager(PersistentItemManager):
-	def __init__(self, parent=None):
-		PersistentItemManager.__init__(self, parent=parent, key='Setup/Widgets', maxItems=MaxTemplateItems, itemProtos=None)
-templateManager = _TemplateManager()
-
 #***********************************************************************************
-# global hooks
+# global objects
 #***********************************************************************************
 windowHook = TableCrabWin32.WindowHook(parent=None)
 mouseHook = TableCrabWin32.MouseHook(parent=None)
 keyboardHook = TableCrabWin32.KeyboardHook(parent=None)
+hotkeyManager = None
+templateManager = None
 
 #***********************************************************************************
 # Qt widgets
@@ -730,6 +420,52 @@ class VStretch(VBox):
 		VBox.__init__(self, *args)
 		self.addStretch(999)
 
+#TODO: we have to ignore <TAB> cos it tabs away from the hotkey box
+class HotkeyBox(QtGui.QComboBox):
+	#NOTE: bit of a hack this combo
+	# x) pretty much disbled all standart keybindings for the combo. except ESCAPE and SPACE (ESCAPE
+	#     mut be handled internally cos it is working without our help)
+	# x) we added a space to each displayName to trrick the combo popup search feature
+	Hotkeys = (		# hotkey --> displayName
+				('', '<Enter Hotkey>'),
+				('<ESCAPE>', ' ESCAPE'),
+				('<SPACE>', ' SPACE'),
+				('<TAB>', ' TAB'),
+				(TableCrabWin32.MouseWheelUp, ' MouseWheelUp'),
+				(TableCrabWin32.MouseWheelDown, ' MouseWheelDown'),
+			)
+	def __init__(self, hotkey=None, parent=None):
+		QtGui.QComboBox.__init__(self, parent=None)
+		self.addItems( [i[1] for i in self.Hotkeys] )
+		for i, (tmpHotkey, _) in enumerate(self.Hotkeys):
+			if hotkey == tmpHotkey:
+				self.setCurrentIndex(i)
+				break
+		else:
+			if hotkey is not None:
+				self.setItemText(0, hotkey)
+		signalConnect(keyboardHook, self, 'inputEvent(QObject*)', self.onInputEvent)
+	def keyPressEvent(self, event):
+		if event.key() == QtCore.Qt.Key_Space and not event.modifiers():
+			QtGui.QComboBox.keyPressEvent(self, event)
+	def keyReleaseEvent(self, event):
+		if event.key() == QtCore.Qt.Key_Space and not event.modifiers():
+			QtGui.QComboBox.keyPressEvent(self, event)
+	def onInputEvent(self, inputEvent):
+		if not inputEvent.keyIsDown: return
+		if self.hasFocus():
+			if self.currentIndex() == 0:
+				for (myKey, _) in self.Hotkeys:
+					if inputEvent.key == myKey:
+						break
+				else:
+					self.setItemText(0, inputEvent.key)
+	def hotkey(self):
+		text = self.currentText()
+		for key, displayName in self.Hotkeys:
+			if text == displayName:
+				return key
+		return text
 
 class TreeWidgetItemIterator(QtGui.QTreeWidgetItemIterator):
 	def __init__(self, *args):

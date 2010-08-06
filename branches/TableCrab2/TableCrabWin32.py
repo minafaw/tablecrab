@@ -806,6 +806,39 @@ def windowGetPos(hwnd):
 	point = windowClientPointToScreenPoint(hwnd, QtCore.QPoint(0, 0) )
 	return windowScreenPointToClientPoint(hwndParent, point)
 
+
+# alternative: use GetModuleFileNameEx to query executable filepath
+# don't like it too much though. we would rely on this entirely. any file name
+# chenge breaks us
+#
+#MAX_PATH = 260
+#psapi = windll.psapi
+#PROCESS_VM_READ = 16
+#PROCESS_QUERY_INFORMATION = 1024
+#GetModuleFileNameEx = None
+#try:
+#	GetModuleFileNameEx = kernel32.GetModuleFileNameExW
+#except AttributeError:
+#	try:
+#		GetModuleFileNameEx = psapi.GetModuleFileNameExW
+#	except AttributeError:
+#		GetModuleFileNameEx = psapi.K32GetModuleFileNameExW
+#		
+#
+#def windowGetExecutable(hwnd):
+#	pId = DWORD()
+#	user32.GetWindowThreadProcessId(hwnd, byref(pId))
+#	if not pId:
+#		return ''
+#	hProcess = kernel32.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, False, pId)
+#	if not hProcess: print FormatError(GetLastError())
+#	try:
+#		p= create_unicode_buffer(MAX_PATH+1)
+#		GetModuleFileNameEx(hProcess, None, p, sizeof(p))
+#	finally:
+#		kernel32.CloseHandle(hProcess)
+#	return p.value
+
 #****************************************************************************************************
 # mouse methods
 #****************************************************************************************************
