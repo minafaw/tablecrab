@@ -511,14 +511,14 @@ class InputEvent(QtCore.QObject):
 	def __init__(self, 
 				key=None, 
 				keyIsDown=False, 
-				mouseSteps=0,
+				steps=1,
 				accept=False, 
 				parent=None
 				):
 		QtCore.QObject.__init__(self, parent)
 		self.key = key
 		self.keyIsDown = keyIsDown
-		self.mouseSteps = mouseSteps
+		self.steps = steps
 		self.accept = accept
 
 #****************************************************************************************************
@@ -1166,7 +1166,7 @@ class MouseHook(QtCore.QObject):
 				nSteps = wheelDelta / WHEEL_DELTA
 				if nSteps:
 					key = MouseWheelUp if nSteps >= 0 else MouseWheelDown
-					e = InputEvent(key=key, mouseSteps=abs(nSteps), accept=False, parent=self)
+					e = InputEvent(key=key, steps=abs(nSteps), accept=False, parent=self)
 					self.emit(QtCore.SIGNAL('inputEvent(QObject*)'), e)
 					if e.accept:
 						return TRUE
@@ -1240,7 +1240,7 @@ class KeyboardHook(QtCore.QObject):
 			#<--HACK:(1)
 			
 			if key and keydown:
-				e = InputEvent(key=key, keyIsDown=keydown, accept=False, parent=self)
+				e = InputEvent(key=key, steps=1, keyIsDown=keydown, accept=False, parent=self)
 				self.emit(QtCore.SIGNAL('inputEvent(QObject*)'), e)
 				if e.accept:
 					return TRUE
