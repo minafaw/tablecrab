@@ -1,4 +1,7 @@
 
+#TODO: check for conflicting hotkeys? currently we trigger the first matching, that's all
+
+
 import TableCrabConfig
 import TableCrabGuiHelp
 
@@ -164,13 +167,6 @@ class HotkeyCheck(QtGui.QTreeWidgetItem):
 		
 Hotkeys.append(HotkeyCheck)
 
-class HotkeyCall(HotkeyCheck):
-	@classmethod
-	def id(klass): return 'Call'
-	@classmethod
-	def menuName(klass): return 'Call'
-Hotkeys.append(HotkeyCall)
-
 class HotkeyFold(HotkeyCheck):
 	@classmethod
 	def id(klass): return 'Fold'
@@ -231,7 +227,7 @@ class HotkeyMultiplyBetAmount(HotkeyCheck):
 	def menuName(klass): return 'Multiply bet amount'
 	def __init__(self, parent=None, hotkey='', hotkeyName='', multiplier=1.0):
 		self._multiplier = multiplier
-		HotkeyCheck.__init__(self, parent=None, hotkey='', hotkeyName='')
+		HotkeyCheck.__init__(self, parent=parent, hotkey=hotkey, hotkeyName=hotkeyName)
 	def update(self, other):
 		self._multiplier = other.multiplier()
 		HotkeyCheck.update(self, other)
@@ -254,9 +250,12 @@ class HotkeyMultiplyBetAmount(HotkeyCheck):
 			return attrs
 	@classmethod
 	def fromConfig(klass, key):
-		attrs = klass.attrsFromConfig(key, klass.id() )
+		attrs = HotkeyCheck.attrsFromConfig(key, klass.id() )
 		if attrs is not None:
-			return klass(**attrs)
+			myAttrs = klass.attrsFromConfig(key, klass.id() )
+			if myAttrs is not None:
+				attrs.update(myAttrs)
+				return klass(**attrs)
 	def toConfig(self, key):
 		HotkeyCheck.toConfig(self, key)
 		TableCrabConfig.settingsSetValue( (key, 'Multiplier'), self._multiplier)
@@ -276,7 +275,7 @@ class HotkeyAddToBetAmount(HotkeyMultiplyBetAmount):
 	BaseValues = ('BigBlind', 'SmallBlind')
 	def __init__(self, parent=None, hotkey='', hotkeyName='', multiplier=1.0,baseValue='BigBlind'):
 		self._baseValue = baseValue
-		HotkeyMultiplyBetAmount.__init__(self, parent=None, hotkey='', hotkeyName='', multiplier=1.0)
+		HotkeyMultiplyBetAmount.__init__(self, parent=parent, hotkey=hotkey, hotkeyName=hotkeyName, multiplier=multiplier)
 	def update(self, other):
 		self._baseValue = other.baseValue()
 		HotkeyMultiplyBetAmount.update(self, other)
@@ -307,9 +306,12 @@ class HotkeyAddToBetAmount(HotkeyMultiplyBetAmount):
 			return attrs
 	@classmethod
 	def fromConfig(klass, key):
-		attrs = klass.attrsFromConfig(key, klass.id() )
+		attrs = HotkeyMultiplyBetAmount.attrsFromConfig(key, klass.id() )
 		if attrs is not None:
-			return klass(**attrs)
+			myAttrs = klass.attrsFromConfig(key, klass.id() )
+			if myAttrs is not None:
+				attrs.update(myAttrs)
+				return klass(**attrs)
 	def toConfig(self, key):
 		HotkeyMultiplyBetAmount.toConfig(self, key)
 		TableCrabConfig.settingsSetValue( (key, 'BaseValue'), self._baseValue)
