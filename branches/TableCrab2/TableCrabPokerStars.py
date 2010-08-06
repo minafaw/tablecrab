@@ -332,14 +332,13 @@ class ActionHandler(object):
 		if not data['hwndBetAmountBox']: return
 		if not data['betAmountBoxIsVisible']: return
 		if data['betAmount'] is None: return
-		if nSteps == 0: return
-		nSteps =  inputEvent.mouseSteps if inputEvent.mouseSteps else 1
-		if hotkey.baseValue == 'BigBlind':
-			newBetAmount = data['betAmount'] + (data['bigBlind'] * hotkey.multiplier * nSteps)
+		if inputEvent.steps == 0: return
+		if hotkey.baseValue() == 'BigBlind':
+			newBetAmount = data['betAmount'] + (data['bigBlind'] * hotkey.multiplier() * inputEvent.steps)
 		elif hotkey.baseValue == 'SmallBlind':
-			newBetAmount = data['betAmount'] + (data['smallBlind'] * hotkey.multiplier * nSteps)
+			newBetAmount = data['betAmount'] + (data['smallBlind'] * hotkey.multiplier() * inputEvent.steps)
 		else:
-			raise ValueError('can not handle base value: %s' % hotkey.baseValue)
+			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
 		newBetAmount = round(newBetAmount, 2)
 		if int(newBetAmount) == newBetAmount:
 			newBetAmount = int(newBetAmount)
@@ -348,18 +347,18 @@ class ActionHandler(object):
 		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name, hotkey.action() ))
 			
 	def tableHandleSubtractFromBetAmount(self, hotkey, template, hwnd, inputEvent):
+		data = self.tableReadData(hwnd)
 		if not data: return
 		if not data['hwndBetAmountBox']: return
 		if not data['betAmountBoxIsVisible']: return
 		if data['betAmount'] is None: return
-		if nSteps == 0: return
-		nSteps =  inputEvent.mouseSteps if inputEvent.mouseSteps else 1
-		if hotkey.baseValue == 'BigBlind':
-			newBetAmount = data['betAmount'] - (data['bigBlind'] * hotkey.multiplier * nSteps)
+		if inputEvent.steps == 0: return
+		if hotkey.baseValue() == 'BigBlind':
+			newBetAmount = data['betAmount'] - (data['bigBlind'] * hotkey.multiplier() * inputEvent.steps)
 		elif hotkey.baseValue == 'SmallBlind':
-			newBetAmount = data['betAmount'] - (data['smallBlind'] * hotkey.multiplier * nSteps)
+			newBetAmount = data['betAmount'] - (data['smallBlind'] * hotkey.multiplier() * inputEvent.steps)
 		else:
-			raise ValueError('can not handle base value: %s' % hotkey.baseValue)
+			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
 		newBetAmount = round(newBetAmount, 2)
 		if int(newBetAmount) == newBetAmount:
 			newBetAmount = int(newBetAmount)
@@ -368,13 +367,13 @@ class ActionHandler(object):
 		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name, hotkey.action() ))
 	
 	def tableHandleMultiplyBetAmount(self, hotkey, template, hwnd, inputEvent):
+		data = self.tableReadData(hwnd)
 		if not data: return
 		if not data['hwndBetAmountBox']: return
 		if not data['betAmountBoxIsVisible']: return
 		if data['betAmount'] is None: return
-		nSteps =  inputEvent.mouseSteps if inputEvent.mouseSteps else 1
-		nSteps = 1 if nSteps is None else abs(nSteps)
-		newBetAmount = data['betAmount'] * hotkey.multiplier * nSteps
+		if inputEvent.steps == 0: return
+		newBetAmount = data['betAmount'] * hotkey.multiplier() * inputEvent.steps
 		newBetAmount = round(newBetAmount, 2)
 		if int(newBetAmount) == newBetAmount:
 			newBetAmount = int(newBetAmount)
@@ -397,7 +396,7 @@ class ActionHandler(object):
 			mi.move(pointCurrent, hwnd=None).send()
 		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name, hotkey.action() ))
 		
-	def _tableClickRestoreFocus(self, hwnd, point, template, hotkey):
+	def _tableClickRestoreFocus(self, hwnd, point):
 		pointCurrent = TableCrabWin32.mouseGetPos()
 		# click point
 		mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
