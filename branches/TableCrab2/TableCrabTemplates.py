@@ -26,7 +26,8 @@ class ChildItem(QtGui.QTreeWidgetItem):
 	
 class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 	_PointNames = ('buttonCheck', 'buttonFold', 'checkboxFold', 'checkboxCheckFold', 'betSliderStart', 'betSliderEnd', 'instantHandHistory', 'replayer')
-	def __init__(self, parent=None, 
+	def __init__(self, 
+			parent=None, 
 			name='',
 			size=None, 
 			buttonCheck=None,
@@ -54,6 +55,7 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 		self.replayer = newValidPoint(replayer)
 		self.itemIsExpanded = itemIsExpanded
 		
+				
 		self.setFirstColumnSpanned(True)
 		self.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
 		self.setIcon(0, QtGui.QIcon(TableCrabConfig.Pixmaps.stars()) )
@@ -77,10 +79,11 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 	def toplevel(self):
 		return self
 	
-	def handleItemChanged(self, item):
+	def handleEditingFinished(self, item):
 		if item is self:
-			self.name = self.text(0)
-			return True
+			if self.text(0) != self.name:
+				self.name = self.text(0)
+				return True
 		return False
 		
 	def handleItemExpanded(self, item):
