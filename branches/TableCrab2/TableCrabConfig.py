@@ -171,6 +171,8 @@ HotkeyNone = 'None'
 #***********************************************************************************
 # persistent items
 #***********************************************************************************
+#NOTE: on every change in templates and hotkeys we dum the whole TreeWidget to settings.
+# easy but brutal. no idea if it is worth the trouble to implement a more sensible mechanism.
 def dumpPersistentItems(settigsKey, items):
 		settingsRemoveKey(settigsKey)
 		slot = 0
