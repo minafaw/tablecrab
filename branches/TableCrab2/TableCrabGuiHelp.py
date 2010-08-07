@@ -13,18 +13,16 @@ Topics = [
 				],
 			('hotkeys', 'Hotkeys'), [
 				('hotkeyCheck', 'Check'),
-				('hotkeyCall', 'Call'),
 				('hotkeyFold', 'Fold'),
 				('hotkeyRaise', 'Raise'),
 				('hotkeyAll_In', 'All-in'),
-				('hotkeyReplayer', 'Replayer'),
-				('hotkeyScreenshot', 'Screenshot'),
 				('hotkeyHilightBetAmount', 'HilightBetAmount'),
+				('hotkeyMultiplyBetAmount', 'MultiplyBetAmount'),
 				('hotkeyAddToBetAmount', 'AddToBetAmount'),
 				('hotkeySubtractFromBetAmount', 'SubtractFromBetAmount'),
-				('hotkeyMultiplyBetAmount', 'MultiplyBetAmount'),
+				('hotkeyReplayer', 'Replayer'),
 				('hotkeyInstantHandHistory', 'InstantHandHistory'),
-				
+				('hotkeyScreenshot', 'Screenshot'),
 				],
 			('hand', 'Hand'),
 			('settings', 'Settings'), [
