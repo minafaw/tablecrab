@@ -1,6 +1,6 @@
 
-#TODO: give feedback when closing dialog boxes
 #TODO: we may need to define a PointNone where our mouse cursor is set to when restoring table focus
+#TODO: move mouse to active table is not implemented. we'll see.
 
 import TableCrabConfig
 import TableCrabWin32
@@ -23,6 +23,7 @@ class ActionHandler(QtCore.QObject):
 		if self.isPopupNews(hwnd):
 			if TableCrabConfig.settingsValue('PokerStars/AutoClosePopupNews', False).toBool():
 				TableCrabWin32.windowClose(hwnd)
+				TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', 'Closed Popup News')
 			return True
 		
 		elif self.isTourneyRegistrationMessageBox(hwnd):
@@ -32,6 +33,7 @@ class ActionHandler(QtCore.QObject):
 				if not 'OK' in buttons: return
 				##windowClose(hwnd)
 				TableCrabWin32.windowClickButton(buttons['OK'])
+				TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', 'Closed Tourney Registration Message Box')
 			return True
 		
 		elif self.isTableMessageBox(hwnd):
@@ -40,6 +42,7 @@ class ActionHandler(QtCore.QObject):
 				if len(buttons) != 1: return
 				if not 'OK' in buttons: return
 				TableCrabWin32.windowClickButton(buttons['OK'])
+				TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', 'Closed Table Message Box')
 			return True
 		
 		elif self.isLogIn(hwnd):
@@ -51,6 +54,7 @@ class ActionHandler(QtCore.QObject):
 						if TableCrabWin32.windowCheckboxIsChecked(buttons['']):
 							if TableCrabWin32.windowIsEnabled(buttons['OK']):
 								TableCrabWin32.windowClickButton(buttons['OK'])
+								TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', 'Closed Log In Box')
 				return True
 			
 		return False
@@ -174,7 +178,7 @@ class ActionHandler(QtCore.QObject):
 		if not self.isPokerStarsWindow(hwnd): return False
 		return True
 		
-	TitleTableMessageBox = 'Tournament Registration'
+	TitleTableMessageBox = 'PokerStars'
 	ClassTableMessageBox = '#32770'
 	def isTableMessageBox(self, hwnd):
 		if not TableCrabWin32.windowGetClassName(hwnd) == self.ClassTableMessageBox: return False
@@ -420,8 +424,7 @@ class ActionHandler(QtCore.QObject):
 			#NOTE: the SendInput() is always off a few pixels so we use mouseSetPos() instead
 			##mi.move(pointCurrent, hwnd=None).send()
 			TableCrabWin32.mouseSetPos(pointCurrent)
-			
-		
+	
 	def tableHandleReplayer(self, hotkey, template, hwnd, inputEvent):
 		point = template.replayer
 		if point == TableCrabConfig.PointNone: 
