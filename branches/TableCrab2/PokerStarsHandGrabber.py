@@ -731,7 +731,7 @@ if sys.platform == 'win32':
 				for hwnd in TableCrabWin32.windowChildren(hwnd):
 					if TableCrabWin32.windowGetClassName(hwnd) != self.WidgetClassName: continue
 					handHistory = TableCrabWin32.windowGetText(hwnd)
-					if handHistory != self._lastHandHistory:
+					if handHistory and handHistory != self._lastHandHistory:
 						self._lastHandHistory = handHistory
 						hand = self.handParser.parse(handHistory)
 						if hand is not None:
@@ -740,11 +740,20 @@ if sys.platform == 'win32':
 					break
 				break
 			if self._isRunning:
-				timer = QtCore.QTimer(self)
-				timer.setSingleShot(True)
-				timer.setInterval( TableCrabConfig.settingsValue('PokerStarsHandGrabber/GrabTimeout', self.GrabTimeout).toFloat()[0] * 1000 )
-				self.connect(timer, QtCore.SIGNAL('timeout()'), self._run)
+				timer = TableCrabConfig.Timer(
+						parent=self, 
+						singleShot=True, 
+						interval=TableCrabConfig.settingsValue('PokerStarsHandGrabber/GrabTimeout', self.GrabTimeout).toFloat()[0] * 1000,
+						slot=self._run,
+						)
 				timer.start()
+				
+				
+				##timer = QtCore.QTimer(self)
+				##timer.setSingleShot(True)
+				##timer.setInterval( TableCrabConfig.settingsValue('PokerStarsHandGrabber/GrabTimeout', self.GrabTimeout).toFloat()[0] * 1000 )
+				##self.connect(timer, QtCore.SIGNAL('timeout()'), self._run)
+				##timer.start()
 				##QtCore.QTimer.singleShot(
 				##	TableCrabConfig.settingsValue('PokerStarsHandGrabber/GrabTimeout', self.GrabTimeout).toFloat()[0] * 1000, 
 				##	self._run
