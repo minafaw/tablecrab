@@ -288,7 +288,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 	def __init__(self, parent=None):
 		QtGui.QScrollArea.__init__(self, parent)
 		
-		self._lastInfo = None
+		self._lastScreenshotInfo = None
 		
 		self.label = self.MyLabel('Screenshot')
 		self.label.setScaledContents(True)
@@ -338,7 +338,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 	
 	def adjustActions(self):
 		self.actionSave.setEnabled(self.label.pixmap() is not None)
-		self.actionInfo.setEnabled(self._lastInfo is not None)
+		self.actionInfo.setEnabled(self._lastScreenshotInfo is not None)
 	
 	def onWidgetScreenshotQuery(self):
 		pixmap = self.label.pixmap()
@@ -357,9 +357,13 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		if selfParent == otherParent:
 			return
 		self.gatherWindowInfo(hwnd)		
+		TableCrabConfig.signalEmit(self, 'widgetScreenshotInfo(QString)', self._lastScreenshotInfo)
 		self.setScreenshot(pixmap)
 		self.adjustActions()
 		
+	def screenshotInfo(self):
+		return self._lastScreenshotInfo
+	
 	def setScreenshot(self, pixmap=None, screenshotName='NewScreenshot'):
 		self.label.setScreenshot(pixmap=pixmap)
 		self.adjustActions()
@@ -373,6 +377,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 			buttons = sorted( TableCrabWin32.windowGetButtons(hwnd).keys() )
 			size = TableCrabWin32.windowGetRect(hwnd).size()
 			pos = TableCrabWin32.windowGetPos(hwnd)
+			clientSize = TableCrabWin32.windowGetClientRect(hwnd).size()
 			if not buttons:
 				buttons = ''
 			elif len(buttons) == 1:
@@ -388,32 +393,33 @@ class ScreenshotWidget(QtGui.QScrollArea):
 			p += '%sClassName: %s\n' % (indent, className)
 			p += '%sPos: %s,%s\n' % (indent, pos.x(), pos.y() )
 			p += '%sSize: %sx%s\n' % (indent, size.width(), size.height() )
+			p += '%sclientSize: %sx%s\n' % (indent, clientSize.width(), clientSize.height() )
 			p += '%sButtons: %s\n' % (indent, buttons)
 			p += '%sVisible: %s\n' % (indent, isVisible)
 			p += '%sEnabled: %s\n' % (indent, isEnabled)
 			p += '%sHwnd: %s\n' % (indent, hwnd)
 			return p
 			
-		self._lastInfo = ''
-		self._lastInfo += '-----------------------------------------------------------------\n'
-		self._lastInfo += 'Current Window\n'
-		self._lastInfo += '-----------------------------------------------------------------\n'
-		self._lastInfo += windowInfo(hwnd)
+		self._lastScreenshotInfo = ''
+		self._lastScreenshotInfo += '-----------------------------------------------------------------\n'
+		self._lastScreenshotInfo += 'Current Window\n'
+		self._lastScreenshotInfo += '-----------------------------------------------------------------\n'
+		self._lastScreenshotInfo += windowInfo(hwnd)
 		
-		self._lastInfo += '-----------------------------------------------------------------\n'
-		self._lastInfo += 'Window Details\n'
-		self._lastInfo += '-----------------------------------------------------------------\n'
+		self._lastScreenshotInfo += '-----------------------------------------------------------------\n'
+		self._lastScreenshotInfo += 'Window Details\n'
+		self._lastScreenshotInfo += '-----------------------------------------------------------------\n'
 		for level, hwnd in TableCrabWin32.windowWalkChildren(hwnd, report=True):
-			 self._lastInfo += windowInfo(hwnd, level=level)
+			 self._lastScreenshotInfo += windowInfo(hwnd, level=level)
 			
 		hwndParent = TableCrabWin32.windowGetTopLevelParent(hwnd)
 		if hwndParent == hwnd: return
 			
-		self._lastInfo += '-----------------------------------------------------------------\n'
-		self._lastInfo += 'Window Hirarchy\n'
-		self._lastInfo += '-----------------------------------------------------------------\n'
+		self._lastScreenshotInfo += '-----------------------------------------------------------------\n'
+		self._lastScreenshotInfo += 'Window Hirarchy\n'
+		self._lastScreenshotInfo += '-----------------------------------------------------------------\n'
 		for level, hwnd in TableCrabWin32.windowWalkChildren(hwndParent, report=True):
-			 self._lastInfo += windowInfo(hwnd, level=level)
+			 self._lastScreenshotInfo += windowInfo(hwnd, level=level)
 			
 	def onActionOpenTriggered(self):
 		imageFormats = [QtCore.QString(i).toLower() for i in  QtGui.QImageReader.supportedImageFormats()]
@@ -433,7 +439,8 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		fileInfo = QtCore.QFileInfo(fileName)
 		screenshotName = fileInfo.baseName()
 		self.setScreenshot(pixmap=pixmap, screenshotName=screenshotName)
-		self._lastInfo = None
+		TableCrabConfig.signalEmit(self, 'widgetScreenshotInfo(QString)', '')
+		self._lastScreenshotInfo = None
 		self.adjustActions()
 		
 	def onActionSaveTriggered(self):
@@ -463,10 +470,10 @@ class ScreenshotWidget(QtGui.QScrollArea):
 			TableCrabConfig.msgWarning(self, 'Could Not Save Screenshot')
 		
 	def onActionInfoTriggered(self):
-		if self._lastInfo is None:
+		if self._lastScreenshotInfo is None:
 			self.actionInfo.setEnabled(False)
 			return
-		dlg = DialgScreenshotInfo(self._lastInfo, parent=self)
+		dlg = DialgScreenshotInfo(self._lastScreenshotInfo, parent=self)
 		dlg.restoreGeometry( TableCrabConfig.settingsValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', QtCore.QByteArray()).toByteArray() )
 		dlg.show()
 		TableCrabConfig.settingsSetValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', dlg.saveGeometry() )
@@ -475,7 +482,10 @@ class ScreenshotWidget(QtGui.QScrollArea):
 class DialgScreenshotInfo(QtGui.QDialog):
 	def __init__(self, info, parent=None):
 		QtGui.QDialog. __init__(self, parent)
+		self._lastScreenshotInfo = info
+		
 		self.edit = QtGui.QPlainTextEdit(self)
+		self.edit.setPlainText(info)
 		self.buttonSave = QtGui.QPushButton('Save..', self)
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		TableCrabConfig.signalConnect(self.buttonHelp, self, 'clicked(bool)', self.onButtonHelpClicked)
@@ -484,8 +494,18 @@ class DialgScreenshotInfo(QtGui.QDialog):
 		self.buttonBox.addButton(self.buttonSave, self.buttonBox.ApplyRole )
 		TableCrabConfig.signalConnect(self.buttonBox, self, 'accepted()', self.accept)
 		TableCrabConfig.signalConnect(self.buttonSave, self, 'clicked(bool)', self.onButtonSaveClicked)
-		self.edit.setPlainText(info)
+		
+		#NOTE: we are modeless, so it is a good idea to add a refresh button 
+		TableCrabConfig.signalConnect(parent, self, 'widgetScreenshotInfo(QString)', self.onWidgetScreenshotInfo)
+		self.buttonRefresh = QtGui.QPushButton('Refresh', self)
+		TableCrabConfig.signalConnect(self.buttonRefresh, self, 'clicked(bool)', self.onButtonRefreshClicked)
+		self.buttonBox.addButton(self.buttonRefresh, self.buttonBox.ActionRole)
+		
 		self.layout()
+		
+	def onWidgetScreenshotInfo(self, info):
+		self._lastScreenshotInfo = info
+		self.buttonRefresh.setEnabled(bool(info))
 		
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
@@ -493,6 +513,9 @@ class DialgScreenshotInfo(QtGui.QDialog):
 		grid.addWidget(TableCrabConfig.HLine(self), 1, 0)
 		grid.addWidget(self.buttonBox, 2, 0)
 	
+	
+	def onButtonRefreshClicked(self, checked):
+		self.edit.setPlainText(self._lastScreenshotInfo)
 	
 	def onButtonSaveClicked(self, checked):
 		fileName = TableCrabConfig.dlgOpenSaveFile(
