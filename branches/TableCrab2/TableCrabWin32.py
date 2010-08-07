@@ -467,12 +467,14 @@ VERTRES = 10
 #	VK_CONTROL and VK_SHIFT work. no way to track numlock, capslock and other toggle keys because we do not 
 #	know their initial states. side effect is that holding own keys ahead of L{KeyboardManager.start} will never be honored.
 #
-# ..then it is up to a keyboard hook to call setKeyDown() when appropriate
+# ..then it is up to a keyboard hook to call _setKeyDown() when appropriate
 #		
 #	@todo: synchronize this stuff
 #	@warning: this hack overwrites user32.GetAsyncKeyState + user32.GetKeyboardState
 
 _keyboardState = [0] * 256
+KEY_IS_DOWN = 0x80
+
 
 def _MyGetKeyboardState(pKeyboardState):
 	"""our implementation of user32.GetKeyboardState"""
@@ -491,12 +493,12 @@ def _MyGetAsyncKeyState(vkCode):
 	return _keyboardState[vkCode]
 user32.GetAsyncKeyState = _MyGetAsyncKeyState
 
-def setKeyDown(vkCode, flag):
+def _setKeyDown(vkCode, flag):
 	"""this method should always be called whenever a keyboard manager notices a key press/release
 	@param vkCode: VK_*
 	@param flag: (bool) True if the key was pressed, False if it was released
 	"""
-	value = 0x80 if flag else 0x00
+	value = KEY_IS_DOWN if flag else 0x00
 	_keyboardState[vkCode] = value
 	if vkCode in (VK_LCONTROL, VK_RCONTROL): _keyboardState[VK_CONTROL] = value		
 	elif vkCode in (VK_LMENU, VK_RMENU): _keyboardState[VK_MENU] = value
@@ -998,7 +1000,12 @@ class MouseInput(object):
 		return self
 
 def mouseButtonsDown():
-	return _mouseButtonsDown[:]
+	"""checks if any mouse buttons are down
+	@return: (bool) True if any of the mouse buttons are down, False otherwise
+	"""
+	return user32.GetAsyncKeyState(KEY_VALUES['LBUTTON'] & KEY_IS_DOWN) or \
+				user32.GetAsyncKeyState(KEY_VALUES['RBUTTON'] & KEY_IS_DOWN) or \
+				user32.GetAsyncKeyState(KEY_VALUES['MBUTTON'] & KEY_IS_DOWN)
 	
 def mouseButtonIsDown(button):
 	return button in _mouseButtonsDown
@@ -1142,24 +1149,17 @@ class MouseHook(QtCore.QObject):
 		
 		if code == HC_ACTION:
 			if wParam == WM_LBUTTONDOWN:
-				if MouseButtonLeft not in _mouseButtonsDown:
-					_mouseButtonsDown.append(MouseButtonLeft)
-			elif wParam == WM_RBUTTONDOWN:
-				if MouseButtonRight not in _mouseButtonsDown:
-					_mouseButtonsDown.append(MouseButtonRight)
-			elif wParam == WM_MBUTTONDOWN:
-				if MouseButtonMiddle not in _mouseButtonsDown:
-					_mouseButtonsDown.append(MouseButtonMiddle)
+				_setKeyDown(KEY_VALUES['LBUTTON'], True)
 			elif wParam == WM_LBUTTONUP:
-				if MouseButtonLeft in _mouseButtonsDown:
-					_mouseButtonsDown.remove(MouseButtonLeft)
+				_setKeyDown(KEY_VALUES['LBUTTON'], False)
+			elif wParam == WM_RBUTTONDOWN:
+				_setKeyDown(KEY_VALUES['RBUTTON'], True)
 			elif wParam == WM_RBUTTONUP:
-				if MouseButtonRight in _mouseButtonsDown:
-					_mouseButtonsDown.remove(MouseButtonRight)
+				_setKeyDown(KEY_VALUES['RBUTTON'], False)
+			elif wParam == WM_MBUTTONDOWN:
+				_setKeyDown(KEY_VALUES['MBUTTON'], True)
 			elif wParam == WM_MBUTTONUP:
-				if MouseButtonMiddle in _mouseButtonsDown:
-					_mouseButtonsDown.remove(MouseButtonMiddle)
-					
+				_setKeyDown(KEY_VALUES['MBUTTON'], False)
 			elif wParam == WM_MOUSEWHEEL:
 				mouseInfo = MSLLHOOKSTRUCT.from_address(lParam)
 				wheelDelta = GET_WHEEL_DELTA_WPARAM(mouseInfo.mouseData)
@@ -1226,7 +1226,7 @@ class KeyboardHook(QtCore.QObject):
 			keyInfo = KBDLLHOOKSTRUCT.from_address(lParam)
 			#HACK:(1)
 			if wParam in (WM_KEYDOWN, WM_SYSKEYDOWN):
-				setKeyDown(keyInfo.vkCode, True)
+				_setKeyDown(keyInfo.vkCode, True)
 			#<--HACK:(1)
 			
 			keyboardState = (c_ubyte*256)()
@@ -1236,7 +1236,7 @@ class KeyboardHook(QtCore.QObject):
 						
 			#HACK:(1)
 			if wParam in (WM_KEYUP, WM_SYSKEYUP):
-				setKeyDown(keyInfo.vkCode, False)
+				_setKeyDown(keyInfo.vkCode, False)
 			#<--HACK:(1)
 			
 			if key and keydown:
