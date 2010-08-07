@@ -59,7 +59,7 @@ VK_SHIFT =  0x10
 VK_LSHIFT =  0xA0
 VK_RSHIFT =  0xA1
 VK_SCROLL = 0x91
-VK_CAPITAL = 014
+VK_CAPITAL = 0x14
 VK_NUMLOCK = 0x90
 VK_SHIFT = 0x10
 	
@@ -74,11 +74,12 @@ class KBDLLHOOKSTRUCT(Structure):
 		('time', DWORD),
 		('dwExtraInfo', POINTER(ULONG))
 		]
+
 WM_KEYDOWN = 256
 WM_KEYUP = 257
 WM_SYSKEYDOWN = 260
 WM_SYSKEYUP = 261
-KEYBOARD_LAYOUT_NAMES= {		# taken from: MSDN - "Code Page Identifiers"
+KEYBOARD_LAYOUT_NAMES = {		# taken from: MSDN - "Code Page Identifiers"
 		37: 'IBM EBCDIC US-Canada',
 		437: 'OEM United States',
 		500: 'IBM EBCDIC International',
@@ -449,10 +450,7 @@ MY_TIMEOUT = 0.1
 MY_SMTO_TIMEOUT = 1000
 MY_MAX_CLASS_NAME = 64
 
-BM_CLICK =245
-
-HORZRES = 8
-VERTRES = 10
+BM_CLICK = 245
 
 #****************************************************************************************************
 #
