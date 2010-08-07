@@ -1,5 +1,6 @@
-'''
-'''
+
+#TODO: give feedback when closing dialog boxes
+#TODO: we may need to define a PointNone where our mouse cursor is set to when restoring table focus
 
 import TableCrabConfig
 import TableCrabWin32
@@ -12,9 +13,10 @@ from PyQt4 import QtCore
 #***************************************************************************************************
 #
 #***************************************************************************************************
-#TODO: sometime ..maybe ..make user adjustable: 'Gui/RestoreMousePosition'
-class ActionHandler(object):
-	def __init__(self):
+class ActionHandler(QtCore.QObject):
+	def __init__(self, parent=None):
+		QtCore.QObject.__init__(self, parent)
+		
 		self._pokerStarsLoginBox = None
 			
 	def handleWindowCreated(self, hwnd):
@@ -255,8 +257,10 @@ class ActionHandler(object):
 				return
 			# looks like we have to double click here
 			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
-		if TableCrabConfig.settingsValue('Gui/RestoreMousePosition', False).toBool():
-			mi.move(pointCurrent, hwnd=None).send()
+		if TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool():
+			#NOTE: the SendInput() is always off a few pixels so we use mouseSetPos() instead
+			##mi.move(pointCurrent, hwnd=None).send()
+			TableCrabWin32.mouseSetPos(pointCurrent)
 		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name, hotkey.action() ))
 		
 	def tableHandleFold(self, hotkey, template, hwnd, inputEvent):
@@ -278,8 +282,10 @@ class ActionHandler(object):
 			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).send()
 			# looks like we have to double click here
 			mi.leftClick(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
-		if TableCrabConfig.settingsValue('Gui/RestoreMousePosition', False).toBool():
-			mi.move(pointCurrent, hwnd=None).send()
+		if TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool():
+			#NOTE: the SendInput() is always off a few pixels so we use mouseSetPos() instead
+			##mi.move(pointCurrent, hwnd=None).send()
+			TableCrabWin32.mouseSetPos(pointCurrent)
 		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name, hotkey.action() ))
 		
 	def tableHandleRaise(self, hotkey, template, hwnd, inputEvent):
@@ -294,8 +300,10 @@ class ActionHandler(object):
 			return
 		pointCurrent = TableCrabWin32.mouseGetPos()
 		mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
-		if TableCrabConfig.settingsValue('Gui/RestoreMousePosition', False).toBool():
-			mi.move(pointCurrent, hwnd=None).send()
+		if TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool():
+			#NOTE: the SendInput() is always off a few pixels so we use mouseSetPos() instead
+			##mi.move(pointCurrent, hwnd=None).send()
+			TableCrabWin32.mouseSetPos(pointCurrent)
 		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name, hotkey.action() ))
 		
 	#NOTE: there is another way to handle all-in. no reliable one but could be a fallback. looks like bet amount box accepts
@@ -322,8 +330,10 @@ class ActionHandler(object):
 		pointCurrent = TableCrabWin32.mouseGetPos()
 		mi = TableCrabWin32.MouseInput().move(pointStart, hwnd=hwnd).send()
 		mi.leftDown(pointStart, hwnd=hwnd).move(pointEnd, hwnd=hwnd).leftUp(pointEnd, hwnd=hwnd).send()
-		if TableCrabConfig.settingsValue('Gui/RestoreMousePosition', False).toBool():
-			mi.move(pointCurrent, hwnd=None).send()
+		if TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool():
+			#NOTE: the SendInput() is always off a few pixels so we use mouseSetPos() instead
+			##mi.move(pointCurrent, hwnd=None).send()
+			TableCrabWin32.mouseSetPos(pointCurrent)
 		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name, hotkey.action() ))
 		
 	def tableHandleAddToBetAmount(self, hotkey, template, hwnd, inputEvent):
@@ -392,30 +402,32 @@ class ActionHandler(object):
 		point = QtCore.QPoint(2, 2)
 		mi = TableCrabWin32.MouseInput().move(point, hwnd=hwndBetAmountBox).send()
 		mi.leftClick(point, hwnd=hwndBetAmountBox).leftClick(point, hwnd=hwndBetAmountBox).send()
-		if TableCrabConfig.settingsValue('Gui/RestoreMousePosition', False).toBool():
-			mi.move(pointCurrent, hwnd=None).send()
+		if TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool():
+			#NOTE: the SendInput() is always off a few pixels so we use mouseSetPos() instead
+			##mi.move(pointCurrent, hwnd=None).send()
+			TableCrabWin32.mouseSetPos(pointCurrent)
 		TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name, hotkey.action() ))
 		
-	def _tableClickRestoreFocus(self, hwnd, point):
+	def _tableClickRestoreFocus(self, hwnd, point, template):
 		pointCurrent = TableCrabWin32.mouseGetPos()
 		# click point
 		mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
 		# replayer gains focus, so we have to wait a bit and send another click to reactivate the table. 
-		#TODO: for some reason we never regain focus when the replayer is opend for the first time
-		#TODO: maybe we have to make timeout user adjustable
-		time.sleep(0.1)
-		#TODO: maybe we have make this point user adjustable
+		#TODO: for some reason (linux/wine?) table regain focus but is not activated when the replayer is opend for the first time
+		#TODO: make this point user adjustable?
 		mi.move(QtCore.QPoint(1, 1), hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
-		if TableCrabConfig.settingsValue('Gui/RestoreMousePosition', False).toBool():
-			#NOTE: the mouse will move around a bit for SndInput() being inacurate)
-			mi.move(pointCurrent, hwnd=None).send()
-				
+		if TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool():
+			#NOTE: the SendInput() is always off a few pixels so we use mouseSetPos() instead
+			##mi.move(pointCurrent, hwnd=None).send()
+			TableCrabWin32.mouseSetPos(pointCurrent)
+			
+		
 	def tableHandleReplayer(self, hotkey, template, hwnd, inputEvent):
 		point = template.replayer
 		if point == TableCrabConfig.PointNone: 
 			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point Replayer Not set -' % template.name)
 		else:
-			self._tableClickRestoreFocus(hwnd, template.replayer)
+			self._tableClickRestoreFocus(hwnd, template.replayer, template)
 			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name, hotkey.action() ))
 		
 	def tableHandleInstantHandHistory(self, hotkey, template, hwnd, inputEvent):
@@ -423,7 +435,7 @@ class ActionHandler(object):
 		if point == TableCrabConfig.PointNone: 
 			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point InstantHandHistory Not set -' % template.name)
 		else:
-			self._tableClickRestoreFocus(hwnd, template.instantHandHistory)
+			self._tableClickRestoreFocus(hwnd, template.instantHandHistory, template)
 			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name, hotkey.action() ))
 
 
