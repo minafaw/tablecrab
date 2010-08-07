@@ -1,15 +1,21 @@
 """handler for global actions"""
 
+#TODO: give feedback when taking a screenshot
+
 
 import TableCrabConfig
 import TableCrabHotkeys
+
+from PyQt4 import QtCore
 
 #**********************************************************************************************
 #
 #**********************************************************************************************
 
-class ActionHandler(object):
-	def __init__(self):
+class ActionHandler(QtCore.QObject):
+	def __init__(self, parent=None):
+		QtCore.QObject.__init__(self, parent)
+		
 		self._hwndMain = None
 		
 	def setHwndMain(self, hwnd):
