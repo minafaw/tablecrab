@@ -40,12 +40,13 @@ class FrameSettingsGlobal(QtGui.QFrame):
 				step=0.1,
 				parent=self
 				)
-		
+				
+		self.checkRestoreMousePosition = TableCrabConfig.CheckBox('Restore Mouse Position', default=False, settingsKey='RestoreMousePosition', parent=self)
 		self.checkAlternatingRowColors = TableCrabConfig.CheckBox('Show Alternating Row Colors', default=False, settingsKey='Gui/AlternatingRowColors', parent=self)
 		TableCrabConfig.signalConnect(self.checkAlternatingRowColors, self, 'stateChanged(int)', self.onAlternatingRowColorsChanged)
 		self.checkChildItemIndicators = TableCrabConfig.CheckBox('Show Child Item Indicators', default=True, settingsKey='Gui/ChildItemIndicators', parent=self)
 		TableCrabConfig.signalConnect(self.checkChildItemIndicators, self, 'stateChanged(int)', self.onChildItemIndicatorsChanged)
-		
+					
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		TableCrabConfig.signalConnect(self.buttonHelp, self, 'clicked(bool)', self.onButtonHelpClicked)
 		self.buttonBox = QtGui.QDialogButtonBox(self)
@@ -72,14 +73,16 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		grid.addWidget(self.spinZoomIncrement, 3, 1)
 		grid.addLayout(TableCrabConfig.HStretch(), 3, 2)
 			
-		grid.addWidget(self.checkAlternatingRowColors, 4, 0)
-		grid.addWidget(self.checkChildItemIndicators, 5, 0)
+		grid.addWidget(self.checkRestoreMousePosition, 4, 0)
+		grid.addWidget(self.checkAlternatingRowColors, 5, 0)
+		grid.addWidget(self.checkChildItemIndicators, 6, 0)
 		
-		grid.addLayout(TableCrabConfig.VStretch(), 6, 0)
-		grid.addWidget(TableCrabConfig.HLine(self), 7, 0, 1, 3)
+		
+		grid.addLayout(TableCrabConfig.VStretch(), 7, 0)
+		grid.addWidget(TableCrabConfig.HLine(self), 8, 0, 1, 3)
 			
 		grid2 = TableCrabConfig.GridBox()
-		grid.addLayout(grid2, 8, 0, 1, 3)
+		grid.addLayout(grid2, 9, 0, 1, 3)
 		grid2.addWidget(self.buttonBox, 0, 0)
 		
 	def onButtonBackupClicked(self, checked):
@@ -228,7 +231,7 @@ class FrameSettingsHand(QtGui.QFrame):
 				editPostfix = None
 			self.actionSettings.append( (editPrefix, labelAction, editPostfix) )
 			
-		self.labelMaxPlayerName = QtGui.QLabel('MaxPlayerName:', self)
+		self.labelMaxPlayerName = QtGui.QLabel('Max Player Name:', self)
 		self.spinMaxPlayerName = TableCrabConfig.SpinBox(
 				settingsKey='PokerStarsHandGrabber/HandFornmatterHtmlTabular/MaxPlayerName', 
 				default=PokerStarsHandGrabber.HandFormatterHtmlTabular.MaxPlayerName, 
@@ -236,7 +239,7 @@ class FrameSettingsHand(QtGui.QFrame):
 				maximum=999, 
 				parent=self
 				)
-		self.labelGrabTimeout = QtGui.QLabel('GrabTimeout:', self)
+		self.labelGrabTimeout = QtGui.QLabel('Grab Timeout:', self)
 		self.spinGrabTimeout = TableCrabConfig.DoubleSpinBox(
 				settingsKey='PokerStarsHandGrabber/GrabTimeout', 
 				default=PokerStarsHandGrabber.HandGrabber.GrabTimeout,
