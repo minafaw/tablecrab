@@ -27,10 +27,10 @@ class SiteManager(QtCore.QObject):
 		TableCrabConfig.signalConnect(TableCrabConfig.keyboardHook, self, 'inputEvent(QObject*)', self.onInputEvent)
 		TableCrabConfig.signalConnect(TableCrabConfig.mouseHook, self, 'inputEvent(QObject*)', self.onInputEvent)
 		
-		self._tableCrabActionHandler = TableCrabActionHandler.ActionHandler()
+		self._tableCrabActionHandler = TableCrabActionHandler.ActionHandler(parent=self)
 		self._handlers = (
 				self._tableCrabActionHandler,	# should always be first item
-				TableCrabPokerStars.ActionHandler(),
+				TableCrabPokerStars.ActionHandler(parent=self),
 				)
 			
 	def tableCrabActionHandler(self):
