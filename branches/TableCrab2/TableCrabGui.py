@@ -19,7 +19,7 @@ ErrText = '''An error occured and TableCrab may no longer work as expected.
 To help improve TableCrab please send this message to:
 
 mail: jUrner@arcor.de
-subject: TableCrab-Exception
+subject: %s-Error
 
 Notes: 
 - make shure that there is is no personal data contained in the message
@@ -31,10 +31,11 @@ Notes:
 class DialogException(QtGui.QDialog):
 	def __init__(self, info, parent=None):
 		QtGui.QDialog. __init__(self, parent)
+		self.setWindowTitle('%s - Error' % TableCrabConfig.ApplicationName)
 		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
 		TableCrabConfig.signalConnect(self.buttonBox, self, 'accepted()', self.accept)
 		self.edit = QtGui.QPlainTextEdit(self)
-		self.edit.setPlainText(ErrText % (TableCrabConfig.ErrorLogName, info) )
+		self.edit.setPlainText(ErrText % (TableCrabConfig.ApplicationName, TableCrabConfig.ErrorLogName, info) )
 		self.layout()
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
@@ -91,7 +92,6 @@ class Gui(TableCrabMainWindow .MainWindow):
 		TableCrabConfig.settingsSetValue('Gui/TabCurrent', self.tabWidget.currentIndex())
 	
 	def onFeedbackException(self, exception):
-		print repr(exception)
 		# we clean exception here to make shure only relavant data is included + privacy issues for users
 		self.lastError = TableCrabConfig.cleanException(exception)
 		self.labelStatus.setText('Error: ')
