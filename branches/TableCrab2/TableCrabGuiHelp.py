@@ -1,4 +1,6 @@
 
+#TODO: save splitter state in DialogHelp()
+
 import TableCrabConfig
 from PyQt4 import QtCore, QtGui, QtWebKit, QtNetwork
 
@@ -6,6 +8,29 @@ from PyQt4 import QtCore, QtGui, QtWebKit, QtNetwork
 #
 #**********************************************************************************************
 
+#TODO: would be nice to auto-generate topics from disk. for now we have to keep track by hand.
+# auto-generating woul drequire some naming scheme to get the hirarchy - we only support flat
+# directories in our NetworkAccessmanager()  ++ some Html parsing to retrieve the desired title
+# of the topic. problem is we may not get topis in a dedicated order.
+#
+# some sleketon code::
+#
+#DirHtmlPages = wherever
+#TitlePat = re.compile('.*?<title>(.*?)</title>', re.I | re.M | re.S)
+#topics = {}
+#for name in os.listdir(DirHtmlPages):
+#	fileName = os.path.join(DirHtmlPages, name)
+#	if not os.path.isfile(fileName): continue
+#	if not os.path.splitext(name)[1].lower() == '.html': continue
+#	with open(fileName, 'r') as fp:
+#		data = fp.read()
+#		result = TitlePat.match(data)
+#		if result is not None:
+#			print result.group(1)
+#		else:
+#			print 'Warning: no title found in : %s' % name
+#		#TODO: break fileName into pieces. something like: topic-subtopic-MyPage.html
+#
 Topics = [
 		('index', 'TableCrab'), [
 			('setup', 'Setup'), [
@@ -16,12 +41,12 @@ Topics = [
 				('hotkeyFold', 'Fold'),
 				('hotkeyRaise', 'Raise'),
 				('hotkeyAll_In', 'All-in'),
-				('hotkeyHilightBetAmount', 'HilightBetAmount'),
-				('hotkeyMultiplyBetAmount', 'MultiplyBetAmount'),
-				('hotkeyAddToBetAmount', 'AddToBetAmount'),
-				('hotkeySubtractFromBetAmount', 'SubtractFromBetAmount'),
+				('hotkeyHilightBetAmount', 'Hilight Bet Amount'),
+				('hotkeyMultiplyBetAmount', 'Multiply Bet Amount'),
+				('hotkeyAddToBetAmount', 'Add To Bet Amount'),
+				('hotkeySubtractFromBetAmount', 'Subtract From Bet Amount'),
 				('hotkeyReplayer', 'Replayer'),
-				('hotkeyInstantHandHistory', 'InstantHandHistory'),
+				('hotkeyInstantHandHistory', 'Instant Hand History'),
 				('hotkeyScreenshot', 'Screenshot'),
 				],
 			('hand', 'Hand'),
