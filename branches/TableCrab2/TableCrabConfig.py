@@ -425,6 +425,16 @@ class VStretch(VBox):
 		VBox.__init__(self, *args)
 		self.addStretch(999)
 
+#NOTE: kind of a guess ..PyQt4 single shot timers are segfaulting from time to time. 
+class Timer(QtCore.QTimer):
+	def __init__(self, parent=None, singleShot=False, interval=0, slot=None, userData=None):
+		QtCore.QTimer.__init__(self, parent)
+		self.setSingleShot(singleShot)
+		self.setInterval(interval)
+		if slot is not None:
+			parent.connect(self, QtCore.SIGNAL('timeout()'), slot)
+		self.userData = userData
+
 #TODO: we have to ignore <TAB> cos it tabs away from the hotkey box
 class HotkeyBox(QtGui.QComboBox):
 	#NOTE: bit of a hack this combo
@@ -432,7 +442,7 @@ class HotkeyBox(QtGui.QComboBox):
 	#     mut be handled internally cos it is working without our help)
 	# x) we added a space to each displayName to trrick the combo popup search feature
 	Hotkeys = (		# hotkey --> displayName
-				('', '<Type On Your Keyboard>'),
+				('', '<Type Keys Your Keyboard>'),
 				('<ESCAPE>', ' ESCAPE'),
 				('<SPACE>', ' SPACE'),
 				('<TAB>', ' TAB'),
@@ -441,6 +451,7 @@ class HotkeyBox(QtGui.QComboBox):
 			)
 	def __init__(self, hotkey=None, parent=None):
 		QtGui.QComboBox.__init__(self, parent=None)
+		self._counter = 0
 		self.addItems( [i[1] for i in self.Hotkeys] )
 		for i, (tmpHotkey, _) in enumerate(self.Hotkeys):
 			if hotkey == tmpHotkey:
@@ -450,6 +461,18 @@ class HotkeyBox(QtGui.QComboBox):
 			if hotkey is not None:
 				self.setItemText(0, hotkey)
 		signalConnect(keyboardHook, self, 'inputEvent(QObject*)', self.onInputEvent)
+	
+	#TODO: works for now, but have to rework this. we open popup if the user clicks the combo twice
+	def focusInEvent(self, event):
+		self._counter = 1
+		return QtGui.QComboBox.focusInEvent(self, event)
+		
+	def mousePressEvent(self, event):
+		if self._counter > 0:
+			self._counter -= 1
+		else:
+			return QtGui.QComboBox.mousePressEvent(self, event)
+	
 	def keyPressEvent(self, event):
 		if event.key() == QtCore.Qt.Key_Space and not event.modifiers():
 			QtGui.QComboBox.keyPressEvent(self, event)
