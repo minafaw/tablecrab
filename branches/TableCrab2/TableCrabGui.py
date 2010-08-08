@@ -1,7 +1,4 @@
 
-
-#TODO: we may need better handling of status information. status per tab and all
-
 import TableCrabConfig
 import TableCrabMainWindow 
 import TableCrabGuiSettings
