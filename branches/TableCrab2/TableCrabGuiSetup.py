@@ -12,8 +12,7 @@ from PyQt4 import QtCore, QtGui
 #
 #**********************************************************************************************
 class TemplatesWidget(QtGui.QTreeWidget):
-	
-	
+		
 	class MyDelegate(QtGui.QItemDelegate):
 		def __init__(self, parent=None):
 			QtGui.QItemDelegate.__init__(self, parent)
@@ -275,7 +274,12 @@ class ScreenshotWidget(QtGui.QScrollArea):
 			if event.button() == QtCore.Qt.LeftButton:
 				pixmap = self.pixmap()
 				if pixmap is not None:
-					TableCrabConfig.signalEmit(None, 'widgetScreenshotDoubleClicked(QPixmap*, QPoint*)', pixmap, event.pos())
+					# holding sown Ctrl while double clicking rests the point
+					if event.modifiers() & QtCore.Qt.ControlModifier:
+						point = TableCrabConfig.newPointNone()
+					else:
+						point = QtCore.QPoint(event.pos())
+					TableCrabConfig.signalEmit(None, 'widgetScreenshotDoubleClicked(QPixmap*, QPoint*)', pixmap, point)
 		def mouseMoveEvent(self, event):
 			pixmap = self.pixmap()
 			if pixmap is not None:
