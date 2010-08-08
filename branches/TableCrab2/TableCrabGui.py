@@ -95,15 +95,19 @@ class Gui(TableCrabMainWindow .MainWindow):
 		# we clean exception here to make shure only relavant data is included + privacy issues for users
 		self.lastError = TableCrabConfig.cleanException(exception)
 		self.labelStatus.setText('Error: ')
+		# hide label CurrentObject so it does not interfere with the error message
+		self.labelCurrentObject.setVisible(False)
 		self.labelCurrentObjectData.setText('an error occured. double click me for details')
 	
 	def onFeedbackCurrentObject(self, qString):
 		self.lastError = None
+		self.labelCurrentObject.setVisible(True)
 		self.labelStatus.setText('Ready: ')
 		self.labelCurrentObject.setText(qString)
 	
 	def onFeedbackCurrentObjectData(self, qString):
 		self.lastError = None
+		self.labelCurrentObject.setVisible(True)
 		self.labelStatus.setText('Ready: ')
 		self.labelCurrentObjectData.setText(qString)
 	
