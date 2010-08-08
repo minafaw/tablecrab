@@ -455,7 +455,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		
 	def onActionSaveTriggered(self):
 		if self.label.pixmap() is None:
-			self.buttonSave.setEnabled(False)
+			self.actionSave.setEnabled(False)
 			return
 		imageFormats = [QtCore.QString(i).toLower() for i in  QtGui.QImageWriter.supportedImageFormats()]
 		fileName = TableCrabConfig.dlgOpenSaveFile(
