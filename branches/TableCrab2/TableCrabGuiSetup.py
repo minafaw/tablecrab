@@ -1,6 +1,8 @@
  
 #TODO: when the mouse leaves screenshot would be nice to set coordianteddisplayed to (-1, -1) or "None"
 #TODO: check for multiple templates of the same size? currently we are using the first matching encountered that's all.
+#TODO: restore last selected template on restart? would rewuire an attr "itemIsSelected", downside
+#				we'd have to dump the whole tree on every curent item change.
  
 import TableCrabConfig
 import TableCrabWin32
