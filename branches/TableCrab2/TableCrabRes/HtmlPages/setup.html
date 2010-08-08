@@ -15,22 +15,23 @@
 	the process is fairly simple. create a new template and sit at a table. hit the <a href="hotkeyScreenshot.html">
 	screenshot</a> hotkey when buttons become visible and go back to the setup tab. select the button or checkbox 
 	in the template you want to assign and double click the corrosponding corrosponding button or checkbox on
-	the screeenshot. this will fill in the location in the template. you may need more than one screenshot. and it's a 
+	the screeenshot. this will fill in the point clicked in the template. you may need more than one screenshot. and it's a 
 	good idea to save them for later use.
 	<br>
 	<br>
 	
 	use PokerStars custom layouts to make shure your tables are of a fixed size because ..if you loose your tables 
-	layout you are a bit out of luck. you may have to setup a new template.
+	layout you are a bit out of luck. you may have to setup a new template <a href="#footnote1">[1]</a>.
 	
 	
 	<div class="noteBox">
 		<ul>
 			<li>you can setup up to 64 templates
 			<li>TableCrab does not check for conflicting templates. it always takes the first one in the list if in doubt.
-			<li>a template will only work for a table of its size
-			<li>buttons or chekboxes with a location of "None" will be ignored
-			<li>points and sizes in templates are in client coordinates. that is relative to the window minus title bar and borders.
+			<li>a template will only work for a table of <b>size</b>
+			<li>buttons or chekboxes with a location of <b>None</b> will be ignored
+			<li>to reset a point hold down <b>Ctrl</b> when double clicking
+			<li><b>size</b> is the size of the client area - that is the windows size minus title bar and borders
 		</ul>
 		
 	</div>
@@ -89,12 +90,26 @@
 <div class="textBox">
 <div class="headerBox">Others</div>
 	<ul>
-		<li>you can change the name of a template by hitting &lt;enter&gt; on the current name or by double cklicking it
+		<li>you can change the name of a template by hitting &lt;enter&gt; on the templates name or by double cklicking it
 	</ul>
+</div>
+
+
+<div class="textBox">
+<div class="headerBox">Footnotes</div>
+	<i>
+	<b><a name="footnote1">[1]</a></b> ..a new template? yeah, this sucks. but on wine/linux there is no way currently
+	to resize a window to fit a templates size. filed a bug report ..see what comes out of it. in the meantime
+	the best way i found was take a screenshot ...open the <a href="screenshotInfo.html">Info</a> dialog.
+	then resize the window  --&gt; take screenshot --&gt; Refresh dialog until <b>&quot;clientSize&quot;</b> 
+	as shown in the dialog matches the size of the template.
+	
+	</i>
 	
 	
 	
 </div>
+
 
 
 </body></html>
