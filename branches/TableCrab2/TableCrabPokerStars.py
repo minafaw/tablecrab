@@ -1,5 +1,7 @@
 
-#TODO: we may need to define a PointNone where our mouse cursor is set to when restoring table focus
+#TODO: we may need to expose a PointNone in our table template where our mouse cursor is set to when restoring table focus
+#TODO: for some reason ButtonCheck and ButtonRaise are not working as expected postflop (preflop is ok). we have to click them
+#				two times (always, sometimes?) to get the desired effect
 #TODO: move mouse to active table is not implemented. we'll see.
 
 import TableCrabConfig
@@ -252,13 +254,13 @@ class ActionHandler(QtCore.QObject):
 		if data['betAmountBoxIsVisible']:
 			point = template.buttonCheck
 			if point == TableCrabConfig.PointNone: 
-				TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point ButtonCheck Not set -' % template.name)
+				TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point ButtonCheck Not Set -' % template.name)
 				return
 			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
 		else:
 			point = template.checkboxCheckFold
 			if point == TableCrabConfig.PointNone: 
-				TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- CheckboxCheckFold Not set -' % template.name)
+				TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- CheckboxCheckFold Not Set -' % template.name)
 				return
 			# looks like we have to double click here
 			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
@@ -276,13 +278,13 @@ class ActionHandler(QtCore.QObject):
 		if data['betAmountBoxIsVisible']:
 			point = template.buttonFold
 			if point == TableCrabConfig.PointNone: 
-				TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point ButtonFold Not set -' % template.name)
+				TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point ButtonFold Not Set -' % template.name)
 				return
 			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
 		else:
 			point = template.checkboxFold
 			if point == TableCrabConfig.PointNone: 
-				TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point CheckboxFold Not set -' % template.name)
+				TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point CheckboxFold Not Set -' % template.name)
 				return
 			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).send()
 			# looks like we have to double click here
@@ -301,7 +303,7 @@ class ActionHandler(QtCore.QObject):
 		##if not data['betAmountBoxIsVisible']: return
 		point = template.buttonRaise
 		if point == TableCrabConfig.PointNone: 
-			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point Buttonraise Not set -' % template.name)
+			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point Buttonraise Not Set -' % template.name)
 			return
 		pointCurrent = TableCrabWin32.mouseGetPos()
 		mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
@@ -326,11 +328,11 @@ class ActionHandler(QtCore.QObject):
 		if not data['betAmountBoxIsVisible']: return
 		pointStart = template.betSliderStart
 		if pointStart == TableCrabConfig.PointNone: 
-			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point BetSliderStart Not set -' % template.name)
+			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point BetSliderStart Not Set -' % template.name)
 			return
 		pointEnd = template.betSliderEnd
 		if pointEnd == TableCrabConfig.PointNone: 
-			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s - Point BetSliderEnd Not set -' % template.name)
+			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point BetSliderEnd Not Set -' % template.name)
 			return
 		pointCurrent = TableCrabWin32.mouseGetPos()
 		mi = TableCrabWin32.MouseInput().move(pointStart, hwnd=hwnd).send()
@@ -429,7 +431,7 @@ class ActionHandler(QtCore.QObject):
 	def tableHandleReplayer(self, hotkey, template, hwnd, inputEvent):
 		point = template.replayer
 		if point == TableCrabConfig.PointNone: 
-			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point Replayer Not set -' % template.name)
+			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point Replayer Not Set -' % template.name)
 		else:
 			self._tableClickRestoreFocus(hwnd, template.replayer, template)
 			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name, hotkey.action() ))
@@ -437,7 +439,7 @@ class ActionHandler(QtCore.QObject):
 	def tableHandleInstantHandHistory(self, hotkey, template, hwnd, inputEvent):
 		point = template.instantHandHistory
 		if point == TableCrabConfig.PointNone: 
-			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point InstantHandHistory Not set -' % template.name)
+			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point InstantHandHistory Not Set -' % template.name)
 		else:
 			self._tableClickRestoreFocus(hwnd, template.instantHandHistory, template)
 			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: %s' % (template.name, hotkey.action() ))
