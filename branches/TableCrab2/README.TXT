@@ -1,13 +1,4 @@
-
-
-------------------------------------------------------------------------------------------------------------------------------------
-issues
-------------------------------------------------------------------------------------------------------------------------------------
-
-- wine: dfault GUI font may or may not not contain bold. adjust font (Tahoma, if installed, works)
-- size grip is not working on windows due to a bug in Qt (QTBUG-5566). so size grip is disabled wherever possible. but some dialogs can nit be adjusted
-- wine? i found that scrolling upwards via MouseWheel in QScrollArea is not working
-- since setting application style we get "Could not parse application stylesheet" messages. no idea why
+TableCrab - Hotkeys for PokerStars and more
 
 
 ------------------------------------------------------------------------------------------------------------------------------------
@@ -58,8 +49,14 @@ NOTES:
 - you must install the msi version of Python. installing the python version python from winetricks failed on a missing Microsoft.VC90.CRT
    assembly. micros~1 at its best.
 
+------------------------------------------------------------------------------------------------------------------------------------
+issues
+------------------------------------------------------------------------------------------------------------------------------------
 
-
+- wine: default GUI font may or may not not contain bold. adjust font (Tahoma, if installed, works)
+- size grip is not working on windows due to a bug in Qt (QTBUG-5566). so size grip is disabled wherever possible. but some dialogs can nit be adjusted
+- wine? i found that scrolling upwards via MouseWheel in QScrollArea is not working
+- since setting application style we get "Could not parse application stylesheet" messages. no idea why
 
 
 
