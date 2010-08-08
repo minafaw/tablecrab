@@ -45,7 +45,8 @@ class DialogException(QtGui.QDialog):
 		grid.addWidget(self.edit, 0, 0)
 		grid.addWidget(TableCrabConfig.HLine(self), 1, 0)
 		grid.addWidget(self.buttonBox, 2, 0)
-		
+
+
 class Gui(TableCrabMainWindow .MainWindow):
 	
 	# double clickabe label. we use this to trigger ExceptionDialog
@@ -58,9 +59,14 @@ class Gui(TableCrabMainWindow .MainWindow):
 		
 	def __init__(self):
 		TableCrabMainWindow .MainWindow.__init__(self)
-		self.lastError = None
-		self.tabWidget = QtGui.QTabWidget(self)
-		self.setCentralWidget(self.tabWidget)
+		
+		# need to store some state data for the statusBar so we can restore on tab changes
+		# error messages are displayed as longs as there is no new feedback from the current tab
+		self._feedbackMessages = {	# widget/tab --> {'currentObject': str, 'objectData': str}
+				None: {'lastError': ''},	# reserved for lastError
+				}		
+			
+		# setup StatusBar
 		statusBar = self.statusBar()
 		#BUG: QTBUG-5566 sizegrip is broken on windows
 		statusBar.setSizeGripEnabled(False)
@@ -71,55 +77,96 @@ class Gui(TableCrabMainWindow .MainWindow):
 		self.labelCurrentObjectData = self.MyLabel('', self)
 		statusBar.addWidget(self.labelCurrentObjectData, 99)
 		
-		self.tabWidget.addTab(TableCrabGuiSetup.FrameSetup(parent=self), 'Setup')
-		self.tabWidget.addTab(TableCrabGuiHotkeys.FrameHotkeys(parent=self), 'Hotkeys')
-		self.tabWidget.addTab(TableCrabGuiHand.FrameHand(parent=self), 'Hand')
-		self.tabWidget.addTab(TableCrabGuiSettings.FrameSettings(parent=self), 'Settings')
-		self.tabWidget.addTab(TableCrabGuiHelp.FrameHelp(parent=self), 'Help')
-			
+		# setup TabWidget
+		self.tabWidget = QtGui.QTabWidget(self)
+		self.setCentralWidget(self.tabWidget)
+		for widgetProto, name in (
+					(TableCrabGuiSetup.FrameSetup, 'Setup'),
+					(TableCrabGuiHotkeys.FrameHotkeys, 'Hotkeys'),
+					(TableCrabGuiHand.FrameHand, 'Hand'),
+					(TableCrabGuiSettings.FrameSettings, 'Settings'),
+					(TableCrabGuiHelp.FrameHelp, 'Help'),
+					):
+			self._addTab(widgetProto, name)
+				
 		# connect global signals
 		TableCrabConfig.signalsConnect(None, self, 
+				('closeEvent(QEvent*)', self.onCloseEvent),
 				('feedbackException(QString)', self.onFeedbackException),
 				('feedbackCurrentObject(QString)', self.onFeedbackCurrentObject),
 				('feedbackCurrentObjectData(QString)', self.onFeedbackCurrentObjectData),
 				('feedbackMessage(QString)', self.onFeedbackMessage),
 				)
 		
-		# connect to our exception QLabel
+		# connect to our double clickable label label
 		TableCrabConfig.signalConnect(self.labelCurrentObjectData, self, 'doubleClicked()', self.onLabelDoubleClicked)
 		
+		# connect to TabWidget
+		TableCrabConfig.signalConnect(self.tabWidget, self, 'currentChanged(int)', self.onTabCurrentChanged)
+		
+		# restore last selected tab
 		self.tabWidget.setCurrentIndex( TableCrabConfig.settingsValue('Gui/TabCurrent', QtCore.QVariant()).toInt()[0] )
-		TableCrabConfig.signalConnect(None, self, 'closeEvent(QEvent*)', self.onCloseEvent)
+		
+	def _addTab(self, widgetProto, name):
+		widget = widgetProto(parent=self)
+		self.tabWidget.addTab(widget, name)
+		self._feedbackMessages[widget] = {'currentObject': '', 'objectData': ''}
 	
 	def onCloseEvent(self, event):
 		TableCrabConfig.settingsSetValue('Gui/TabCurrent', self.tabWidget.currentIndex())
 	
+	def onTabCurrentChanged(self, index):
+		if index < 0:
+			return
+		# check if we got an error to display
+		if self._feedbackMessages[None]['lastError']:
+			pass
+		else:
+			widget = self.tabWidget.widget(index)
+			data = self._feedbackMessages[widget]
+			self.labelCurrentObject.setText(data['currentObject'])
+			self.labelCurrentObjectData.setText(data['objectData'])
+		
 	def onFeedbackException(self, exception):
-		# we clean exception here to make shure only relavant data is included + privacy issues for users
-		self.lastError = TableCrabConfig.cleanException(exception)
+		#NOTE: we assume "exception" is never empty string
+		# clean exception here to make shure only relavant data is included + privacy issues for users
+		self._feedbackMessages[None]['lastError'] = TableCrabConfig.cleanException(exception)
 		self.labelStatus.setText('Error: ')
 		# hide label CurrentObject so it does not interfere with the error message
 		self.labelCurrentObject.setVisible(False)
 		self.labelCurrentObjectData.setText('an error occured. double click me for details')
 	
 	def onFeedbackCurrentObject(self, qString):
-		self.lastError = None
-		self.labelCurrentObject.setVisible(True)
+		# clear last error
+		self._feedbackMessages[None]['lastError'] = ''
+		# store data for tab changes
+		widget = self.tabWidget.currentWidget()
+		data = self._feedbackMessages[widget]
+		data['currentObject'] = qString
+		# set message to statusBar
 		self.labelStatus.setText('Ready: ')
+		self.labelCurrentObject.setVisible(True)
 		self.labelCurrentObject.setText(qString)
 	
 	def onFeedbackCurrentObjectData(self, qString):
-		self.lastError = None
-		self.labelCurrentObject.setVisible(True)
+		# clear last error
+		self._feedbackMessages[None]['lastError'] = ''
+		# store data for tab changes
+		widget = self.tabWidget.currentWidget()
+		data = self._feedbackMessages[widget]
+		data['objectData'] = qString
+		# set message to statusBar
 		self.labelStatus.setText('Ready: ')
+		self.labelCurrentObject.setVisible(True)
 		self.labelCurrentObjectData.setText(qString)
 	
 	def onFeedbackMessage(self, qString):
 		self.statusBar().showMessage(qString, 3000)
 		
 	def onLabelDoubleClicked(self):
-		if self.lastError is not None:
-			dlg = DialogException(self.lastError, parent=self)
+		lastError = self._feedbackMessages[None]['lastError']
+		if lastError:
+			dlg = DialogException(lastError, parent=self)
 			dlg.restoreGeometry( TableCrabConfig.settingsValue('Gui/DialogException/Geometry', QtCore.QByteArray()).toByteArray())
 			dlg.exec_()
 			TableCrabConfig.settingsSetValue('Gui/DialogException/Geometry', dlg.saveGeometry() )
