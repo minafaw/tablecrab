@@ -436,6 +436,8 @@ class HandFormatterHtmlTabular(HandFormatterBase):
         border-collapse: collapse;
         }
 .handSource{margin-top: 10em;}
+
+
 .playerCell{
         vertical-align: top; 
         border: 1px solid black; 
@@ -443,30 +445,50 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 .playerName{}
 .playerStack{}
 .playerCardsCell{border: 1px solid black;}
+.playerCards{
+        border: 0px; 
+        border-spacing: 0px;
+        width: 100%;  
+        }
 .playerActionsCell{
         white-space: nowrap;
         vertical-align: top;
         padding-left: 0.1em; 
         border: 1px solid black; 
         }
-.potCell{
-        text-align: center;
-        border: 1px solid black; 
-        }
+.playerActionFold{}
+.playerActionCall{background-color: #87CEFA ;}
+.playerActionCheck{background-color: #98FB98;}
+.playerActionBet{background-color: #FFA54F;}
+.playerActionRaise{background-color: #FF6EB4;}
+.playerActionPostBlindBig{}
+.playerActionPostBlindSmall{}
+
+
 .potCellExtra{
         padding-left: 1em; 
         border: 1px solid black; 
         }
+.potCell{
+        text-align: center;
+        border: 1px solid black; 
+        }
+
+
+.boardCardCellExtra{border: 1px solid black; }
 .boardCardCell{
         border:1px solid black;
         margin-left: auto;        /* centers contents of the cell */
         margin-right: auto;    /* centers contents of the cell */
         }
-.boardCardCellExtra{border: 1px solid black; }
-.cards{
+.boardCards{
         border: 0px; 
         border-spacing: 0px;
+        margin-left: auto;        /* centers contents of the cell */
+        margin-right: auto;    /* centers contents of the cell */   
         }
+
+
 .cardCell{padding: 0px;}
 .card{
         border: solid 1px;
@@ -492,13 +514,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
         color: #355b73;
         background-color: #355b73;
         }
-.playerActionFold{}
-.playerActionCall{background-color: #87CEFA ;}
-.playerActionCheck{background-color: #98FB98;}
-.playerActionBet{background-color: #FFA54F;}
-.playerActionRaise{background-color: #FF6EB4;}
-.playerActionPostBlindBig{}
-.playerActionPostBlindSmall{}
+
 
 '''
 			
@@ -550,8 +566,13 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			string = string.replace(' ', '&nbsp;')
 		return string
 	
-	def htmlFormatCards(self, p, *cards):
-		p >> '<table class="cards">'
+	def htmlFormatCards(self, p, cardsType, *cards):
+		if cardsType == 'playerCards':
+			p >> '<table class="playerCards">'
+		elif  cardsType == 'boardCards':
+			p >> '<table class="boardCards">'
+		else:
+			raise ValueError('unknown cardsType: %s' % cardsType)
 		p >> '<tr>'
 		for card in cards:
 			if not card:
@@ -610,7 +631,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 				
 			# add pocket cards column
 			p >> '<td class="playerCardsCell">'
-			self.htmlFormatCards(p, *player.cards)
+			self.htmlFormatCards(p, 'playerCards', *player.cards)
 			p << '</td>'
 			
 			# add player actions
@@ -681,13 +702,13 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		p >> '<tr>'
 		p | '<td class="boardCardCellExtra" colspan="4">&nbsp;</td>'
 		p >> '<td class="boardCardCell">'
-		self.htmlFormatCards(p, hand.cards[0], hand.cards[1], hand.cards[2])
+		self.htmlFormatCards(p, 'boardCards', hand.cards[0], hand.cards[1], hand.cards[2])
 		p << '</td>'
 		p >> '<td class="boardCardCell">'
-		self.htmlFormatCards(p, hand.cards[3])
+		self.htmlFormatCards(p, 'boardCards', hand.cards[3])
 		p << '</td>'
 		p >> '<td class="boardCardCell">'
-		self.htmlFormatCards(p, hand.cards[4])
+		self.htmlFormatCards(p, 'boardCards', hand.cards[4])
 		p << '</td>'
 		p << '</tr>'
 		
