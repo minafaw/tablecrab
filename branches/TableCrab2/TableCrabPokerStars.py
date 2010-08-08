@@ -1,7 +1,7 @@
 
 #TODO: we may need to expose a PointNone in our table template where our mouse cursor is set to when restoring table focus
-#TODO: for some reason ButtonCheck and ButtonRaise are not working as expected postflop (preflop is ok). we have to click them
-#				two times (always, sometimes?) to get the desired effect
+#TODO: for some reason ButtonCheck and ButtonRaise are not working as expected postflop (preflop is ok). we have to trigger
+#				hotkey two times (always, sometimes?) to get the desired effect. double clicking right now ..have to experiment.
 #TODO: move mouse to active table is not implemented. we'll see.
 
 import TableCrabConfig
@@ -256,14 +256,14 @@ class ActionHandler(QtCore.QObject):
 			if point == TableCrabConfig.PointNone: 
 				TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point ButtonCheck Not Set -' % template.name)
 				return
-			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
+			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClickDouble(point, hwnd=hwnd).send()
 		else:
 			point = template.checkboxCheckFold
 			if point == TableCrabConfig.PointNone: 
 				TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- CheckboxCheckFold Not Set -' % template.name)
 				return
 			# looks like we have to double click here
-			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
+			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClickDouble(point, hwnd=hwnd).send()
 		if TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool():
 			#NOTE: the SendInput() is always off a few pixels so we use mouseSetPos() instead
 			##mi.move(pointCurrent, hwnd=None).send()
@@ -306,7 +306,7 @@ class ActionHandler(QtCore.QObject):
 			TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point Buttonraise Not Set -' % template.name)
 			return
 		pointCurrent = TableCrabWin32.mouseGetPos()
-		mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
+		mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClickDouble(point, hwnd=hwnd).send()
 		if TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool():
 			#NOTE: the SendInput() is always off a few pixels so we use mouseSetPos() instead
 			##mi.move(pointCurrent, hwnd=None).send()
@@ -408,7 +408,7 @@ class ActionHandler(QtCore.QObject):
 		pointCurrent = TableCrabWin32.mouseGetPos()
 		point = QtCore.QPoint(2, 2)
 		mi = TableCrabWin32.MouseInput().move(point, hwnd=hwndBetAmountBox).send()
-		mi.leftClick(point, hwnd=hwndBetAmountBox).leftClick(point, hwnd=hwndBetAmountBox).send()
+		mi.leftClickDouble(point, hwnd=hwndBetAmountBox).send()
 		if TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool():
 			#NOTE: the SendInput() is always off a few pixels so we use mouseSetPos() instead
 			##mi.move(pointCurrent, hwnd=None).send()
