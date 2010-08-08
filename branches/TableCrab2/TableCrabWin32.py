@@ -957,6 +957,7 @@ class MouseInput(object):
 		self._input = []
 		user32.SendInput(len(arr), byref(arr), sizeof(INPUT))
 		return self
+	
 	def leftDown(self, point, hwnd=None):
 		self._addMousePoint(MOUSEEVENTF_LEFTDOWN, point, hwnd=hwnd)
 		return self
@@ -967,6 +968,11 @@ class MouseInput(object):
 		self.leftDown(point, hwnd=hwnd)
 		self.leftUp(point, hwnd=hwnd)
 		return self
+	def leftClickDouble(self, point, hwnd=None):
+		self.leftClick(point, hwnd=hwnd)
+		self.leftClick(point, hwnd=hwnd)
+		return self
+		
 	def rightDown(self, point, hwnd=None):
 		self._addMousePoint(MOUSEEVENTF_RIGHTDOWN, point, hwnd=hwnd)
 		return self
@@ -977,6 +983,7 @@ class MouseInput(object):
 		self.rightDown(point, hwnd=hwnd)
 		self.rightUp(point, hwnd=hwnd)
 		return self
+	
 	def middleDown(self, point, hwnd=None):
 		self._addMousePoint(MOUSEEVENTF_MIDDLEDOWN, point, hwnd=hwnd)
 		return self
