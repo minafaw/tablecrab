@@ -1,0 +1,162 @@
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGui.py", line 130, in <module>
+    if __name__ == '__main__': Gui().start()
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGui.py", line 60, in __init__
+    TableCrabMainWindow .MainWindow.__init__(self)
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabMainWindow.py", line 13, in __init__
+    self._singleApplication = TableCrabConfig.SingleApplication()
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabConfig.py", line 99, in __init__
+    raise RuntimeError(' is already running')
+RuntimeError:  is already running
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 602, in <module>
+    g.setCentralWidget(FrameSetup(g))
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 561, in __init__
+    self.screenshotWidget =ScreenshotWidget(parent=self)
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 301, in __init__
+    self.label = self.MyLabel('Screenshot')
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 255, in __init__
+    self.setFrameShape(QtGui.QFrame.Styledpanel | QtGui.QFrame.Raised)
+AttributeError: type object 'QFrame' has no attribute 'Styledpanel'
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 604, in <module>
+    g.setCentralWidget(FrameSetup(g))
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 563, in __init__
+    self.screenshotWidget =ScreenshotWidget(parent=self)
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 340, in __init__
+    self.setScreenshot(pixmap=None)
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 375, in setScreenshot
+    self.label.setFrameShape(QtGui.QFrame.None)
+AttributeError: type object 'QFrame' has no attribute 'None'
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 604, in <module>
+    g.setCentralWidget(FrameSetup(g))
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 563, in __init__
+    self.screenshotWidget =ScreenshotWidget(parent=self)
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 340, in __init__
+    self.setScreenshot(pixmap=None)
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 378, in setScreenshot
+    self.label.setScreenshot(pixmap=pixmap)
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 257, in setScreenshot
+    self.setPixmap(pixmap)
+TypeError: QLabel.setPixmap(QPixmap): argument 1 has unexpected type 'NoneType'
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 603, in <module>
+    g.setCentralWidget(FrameSetup(g))
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 562, in __init__
+    self.screenshotWidget =ScreenshotWidget(parent=self)
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 344, in __init__
+    self.setScreenshot(pixmap=None)
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 378, in setScreenshot
+    self.label.setScreenshot(pixmap=pixmap, screenshotName=screenshotName)
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 256, in setScreenshot
+    result = false
+NameError: global name 'false' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGui.py", line 130, in <module>
+    if __name__ == '__main__': Gui().start()
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGui.py", line 60, in __init__
+    TableCrabMainWindow .MainWindow.__init__(self)
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabMainWindow.py", line 13, in __init__
+    self._singleApplication = TableCrabConfig.SingleApplication()
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabConfig.py", line 99, in __init__
+    raise RuntimeError(' is already running')
+RuntimeError:  is already running
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 603, in <module>
+    g = TableCrabMainWindow.MainWindow()
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabMainWindow.py", line 13, in __init__
+    self._singleApplication = TableCrabConfig.SingleApplication()
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabConfig.py", line 99, in __init__
+    raise RuntimeError(' is already running')
+RuntimeError:  is already running
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 604, in <module>
+    g.setCentralWidget(FrameSetup(g))
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 563, in __init__
+    self.screenshotWidget =ScreenshotWidget(parent=self)
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 305, in __init__
+    self.setScreenshot(pixmap=None)
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 380, in setScreenshot
+    self.adjustActions()
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 351, in adjustActions
+    self.actionSave.setEnabled(self.label.pixmap() is not None)
+AttributeError: 'ScreenshotWidget' object has no attribute 'actionSave'
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 454, in onActionSaveTriggered
+    self.buttonSave.setEnabled(False)
+AttributeError: 'ScreenshotWidget' object has no attribute 'buttonSave'
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "/home/me/Scr/Poker/TableCrab/branches/TableCrab2/TableCrabGuiSetup.py", line 454, in onActionSaveTriggered
+    self.buttonSave.setEnabled(False)
+AttributeError: 'ScreenshotWidget' object has no attribute 'buttonSave'
+

@@ -1,4 +1,5 @@
  
+#TODO: when the mouse leaves screenshot would be nice to set coordianteddisplayed to (-1, -1) or "None"
 #TODO: check for multiple templates of the same size? currently we are using the first matching encountered that's all.
  
 import TableCrabConfig
@@ -245,31 +246,35 @@ class TemplatesWidget(QtGui.QTreeWidget):
 	
 class ScreenshotWidget(QtGui.QScrollArea):
 	
-	class MyLabel(QtGui.QLabel):
+	class ScreenshotLabel(QtGui.QLabel):
 		ScreenshotName = 'Screenshot'
 		def __init__(self, *args):
 			QtGui.QLabel.__init__(self, *args)
 			self.setMouseTracking(True)
-		def setScreenshot(self, pixmap=None):
+				
+		def setScreenshot(self, pixmap=None, screenshotName=None):
 			result = False
-			self.setPixmap(pixmap)
 			if pixmap is None:
 				self.setScaledContents(True)
-				self.setText(self.ScreenshotName)
+				self.setFrameShape(QtGui.QFrame.NoFrame)
+				self.setText(self.ScreenshotName if screenshotName is None else screenshotName)
 				pixmap = QtGui.QPixmap()
 			else:
 				# manually set size of the label so we get the correct coordiantes of the mouse cursor
+				self.setPixmap(pixmap)
 				self.setScaledContents(False)
 				self.resize(pixmap.size())
+				self.setFrameShape(QtGui.QFrame.StyledPanel | QtGui.QFrame.Sunken)
 				point = QtGui.QCursor.pos()
 				point = self.mapFromGlobal(point)
 				if point.x() < 0 or point.y() < 0:
 					point = QtCore.QPoint()
 				self._giveFeedback(pixmap,  point)
 				result = True
-			# emit global signal
+			TableCrabConfig.signalEmit(None, 'feedbackCurrentObject(QString)', screenshotName)
 			TableCrabConfig.signalEmit(None, 'widgetScreenshotSet(QPixmap*)', pixmap)
 			return result
+				
 		def mouseDoubleClickEvent(self, event):
 			if event.button() == QtCore.Qt.LeftButton:
 				pixmap = self.pixmap()
@@ -280,10 +285,12 @@ class ScreenshotWidget(QtGui.QScrollArea):
 					else:
 						point = QtCore.QPoint(event.pos())
 					TableCrabConfig.signalEmit(None, 'widgetScreenshotDoubleClicked(QPixmap*, QPoint*)', pixmap, point)
+		
 		def mouseMoveEvent(self, event):
 			pixmap = self.pixmap()
 			if pixmap is not None:
 				self._giveFeedback(pixmap, event.pos())
+		
 		def _giveFeedback(self, pixmap, point):
 			p = 'Size %s Mouse %s' % (TableCrabConfig.sizeToString(pixmap.size()), TableCrabConfig.pointToString(point) )
 			TableCrabConfig.signalEmit(None, 'feedbackCurrentObjectData(QString)', p )
@@ -294,10 +301,8 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		
 		self._lastScreenshotInfo = None
 		
-		self.label = self.MyLabel('Screenshot')
-		self.label.setScaledContents(True)
-		self.label.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-		
+		self.label = self.ScreenshotLabel()
+		self.label.setScreenshot(pixmap=None)
 		self.setBackgroundRole(QtGui.QPalette.Dark)
 		self.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
 		self.setWidget(self.label)		
@@ -334,7 +339,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 				('widgetScreenshotQuery()', self.onWidgetScreenshotQuery),
 				('widgetScreenshot(int, QPixmap*)', self.onWidgetScreenshot),
 				)
-				
+		
 		self.adjustActions()
 		
 	def actions(self):
@@ -368,10 +373,9 @@ class ScreenshotWidget(QtGui.QScrollArea):
 	def screenshotInfo(self):
 		return self._lastScreenshotInfo
 	
-	def setScreenshot(self, pixmap=None, screenshotName='NewScreenshot'):
-		self.label.setScreenshot(pixmap=pixmap)
+	def setScreenshot(self, pixmap=None, screenshotName=None):
+		self.label.setScreenshot(pixmap=pixmap, screenshotName=screenshotName)
 		self.adjustActions()
-		TableCrabConfig.signalEmit(None, 'feedbackCurrentObject(QString)', screenshotName)
 		
 	def 	gatherWindowInfo(self, hwnd):
 		def windowInfo(hwnd, level=0):
