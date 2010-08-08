@@ -89,7 +89,7 @@ class FrameHand(QtGui.QFrame):
 		fp = open(fileName, 'r')
 		try:	self.webView.setHtml(fp.read() )
 		finally: fp.close()
-		self._hasHand = true
+		self._hasHand = True
 		self.adjustActions()
 		
 	def onActionSaveTriggered(self):
