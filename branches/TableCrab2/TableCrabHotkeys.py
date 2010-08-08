@@ -197,28 +197,6 @@ class HotkeyHilightBetAmount(HotkeyCheck):
 	def menuName(klass): return 'Hilight Bet Amount'
 Hotkeys.append(HotkeyHilightBetAmount)
 
-class HotkeyReplayer(HotkeyCheck):
-	@classmethod
-	def id(klass): return 'Replayer'
-	@classmethod
-	def menuName(klass): return 'Replayer'
-Hotkeys.append(HotkeyReplayer)
-
-class HotkeyInstantHandHistory(HotkeyCheck):
-	@classmethod
-	def id(klass): return 'InstantHandHistory'
-	@classmethod
-	def menuName(klass): return 'Instant hand history'
-Hotkeys.append(HotkeyInstantHandHistory)
-
-class HotkeyScreenshot(HotkeyCheck):
-	@classmethod
-	def id(klass): return 'Screenshot'
-	@classmethod
-	def menuName(klass): return 'Screenshot'
-Hotkeys.append(HotkeyScreenshot)
-
-
 class HotkeyMultiplyBetAmount(HotkeyCheck):
 	MultiplierMax = 99.0
 	MultiplierMin = 1.0
@@ -347,5 +325,26 @@ class HotkeySubtractFromBetAmount(HotkeyAddToBetAmount):
 		return 'Subtract %s %s' % (multiplier, baseValue)
 		
 Hotkeys.append(HotkeySubtractFromBetAmount)
-	
+
+class HotkeyReplayer(HotkeyCheck):
+	@classmethod
+	def id(klass): return 'Replayer'
+	@classmethod
+	def menuName(klass): return 'Replayer'
+Hotkeys.append(HotkeyReplayer)
+
+class HotkeyInstantHandHistory(HotkeyCheck):
+	@classmethod
+	def id(klass): return 'InstantHandHistory'
+	@classmethod
+	def menuName(klass): return 'Instant hand history'
+Hotkeys.append(HotkeyInstantHandHistory)
+
+class HotkeyScreenshot(HotkeyCheck):
+	@classmethod
+	def id(klass): return 'Screenshot'
+	@classmethod
+	def menuName(klass): return 'Screenshot'
+Hotkeys.append(HotkeyScreenshot)
+
 	
