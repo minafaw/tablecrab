@@ -239,17 +239,6 @@ class FrameSettingsHand(QtGui.QFrame):
 				maximum=999, 
 				parent=self
 				)
-		self.labelGrabTimeout = QtGui.QLabel('Grab Timeout:', self)
-		self.spinGrabTimeout = TableCrabConfig.DoubleSpinBox(
-				settingsKey='PokerStarsHandGrabber/GrabTimeout', 
-				default=PokerStarsHandGrabber.HandGrabber.GrabTimeout,
-				minimum=0.2, 
-				maximum=4.9,
-				precision=1,
-				step=0.1,
-				parent=self
-				)
-		
 		self.checkNoFloatingPoint = TableCrabConfig.CheckBox(
 				'Floating Point To Integer', 
 				settingsKey='PokerStarsHandGrabber/HandFornmatterHtmlTabular/NoFloatingPoint', 
@@ -275,13 +264,11 @@ class FrameSettingsHand(QtGui.QFrame):
 				grid.addWidget(editPostfix, i+1, 2)
 		grid.addWidget(self.labelMaxPlayerName, i+2, 0)
 		grid.addWidget(self.spinMaxPlayerName, i+2, 1)
-		grid.addWidget(self.labelGrabTimeout, i+3, 0)
-		grid.addWidget(self.spinGrabTimeout, i+3, 1)
-		grid.addWidget(self.checkNoFloatingPoint, i+4, 0)
+		grid.addWidget(self.checkNoFloatingPoint, i+3, 0)
 		
-		grid.addLayout(TableCrabConfig.VStretch(), i+5, 0)
+		grid.addLayout(TableCrabConfig.VStretch(), i+4, 0)
 		
-		grid.addWidget(TableCrabConfig.HLine(self), i+6, 0, 1, 3)
+		grid.addWidget(TableCrabConfig.HLine(self), i+5, 0, 1, 3)
 		grid2 = TableCrabConfig.GridBox()
 		grid.addLayout(grid2, i+7, 0, 1, 3)
 		grid2.addWidget(self.buttonBox, 0, 0)
