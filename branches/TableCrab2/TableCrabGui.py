@@ -1,4 +1,8 @@
 
+#TODO: tabs may want to give feedback on status bar when they are not current - to be shown as soon as 
+#				they get current.	this is not supported. right now they have to check if they are visible - if not 
+#				don't send feedback
+
 import TableCrabConfig
 import TableCrabMainWindow 
 import TableCrabGuiSettings
@@ -139,7 +143,7 @@ class Gui(TableCrabMainWindow .MainWindow):
 		self.labelFeedback.setText('an error occured. double click me for details')
 		
 	def onFeedbackMessage(self, qString):
-		self.statusBar().showMessage(qString, 3000)
+		self.statusBar().showMessage(qString, TableCrabConfig.StatusBarMessageTimeout * 1000)
 		
 	def onLabelFeedbackDoubleClicked(self):
 		lastError = self._feedbackMessages[None]
