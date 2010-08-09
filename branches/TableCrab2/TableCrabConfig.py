@@ -1,4 +1,28 @@
 
+#************************************************************************************
+# consts
+#************************************************************************************
+ApplicationName = 'TableCrab2'
+Version = '0.1.0'
+ReleaseName = '%s-%s' % (ApplicationName, Version)
+Author = 'JuergenUrner'
+ErrorLogName = ApplicationName + '-Error.log'
+
+MaxName = 32		# arbitrary, maximum number of chars allowed in user supplied names
+								# for now we hard code it here. would require some efford for status bar
+								#to get it dynamically truncated
+								# ++ we need to set some limit to template name editing
+
+WindowHookTimeout = 0.2
+HandGrabberTimeout = 0.4
+
+#TODO: implement these
+MaxHandGrabberCss = 8112
+MaxhandGrabberPrefix = 24
+MaxHandHtml = 0
+#no idea about this
+MaxScreenshotSize = 0
+
 #****************************************************************************************
 # setup minimal stuff to get at least some information in case something goes wrong
 #
@@ -8,13 +32,6 @@
 #***************************************************************************************
 import sys, os, traceback, logging, platform
 from logging import handlers
-
-ApplicationName = 'TableCrab2'
-Version = '0.1.0'
-ReleaseName = '%s-%s' % (ApplicationName, Version)
-Author = 'JuergenUrner'
-ErrorLogName = ApplicationName + '-Error.log'
-
 logger = logging.getLogger(ApplicationName)
 logger.addHandler(handlers.RotatingFileHandler(
 		os.path.join(os.getcwd(), ErrorLogName),
@@ -133,8 +150,7 @@ def settingsRemoveKey(key):
 # global singal handling and messages
 #***********************************************************************************
 # global signal  'closeEvent(QEvent*)'
-# global signal 'feedbackCurentObject(QString)'
-# global signal 'feedbackCurentObjectData(QString)'
+# global signal 'feedback(QString)'
 # global signal 'feedbackMessage(QString)'
 # global signal 'feedbackException()'
 # global signal 'widgetScreenshot(int, QPixmap*)'
@@ -207,7 +223,7 @@ def readPersistentItems(settingsKey, maxItems=0, itemProtos=None):
 #***********************************************************************************
 # global objects
 #***********************************************************************************
-windowHook = TableCrabWin32.WindowHook(parent=None)
+windowHook = TableCrabWin32.WindowHook(parent=None, timeout=WindowHookTimeout)
 mouseHook = TableCrabWin32.MouseHook(parent=None)
 keyboardHook = TableCrabWin32.KeyboardHook(parent=None)
 #TODO: not with about this ..both only get set if and when the according widgets are created
@@ -594,6 +610,17 @@ def cleanException(exception):
 		p += line 
 		p += '\n'
 	return p
+
+def truncateString(string, maxChars):
+	isQString = isinstance(string, QtCore.QString)
+	if maxChars > -1 and len(string) > maxChars:
+		if maxChars == 0:
+			return QtCore.QString('') if isQString else ''
+		elif maxChars == 1:
+			return QtCore.QString('.') if isQString else ''
+		else:
+			return string[:maxChars-2] + '..'
+	return string
 
 #***********************************************************************************
 # global Application object
