@@ -91,6 +91,11 @@ class FrameHand(QtGui.QFrame):
 		finally: fp.close()
 		self._hasHand = True
 		self.adjustActions()
+		# give feedback
+		fileInfo = QtCore.QFileInfo(fileName)
+		handName = fileInfo.baseName()
+		handName = TableCrabConfig.truncateString(handName, TableCrabConfig.MaxName)
+		TableCrabConfig.signalEmit(None, 'feedback(QString)', handName)
 		
 	def onActionSaveTriggered(self):
 		dlg = QtGui.QFileDialog(self)
@@ -111,7 +116,7 @@ class FrameHand(QtGui.QFrame):
 		fp = open(fileName, 'w')
 		try: fp.write(self.webView.page().mainFrame().toHtml())
 		finally: fp.close()
-	
+		
 	def onActionHelpTriggered(self, checked):
 		TableCrabGuiHelp.dialogHelp('hand', parent=self)		
 	
@@ -119,6 +124,7 @@ class FrameHand(QtGui.QFrame):
 		self.webView.setHtml(data)
 		self._hasHand = True
 		self.adjustActions()
+		TableCrabConfig.signalEmit(None, 'feedback(QString)', 'Hand grabbed')
 	
 	
 
