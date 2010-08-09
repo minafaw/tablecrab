@@ -47,6 +47,7 @@ class ActionHandler(QtCore.QObject):
 		if hotkey.id() == TableCrabHotkeys.HotkeyScreenshot.id():
 			if inputEvent.keyIsDown or inputEvent.mouseSteps:
 				TableCrabConfig.widgetScreenshot(hwnd)
+				TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s' % hotkey.action())
 				inputEvent.accept = True
 			return True
 		return False
