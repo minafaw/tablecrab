@@ -124,7 +124,7 @@ class FrameHand(QtGui.QFrame):
 		self.webView.setHtml(data)
 		self._hasHand = True
 		self.adjustActions()
-		TableCrabConfig.signalEmit(None, 'feedback(QString)', 'Hand grabbed')
+		TableCrabConfig.signalEmit(None, 'feedback(QString)', 'grabbed hand')
 	
 	
 
