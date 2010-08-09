@@ -1,4 +1,5 @@
  
+#TODO: when taking a screenshot feedback is set to the current tab. we have to check if we are current and just post a message in TableCrabActionHandler.py
 #TODO: when the mouse leaves screenshot would be nice to set coordianteddisplayed to (-1, -1) or "None"
 #TODO: check for multiple templates of the same size? currently we are using the first matching encountered that's all.
 #TODO: restore last selected template on restart? would rewuire an attr "itemIsSelected", downside
@@ -265,7 +266,8 @@ class ScreenshotWidget(QtGui.QScrollArea):
 				self.setText(self._screenshotName)
 				pixmap = QtGui.QPixmap()
 				TableCrabConfig.signalEmit(None, 'widgetScreenshotSet(QPixmap*)', pixmap)
-				TableCrabConfig.signalEmit(None, 'feedback(QString)', '')
+				if self.isVisible():
+					TableCrabConfig.signalEmit(None, 'feedback(QString)', '')
 			else:
 				# manually set size of the label so we get the correct coordiantes of the mouse cursor
 				self.setPixmap(pixmap)
@@ -277,7 +279,8 @@ class ScreenshotWidget(QtGui.QScrollArea):
 				if point.x() < 0 or point.y() < 0:
 					point = QtCore.QPoint()
 				TableCrabConfig.signalEmit(None, 'widgetScreenshotSet(QPixmap*)', pixmap)
-				self._giveFeedback(pixmap,  point)
+				if self.isVisible():
+					self._giveFeedback(pixmap,  point)
 				result = True
 			return result
 				
@@ -566,7 +569,7 @@ class FrameSetup(QtGui.QFrame):
 		QtGui.QFrame.__init__(self, parent)
 		
 		# time to monitor mouse to give feedback on other windws  
-		self.mouseMonitorTimer = TableCrabConfig.Timer(parent=self, singleShot=False, interval=500, slot=self.onMouseMonitor)
+		self.mouseMonitorTimer = TableCrabConfig.Timer(parent=self, singleShot=False, interval=TableCrabConfig.MouseMonitorTimeout*1000, slot=self.onMouseMonitor)
 			
 		self.splitter = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
 		self.templatesWidget = TemplatesWidget(parent=self)
