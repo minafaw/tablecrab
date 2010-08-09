@@ -225,7 +225,7 @@ class ActionHandler(QtCore.QObject):
 		data['bigBlind'] = float(match.group(1))
 		hwndBetAmountBox = TableCrabWin32.windowFindChild(hwnd, self.ClassTableBetAmountBox)
 		data['hwndBetAmountBox'] =  hwndBetAmountBox
-		data['betAmountBoxIsVisible'] = TableCrabWin32.windowIsVisible(hwndBetAmountBox )
+		data['betAmountBoxIsVisible'] = TableCrabWin32.windowIsVisible(hwndBetAmountBox) if hwndBetAmountBox else False
 		data['betAmount'] = None
 		if data['hwndBetAmountBox']:
 			p = TableCrabWin32.windowGetText(hwndBetAmountBox)
@@ -249,14 +249,15 @@ class ActionHandler(QtCore.QObject):
 	def tableHandleCheck(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
-		if not data['hwndBetAmountBox']: return
 		pointCurrent = TableCrabWin32.mouseGetPos()
-		if data['betAmountBoxIsVisible']:
+		if data['hwndBetAmountBox'] and data['betAmountBoxIsVisible']:
 			point = template.buttonCheck
 			if point == TableCrabConfig.PointNone: 
 				TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point ButtonCheck Not Set -' % template.name)
 				return
 			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClickDouble(point, hwnd=hwnd).send()
+		# we always allow checkboxFold ..stars may show this box when we are newly seated at a table without having the
+		# bet amount box created yet
 		else:
 			point = template.checkboxCheckFold
 			if point == TableCrabConfig.PointNone: 
@@ -273,14 +274,15 @@ class ActionHandler(QtCore.QObject):
 	def tableHandleFold(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
-		if not data['hwndBetAmountBox']: return
 		pointCurrent = TableCrabWin32.mouseGetPos()
-		if data['betAmountBoxIsVisible']:
+		if data['hwndBetAmountBox'] and data['betAmountBoxIsVisible']:
 			point = template.buttonFold
 			if point == TableCrabConfig.PointNone: 
 				TableCrabConfig.signalEmit(None, 'feedbackMessage(QString)', '%s: -- Point ButtonFold Not Set -' % template.name)
 				return
 			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
+		# we always allow checkboxCheckFold ..stars may show this box when we are newly seated at a table without having the
+		# bet amount box created yet
 		else:
 			point = template.checkboxFold
 			if point == TableCrabConfig.PointNone: 
