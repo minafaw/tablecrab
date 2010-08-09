@@ -1,4 +1,6 @@
 
+#TODO: would be nice to have line numbers in HandCss editor
+
 import TableCrabConfig
 import PokerStarsHandGrabber
 import TableCrabGuiHelp
