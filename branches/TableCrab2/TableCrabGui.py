@@ -143,7 +143,7 @@ class Gui(TableCrabMainWindow .MainWindow):
 		self.labelFeedback.setText('an error occured. double click me for details')
 		
 	def onFeedbackMessage(self, qString):
-		self.statusBar().showMessage(qString, TableCrabConfig.StatusBarMessageTimeout * 1000)
+		self.statusBar().showMessage('>>' + qString, TableCrabConfig.StatusBarMessageTimeout * 1000)
 		
 	def onLabelFeedbackDoubleClicked(self):
 		lastError = self._feedbackMessages[None]
