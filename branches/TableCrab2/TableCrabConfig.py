@@ -15,13 +15,17 @@ MaxName = 32		# arbitrary, maximum number of chars allowed in user supplied name
 
 WindowHookTimeout = 0.2
 HandGrabberTimeout = 0.4
+MouseMonitorTimeout = 0.5
+StatusBarMessageTimeout = 3
+MaxHandGrabberPrefix = 8
 
 #TODO: implement these
-MaxHandGrabberCss = 8112
-MaxhandGrabberPrefix = 24
-MaxHandHtml = 0
-#no idea about this
-MaxScreenshotSize = 0
+# not very easy to limit this. QPlaintextEdit has no idea of its lenght
+##MaxHandGrabberCss = 8112
+# we could popup a message box that's all
+##MaxHandHtml = 0
+# no idea about this
+##MaxScreenshotSize = 0
 
 #****************************************************************************************
 # setup minimal stuff to get at least some information in case something goes wrong
