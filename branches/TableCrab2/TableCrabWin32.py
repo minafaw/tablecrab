@@ -410,7 +410,7 @@ class WindowHook(QtCore.QObject):
 		self._hwnds = []
 		self._timeout = timeout
 		self._timer = QtCore.QTimer(self)
-		self._timer.setInterval(self._timeout)
+		self._timer.setInterval(self._timeout * 1000)
 		self.connect(self._timer, QtCore.SIGNAL('timeout()'), self._run)
 	def stop(self):
 		self._timer.stop()
