@@ -21,7 +21,8 @@
 	<br>
 	
 	use PokerStars custom layouts to make shure your tables are of a fixed size because ..if you loose your tables 
-	layout you are a bit out of luck. you may have to setup a new template <a href="#footnote1">[1]</a>.
+	layout you are a bit out of luck. you may have to setup a new template or fiddle around to get the window to match 
+	the size of the template again.
 	
 	
 	<div class="noteBox">
@@ -31,7 +32,7 @@
 			<li>a template will only work for a table of <b>size</b>
 			<li>buttons or chekboxes with a location of <b>None</b> will be ignored
 			<li>to reset a point hold down <b>Ctrl</b> when double clicking
-			<li><b>size</b> is the size of the client area - that is the windows size minus title bar and borders
+			<li>all sizes and positions are relative to the client area of a window - that is the windows size minus title bar, menu bar and borders
 		</ul>
 		
 	</div>
@@ -39,7 +40,6 @@
 	
 	
 </div>
-
 
 <div class="textBox">
 	<div class="headerBox">Toolbar</div>
@@ -96,17 +96,10 @@
 
 
 <div class="textBox">
-<div class="headerBox">Footnotes</div>
-	<i>
-	<b><a name="footnote1">[1]</a></b> ..a new template? yeah, this sucks. but on wine/linux there is no way currently
-	to resize a window to fit a templates size. filed a bug report ..see what comes out of it. in the meantime
-	the best way i found was take a screenshot ...open the <a href="screenshotInfo.html">Info</a> dialog.
-	then resize the window  --&gt; take screenshot --&gt; Refresh dialog until <b>&quot;clientSize&quot;</b> 
-	as shown in the dialog matches the size of the template.
-	
-	</i>
-	
-	
+<div class="headerBox">Status Messages</div>
+
+	on the staus bar the name of the current screenshot is displayed along with its size and the mouse position inside the screenshot.
+	if the mouse is over another window the windows title is displayed along with its size and the mouse position.
 	
 </div>
 
