@@ -21,6 +21,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 			QtGui.QItemDelegate.__init__(self, parent)
 		def createEditor(self, parent, option, index):
 			ed = QtGui.QLineEdit(parent)
+			ed.setMaxLength(TableCrabConfig.MaxName)
 			TableCrabConfig.signalConnect(ed, self, 'editingFinished()', self.onEditingFinished)
 			return ed
 		def onEditingFinished(self):
@@ -253,14 +254,18 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		def __init__(self, *args):
 			QtGui.QLabel.__init__(self, *args)
 			self.setMouseTracking(True)
+			self._screenshotName = self.ScreenshotName
 				
 		def setScreenshot(self, pixmap=None, screenshotName=None):
+			self._screenshotName = self.ScreenshotName if screenshotName is None else screenshotName
 			result = False
 			if pixmap is None:
 				self.setScaledContents(True)
 				self.setFrameShape(QtGui.QFrame.NoFrame)
-				self.setText(self.ScreenshotName if screenshotName is None else screenshotName)
+				self.setText(self._screenshotName)
 				pixmap = QtGui.QPixmap()
+				TableCrabConfig.signalEmit(None, 'widgetScreenshotSet(QPixmap*)', pixmap)
+				TableCrabConfig.signalEmit(None, 'feedback(QString)', '')
 			else:
 				# manually set size of the label so we get the correct coordiantes of the mouse cursor
 				self.setPixmap(pixmap)
@@ -271,16 +276,15 @@ class ScreenshotWidget(QtGui.QScrollArea):
 				point = self.mapFromGlobal(point)
 				if point.x() < 0 or point.y() < 0:
 					point = QtCore.QPoint()
+				TableCrabConfig.signalEmit(None, 'widgetScreenshotSet(QPixmap*)', pixmap)
 				self._giveFeedback(pixmap,  point)
 				result = True
-			TableCrabConfig.signalEmit(None, 'feedbackCurrentObject(QString)', screenshotName)
-			TableCrabConfig.signalEmit(None, 'widgetScreenshotSet(QPixmap*)', pixmap)
 			return result
 				
 		def mouseDoubleClickEvent(self, event):
 			if event.button() == QtCore.Qt.LeftButton:
 				pixmap = self.pixmap()
-				if pixmap is not None:
+				if pixmap is not None and not pixmap.isNull():
 					# holding sown Ctrl while double clicking rests the point
 					if event.modifiers() & QtCore.Qt.ControlModifier:
 						point = TableCrabConfig.newPointNone()
@@ -290,12 +294,13 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		
 		def mouseMoveEvent(self, event):
 			pixmap = self.pixmap()
-			if pixmap is not None:
+			if pixmap is not None and not pixmap.isNull():
 				self._giveFeedback(pixmap, event.pos())
 		
 		def _giveFeedback(self, pixmap, point):
-			p = 'Size %s Mouse %s' % (TableCrabConfig.sizeToString(pixmap.size()), TableCrabConfig.pointToString(point) )
-			TableCrabConfig.signalEmit(None, 'feedbackCurrentObjectData(QString)', p )
+			name = TableCrabConfig.truncateString(self._screenshotName, TableCrabConfig.MaxName)
+			p = '%s -- Size: %s Mouse: %s' % (name, TableCrabConfig.sizeToString(pixmap.size()), TableCrabConfig.pointToString(point) )
+			TableCrabConfig.signalEmit(None, 'feedback(QString)', p )
 	
 	
 	def __init__(self, parent=None):
@@ -496,6 +501,7 @@ class DialgScreenshotInfo(QtGui.QDialog):
 		
 		self.edit = QtGui.QPlainTextEdit(self)
 		self.edit.setPlainText(info)
+		self.edit.setReadOnly(True)
 		self.buttonSave = QtGui.QPushButton('Save..', self)
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		TableCrabConfig.signalConnect(self.buttonHelp, self, 'clicked(bool)', self.onButtonHelpClicked)
@@ -558,6 +564,10 @@ class DialgScreenshotInfo(QtGui.QDialog):
 class FrameSetup(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
+		
+		# time to monitor mouse to give feedback on other windws  
+		self.mouseMonitorTimer = TableCrabConfig.Timer(parent=self, singleShot=False, interval=500, slot=self.onMouseMonitor)
+			
 		self.splitter = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
 		self.templatesWidget = TemplatesWidget(parent=self)
 		self.screenshotWidget =ScreenshotWidget(parent=self)
@@ -594,6 +604,43 @@ class FrameSetup(QtGui.QFrame):
 	
 	def onActionHelpTriggered(self):
 		TableCrabGuiHelp.dialogHelp('setup', parent=self)
+		
+	def onMouseMonitor(self):
+		# find our main window hwnd
+		wid = self.effectiveWinId()	# NOTE: effectiveWinId() returns <sip.voidptr> and may be None
+		if not wid:
+			return
+		hwndSelf = int(wid)
+		hwndSelf = TableCrabWin32.windowGetTopLevelParent(hwndSelf)
+		
+		# get toplevel window under mouse
+		point = TableCrabWin32.mouseGetPos()
+		hwndOther = TableCrabWin32.windowFromPoint(point)
+		hwndOther = TableCrabWin32.windowGetTopLevelParent(hwndOther)
+		if not hwndOther:
+			return
+		elif hwndOther == hwndSelf:
+			return
+		
+		# found a window of another process ..give feedback
+		title = TableCrabWin32.windowGetText(hwndOther)
+		if not title:
+			return
+		title = TableCrabConfig.truncateString(title, TableCrabConfig.MaxName)
+		rect = TableCrabWin32.windowGetClientRect(hwndOther)
+		size = TableCrabConfig.sizeToString(rect.size() )
+		point = TableCrabWin32.windowScreenPointToClientPoint(hwndOther, point)
+		point = TableCrabConfig.pointToString(point)
+		TableCrabConfig.signalEmit(None, 'feedback(QString)', '%s -- Size: %s Mouse: %s' % (title, size, point) )
+	
+	def hideEvent(self, event):
+		self.mouseMonitorTimer.stop()
+		return QtGui.QFrame.hideEvent(self, event)
+	
+	def showEvent(self, event):
+		self.mouseMonitorTimer.start()		
+		return QtGui.QFrame.showEvent(self, event)
+		
 
 #**********************************************************************************************
 #
