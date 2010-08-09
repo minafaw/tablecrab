@@ -220,6 +220,7 @@ class FrameSettingsHand(QtGui.QFrame):
 					default=getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, actionPrefix), 
 					parent=self
 					)
+			editPrefix.setMaxLength(TableCrabConfig.MaxHandGrabberPrefix)
 			labelAction = QtGui.QLabel(actionName, self)
 			if actionPostfix is not None:
 				editPostfix = TableCrabConfig.LineEdit(
@@ -227,6 +228,7 @@ class FrameSettingsHand(QtGui.QFrame):
 						default=getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, actionPostfix),  
 						parent=self
 						)
+				editPostfix.setMaxLength(TableCrabConfig.MaxHandGrabberPrefix)
 			else:
 				editPostfix = None
 			self.actionSettings.append( (editPrefix, labelAction, editPostfix) )
@@ -284,7 +286,6 @@ class FrameSettingsHandCss(QtGui.QFrame):
 				settingsKey='PokerStarsHandGrabber/handFornmatterHtmlTabular/Css', 
 				default=PokerStarsHandGrabber.HandFormatterHtmlTabular.Css
 				)
-		
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 		
 		self.buttonRestoreDefault = QtGui.QPushButton('Restore Default', self)
