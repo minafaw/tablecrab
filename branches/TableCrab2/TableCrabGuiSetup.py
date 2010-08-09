@@ -308,7 +308,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		def _giveFeedback(self, pixmap, point):
 			name = TableCrabConfig.truncateString(self._screenshotName, TableCrabConfig.MaxName)
 			p = '%s -- Size: %s Mouse: %s' % (name, TableCrabConfig.sizeToString(pixmap.size()), TableCrabConfig.pointToString(point) )
-			TableCrabConfig.signalEmit(None, 'feedback(QString)', p )
+			TableCrabConfig.signalEmit(None, 'feedback(QString)', p)
 	
 	
 	def __init__(self, parent=None):
