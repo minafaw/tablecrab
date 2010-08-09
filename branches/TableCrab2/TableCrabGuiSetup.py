@@ -1,9 +1,14 @@
  
-#TODO: when taking a screenshot feedback is set to the current tab. we have to check if we are current and just post a message in TableCrabActionHandler.py
+#TODO: in wine we-1.2 can not resize windows belonging to other processes. this a bug in wine [ http://bugs.winehq.org/show_bug.cgi?id=23940 ] 
+#				user32.SetWindowPos()	does not work for other processes. used to work in wine-1.14, stopped working in wine-1.2. as soon as SetWindowPos() 
+#				is working again we should kick out mouse tracking on other windows and add a hotkey to resize the current window to the size of the currently 
+#				selected tempplate
+#TODO: i kind of dislike in-place editing of template names. an "Edit" button would be more consistent but a bit of overkill right now. then .again .screenshot 
+# 			open / save is taking away screenspace already. would have to find shorter names for these actions.
 #TODO: when the mouse leaves screenshot would be nice to set coordianteddisplayed to (-1, -1) or "None"
 #TODO: check for multiple templates of the same size? currently we are using the first matching encountered that's all.
-#TODO: restore last selected template on restart? would rewuire an attr "itemIsSelected", downside
-#				we'd have to dump the whole tree on every curent item change.
+#TODO: restore last selected template on restart? would require an attr "itemIsSelected", downside we'd have to dump the whole tree on every curent
+#				item change. so most likely a no.
  
 import TableCrabConfig
 import TableCrabWin32
