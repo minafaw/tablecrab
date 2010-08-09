@@ -1,10 +1,4 @@
 
-#TODO: on wine we-1.2 can not resize (..) windows belonging to other processes
-#				filed a bug report [ http://bugs.winehq.org/show_bug.cgi?id=23940 ] 
-#				user32.SetWindowPos()	does not work for other processes. used to work in wine-xx, stopped 
-#				working in wine-1.2
-
-
 import time
 from ctypes import *
 from ctypes.wintypes import *
