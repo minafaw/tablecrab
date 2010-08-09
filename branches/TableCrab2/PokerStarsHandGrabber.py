@@ -590,6 +590,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		p << '</tr>'
 		p << '</table>'
 			
+	#TODO: use TableCrabConfig.truncateString()
 	def formatPlayerName(self, playerName):
 		maxPlayerName = TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/MaxPlayerName', self.MaxPlayerName).toInt()[0]
 		if maxPlayerName > -1 and len(playerName) > maxPlayerName:
@@ -727,22 +728,22 @@ InstantHandHistoryGrabber = None
 if sys.platform == 'win32':
 	
 	class HandGrabber(QtCore.QObject):
-		GrabTimeout = 0.4
 		WindowClassName = '#32770'
 		WindowTitle = 'Instant Hand History'
 		WidgetClassName = 'PokerStarsViewClass'
-		def __init__(self, handParser, handFormatter, parent=None):
+		def __init__(self, handParser, handFormatter, parent=None, timeout=0.4):
 			QtCore.QObject.__init__(self, parent)
 			self.handParser = handParser
 			self.handFormatter = handFormatter
 			self._lastHandHistory = None
-			self._isRunning = False
+			self._timeout = timeout
+			self._timer = QtCore.QTimer(self)
+			self._timer.setInterval(self._timeout * 1000)
+			self.connect(self._timer, QtCore.SIGNAL('timeout()'), self._run)
 		def stop(self):
-			self._isRunning = False
+			self._timer.stop()
 		def start(self):
-			if self._isRunning: raise ValueError('hand grabber already started')
-			self._isRunning = True
-			self._run()
+			self._timer.start()
 		def _run(self):
 			# find "instant hand history" dialog
 			for hwnd in TableCrabWin32.windowChildren(None):
@@ -760,24 +761,5 @@ if sys.platform == 'win32':
 							self.emit(QtCore.SIGNAL('handGrabbed(QObject*, QString)'), hand, data)
 					break
 				break
-			if self._isRunning:
-				timer = TableCrabConfig.Timer(
-						parent=self, 
-						singleShot=True, 
-						interval=TableCrabConfig.settingsValue('PokerStarsHandGrabber/GrabTimeout', self.GrabTimeout).toFloat()[0] * 1000,
-						slot=self._run,
-						)
-				timer.start()
-				
-				
-				##timer = QtCore.QTimer(self)
-				##timer.setSingleShot(True)
-				##timer.setInterval( TableCrabConfig.settingsValue('PokerStarsHandGrabber/GrabTimeout', self.GrabTimeout).toFloat()[0] * 1000 )
-				##self.connect(timer, QtCore.SIGNAL('timeout()'), self._run)
-				##timer.start()
-				##QtCore.QTimer.singleShot(
-				##	TableCrabConfig.settingsValue('PokerStarsHandGrabber/GrabTimeout', self.GrabTimeout).toFloat()[0] * 1000, 
-				##	self._run
-				##	)	
-	
+			
 	
