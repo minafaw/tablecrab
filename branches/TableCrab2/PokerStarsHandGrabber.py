@@ -731,14 +731,13 @@ if sys.platform == 'win32':
 		WindowClassName = '#32770'
 		WindowTitle = 'Instant Hand History'
 		WidgetClassName = 'PokerStarsViewClass'
-		def __init__(self, handParser, handFormatter, parent=None, timeout=0.4):
+		def __init__(self, handParser, handFormatter, parent=None):
 			QtCore.QObject.__init__(self, parent)
 			self.handParser = handParser
 			self.handFormatter = handFormatter
 			self._lastHandHistory = None
-			self._timeout = timeout
 			self._timer = QtCore.QTimer(self)
-			self._timer.setInterval(self._timeout * 1000)
+			self._timer.setInterval(TableCrabConfig.HandGrabberTimeout * 1000)
 			self.connect(self._timer, QtCore.SIGNAL('timeout()'), self._run)
 		def stop(self):
 			self._timer.stop()
