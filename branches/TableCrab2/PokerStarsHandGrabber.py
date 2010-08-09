@@ -427,10 +427,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	PrefixCheck = 'ck'
 	PrefixFold = 'f'
 	MaxPlayerName = -1
-	Css = '''.handBody{
-        margin-left: 0px;
-        margin-top: 0px;
-        }
+	Css = '''.handBody{}
 .handTable{
         border-spacing: 0px; 
         border-collapse: collapse;
