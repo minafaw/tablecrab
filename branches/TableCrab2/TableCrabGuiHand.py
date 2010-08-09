@@ -20,7 +20,6 @@ class FrameHand(QtGui.QFrame):
 				PokerStarsHandGrabber.HandParser(),
 				PokerStarsHandGrabber.HandFormatterHtmlTabular(),
 				parent=self,
-				timeout=TableCrabConfig.HandGrabberTimeout,
 				)
 		TableCrabConfig.signalConnect(self.pokerStarsHandGrabber, self, 'handGrabbed(QObject*, QString)', self.onPShandGrabberHandGrabbed)
 		TableCrabConfig.signalConnect(None, self, 'closeEvent(QEvent*)', self.onCloseEvent)
