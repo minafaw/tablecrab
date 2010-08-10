@@ -42,17 +42,13 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		def onTriggered(self):
 			self.parent().createTemplate(self.templateProto)
 			
-	def onTemplateEditingFinished(self):
-		item = self.currentItem()
-		if item is not None:
-			if item.toplevel().handleEditingFinished(item):
-				self.dump()
-		
+	
 	def __init__(self, parent=None):
 		QtGui.QTreeWidget.__init__(self, parent)
 		
 		TableCrabConfig.templateManager = self
 		
+		# setup treeWidget
 		self.setColumnCount(2)
 		self.setExpandsOnDoubleClick(False)
 		self.setSelectionBehavior(self.SelectRows)
@@ -64,9 +60,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		
 		self.myDelegate = self.MyDelegate(parent=self)
 		self.setItemDelegate(self.myDelegate)
-		TableCrabConfig.signalConnect(self.myDelegate, self, 'editingFinished()', self.onTemplateEditingFinished)
-		
-		
+			
 		self._templatesRead = False
 		
 		# setup actions
@@ -119,6 +113,10 @@ class TemplatesWidget(QtGui.QTreeWidget):
 				('itemCollapsed(QTreeWidgetItem*)',self.onItemCollapsed),
 				('itemSelectionChanged()', self.adjustActions),
 				)
+		
+		# connect to ietm delegate signals
+		TableCrabConfig.signalConnect(self.myDelegate, self, 'editingFinished()', self.onTemplateEditingFinished)
+		
 		self.adjustActions()
 		
 	def keyReleaseEvent(self, event):
@@ -167,29 +165,6 @@ class TemplatesWidget(QtGui.QTreeWidget):
 			self.actionDown.setEnabled(self.canMoveTemplateDown() )
 			self.actionRemove.setEnabled(True)
 		
-	def onItemExpanded(self, item):
-		if not self._templatesRead:
-			return
-		if item.toplevel().handleItemExpanded(item):
-			self.dump()
-		
-	def onItemCollapsed(self, item):
-		if not self._templatesRead:
-			return
-		if item.toplevel().handleItemCollapsed(item):
-			self.dump()
-		
-	def onWidgetScreenshotSet(self, pixmap):
-		for template in self:
-			template.handleScreenshotSet(pixmap)
-		
-	def onWidgetScreenshotDoubleClicked(self, pixmap, point):
-		item = self.currentItem()
-		if item is None:
-			return False
-		if item.toplevel().handleScreenshotDoubleClicked(item, pixmap, point):
-			self.dump()
-	
 	def createTemplate(self, templateProto):
 		names = [i.name for i in self]
 		name = templateProto.menuName()
@@ -208,20 +183,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		else:
 			return self.indexOfTopLevelItem(item.toplevel() ) > 0
 		return False
-		
-	def moveTemplateUp(self):
-		item = self.currentItem()
-		if item is None:
-			self.actionUp.setEnabled(False)
-			return
-		index = self.indexOfTopLevelItem(item.toplevel() )
-		template = self.takeTopLevelItem(index)
-		self.insertTopLevelItem(index -1, template)
-		#NOTE: for some reason Qt collapses items on TakeItem()
-		template.setExpanded(template.itemIsExpanded)
-		self.setCurrentItem(template)
-		self.dump()
-		
+	
 	def canMoveTemplateDown(self):
 		item = self.currentItem()
 		if item is None:
@@ -242,6 +204,19 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		template.setExpanded(template.itemIsExpanded)
 		self.setCurrentItem(template)
 		self.dump()
+		
+	def moveTemplateUp(self):
+		item = self.currentItem()
+		if item is None:
+			self.actionUp.setEnabled(False)
+			return
+		index = self.indexOfTopLevelItem(item.toplevel() )
+		template = self.takeTopLevelItem(index)
+		self.insertTopLevelItem(index -1, template)
+		#NOTE: for some reason Qt collapses items on TakeItem()
+		template.setExpanded(template.itemIsExpanded)
+		self.setCurrentItem(template)
+		self.dump()
 	
 	def removeTemplate(self):
 		item = self.currentItem()
@@ -251,7 +226,36 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		index = self.indexOfTopLevelItem(item.toplevel() )
 		self.takeTopLevelItem(index)
 		self.dump()
-
+	
+	def onItemCollapsed(self, item):
+		if not self._templatesRead:
+			return
+		if item.toplevel().handleItemCollapsed(item):
+			self.dump()
+	
+	def onTemplateEditingFinished(self):
+		item = self.currentItem()
+		if item is not None:
+			if item.toplevel().handleEditingFinished(item):
+				self.dump()
+	
+	def onItemExpanded(self, item):
+		if not self._templatesRead:
+			return
+		if item.toplevel().handleItemExpanded(item):
+			self.dump()
+	
+	def onWidgetScreenshotDoubleClicked(self, pixmap, point):
+		item = self.currentItem()
+		if item is None:
+			return False
+		if item.toplevel().handleScreenshotDoubleClicked(item, pixmap, point):
+			self.dump()
+	
+	def onWidgetScreenshotSet(self, pixmap):
+		for template in self:
+			template.handleScreenshotSet(pixmap)
+	
 	
 class ScreenshotWidget(QtGui.QScrollArea):
 	
@@ -262,6 +266,27 @@ class ScreenshotWidget(QtGui.QScrollArea):
 			self.setMouseTracking(True)
 			self._screenshotName = self.ScreenshotName
 				
+		def mouseDoubleClickEvent(self, event):
+			if event.button() == QtCore.Qt.LeftButton:
+				pixmap = self.pixmap()
+				if pixmap is not None and not pixmap.isNull():
+					# holding sown Ctrl while double clicking rests the point
+					if event.modifiers() & QtCore.Qt.ControlModifier:
+						point = TableCrabConfig.newPointNone()
+					else:
+						point = QtCore.QPoint(event.pos())
+					TableCrabConfig.signalEmit(None, 'widgetScreenshotDoubleClicked(QPixmap*, QPoint*)', pixmap, point)
+		
+		def mouseMoveEvent(self, event):
+			pixmap = self.pixmap()
+			if pixmap is not None and not pixmap.isNull():
+				self._giveFeedback(pixmap, event.pos())
+		
+		def _giveFeedback(self, pixmap, point):
+			name = TableCrabConfig.truncateString(self._screenshotName, TableCrabConfig.MaxName)
+			p = '%s -- Size: %s Mouse: %s' % (name, TableCrabConfig.sizeToString(pixmap.size()), TableCrabConfig.pointToString(point) )
+			TableCrabConfig.signalEmit(None, 'feedback(QString)', p)
+			
 		def setScreenshot(self, pixmap=None, screenshotName=None):
 			self._screenshotName = self.ScreenshotName if screenshotName is None else screenshotName
 			result = False
@@ -288,27 +313,6 @@ class ScreenshotWidget(QtGui.QScrollArea):
 					self._giveFeedback(pixmap,  point)
 				result = True
 			return result
-				
-		def mouseDoubleClickEvent(self, event):
-			if event.button() == QtCore.Qt.LeftButton:
-				pixmap = self.pixmap()
-				if pixmap is not None and not pixmap.isNull():
-					# holding sown Ctrl while double clicking rests the point
-					if event.modifiers() & QtCore.Qt.ControlModifier:
-						point = TableCrabConfig.newPointNone()
-					else:
-						point = QtCore.QPoint(event.pos())
-					TableCrabConfig.signalEmit(None, 'widgetScreenshotDoubleClicked(QPixmap*, QPoint*)', pixmap, point)
-		
-		def mouseMoveEvent(self, event):
-			pixmap = self.pixmap()
-			if pixmap is not None and not pixmap.isNull():
-				self._giveFeedback(pixmap, event.pos())
-		
-		def _giveFeedback(self, pixmap, point):
-			name = TableCrabConfig.truncateString(self._screenshotName, TableCrabConfig.MaxName)
-			p = '%s -- Size: %s Mouse: %s' % (name, TableCrabConfig.sizeToString(pixmap.size()), TableCrabConfig.pointToString(point) )
-			TableCrabConfig.signalEmit(None, 'feedback(QString)', p)
 	
 	
 	def __init__(self, parent=None):
@@ -363,34 +367,6 @@ class ScreenshotWidget(QtGui.QScrollArea):
 	def adjustActions(self):
 		self.actionSave.setEnabled(self.label.pixmap() is not None)
 		self.actionInfo.setEnabled(self._lastScreenshotInfo is not None)
-	
-	def onWidgetScreenshotQuery(self):
-		pixmap = self.label.pixmap()
-		if pixmap is None:
-			pixmap = QtGui.QPixmap()
-		TableCrabConfig.signalEmit(None, 'widgetScreenshotSet(QPixmap*)', pixmap)
-		
-	def onWidgetScreenshot(self, hwnd, pixmap):
-		# make shure to not take screenshot of self
-		wid = self.effectiveWinId()	# NOTE: effectiveWinId() returns <sip.voidptr> and may be None
-		if not wid:
-			return
-		selfHwnd = int(wid)
-		selfParent = TableCrabWin32.windowGetTopLevelParent(selfHwnd)
-		otherParent = TableCrabWin32.windowGetTopLevelParent(hwnd)
-		if selfParent == otherParent:
-			return
-		self.gatherWindowInfo(hwnd)		
-		TableCrabConfig.signalEmit(self, 'widgetScreenshotInfo(QString)', self._lastScreenshotInfo)
-		self.setScreenshot(pixmap)
-		self.adjustActions()
-		
-	def screenshotInfo(self):
-		return self._lastScreenshotInfo
-	
-	def setScreenshot(self, pixmap=None, screenshotName=None):
-		self.label.setScreenshot(pixmap=pixmap, screenshotName=screenshotName)
-		self.adjustActions()
 		
 	def 	gatherWindowInfo(self, hwnd):
 		def windowInfo(hwnd, level=0):
@@ -411,12 +387,12 @@ class ScreenshotWidget(QtGui.QScrollArea):
 			isEnabled = TableCrabWin32.windowIsEnabled(hwnd)
 			
 			indent = '\x20\x20\x20\x20' *level
-			p = ''
+			p = '%s%s\n' % (indent, '/'*level)
 			p += '%sTitle: %s\n' % (indent, title)
 			p += '%sClassName: %s\n' % (indent, className)
 			p += '%sPos: %s,%s\n' % (indent, pos.x(), pos.y() )
 			p += '%sSize: %sx%s\n' % (indent, size.width(), size.height() )
-			p += '%sclientSize: %sx%s\n' % (indent, clientSize.width(), clientSize.height() )
+			p += '%sClientSize: %sx%s\n' % (indent, clientSize.width(), clientSize.height() )
 			p += '%sButtons: %s\n' % (indent, buttons)
 			p += '%sVisible: %s\n' % (indent, isVisible)
 			p += '%sEnabled: %s\n' % (indent, isEnabled)
@@ -430,20 +406,28 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		self._lastScreenshotInfo += windowInfo(hwnd)
 		
 		self._lastScreenshotInfo += '-----------------------------------------------------------------\n'
+		self._lastScreenshotInfo += 'Window Hirarchy\n'
+		self._lastScreenshotInfo += '-----------------------------------------------------------------\n'
+		level = 0
+		hwndParent = hwnd
+		while hwndParent:
+			self._lastScreenshotInfo += windowInfo(hwndParent, level=level)
+			hwndParent = TableCrabWin32.windowGetParent(hwndParent)
+			level += 1
+			
+		self._lastScreenshotInfo += '-----------------------------------------------------------------\n'
 		self._lastScreenshotInfo += 'Window Details\n'
 		self._lastScreenshotInfo += '-----------------------------------------------------------------\n'
 		for level, hwnd in TableCrabWin32.windowWalkChildren(hwnd, report=True):
 			 self._lastScreenshotInfo += windowInfo(hwnd, level=level)
-			
-		hwndParent = TableCrabWin32.windowGetTopLevelParent(hwnd)
-		if hwndParent == hwnd: return
-			
-		self._lastScreenshotInfo += '-----------------------------------------------------------------\n'
-		self._lastScreenshotInfo += 'Window Hirarchy\n'
-		self._lastScreenshotInfo += '-----------------------------------------------------------------\n'
-		for level, hwnd in TableCrabWin32.windowWalkChildren(hwndParent, report=True):
-			 self._lastScreenshotInfo += windowInfo(hwnd, level=level)
-			
+		
+	def screenshotInfo(self):
+		return self._lastScreenshotInfo
+	
+	def setScreenshot(self, pixmap=None, screenshotName=None):
+		self.label.setScreenshot(pixmap=pixmap, screenshotName=screenshotName)
+		self.adjustActions()
+	
 	def onActionOpenTriggered(self):
 		imageFormats = [QtCore.QString(i).toLower() for i in  QtGui.QImageReader.supportedImageFormats()]
 		fileName = TableCrabConfig.dlgOpenSaveFile(
@@ -501,10 +485,33 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		dlg.show()
 		TableCrabConfig.settingsSetValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', dlg.saveGeometry() )
 	
+	def onWidgetScreenshot(self, hwnd, pixmap):
+		# make shure to not take screenshot of self
+		wid = self.effectiveWinId()	# NOTE: effectiveWinId() returns <sip.voidptr> and may be None
+		if not wid:
+			return
+		selfHwnd = int(wid)
+		selfParent = TableCrabWin32.windowGetTopLevelParent(selfHwnd)
+		otherParent = TableCrabWin32.windowGetTopLevelParent(hwnd)
+		if selfParent == otherParent:
+			return
+		self.gatherWindowInfo(hwnd)		
+		TableCrabConfig.signalEmit(self, 'widgetScreenshotInfo(QString)', self._lastScreenshotInfo)
+		self.setScreenshot(pixmap)
+		self.adjustActions()
+		
+	def onWidgetScreenshotQuery(self):
+		pixmap = self.label.pixmap()
+		if pixmap is None:
+			pixmap = QtGui.QPixmap()
+		TableCrabConfig.signalEmit(None, 'widgetScreenshotSet(QPixmap*)', pixmap)
+
 
 class DialgScreenshotInfo(QtGui.QDialog):
 	def __init__(self, info, parent=None):
 		QtGui.QDialog. __init__(self, parent)
+		self.setWindowTitle(TableCrabConfig.dialogTitle('Screenshot Info') )
+		
 		self._lastScreenshotInfo = info
 		
 		self.edit = QtGui.QPlainTextEdit(self)
@@ -527,16 +534,14 @@ class DialgScreenshotInfo(QtGui.QDialog):
 		
 		self.layout()
 		
-	def onWidgetScreenshotInfo(self, info):
-		self._lastScreenshotInfo = info
-		self.buttonRefresh.setEnabled(bool(info))
-		
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
 		grid.addWidget(self.edit, 0, 0)
 		grid.addWidget(TableCrabConfig.HLine(self), 1, 0)
 		grid.addWidget(self.buttonBox, 2, 0)
 	
+	def onButtonHelpClicked(self, checked):
+		TableCrabGuiHelp.dialogHelp('screenshotInfo', parent=self)
 	
 	def onButtonRefreshClicked(self, checked):
 		self.edit.setPlainText(self._lastScreenshotInfo)
@@ -565,8 +570,9 @@ class DialgScreenshotInfo(QtGui.QDialog):
 		finally: 
 			if fp is not None: fp.close()
 		
-	def onButtonHelpClicked(self, checked):
-		TableCrabGuiHelp.dialogHelp('screenshotInfo', parent=self)
+	def onWidgetScreenshotInfo(self, info):
+		self._lastScreenshotInfo = info
+		self.buttonRefresh.setEnabled(bool(info))
 		
 
 class FrameSetup(QtGui.QFrame):
@@ -607,12 +613,17 @@ class FrameSetup(QtGui.QFrame):
 		box.addWidget(self.toolBar, 0, 0)
 		box.addWidget(self.splitter, 1, 0)
 		
+	def hideEvent(self, event):
+		self.mouseMonitorTimer.stop()
+		return QtGui.QFrame.hideEvent(self, event)
+	
+	def showEvent(self, event):
+		self.mouseMonitorTimer.start()		
+		return QtGui.QFrame.showEvent(self, event)
+	
 	def onCloseEvent(self, event):
 		TableCrabConfig.settingsSetValue('Gui/Setup/SplitterState', self.splitter.saveState())
 	
-	def onActionHelpTriggered(self):
-		TableCrabGuiHelp.dialogHelp('setup', parent=self)
-		
 	def onMouseMonitor(self):
 		# find our main window hwnd
 		wid = self.effectiveWinId()	# NOTE: effectiveWinId() returns <sip.voidptr> and may be None
@@ -641,14 +652,9 @@ class FrameSetup(QtGui.QFrame):
 		point = TableCrabConfig.pointToString(point)
 		TableCrabConfig.signalEmit(None, 'feedback(QString)', '%s -- Size: %s Mouse: %s' % (title, size, point) )
 	
-	def hideEvent(self, event):
-		self.mouseMonitorTimer.stop()
-		return QtGui.QFrame.hideEvent(self, event)
+	def onActionHelpTriggered(self):
+		TableCrabGuiHelp.dialogHelp('setup', parent=self)
 	
-	def showEvent(self, event):
-		self.mouseMonitorTimer.start()		
-		return QtGui.QFrame.showEvent(self, event)
-		
 
 #**********************************************************************************************
 #
