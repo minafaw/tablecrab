@@ -644,6 +644,32 @@ def windowGetPos(hwnd):
 	point = windowClientPointToScreenPoint(hwnd, QtCore.QPoint(0, 0) )
 	return windowScreenPointToClientPoint(hwndParent, point)
 
+# ##############################################
+#def windowSetSize(hwnd, size):
+#	"""sets size of the specified window 
+#	@param hwnd: handle of the window
+#	@param size: (QSize)
+#	@return: None
+#	"""
+#	if not hwnd: raise ValueError('can not set posAndSize of desktop window')
+#	#NOTE: SetWindowPos broken in wine 1.1.42
+#	user32.SetWindowPos(hwnd, None, 0, 0, size.width(), size.height(), SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE)
+#
+#def windowSetClientSize(hwnd, size):
+#	"""adjusts the specified windows size to fit the specified size of the client area
+#	@param hwnd: handle of the window
+#	@param size: (QSize)
+#	@return: None
+#	"""
+#	if not hwnd: raise ValueError('can not set clientSize of desktop window')
+#	rect = windowGetRect(hwnd)
+#	rectCli = windowGetClientRect(hwnd)
+#	newW = rect.width() - rectCl.width() + size.width()
+#	newH = rect.height() - rectCl.wheight() + size.height()
+#	size = QtCore.QSize(newW, newH)
+#	windowSetSize(hwnd, size)
+
+# ################################################
 # alternative: use GetModuleFileNameEx to query executable filepath
 # don't like it too much though. we would rely on this entirely. any file name
 # chenge breaks us
