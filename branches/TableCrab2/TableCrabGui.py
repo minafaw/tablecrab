@@ -52,6 +52,7 @@ class Gui(TableCrabMainWindow .MainWindow):
 	
 	# double clickabe label. we use this to trigger ExceptionDialog
 	class FeedbackLabel(QtGui.QLabel):
+		doubleClicked = QtCore.pyqtSignal()
 		def __init__(self, *args):
 			QtGui.QLabel.__init__(self, *args)
 			self.setMouseTracking(True)
@@ -88,20 +89,14 @@ class Gui(TableCrabMainWindow .MainWindow):
 					):
 			self._addTab(widgetProto, name)
 				
-		# connect global signals
-		TableCrabConfig.signalsConnect(None, self, 
-				('closeEvent(QEvent*)', self.onCloseEvent),
-				('feedback(QWidget*, QString)', self.onFeedback),
-				('feedbackException(QString)', self.onFeedbackException),
-				('feedbackMessage(QString)', self.onFeedbackMessage),
-				)
-		
-		# connect to our double clickable label label
-		TableCrabConfig.signalConnect(self.labelFeedback, self, 'doubleClicked()', self.onLabelFeedbackDoubleClicked)
-		
-		# connect to TabWidget
-		TableCrabConfig.signalConnect(self.tabWidget, self, 'currentChanged(int)', self.onTabCurrentChanged)
-		
+		# connect signals
+		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
+		TableCrabConfig.globalObject.feedback.connect(self.onFeedback)
+		TableCrabConfig.globalObject.feedbackException.connect(self.onFeedbackException)
+		TableCrabConfig.globalObject.feedbackMessage.connect(self.onFeedbackMessage)
+		self.labelFeedback.doubleClicked.connect(self.onLabelFeedbackDoubleClicked)
+		self.tabWidget.currentChanged.connect(self.onTabCurrentChanged)
+			
 		# restore last selected tab
 		self.tabWidget.setCurrentIndex( TableCrabConfig.settingsValue('Gui/TabCurrent', QtCore.QVariant()).toInt()[0] )
 		
