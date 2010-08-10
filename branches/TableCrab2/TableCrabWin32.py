@@ -81,48 +81,48 @@ WM_SYSKEYDOWN = 260
 WM_SYSKEYUP = 261
 
 KEY_VALUES = {		# keyName --> vkCode
-		'LBUTTON': 0x01,
-		'RBUTTON': 0x02,
-		'CANCEL': 0x03,
-		'MBUTTON': 0x04,
-		'XBUTTON1': 0x05,
-		'XBUTTON2': 0x06,
-		'BACK': 0x08,
-		'TAB': 0x09,
-		'CLEAR': 0x0C,
-		'RETURN': 0x0D,
-		'SHIFT': 0x10,
-		'CONTROL': 0x11,
-		'MENU': 0x12,
-		'PAUSE': 0x13,
-		'CAPITAL': 0x14,
-		'KANA': 0x15,
-		'HANGEUL': 0x15,
-		'JUNJA': 0x17,
-		'FINAL': 0x18,
-		'HANJA': 0x19,
-		'KANJI': 0x19,
-		'ESCAPE': 0x1B,
-		'CONVERT': 0x1C,
-		'NONCONVERT': 0x1D,
-		'ACCEPT': 0x1E,
-		'MODECHANGE': 0x1F,
-		'SPACE': 0x20,
-		'PRIOR': 0x21,
-		'NEXT': 0x22,
-		'END': 0x23,
-		'HOME': 0x24,
-		'LEFT': 0x25,
-		'UP': 0x26,
-		'RIGHT': 0x27,
-		'DOWN': 0x28,
-		'SELECT': 0x29,
-		'PRINT': 0x2A,
-		'EXECUTE': 0x2B,
-		'SNAPSHOT': 0x2C,
-		'INSERT': 0x2D,
-		'DELETE': 0x2E,
-		'HELP': 0x2F,
+		'LeftButton': 0x01,
+		'RightButton': 0x02,
+		'Cancel': 0x03,
+		'MiddleButton': 0x04,
+		'XButton1': 0x05,
+		'XButton2': 0x06,
+		'Back': 0x08,
+		'Tab': 0x09,
+		'Clear': 0x0C,
+		'Return': 0x0D,
+		'Shift': 0x10,
+		'Control': 0x11,
+		'Menu': 0x12,
+		'Pause': 0x13,
+		'Capital': 0x14,
+		'Kana': 0x15,
+		'Hangeul': 0x15,
+		'Junja': 0x17,
+		'Final': 0x18,
+		'Hanja': 0x19,
+		'Kanji': 0x19,
+		'Escape': 0x1B,
+		'Convert': 0x1C,
+		'NonConvert': 0x1D,
+		'Accept': 0x1E,
+		'Modechange': 0x1F,
+		'Space': 0x20,
+		'Prior': 0x21,
+		'Next': 0x22,
+		'End': 0x23,
+		'Home': 0x24,
+		'Left': 0x25,
+		'Up': 0x26,
+		'Right': 0x27,
+		'Down': 0x28,
+		'Select': 0x29,
+		'Print': 0x2A,
+		'Execute': 0x2B,
+		'Snapshot': 0x2C,
+		'Insert': 0x2D,
+		'Delete': 0x2E,
+		'Help': 0x2F,
 		'0': 0x30,
 		'1': 0x31,
 		'2': 0x32,
@@ -159,26 +159,26 @@ KEY_VALUES = {		# keyName --> vkCode
 		'X': 0x58,
 		'Y': 0x59,
 		'Z': 0x5A,
-		'LWIN': 0x5B,
-		'RWIN': 0x5C,
-		'APPS': 0x5D,
-		'SLEEP': 0x5f,
-		'NUMPAD0': 0x60,
-		'NUMPAD1': 0x61,
-		'NUMPAD2': 0x62,
-		'NUMPAD3': 0x63,
-		'NUMPAD4': 0x64,
-		'NUMPAD5': 0x65,
-		'NUMPAD6': 0x66,
-		'NUMPAD7': 0x67,
-		'NUMPAD8': 0x68,
-		'NUMPAD9': 0x69,
-		'MULTIPLY': 0x6A,
-		'ADD': 0x6B,
-		'SEPARATOR': 0x6C,
-		'SUBTRACT': 0x6D,
-		'DECIMAL': 0x6E,
-		'DIVIDE': 0x6F,
+		'LeftWin': 0x5B,
+		'RightWin': 0x5C,
+		'Apps': 0x5D,
+		'Sleep': 0x5f,
+		'Numpad0': 0x60,
+		'Numpad1': 0x61,
+		'Numpad2': 0x62,
+		'Numpad3': 0x63,
+		'Numpad4': 0x64,
+		'Numpad5': 0x65,
+		'Numpad6': 0x66,
+		'Numpad7': 0x67,
+		'Numpad8': 0x68,
+		'Numpad9': 0x69,
+		'Multiply': 0x6A,
+		'Add': 0x6B,
+		'Separator': 0x6C,
+		'Subtract': 0x6D,
+		'Decimal': 0x6E,
+		'Divide': 0x6F,
 		'F1': 0x70,
 		'F2': 0x71,
 		'F3': 0x72,
@@ -203,79 +203,79 @@ KEY_VALUES = {		# keyName --> vkCode
 		'F22': 0x85,
 		'F23': 0x86,
 		'F24': 0x87,
-		'NUMLOCK': 0x90,
-		'SCROLL': 0x91,
-		'OEM-NEC-EQUAL': 0x92,
-		'OEM-FJ-JISHO': 0x92,
-		'OEM-FJ-MASSHOU': 0x93,
-		'OEM-FJ-TOUROKU': 0x94,
-		'OEM-FJ-LOYA': 0x95,
-		'OEM-FJ-ROYA': 0x96,
-		'LSHIFT': 0xA0,
-		'RSHIFT': 0xA1,
-		'LCONTROL': 0xA2,
-		'RCONTROL': 0xA3,
-		'LMENU': 0xA4,
-		'RMENU': 0xA5,
-		'BROWSER-BACK': 0xA6,
-		'BROWSER-FORWARD': 0xA7,
-		'BROWSER-REFRESH': 0xA8,
-		'BROWSER-STOP': 0xA9,
-		'BROWSER-SEARCH': 0xAA,
-		'BROWSER-FAVORITES': 0xAB,
-		'BROWSER-HOME': 0xAC,
-		'VOLUME-MUTE': 0xAD,
-		'VOLUME-DOWN': 0xAE,
-		'VOLUME-UP': 0xAF,
-		'MEDIA-NEXT-TRACK': 0xB0,
-		'MEDIA-PREV-TRACK': 0xB1,
-		'MEDIA-STOP': 0xB2,
-		'MEDIA-PLAY-PAUSE': 0xB3,
-		'LAUNCH-MAIL': 0xB4,
-		'LAUNCH-MEDIA-SELECT': 0xB5,
-		'LAUNCH-APP1': 0xB6,
-		'LAUNCH-APP2': 0xB7,
-		'OEM-1': 0xBA,
-		'OEM-PLUS': 0xBB,
-		'OEM-COMMA': 0xBC,
-		'OEM-MINUS': 0xBD,
-		'OEM-PERIOD': 0xBE,
-		'OEM-2': 0xBF,
-		'OEM-3': 0xC0,
-		'OEM-4': 0xDB,
-		'OEM-5': 0xDC,
-		'OEM-6': 0xDD,
-		'OEM-7': 0xDE,
-		'OEM-8': 0xDF,
-		'OEM-AX': 0xE1,
-		'OEM-102': 0xE2,
-		'ICO-HELP': 0xE3,
+		'Numlock': 0x90,
+		'Scroll': 0x91,
+		'Oem-Nec-Equal': 0x92,
+		'Oem-FJ-Jisho': 0x92,
+		'Oem-FJ-Masshou': 0x93,
+		'Oem-FJ-Touroku': 0x94,
+		'Oem-FJ-Loya': 0x95,
+		'Oem-FJ-Roya': 0x96,
+		'LeftShift': 0xA0,
+		'RightShift': 0xA1,
+		'LeftControl': 0xA2,
+		'RightControl': 0xA3,
+		'LeftMenu': 0xA4,
+		'RightMenu': 0xA5,
+		'Browser-Back': 0xA6,
+		'Browser-Forward': 0xA7,
+		'Browser-Refresh': 0xA8,
+		'Browser-Stop': 0xA9,
+		'Browser-Search': 0xAA,
+		'Browser-Favorites': 0xAB,
+		'Browser-Home': 0xAC,
+		'Volume-Mute': 0xAD,
+		'Volume-Down': 0xAE,
+		'Volume-UP': 0xAF,
+		'Media-Next-Track': 0xB0,
+		'Media-Prev-Track': 0xB1,
+		'Media-Stop': 0xB2,
+		'Media-Play-Pause': 0xB3,
+		'launch-Mail': 0xB4,
+		'launch-Media-Select': 0xB5,
+		'launch-App1': 0xB6,
+		'launch-App2': 0xB7,
+		'Oem-1': 0xBA,
+		'Oem-Plus': 0xBB,
+		'Oem-Comma': 0xBC,
+		'Oem-Minus': 0xBD,
+		'Oem-Period': 0xBE,
+		'Oem-2': 0xBF,
+		'Oem-3': 0xC0,
+		'Oem-4': 0xDB,
+		'Oem-5': 0xDC,
+		'Oem-6': 0xDD,
+		'Oem-7': 0xDE,
+		'Oem-8': 0xDF,
+		'Oem-AX': 0xE1,
+		'Oem-102': 0xE2,
+		'ICO-Help': 0xE3,
 		'ICO-00': 0xE4,
-		'PROCESSKEY': 0xE5,
-		'ICO-CLEAR': 0xE6,
-		'PACKET': 0xE7,
-		'OEM-RESET': 0xE9,
-		'OEM-JUMP': 0xEA,
-		'OEM-PA1': 0xEB,
-		'OEM-PA2': 0xEC,
-		'OEM-PA3': 0xED,
-		'OEM-WSCTRL': 0xEE,
-		'OEM-CUSEL': 0xEF,
-		'OEM-ATTN': 0xF0,
-		'OEM-FINISH': 0xF1,
-		'OEM-COPY': 0xF2,
-		'OEM-AUTO': 0xF3,
-		'OEM-ENLW': 0xF4,
-		'OEM-BACKTAB': 0xF5,
-		'ATTN': 0xF6,
-		'CRSEL': 0xF7,
-		'EXSEL': 0xF8,
-		'EREOF': 0xF9,
-		'PLAY': 0xFA,
-		'ZOOM': 0xFB,
-		'NONAME': 0xFC,
+		'Processkey': 0xE5,
+		'Ico-Clear': 0xE6,
+		'Packet': 0xE7,
+		'Oem-Reset': 0xE9,
+		'Oem-Jump': 0xEA,
+		'Oem-PA1': 0xEB,
+		'Oem-PA2': 0xEC,
+		'Oem-PA3': 0xED,
+		'Oem-Wsctrl': 0xEE,
+		'Oem-Cusel': 0xEF,
+		'Oem-Attn': 0xF0,
+		'Oem-Finish': 0xF1,
+		'Oem-Copy': 0xF2,
+		'Oem-Auto': 0xF3,
+		'Oem-Enlw': 0xF4,
+		'Oem-Backtab': 0xF5,
+		'Attn': 0xF6,
+		'Crsel': 0xF7,
+		'Exsel': 0xF8,
+		'Ereof': 0xF9,
+		'Play': 0xFA,
+		'Zoom': 0xFB,
+		'Noname': 0xFC,
 		'PA1': 0xFD,
-		'OEM-CLEAR': 0xFE,
+		'Oem-Clear': 0xFE,
 		}
 KEY_NAMES = dict([(i[1], i[0]) for i in KEY_VALUES.items()])	# vkCode --> keyName
 	
@@ -845,9 +845,9 @@ def mouseButtonsDown():
 	"""checks if any mouse buttons are down
 	@return: (bool) True if any of the mouse buttons are down, False otherwise
 	"""
-	return user32.GetAsyncKeyState(KEY_VALUES['LBUTTON'] & KEY_IS_DOWN) or \
-				user32.GetAsyncKeyState(KEY_VALUES['RBUTTON'] & KEY_IS_DOWN) or \
-				user32.GetAsyncKeyState(KEY_VALUES['MBUTTON'] & KEY_IS_DOWN)
+	return user32.GetAsyncKeyState(KEY_VALUES['LeftButton'] & KEY_IS_DOWN) or \
+				user32.GetAsyncKeyState(KEY_VALUES['RightButton'] & KEY_IS_DOWN) or \
+				user32.GetAsyncKeyState(KEY_VALUES['MiddleButton'] & KEY_IS_DOWN)
 	
 def mouseButtonIsDown(button):
 	return button in _mouseButtonsDown
@@ -991,17 +991,17 @@ class MouseHook(QtCore.QObject):
 		
 		if code == HC_ACTION:
 			if wParam == WM_LBUTTONDOWN:
-				_setKeyDown(KEY_VALUES['LBUTTON'], True)
+				_setKeyDown(KEY_VALUES['LeftButton'], True)
 			elif wParam == WM_LBUTTONUP:
-				_setKeyDown(KEY_VALUES['LBUTTON'], False)
+				_setKeyDown(KEY_VALUES['LeftButton'], False)
 			elif wParam == WM_RBUTTONDOWN:
-				_setKeyDown(KEY_VALUES['RBUTTON'], True)
+				_setKeyDown(KEY_VALUES['RightButton'], True)
 			elif wParam == WM_RBUTTONUP:
-				_setKeyDown(KEY_VALUES['RBUTTON'], False)
+				_setKeyDown(KEY_VALUES['RightButton'], False)
 			elif wParam == WM_MBUTTONDOWN:
-				_setKeyDown(KEY_VALUES['MBUTTON'], True)
+				_setKeyDown(KEY_VALUES['MiddleButton'], True)
 			elif wParam == WM_MBUTTONUP:
-				_setKeyDown(KEY_VALUES['MBUTTON'], False)
+				_setKeyDown(KEY_VALUES['MiddleButton'], False)
 			elif wParam == WM_MOUSEWHEEL:
 				mouseInfo = MSLLHOOKSTRUCT.from_address(lParam)
 				wheelDelta = GET_WHEEL_DELTA_WPARAM(mouseInfo.mouseData)
@@ -1060,51 +1060,38 @@ class KeyboardHook(QtCore.QObject):
 		"""private method, KEYBHOOKPROCLL implementation"""
 		if code == HC_ACTION:
 			keyInfo = KBDLLHOOKSTRUCT.from_address(lParam)
+			keyIsDown = wParam in (WM_KEYDOWN, WM_SYSKEYDOWN)
 			#HACK:(1)
-			if wParam in (WM_KEYDOWN, WM_SYSKEYDOWN):
-				_setKeyDown(keyInfo.vkCode, True)
+			_setKeyDown(keyInfo.vkCode, keyIsDown)
 			#<--HACK:(1)
-			
 			keyboardState = (c_ubyte*256)()
 			user32.GetKeyboardState(byref(keyboardState))
-			key = self._keyFromKeyboardState(keyboardState=keyboardState)
-			keydown = wParam in (WM_KEYDOWN, WM_SYSKEYDOWN)
-						
-			#HACK:(1)
-			if wParam in (WM_KEYUP, WM_SYSKEYUP):
-				_setKeyDown(keyInfo.vkCode, False)
-			#<--HACK:(1)
-			
-			if key and keydown:
-				e = InputEvent(key=key, steps=1, keyIsDown=keydown, accept=False, parent=self)
+			key = self._keyFromKeyboardState(keyboardState)
+			if key:
+				e = InputEvent(key=key, steps=1, keyIsDown=keyIsDown, accept=False, parent=self)
 				self.emit(QtCore.SIGNAL('inputEvent(QObject*)'), e)
 				if e.accept:
 					return TRUE
-		
 		return user32.CallNextHookEx(self._hHook, code, wParam, lParam)
 		
-	def _keyFromKeyboardState(self, keyboardState=None):
-		"""@param keyboardState: (c_ubyte*256) holding a keyboar state or None"""
-		value = ''
-		if keyboardState:		
-			for vkCode, tmp_value in enumerate(keyboardState):
-				if tmp_value:
-					if vkCode in (		# ignore these keys
-							VK_CONTROL,
-							VK_MENU,
-							VK_SHIFT,
-							VK_SCROLL,
-							VK_CAPITAL,
-							VK_NUMLOCK,
-							):
-						continue
-					if value:
-						value += ' %s' % KEY_NAMES[vkCode]
-					else:
-						value = KEY_NAMES[vkCode]
-		if value:
-			return '<%s>' % value
-		return value
+	def _keyFromKeyboardState(self, keyboardState):
+		"""@param keyboardState: (c_ubyte*256) holding a keyboard state"""
+		result = []
+		for vkCode, flag in enumerate(keyboardState):
+			if flag & KEY_IS_DOWN:
+				if vkCode in (			# ignore these keys,
+						VK_CONTROL,		# we pass left or right representation only
+						VK_MENU,			# we pass left or right representation only
+						VK_SHIFT,			# we can not know lock state
+						VK_SCROLL,		# we can not know lock state
+						VK_CAPITAL,		# we can not know lock state
+						VK_NUMLOCK,	# we can not know lock state
+						):
+					continue
+				result.append(KEY_NAMES[vkCode])
+		if result:
+			return '<%s>' % '+'.join(result)
+		return ''
 	
 	def isStarted(self): 
 		"""cheks if the keyboard manager is started"""
