@@ -27,10 +27,10 @@ class HotkeyEditor(QtGui.QDialog):
 		self.settingsKey = settingsKey
 		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
 		self.buttonHelp = QtGui.QPushButton('Help', self)
-		TableCrabConfig.signalConnect(self.buttonHelp, self, 'clicked(bool)', self.onButtonHelpClicked)
+		self.buttonHelp.clicked.connect(self.onButtonHelpClicked)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
-		TableCrabConfig.signalConnect(self.buttonBox, self, 'accepted()', self.accept)
-		TableCrabConfig.signalConnect(self.buttonBox, self, 'rejected()', self.reject)
+		self.buttonBox.accepted.connect(self.accept)
+		self.buttonBox.rejected.connect(self.reject)
 		
 		self.labelAction = QtGui.QLabel('Action:', self)
 		self.editAction = QtGui.QLineEdit(self)
@@ -85,7 +85,7 @@ class HotkeyEditorWithMultiplier(HotkeyEditor):
 				precision=1,
 				parent=self,
 				)
-		TableCrabConfig.signalConnect(self.spinMultiplier, self, 'valueChanged(double)', self.setNewActionName)
+		self.spinMultiplier.valueChanged.connect(self.setNewActionName)
 		self.fields.extend((
 				(self.labelMultiplier, self.spinMultiplier),
 				))
@@ -104,7 +104,7 @@ class HotkeyEditorWithMultiplierAndBaseValue(HotkeyEditorWithMultiplier):
 		HotkeyEditorWithMultiplier.__init__(self, *args,**kws)
 		self.labelBasevalue = QtGui.QLabel('BaseValue:', self)
 		self.comboBaseValue = TableCrabConfig.ComboBox(choices=self.hotkey.BaseValues, default=self.hotkey.baseValue(), parent=self)
-		TableCrabConfig.signalConnect(self.comboBaseValue, self, 'currentIndexChanged(int)', self.setNewActionName)
+		self.comboBaseValue.currentIndexChanged.connect(self.setNewActionName)
 		self.fields.insert(-1, 
 				(self.labelBasevalue, self.comboBaseValue),
 				)	
