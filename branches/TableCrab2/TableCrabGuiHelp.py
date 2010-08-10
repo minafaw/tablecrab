@@ -275,7 +275,7 @@ class _DialogHelp(QtGui.QDialog):
 	def __init__(self, topic, parent=None):
 		QtGui.QDialog.__init__(self, parent)
 		
-		self.setWindowTitle(TableCrabConfig.ApplicationName + ' - Help')
+		self.setWindowTitle(TableCrabConfig.dialogTitle('Help') )
 		self.setWindowIcon( QtGui.QIcon(TableCrabConfig.Pixmaps.tableCrab()) )
 		
 		TableCrabConfig.settingsSetValue('Gui/Help/Topic', topic)
