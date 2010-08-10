@@ -168,9 +168,13 @@ class _GlobalObject(QtCore.QObject):
 	settingAlternatingRowColorsChanged = QtCore.pyqtSignal(bool)
 	settingChildItemIndicatorsChanged = QtCore.pyqtSignal(bool)	
 	
+	# new screenshot created (hwnd, pixmap)
 	widgetScreenshot = QtCore.pyqtSignal(int, QtGui.QPixmap)
+	# a screenshot has been double clicked in the screenshot widget
 	widgetScreenshotDoubleClicked = QtCore.pyqtSignal(QtGui.QPixmap, QtCore.QPoint)
+	# query screenshot widget for screenshot --> signal widgetScreenshotSet()
 	widgetScreenshotQuery = QtCore.pyqtSignal()
+	# a sceenshot has been set to screenshot widget. a null pixmap is passed if no screenshot has been set
 	widgetScreenshotSet = QtCore.pyqtSignal(QtGui.QPixmap)
 	
 globalObject = _GlobalObject()
