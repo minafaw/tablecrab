@@ -207,13 +207,13 @@ class FrameSettingsHand(QtGui.QFrame):
 		
 		actionSettings = (
 			('PrefixBet', 'Bet', 'PostfixBet'),
-			('PrefixRaise', 'Raise', 'PostfixRaise'),
 			('PrefixCall', 'Call', 'PostfixCall'),
-			('PrefixAnte', 'Ante', 'PostfixAnte'),
-			('PrefixSmallBlind', 'SmallBlind', 'PostfixSmallBlind'),
-			('PrefixBigBlind', 'BigBlind', 'PostfixBigBlind'),
 			('PrefixCheck', 'Check', None),
 			('PrefixFold', 'Fold', None),
+			('PrefixRaise', 'Raise', 'PostfixRaise'),
+			('PrefixAnte', 'Ante', 'PostfixAnte'),
+			('PrefixBigBlind', 'BigBlind', 'PostfixBigBlind'),
+			('PrefixSmallBlind', 'SmallBlind', 'PostfixSmallBlind'),
 			)
 		self.actionSettings = []
 		for actionPrefix, actionName, actionPostfix in actionSettings:
