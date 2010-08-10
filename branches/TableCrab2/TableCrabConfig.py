@@ -466,9 +466,9 @@ class HotkeyBox(QtGui.QComboBox):
 	# x) we added a space to each displayName to trrick the combo popup search feature
 	Hotkeys = (		# hotkey --> displayName
 				('', '<Type Keys Your Keyboard>'),
-				('<ESCAPE>', ' ESCAPE'),
-				('<SPACE>', ' SPACE'),
-				('<TAB>', ' TAB'),
+				('<Escape>', ' Escape'),
+				('<Space>', ' Space'),
+				('<Tab>', ' Tab'),
 				(TableCrabWin32.MouseWheelUp, ' MouseWheelUp'),
 				(TableCrabWin32.MouseWheelDown, ' MouseWheelDown'),
 			)
@@ -625,6 +625,9 @@ def truncateString(string, maxChars):
 		else:
 			return string[:maxChars-2] + '..'
 	return string
+
+def dialogTitle(title):
+	return '%s - %s' % (ApplicationName, title)
 
 #***********************************************************************************
 # global Application object
