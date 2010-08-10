@@ -1,13 +1,6 @@
 
+#TODO: give feedback ++ set tree to point to current page
 #TODO: save splitter state in DialogHelp()
-
-import TableCrabConfig
-from PyQt4 import QtCore, QtGui, QtWebKit, QtNetwork
-
-#**********************************************************************************************
-#
-#**********************************************************************************************
-
 #TODO: would be nice to auto-generate topics from disk. for now we have to keep track by hand.
 # auto-generating woul drequire some naming scheme to get the hirarchy - we only support flat
 # directories in our NetworkAccessmanager()  ++ some Html parsing to retrieve the desired title
@@ -30,7 +23,13 @@ from PyQt4 import QtCore, QtGui, QtWebKit, QtNetwork
 #		else:
 #			print 'Warning: no title found in : %s' % name
 #		#TODO: break fileName into pieces. something like: topic-subtopic-MyPage.html
+
+import TableCrabConfig
+from PyQt4 import QtCore, QtGui, QtWebKit, QtNetwork
+
+#**********************************************************************************************
 #
+#**********************************************************************************************
 Topics = [
 		('index', 'TableCrab'), [
 			('setup', 'Setup'), [
@@ -200,7 +199,7 @@ class FrameHelp(QtGui.QFrame):
 		
 		self.tree = QtGui.QTreeWidget(self)
 		self.tree.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
-		TableCrabConfig.signalConnect(None, self, 'settingAlternatingRowColorsChanged(bool)', self.onSettingAlternatingRowColorsChanged)
+		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(self.onSettingAlternatingRowColorsChanged)
 		
 		self.splitter = QtGui.QSplitter(self)
 		self.splitter.addWidget(self.tree)
@@ -238,10 +237,9 @@ class FrameHelp(QtGui.QFrame):
 			if firstTopicItem is None:
 				firstTopicItem = item
 			
-		TableCrabConfig.signalConnect(self.tree, self, 'itemSelectionChanged()', self.onItemSelectionChanged)
-		TableCrabConfig.signalConnect(self.tree, self, 'itemActivated(QTreeWidgetItem*, int)', self.onItemSelectionChanged)
-		
-		TableCrabConfig.signalConnect(None, self, 'closeEvent(QEvent*)', self.onCloseEvent)
+		self.tree.itemSelectionChanged.connect(self.onItemSelectionChanged)
+		self.tree.itemActivated.connect(self.onItemSelectionChanged)
+		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
 		if lastTopicItem is not None:
 			self.tree.setCurrentItem(lastTopicItem)
 		else:
