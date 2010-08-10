@@ -18,14 +18,12 @@ class SiteManager(QtCore.QObject):
 		QtCore.QObject.__init__(self, parent)
 		self._lock = thread.allocate_lock()
 		
-		TableCrabConfig.mouseHook.setEventHandler(self)
-		TableCrabConfig.keyboardHook.setEventHandler(self)
-		TableCrabConfig.signalConnect(TableCrabConfig.windowHook, self, 'windowCreated(int)', self.onWindowCreated)
-		TableCrabConfig.signalConnect(TableCrabConfig.windowHook, self, 'windowDestroyed(int)', self.onWindowDestroyed)
-		TableCrabConfig.signalConnect(TableCrabConfig.windowHook, self, 'windowGainedForeground(int)', self.onWindowGainedForeground)
-		TableCrabConfig.signalConnect(TableCrabConfig.windowHook, self, 'windowLostForeground(int)', self.onWindowLostForeground)
-		TableCrabConfig.signalConnect(TableCrabConfig.keyboardHook, self, 'inputEvent(QObject*)', self.onInputEvent)
-		TableCrabConfig.signalConnect(TableCrabConfig.mouseHook, self, 'inputEvent(QObject*)', self.onInputEvent)
+		TableCrabConfig.windowHook.windowCreated.connect(self.onWindowCreated)
+		TableCrabConfig.windowHook.windowDestroyed.connect(self.onWindowDestroyed)
+		TableCrabConfig.windowHook.windowGainedForeground.connect(self.onWindowGainedForeground)
+		TableCrabConfig.windowHook.windowLostForeground.connect(self.onWindowLostForeground)
+		TableCrabConfig.keyboardHook.inputEvent.connect(self.onInputEvent)
+		TableCrabConfig.mouseHook.inputEvent.connect(self.onInputEvent)
 		
 		self._tableCrabActionHandler = TableCrabActionHandler.ActionHandler(parent=self)
 		self._handlers = (
