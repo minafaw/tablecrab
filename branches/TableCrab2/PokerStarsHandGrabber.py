@@ -422,7 +422,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	PostfixAnte = ''
 	PrefixSmallBlind = 'sb'
 	PostfixSmallBlind = ''
-	PrefixBigBlind = 'sb'
+	PrefixBigBlind = 'bb'
 	PostfixBigBlind = ''
 	PrefixCheck = 'ck'
 	PrefixFold = 'f'
@@ -726,6 +726,9 @@ InstantHandHistoryGrabber = None
 if sys.platform == 'win32':
 	
 	class HandGrabber(QtCore.QObject):
+		
+		handGrabbed = QtCore.pyqtSignal(QtCore.QObject, QtCore.QString)
+		
 		WindowClassName = '#32770'
 		WindowTitle = 'Instant Hand History'
 		WidgetClassName = 'PokerStarsViewClass'
@@ -755,7 +758,7 @@ if sys.platform == 'win32':
 						hand = self.handParser.parse(handHistory)
 						if hand is not None:
 							data = self.handFormatter.dump(hand)
-							self.emit(QtCore.SIGNAL('handGrabbed(QObject*, QString)'), hand, data)
+							self.handGrabbed.emit(hand, data)
 					break
 				break
 			
