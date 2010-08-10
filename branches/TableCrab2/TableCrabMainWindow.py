@@ -33,7 +33,7 @@ class MainWindow(QtGui.QMainWindow):
 			TableCrabConfig.templateManager.read()
 		self.siteManager.tableCrabActionHandler().setHwndMain(self.effectiveWinId() )
 	def closeEvent(self, event):
-		TableCrabConfig.signalEmit(None, 'closeEvent(QEvent*)', event)
+		TableCrabConfig.globalObject.closeEvent.emit(event)
 		TableCrabConfig.mouseHook.stop()
 		TableCrabConfig.keyboardHook.stop()
 		TableCrabConfig.windowHook.stop()
