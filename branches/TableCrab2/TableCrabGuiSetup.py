@@ -25,22 +25,24 @@ from PyQt4 import QtCore, QtGui
 class TemplatesWidget(QtGui.QTreeWidget):
 		
 	class MyDelegate(QtGui.QItemDelegate):
+		editingFinished = QtCore.pyqtSignal()
+		
 		def __init__(self, parent=None):
 			QtGui.QItemDelegate.__init__(self, parent)
 		def createEditor(self, parent, option, index):
 			ed = QtGui.QLineEdit(parent)
 			ed.setMaxLength(TableCrabConfig.MaxName)
-			TableCrabConfig.signalConnect(ed, self, 'editingFinished()', self.onEditingFinished)
+			ed.editingFinished.connect(self.onEditingFinished)
 			return ed
 		def onEditingFinished(self):
-			TableCrabConfig.signalEmit(self, 'editingFinished()')
+			self.editingFinished.emit()
 	
 	class ActionNewTemplate(QtGui.QAction):
 		def __init__(self, templateProto, parent=None):
 			QtGui.QAction.__init__(self, parent)
 			self.templateProto = templateProto
 			self.setText(self.templateProto.menuName() )
-			TableCrabConfig.signalConnect(self, self, 'triggered(bool)', self.onTriggered)
+			self, self.triggered.connect(self.onTriggered)
 		def onTriggered(self):
 			self.parent().createTemplate(self.templateProto)
 			
@@ -100,27 +102,32 @@ class TemplatesWidget(QtGui.QTreeWidget):
 				)
 		self._actions.append(self.actionRemove)
 				
-		# connect to global signals	
-		TableCrabConfig.signalsConnect(None, self,
-				('settingAlternatingRowColorsChanged(bool)', self.setAlternatingRowColors),
-				('settingChildItemIndicatorsChanged(bool)', self.setRootIsDecorated),
-				('widgetScreenshotSet(QPixmap*)', self.onWidgetScreenshotSet),
-				('widgetScreenshotDoubleClicked(QPixmap*, QPoint*)', self.onWidgetScreenshotDoubleClicked),
-				)
+		# connect signals	
+		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(self.onSetAlternatingRowColors)
+		TableCrabConfig.globalObject.settingChildItemIndicatorsChanged.connect(self.onSetRootIsDecorated)
+		TableCrabConfig.globalObject.widgetScreenshotSet.connect(self.onWidgetScreenshotSet)
+		TableCrabConfig.globalObject.widgetScreenshotDoubleClicked.connect(self.onWidgetScreenshotDoubleClicked)
 			
 		# connect to TreeWidget signals
-		TableCrabConfig.signalsConnect(self, self,
-				('itemDoubleClicked(QTreeWidgetItem*)',self.editItem),
-				('itemExpanded(QTreeWidgetItem*)',self.onItemExpanded),
-				('itemCollapsed(QTreeWidgetItem*)',self.onItemCollapsed),
-				('itemSelectionChanged()', self.adjustActions),
-				)
-		
+		self.itemDoubleClicked.connect(self.onEditItem)
+		self.itemExpanded.connect(self.onItemExpanded)
+		self.itemCollapsed.connect(self.onItemCollapsed)
+		self.itemSelectionChanged.connect(self.adjustActions)
+			
 		# connect to ietm delegate signals
-		TableCrabConfig.signalConnect(self.myDelegate, self, 'editingFinished()', self.onTemplateEditingFinished)
+		self.myDelegate.editingFinished.connect(self.onTemplateEditingFinished)
 		
 		self.adjustActions()
 		
+	def onSetAlternatingRowColors(self, flag):
+		self.setAlternatingRowColors(flag)
+	
+	def onSetRootIsDecorated(self, flag):
+		self.setRootIsDecorated(flag)
+	
+	def onEditItem(self, item):
+		self.editItem(item)
+	
 	def keyReleaseEvent(self, event):
 		#TODO: for some reason the first enter when the widget is created is not accepted
 		if event.key() == QtCore.Qt.Key_Return and not event.modifiers():
@@ -143,7 +150,6 @@ class TemplatesWidget(QtGui.QTreeWidget):
 			self.addTopLevelItem(template)
 			template.setExpanded(True)
 		self._templatesRead = True
-		TableCrabConfig.signalEmit(None, 'widgetScreenshotQuery()')
 		
 	def dump(self):
 		TableCrabConfig.dumpPersistentItems('Templates', [template for template in self])
@@ -176,7 +182,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self.setCurrentItem(template)
 		template.setExpanded(True)
 		self.dump()
-		TableCrabConfig.signalEmit(None, 'widgetScreenshotQuery()')
+		TableCrabConfig.globalObject.widgetScreenshotQuery.emit()
 		
 	def canMoveTemplateUp(self):
 		item = self.currentItem()
@@ -261,6 +267,8 @@ class TemplatesWidget(QtGui.QTreeWidget):
 	
 class ScreenshotWidget(QtGui.QScrollArea):
 	
+	widgetScreenshotInfo = QtCore.pyqtSignal(QtCore.QString)
+	
 	class ScreenshotLabel(QtGui.QLabel):
 		ScreenshotName = 'Screenshot'
 		def __init__(self, *args):
@@ -277,7 +285,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 						point = TableCrabConfig.newPointNone()
 					else:
 						point = QtCore.QPoint(event.pos())
-					TableCrabConfig.signalEmit(None, 'widgetScreenshotDoubleClicked(QPixmap*, QPoint*)', pixmap, point)
+					TableCrabConfig.globalObject.widgetScreenshotDoubleClicked.emit(pixmap, point)
 		
 		def mouseMoveEvent(self, event):
 			pixmap = self.pixmap()
@@ -287,7 +295,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		def _giveFeedback(self, pixmap, point):
 			name = TableCrabConfig.truncateString(self._screenshotName, TableCrabConfig.MaxName)
 			p = '%s -- Size: %s Mouse: %s' % (name, TableCrabConfig.sizeToString(pixmap.size()), TableCrabConfig.pointToString(point) )
-			TableCrabConfig.signalEmit(None, 'feedback(QWidget*, QString)', self, p)
+			TableCrabConfig.globalObject.feedback.emit(self, p)
 			
 		def setScreenshot(self, pixmap=None, screenshotName=None):
 			self._screenshotName = self.ScreenshotName if screenshotName is None else screenshotName
@@ -297,9 +305,9 @@ class ScreenshotWidget(QtGui.QScrollArea):
 				self.setFrameShape(QtGui.QFrame.NoFrame)
 				self.setText(self._screenshotName)
 				pixmap = QtGui.QPixmap()
-				TableCrabConfig.signalEmit(None, 'widgetScreenshotSet(QPixmap*)', pixmap)
+				TableCrabConfig.globalObject.widgetScreenshotSet.emit(pixmap)
 				if self.isVisible():
-					TableCrabConfig.signalEmit(None, 'feedback(QWidget*, QString)', self, '')
+					TableCrabConfig.globalObject.feedback.emit(self, '')
 			else:
 				# manually set size of the label so we get the correct coordiantes of the mouse cursor
 				self.setPixmap(pixmap)
@@ -310,7 +318,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 				point = self.mapFromGlobal(point)
 				if point.x() < 0 or point.y() < 0:
 					point = QtCore.QPoint()
-				TableCrabConfig.signalEmit(None, 'widgetScreenshotSet(QPixmap*)', pixmap)
+				TableCrabConfig.globalObject.widgetScreenshotSet.emit(pixmap)
 				if self.isVisible():
 					self._giveFeedback(pixmap,  point)
 				result = True
@@ -356,11 +364,9 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		self._actions.append(self.actionInfo)
 			
 		# connect global signals
-		TableCrabConfig.signalsConnect(None, self, 
-				('widgetScreenshotQuery()', self.onWidgetScreenshotQuery),
-				('widgetScreenshot(int, QPixmap*)', self.onWidgetScreenshot),
-				)
-		
+		TableCrabConfig.globalObject.widgetScreenshotQuery.connect(self.onWidgetScreenshotQuery)
+		TableCrabConfig.globalObject.widgetScreenshot.connect(self.onWidgetScreenshot)
+			
 		self.adjustActions()
 		
 	def actions(self):
@@ -448,7 +454,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		fileInfo = QtCore.QFileInfo(fileName)
 		screenshotName = fileInfo.baseName()
 		self.setScreenshot(pixmap=pixmap, screenshotName=screenshotName)
-		TableCrabConfig.signalEmit(self, 'widgetScreenshotInfo(QString)', '')
+		self.widgetScreenshotInfo.emit('')
 		self._lastScreenshotInfo = None
 		self.adjustActions()
 		
@@ -498,15 +504,16 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		if selfParent == otherParent:
 			return
 		self.gatherWindowInfo(hwnd)		
-		TableCrabConfig.signalEmit(self, 'widgetScreenshotInfo(QString)', self._lastScreenshotInfo)
+		self.widgetScreenshotInfo.emit(self._lastScreenshotInfo)
 		self.setScreenshot(pixmap)
 		self.adjustActions()
 		
 	def onWidgetScreenshotQuery(self):
+		print 'on query'
 		pixmap = self.label.pixmap()
 		if pixmap is None:
 			pixmap = QtGui.QPixmap()
-		TableCrabConfig.signalEmit(None, 'widgetScreenshotSet(QPixmap*)', pixmap)
+		TableCrabConfig.globalObject.widgetScreenshotSet.emit(pixmap)
 
 
 class DialgScreenshotInfo(QtGui.QDialog):
@@ -521,17 +528,17 @@ class DialgScreenshotInfo(QtGui.QDialog):
 		self.edit.setReadOnly(True)
 		self.buttonSave = QtGui.QPushButton('Save..', self)
 		self.buttonHelp = QtGui.QPushButton('Help', self)
-		TableCrabConfig.signalConnect(self.buttonHelp, self, 'clicked(bool)', self.onButtonHelpClicked)
+		self.buttonHelp.clicked.connect(self.onButtonHelpClicked)
 		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
 		self.buttonBox.addButton(self.buttonSave, self.buttonBox.ApplyRole )
-		TableCrabConfig.signalConnect(self.buttonBox, self, 'accepted()', self.accept)
-		TableCrabConfig.signalConnect(self.buttonSave, self, 'clicked(bool)', self.onButtonSaveClicked)
+		self.buttonBox.accepted.connect(self.accept)
+		self.buttonSave.clicked.connect(self.onButtonSaveClicked)
 		
 		#NOTE: we are modeless, so it is a good idea to add a refresh button 
-		TableCrabConfig.signalConnect(parent, self, 'widgetScreenshotInfo(QString)', self.onWidgetScreenshotInfo)
+		parent.widgetScreenshotInfo.connect(self.onWidgetScreenshotInfo)
 		self.buttonRefresh = QtGui.QPushButton('Refresh', self)
-		TableCrabConfig.signalConnect(self.buttonRefresh, self, 'clicked(bool)', self.onButtonRefreshClicked)
+		self.buttonRefresh.clicked.connect(self.onButtonRefreshClicked)
 		self.buttonBox.addButton(self.buttonRefresh, self.buttonBox.ActionRole)
 		
 		self.layout()
@@ -591,7 +598,7 @@ class FrameSetup(QtGui.QFrame):
 		self.splitter.addWidget(self.templatesWidget)
 		self.splitter.addWidget(self.screenshotWidget)
 		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Setup/SplitterState', QtCore.QByteArray()).toByteArray() )
-		TableCrabConfig.signalConnect(None, self, 'closeEvent(QEvent*)', self.onCloseEvent)
+		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
 		
 		self.toolBar = QtGui.QToolBar(self)
 		for action in self.templatesWidget.actions():
@@ -652,7 +659,7 @@ class FrameSetup(QtGui.QFrame):
 		size = TableCrabConfig.sizeToString(rect.size() )
 		point = TableCrabWin32.windowScreenPointToClientPoint(hwndOther, point)
 		point = TableCrabConfig.pointToString(point)
-		TableCrabConfig.signalEmit(None, 'feedback(QWidget*, QString)', self, '%s -- Size: %s Mouse: %s' % (title, size, point) )
+		TableCrabConfig.globalObject.feedback.emit(self, '%s -- Size: %s Mouse: %s' % (title, size, point) )
 	
 	def onActionHelpTriggered(self):
 		TableCrabGuiHelp.dialogHelp('setup', parent=self)
