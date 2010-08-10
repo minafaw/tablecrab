@@ -75,7 +75,7 @@ def _excepthook(type, value, tb,
 		lastTraceback = p
 	except: pass
 	try:
-		signalEmit(None, 'feedbackException(QString)', p)
+		globalObject.feedbackException.emit(p)
 	except: pass
 	try:	# try to log
 		logger.critical(p)
@@ -156,28 +156,24 @@ def settingsRemoveKey(key):
 #***********************************************************************************
 # global singal handling and messages
 #***********************************************************************************
-# global signal  'closeEvent(QEvent*)'
-# global signal 'feedback(QWidget*, QString)'
-# global signal 'feedbackMessage(QString)'
-# global signal 'feedbackException()'
-# global signal 'widgetScreenshot(int, QPixmap*)'
-# global signal 'widgetScreenshotSet(QPixmap*)'
-# global signal 'widgetScreenshotDoubleClicked(QPixmap*, QPoint*)'
-# global signal 'widgetScreenshotQuery()'
-# global signal 'settingAlternatingRowColorsChanged(bool)'
-# global signal 'settingChildItemIndicatorsChanged(bool)'
-#
-_qObject = QtCore.QObject()
-def signalEmit(sender, signal, *params):
-	if sender is None: _qObject.emit(QtCore.SIGNAL(signal), *params)
-	else: sender.emit(QtCore.SIGNAL(signal), *params)
-def signalConnect(sender, receiver, signal, slot):
-	if sender is None: receiver.connect(_qObject, QtCore.SIGNAL(signal), slot)
-	else: receiver.connect(sender, QtCore.SIGNAL(signal), slot)
-
-def signalsConnect(sender, receiver, *signals):
-	for signal, slot in signals:
-		signalConnect(sender, receiver, signal, slot)
+class _GlobalObject(QtCore.QObject):
+	
+	# global signals
+	closeEvent = QtCore.pyqtSignal(QtCore.QEvent)
+	
+	feedback =  QtCore.pyqtSignal(QtGui.QWidget, QtCore.QString)
+	feedbackMessage =  QtCore.pyqtSignal(QtCore.QString)
+	feedbackException =  QtCore.pyqtSignal(QtCore.QString)
+	
+	settingAlternatingRowColorsChanged = QtCore.pyqtSignal(bool)
+	settingChildItemIndicatorsChanged = QtCore.pyqtSignal(bool)	
+	
+	widgetScreenshot = QtCore.pyqtSignal(int, QtGui.QPixmap)
+	widgetScreenshotDoubleClicked = QtCore.pyqtSignal(QtGui.QPixmap, QtCore.QPoint)
+	widgetScreenshotQuery = QtCore.pyqtSignal()
+	widgetScreenshotSet = QtCore.pyqtSignal(QtGui.QPixmap)
+	
+globalObject = _GlobalObject()
 
 #***********************************************************************************
 # types
@@ -258,7 +254,7 @@ class Action(QtGui.QAction):
 			QtGui.QAction.__init__(self, parent)
 		self.setText(text)
 		self.setMenu(menu)
-		if slot is not None and parent is not None: parent.connect(self, QtCore.SIGNAL('triggered(bool)'), slot)
+		if slot is not None and parent is not None: self.triggered.connect(slot)
 		self.setEnabled(isEnabled)
 		if toolTip is not None: self.setToolTip(toolTip)
 		self.setAutoRepeat(autoRepeat)
@@ -339,7 +335,7 @@ class LineEdit(QtGui.QLineEdit):
 			self.setText(default)
 		else:
 			self.setText( settingsValue(self.settingsKey, default).toString() )
-			self.connect(self, QtCore.SIGNAL('editingFinished()'), self.onValueChanged)
+			self.editingFinished.connect(self.onValueChanged)
 	def onValueChanged(self):
 			if self.settingsKey is not None: settingsSetValue(self.settingsKey, self.text())
 
@@ -351,7 +347,7 @@ class PlainTextEdit(QtGui.QPlainTextEdit):
 			self.setPlainText(default)
 		else:
 			self.setPlainText( settingsValue(self.settingsKey, default).toString() )
-			self.connect(self, QtCore.SIGNAL('textChanged()'), self.onValueChanged)
+			self.textChanged.connect(self.onValueChanged)
 	def onValueChanged(self):
 		if self.settingsKey is not None: settingsSetValue(self.settingsKey, self.toPlainText())
 
@@ -366,7 +362,7 @@ class DoubleSpinBox(QtGui.QDoubleSpinBox):
 			self.setValue(default)
 		else:
 			self.setValue(  settingsValue(self.settingsKey, default).toDouble()[0] )
-			self.connect(self, QtCore.SIGNAL('valueChanged(double)'), self.onValueChanged)
+			self.valueChanged.connect(self.onValueChanged)
 	def onValueChanged(self):
 			if self.settingsKey is not None: settingsSetValue(self.settingsKey, self.value())
 				
@@ -379,7 +375,7 @@ class SpinBox(QtGui.QSpinBox):
 			self.setValue(default)
 		else:
 			self.setValue(  settingsValue(self.settingsKey, default).toInt()[0] )
-			self.connect(self, QtCore.SIGNAL('valueChanged(int)'), self.onValueChanged)
+			self.valueChanged.connect(self.onValueChanged)
 	def onValueChanged(self):
 		if self.settingsKey is not None: settingsSetValue(self.settingsKey, self.value())
 
@@ -391,7 +387,7 @@ class CheckBox(QtGui.QCheckBox):
 			self.setCheckState(  QtCore.Qt.Checked if default else QtCore.Qt.Unchecked )
 		else:
 			self.setCheckState(  QtCore.Qt.Checked if settingsValue(self.settingsKey, default).toBool() else QtCore.Qt.Unchecked )
-			self.connect(self, QtCore.SIGNAL('stateChanged(int)'), self.onStateChanged)
+			self.stateChanged.connect(self.onStateChanged)
 	def onStateChanged(self):
 		if self.settingsKey is not None: settingsSetValue(self.settingsKey, self.checkState() == QtCore.Qt.Checked)
 
@@ -404,14 +400,14 @@ class ComboBox(QtGui.QComboBox):
 			value = default
 		else:
 			value = settingsValue(self.settingsKey, default).toString()
-			self.connect(self, QtCore.SIGNAL('currentIndexChanged(QString)'), self.onCurrentIndexChanged)
+			self.currentIndexChanged.connect(self.onCurrentIndexChanged)
 		if failsave:
 			if value in choices:
 				self.setCurrentIndex(choices.index(value))
 		else:
 			self.setCurrentIndex(choices.index(value))
-	def 	onCurrentIndexChanged(self, qString):
-		if self.settingsKey is not None: settingsSetValue(self.settingsKey, qString)
+	def 	onCurrentIndexChanged(self, index):
+		if self.settingsKey is not None: settingsSetValue(self.settingsKey, self.itemText(index))
 
 contentsMargins = QtCore.QMargins(2, 2, 2, 2)
 class VBox(QtGui.QVBoxLayout):
@@ -458,7 +454,7 @@ class Timer(QtCore.QTimer):
 		self.setSingleShot(singleShot)
 		self.setInterval(interval)
 		if slot is not None:
-			parent.connect(self, QtCore.SIGNAL('timeout()'), slot)
+			self.timeout.connect(slot)
 		self.userData = userData
 
 #TODO: we have to ignore <TAB> cos it tabs away from the hotkey box
@@ -486,7 +482,7 @@ class HotkeyBox(QtGui.QComboBox):
 		else:
 			if hotkey is not None:
 				self.setItemText(0, hotkey)
-		signalConnect(keyboardHook, self, 'inputEvent(QObject*)', self.onInputEvent)
+		keyboardHook.inputEvent.connect(self.onInputEvent)
 	
 	#TODO: works for now, but have to rework this. we open popup if the user clicks the combo twice
 	def focusInEvent(self, event):
@@ -593,7 +589,7 @@ def pointInSize(size, point):
 
 def widgetScreenshot(hwnd):
 	pixmap = QtGui.QPixmap.grabWindow(hwnd, 0, 0, -1,-1)
-	signalEmit(None, 'widgetScreenshot(int, QPixmap*)', hwnd, pixmap)
+	globalObject.widgetScreenshot.emit(hwnd, pixmap)
 
 def uniqueName(name, names):
 	i = 0
