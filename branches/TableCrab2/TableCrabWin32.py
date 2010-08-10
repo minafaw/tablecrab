@@ -397,6 +397,11 @@ class WindowForegroundHook(QtCore.QObject):
 			time.sleep(self.Timeout)
 
 class WindowHook(QtCore.QObject):
+	windowDestroyed = QtCore.pyqtSignal(int)
+	windowCreated = QtCore.pyqtSignal(int)
+	windowLostForeground = QtCore.pyqtSignal(int)
+	windowGainedForeground = QtCore.pyqtSignal(int)
+		
 	def __init__(self, parent=None, timeout=0.2):
 		QtCore.QObject.__init__(self, parent)		
 		self._isRunning = False
@@ -405,7 +410,7 @@ class WindowHook(QtCore.QObject):
 		self._timeout = timeout
 		self._timer = QtCore.QTimer(self)
 		self._timer.setInterval(self._timeout * 1000)
-		self.connect(self._timer, QtCore.SIGNAL('timeout()'), self._run)
+		self._timer.timeout.connect(self._run)
 	def stop(self):
 		self._timer.stop()
 	def start(self):
@@ -416,13 +421,13 @@ class WindowHook(QtCore.QObject):
 		hwndsCreated = [hwnd for hwnd in hwnds if hwnd not in self._hwnds]
 		self._hwnds = hwnds
 		for hwnd in hwndsDestroyed:
-			self.emit(QtCore.SIGNAL('windowDestroyed(int)'), hwnd)
+			self.windowDestroyed.emit(hwnd)
 		for hwnd in hwndsCreated:
-			self.emit(QtCore.SIGNAL('windowCreated(int)'), hwnd)
+			self.windowCreated.emit(hwnd)
 		hwnd = windowForeground()
 		if hwnd in self._hwnds and hwnd != self._hwndForeground:
-			self.emit(QtCore.SIGNAL('windowLostForeground(int)'), self._hwndForeground)
-			self.emit(QtCore.SIGNAL('windowGainedForeground(int)'), hwnd)
+			self.windowLostForeground.emit(self._hwndForeground)
+			self.windowGainedForeground.emit(hwnd)
 			self._hwndForeground = hwnd
 
 def windowChildren(hwndParent=None):
@@ -999,6 +1004,8 @@ class MouseHook(QtCore.QObject):
 	@event EvtMouseWheelScrolled: event triggerered when the mosue wheel is scrolled. arg = stepsScrolled
 	"""
 	
+	inputEvent = QtCore.pyqtSignal(QtCore.QObject)
+	
 	def __init__(self, parent=None, eventHandler=None):
 		"""
 		@param cb: (function) event handler
@@ -1009,9 +1016,6 @@ class MouseHook(QtCore.QObject):
 		self._pHookProc = MOUSEHOOKPROCLL(self._hookProc)
 		self._eventHandler = eventHandler
 		
-	def setEventHandler(self, eventHandler):
-		self._eventHandler = eventHandler
-	
 	def _hookProc(self, code, wParam, lParam):
 		"""private method, MOUSEHOOKPROCLL implementation"""
 		
@@ -1035,7 +1039,7 @@ class MouseHook(QtCore.QObject):
 				if nSteps:
 					key = MouseWheelUp if nSteps >= 0 else MouseWheelDown
 					e = InputEvent(key=key, steps=abs(nSteps), accept=False, parent=self)
-					self.emit(QtCore.SIGNAL('inputEvent(QObject*)'), e)
+					self.inputEvent.emit(e)
 					if e.accept:
 						return TRUE
 		return user32.CallNextHookEx(self._hHook, code, wParam, lParam)
@@ -1069,6 +1073,9 @@ class MouseHook(QtCore.QObject):
 #***********************************************************************************
 class KeyboardHook(QtCore.QObject):
 	"""win32 keyboard hook implementation"""
+	
+	inputEvent = QtCore.pyqtSignal(QtCore.QObject)
+	
 	def __init__(self, parent=None, eventHandler=None):
 		"""
 		@param cb: (function) event handler
@@ -1079,9 +1086,6 @@ class KeyboardHook(QtCore.QObject):
 		self._pHookProc = KEYBHOOKPROCLL(self._hookProc)
 		self._eventHandler = eventHandler
 		
-	def setEventHandler(self, eventHandler):
-		self._eventHandler = eventHandler
-	
 	def _hookProc(self, code, wParam, lParam):
 		"""private method, KEYBHOOKPROCLL implementation"""
 		if code == HC_ACTION:
@@ -1095,7 +1099,7 @@ class KeyboardHook(QtCore.QObject):
 			key = self._keyFromKeyboardState(keyboardState)
 			if key:
 				e = InputEvent(key=key, steps=1, keyIsDown=keyIsDown, accept=False, parent=self)
-				self.emit(QtCore.SIGNAL('inputEvent(QObject*)'), e)
+				self.inputEvent.emit(e)
 				if e.accept:
 					return TRUE
 		return user32.CallNextHookEx(self._hHook, code, wParam, lParam)
