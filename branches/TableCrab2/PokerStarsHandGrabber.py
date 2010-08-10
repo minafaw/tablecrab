@@ -573,8 +573,9 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		p >> '<tr>'
 		for card in cards:
 			if not card:
-				shape = 'A'
-				htmlSuit = '&diams;'
+				#TODO: == card back. dont realy know what to return in this case - i am not not a Css guru. 
+				shape = '&nbsp;'
+				htmlSuit = '&nbsp;&nbsp;'
 				htmlKlass = 'cardBack'
 			else:
 				shape = card[0]
