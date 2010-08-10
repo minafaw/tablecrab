@@ -7,8 +7,6 @@ from PyQt4 import QtCore, QtGui
 #**********************************************************************************************
 
 Templates = []
-MaxTemplates = 64
-
 
 def newValidSize(size):
 	return TableCrabConfig.newSizeNone() if size is None else size

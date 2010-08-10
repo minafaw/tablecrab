@@ -91,7 +91,7 @@ class Gui(TableCrabMainWindow .MainWindow):
 		# connect global signals
 		TableCrabConfig.signalsConnect(None, self, 
 				('closeEvent(QEvent*)', self.onCloseEvent),
-				('feedback(QString)', self.onFeedback),
+				('feedback(QWidget*, QString)', self.onFeedback),
 				('feedbackException(QString)', self.onFeedbackException),
 				('feedbackMessage(QString)', self.onFeedbackMessage),
 				)
@@ -124,15 +124,25 @@ class Gui(TableCrabMainWindow .MainWindow):
 			data = self._feedbackMessages[widget]
 			self.labelFeedback.setText(data)
 		
-	def onFeedback(self, string):
+	def onFeedback(self, widget, string):
 		# clear last error
 		self._feedbackMessages[None] = ''
+		#find tab widget
+		tab = None
+		while True:
+			if self.tabWidget.indexOf(widget) > -1:
+				tab = widget
+				break
+			widget = widget.parent()
+			if widget is None: break
+		if tab is None:
+			raise valueError('widget is not on one of our tabs')	
 		# store data for tab changes
-		widget = self.tabWidget.currentWidget()
-		self._feedbackMessages[widget] = string
-		# set message to statusBar
-		self.labelStatus.setText('Ready: ')
-		self.labelFeedback.setText(string)
+		self._feedbackMessages[tab] = string
+		if tab is self.tabWidget.currentWidget():
+			# set message to statusBar
+			self.labelStatus.setText('Ready: ')
+			self.labelFeedback.setText(string)
 		
 	def onFeedbackException(self, exception):
 		#NOTE: we assume "exception" is never empty string

@@ -1,4 +1,6 @@
 
+#TODO: would be nice to have some information on how many hotkeys are left until hitting MaxHotkeys
+
 import TableCrabConfig
 import TableCrabWin32
 import TableCrabGuiHelp
@@ -108,7 +110,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		
 	def adjustActions(self):
 		hotkey = self.currentItem()
-		self.actionNew.setEnabled(self.topLevelItemCount() < TableCrabHotkeys.MaxHotkeys)
+		self.actionNew.setEnabled(self.topLevelItemCount() < TableCrabConfig.MaxHotkeys)
 		if hotkey is None:
 			self.actionUp.setEnabled(False)
 			self.actionDown.setEnabled(False)
@@ -180,7 +182,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 	
 	def read(self):
 		hotkey = None
-		for hotkey in TableCrabConfig.readPersistentItems('Hotkeys', maxItems=TableCrabHotkeys.MaxHotkeys, itemProtos=TableCrabHotkeys.Hotkeys):
+		for hotkey in TableCrabConfig.readPersistentItems('Hotkeys', maxItems=TableCrabConfig.MaxHotkeys, itemProtos=TableCrabHotkeys.Hotkeys):
 			self.addTopLevelItem(hotkey)
 		# set at least one hotkey as default
 		if hotkey is None:

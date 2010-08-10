@@ -8,6 +8,9 @@ ReleaseName = '%s-%s' % (ApplicationName, Version)
 Author = 'JuergenUrner'
 ErrorLogName = ApplicationName + '-Error.log'
 
+
+MaxHotkeys = 64
+MaxTemplates = 64
 MaxName = 32		# arbitrary, maximum number of chars allowed in user supplied names
 								# for now we hard code it here. would require some efford for status bar
 								#to get it dynamically truncated
@@ -114,10 +117,10 @@ class SingleApplication(object):
 		self.hMutex = TableCrabWin32.kernel32.CreateMutexA(None, 1, 'Local\\73524668475460800279396959888864133024')
 		atexit.register(self.close)
 		if TableCrabWin32.GetLastError() == TableCrabWin32.ERROR_INVALID_HANDLE:
-			#TODO: we could try to find the app holding the mutex (hopefuly ) and activate it 
-			# gut feeling it is be better to raise and log here, so we get at least some information in case someone blocks our mutex
+			#TODO: we could try to find the app holding the mutex (hopefuly us up and alive) and activate it 
+			# gut feeling it is be better to raise and log here. so we get at least some information in case someone blocks our mutex
 			##sys.exit(1)
-			raise RuntimeError(' is already running')
+			raise RuntimeError('%s is already running' % ApplicationName)
 	def close(self, closeFunc=TableCrabWin32.kernel32.CloseHandle):	# need to hold reference to CloseHandle here. we get garbage collected otherwise
 		closeFunc(self.hMutex)
 
@@ -154,7 +157,7 @@ def settingsRemoveKey(key):
 # global singal handling and messages
 #***********************************************************************************
 # global signal  'closeEvent(QEvent*)'
-# global signal 'feedback(QString)'
+# global signal 'feedback(QWidget*, QString)'
 # global signal 'feedbackMessage(QString)'
 # global signal 'feedbackException()'
 # global signal 'widgetScreenshot(int, QPixmap*)'

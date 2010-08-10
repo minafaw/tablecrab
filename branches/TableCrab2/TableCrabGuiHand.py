@@ -92,10 +92,11 @@ class FrameHand(QtGui.QFrame):
 		self._hasHand = True
 		self.adjustActions()
 		# give feedback
-		fileInfo = QtCore.QFileInfo(fileName)
-		handName = fileInfo.baseName()
-		handName = TableCrabConfig.truncateString(handName, TableCrabConfig.MaxName)
-		TableCrabConfig.signalEmit(None, 'feedback(QString)', handName)
+		if self.isVisible():
+			fileInfo = QtCore.QFileInfo(fileName)
+			handName = fileInfo.baseName()
+			handName = TableCrabConfig.truncateString(handName, TableCrabConfig.MaxName)
+			TableCrabConfig.signalEmit(None, 'feedback(QWidget*, QString)', self, handName)
 		
 	def onActionSaveTriggered(self):
 		dlg = QtGui.QFileDialog(self)
@@ -124,7 +125,7 @@ class FrameHand(QtGui.QFrame):
 		self.webView.setHtml(data)
 		self._hasHand = True
 		self.adjustActions()
-		TableCrabConfig.signalEmit(None, 'feedback(QString)', 'grabbed hand')
+		TableCrabConfig.signalEmit(None, 'feedback(QWidget*, QString)', self, 'grabbed hand')
 	
 	
 

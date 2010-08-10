@@ -13,7 +13,6 @@ from PyQt4 import QtCore, QtGui
 #**********************************************************************************************
 
 Hotkeys = []
-MaxHotkeys = 64
 
 
 class HotkeyEditor(QtGui.QDialog):

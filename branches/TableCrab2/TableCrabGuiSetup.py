@@ -1,4 +1,5 @@
  
+#TODO: would be nice to have some information on how many templates are left until hitting MaxTemplates
 #TODO: in wine we-1.2 can not resize windows belonging to other processes. this a bug in wine [ http://bugs.winehq.org/show_bug.cgi?id=23940 ] 
 #				user32.SetWindowPos() does not work for other processes. used to work in wine-1.1.41, stopped working in wine-1.1.42. as soon as SetWindowPos() 
 #				is working again we should kick out mouse tracking on other windows and add a hotkey to resize the current window to match the size of a tempplate.
@@ -133,7 +134,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 	
 	def read(self):
 		template = None
-		for template in TableCrabConfig.readPersistentItems('Templates', maxItems=TableCrabTemplates.MaxTemplates, itemProtos=TableCrabTemplates.Templates):
+		for template in TableCrabConfig.readPersistentItems('Templates', maxItems=TableCrabConfig.MaxTemplates, itemProtos=TableCrabTemplates.Templates):
 			self.addTopLevelItem(template)
 			template.setExpanded(template.itemIsExpanded)
 		# set at least one template as default
@@ -155,7 +156,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		return self._actions
 	
 	def adjustActions(self):
-		self.actionNew.setEnabled(self.topLevelItemCount() < TableCrabTemplates.MaxTemplates)
+		self.actionNew.setEnabled(self.topLevelItemCount() < TableCrabConfig.MaxTemplates)
 		item = self.currentItem()
 		if item is None:
 			self.actionUp.setEnabled(False)
@@ -286,7 +287,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		def _giveFeedback(self, pixmap, point):
 			name = TableCrabConfig.truncateString(self._screenshotName, TableCrabConfig.MaxName)
 			p = '%s -- Size: %s Mouse: %s' % (name, TableCrabConfig.sizeToString(pixmap.size()), TableCrabConfig.pointToString(point) )
-			TableCrabConfig.signalEmit(None, 'feedback(QString)', p)
+			TableCrabConfig.signalEmit(None, 'feedback(QWidget*, QString)', self, p)
 			
 		def setScreenshot(self, pixmap=None, screenshotName=None):
 			self._screenshotName = self.ScreenshotName if screenshotName is None else screenshotName
@@ -298,7 +299,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 				pixmap = QtGui.QPixmap()
 				TableCrabConfig.signalEmit(None, 'widgetScreenshotSet(QPixmap*)', pixmap)
 				if self.isVisible():
-					TableCrabConfig.signalEmit(None, 'feedback(QString)', '')
+					TableCrabConfig.signalEmit(None, 'feedback(QWidget*, QString)', self, '')
 			else:
 				# manually set size of the label so we get the correct coordiantes of the mouse cursor
 				self.setPixmap(pixmap)
@@ -651,7 +652,7 @@ class FrameSetup(QtGui.QFrame):
 		size = TableCrabConfig.sizeToString(rect.size() )
 		point = TableCrabWin32.windowScreenPointToClientPoint(hwndOther, point)
 		point = TableCrabConfig.pointToString(point)
-		TableCrabConfig.signalEmit(None, 'feedback(QString)', '%s -- Size: %s Mouse: %s' % (title, size, point) )
+		TableCrabConfig.signalEmit(None, 'feedback(QWidget*, QString)', self, '%s -- Size: %s Mouse: %s' % (title, size, point) )
 	
 	def onActionHelpTriggered(self):
 		TableCrabGuiHelp.dialogHelp('setup', parent=self)
