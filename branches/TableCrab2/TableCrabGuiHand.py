@@ -21,8 +21,8 @@ class FrameHand(QtGui.QFrame):
 				PokerStarsHandGrabber.HandFormatterHtmlTabular(),
 				parent=self,
 				)
-		TableCrabConfig.signalConnect(self.pokerStarsHandGrabber, self, 'handGrabbed(QObject*, QString)', self.onPShandGrabberHandGrabbed)
-		TableCrabConfig.signalConnect(None, self, 'closeEvent(QEvent*)', self.onCloseEvent)
+		self.pokerStarsHandGrabber.handGrabbed.connect(self.onPShandGrabberHandGrabbed)
+		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
 		self.webView.setZoomFactor( TableCrabConfig.settingsValue('Gui/Hand/ZoomFactor',  self.webView.zoomFactor() ).toDouble()[0] )
 		
 		self.toolBar = TableCrabConfig.WebViewToolBar(self.webView,
@@ -96,7 +96,7 @@ class FrameHand(QtGui.QFrame):
 			fileInfo = QtCore.QFileInfo(fileName)
 			handName = fileInfo.baseName()
 			handName = TableCrabConfig.truncateString(handName, TableCrabConfig.MaxName)
-			TableCrabConfig.signalEmit(None, 'feedback(QWidget*, QString)', self, handName)
+			TableCrabConfig.globalObject.feedback.emit(self, handName)
 		
 	def onActionSaveTriggered(self):
 		dlg = QtGui.QFileDialog(self)
@@ -125,7 +125,7 @@ class FrameHand(QtGui.QFrame):
 		self.webView.setHtml(data)
 		self._hasHand = True
 		self.adjustActions()
-		TableCrabConfig.signalEmit(None, 'feedback(QWidget*, QString)', self, 'grabbed hand')
+		TableCrabConfig.globalObject.feedback.emit(self, 'grabbed hand')
 	
 	
 
