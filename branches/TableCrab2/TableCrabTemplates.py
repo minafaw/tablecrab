@@ -107,6 +107,9 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 		elif self.size == TableCrabConfig.SizeNone:
 			for _, item in self.itemsPoint:
 				item.setDisabled(False)
+		else:
+			for _, item in self.itemsPoint:
+				item.setDisabled(True)
 		
 	def handleScreenshotDoubleClicked(self, item, pixmap, point):
 		if item.isDisabled():
