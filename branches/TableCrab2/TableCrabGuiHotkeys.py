@@ -19,7 +19,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			QtGui.QAction.__init__(self, parent)
 			self.hotkeyProto = hotkeyProto
 			self.setText(self.hotkeyProto.menuName())
-			TableCrabConfig.signalConnect(self, self, 'triggered(bool)', self.onTriggered)
+			self.triggered.connect(self.onTriggered)
 		def onTriggered(self):
 			self.parent().createHotkey(self.hotkeyProto)
 		
@@ -79,16 +79,10 @@ class HotkeyWidget(QtGui.QTreeWidget):
 				)
 		self._actions.append(self.actionRemove)
 			
-		# connect to global signals
-		TableCrabConfig.signalsConnect(None, self, 
-				('settingAlternatingRowColorsChanged(bool)', self.setAlternatingRowColors),
-				)
-		
-		# connect to TreeWidgret signals
-		TableCrabConfig.signalsConnect(self, self, 
-				('itemDoubleClicked(QTreeWidgetItem*, int)', self.onHotkeyDoubleClicked),
-				('itemSelectionChanged()', self.adjustActions),
-				)
+		# connect signals
+		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(self.onSetAlternatingRowColors),
+		self.itemDoubleClicked.connect(self.onHotkeyDoubleClicked)
+		self.itemSelectionChanged.connect(self.adjustActions)
 		
 		self.adjustActions()
 		
@@ -96,6 +90,9 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		for i in xrange(self.topLevelItemCount()):
 			yield self.topLevelItem(i)
 		
+	def onSetAlternatingRowColors(self, flag):
+		self.setAlternatingRowColors(flag)
+	
 	def keyReleaseEvent(self, event):
 		#TODO: for some reason the first enter when the widget is created is not accepted
 		if event.key() == QtCore.Qt.Key_Return and not event.modifiers():
