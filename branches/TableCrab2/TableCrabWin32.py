@@ -226,7 +226,7 @@ KEY_VALUES = {		# keyName --> vkCode
 		'Browser-Home': 0xAC,
 		'Volume-Mute': 0xAD,
 		'Volume-Down': 0xAE,
-		'Volume-UP': 0xAF,
+		'Volume-Up': 0xAF,
 		'Media-Next-Track': 0xB0,
 		'Media-Prev-Track': 0xB1,
 		'Media-Stop': 0xB2,
