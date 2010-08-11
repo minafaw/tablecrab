@@ -296,7 +296,7 @@ SWP_NOACTIVATE = 16
 ENUMWINDOWSPROC = WINFUNCTYPE(INT, HANDLE, LPARAM)
 
 MY_TIMEOUT = 0.1
-MY_SMTO_TIMEOUT = 3000
+MY_SMTO_TIMEOUT = 2000
 MY_MAX_CLASS_NAME = 64
 
 BM_CLICK = 245
@@ -369,6 +369,18 @@ class InputEvent(QtCore.QObject):
 		self.keyIsDown = keyIsDown
 		self.steps = steps
 		self.accept = accept
+
+#****************************************************************************************************
+# message methods
+#****************************************************************************************************
+def sendMessageTimeout(hwnd, msg, wParam,lParam, isUnicode=True):
+	result = DWORD()
+	if isUnicode:
+		user32.SendMessageTimeoutW(hwnd, msg, wParam, lParam, SMTO_ABORTIFHUNG, MY_SMTO_TIMEOUT, byref(result))
+	else:
+		user32.SendMessageTimeoutA(hwnd, msg, wParam, lParam, SMTO_ABORTIFHUNG, MY_SMTO_TIMEOUT, byref(result))
+	return result.value
+
 
 #****************************************************************************************************
 # window methods
@@ -475,35 +487,32 @@ def windowGetTextLength(hwnd):
 def windowGetText(hwnd, maxSize=-1):
 	"""returns the window title of the specified window
 	@param hwnd: handle of the window
+	 @param maxSize: (int) maximum size of text to retrieve. if -1 text is retrieved unconditionally. else only text <= maxSize is retrieved
 	@return: (str)
 	"""
 	if not hwnd or maxSize == 0: return ''
-	n = user32.GetWindowTextLengthW(hwnd)
-	##n = n if maxSize < 0 else min(n, maxSize)		## this segfaults in TableCrab
-	if n:
-		if maxSize > 0 and n > maxSize: 
+	
+	#NOTE: see: [ http://blogs.msdn.com/b/oldnewthing/archive/2003/08/21/54675.aspx ] "the secret live of GetWindowtext" for details
+	
+	# try GetWindowText first
+	nChars = user32.GetWindowTextLengthW(hwnd)
+	##nChars = nChars if maxSize < 0 else min(nChars, maxSize)		## this segfaults in TableCrab
+	if nChars:
+		if maxSize > 0 and nChars > maxSize: 
 			return  ''
-		p = create_unicode_buffer(n+1)
+		p = create_unicode_buffer(nChars +1)
 		if user32.GetWindowTextW(hwnd, p, sizeof(p)):
 			return p.value
 		
+	# some text can only be retrieved by WM_GETTEXT, so here we go
 	result = DWORD()
-	user32.SendMessageTimeoutW(hwnd, WM_GETTEXTLENGTH, 0, 0, SMTO_ABORTIFHUNG, MY_SMTO_TIMEOUT, byref(result))
-	n = result.value
-	##n = n if maxSize < 0 else min(n, maxSize)		## this segfaults in TableCrab
-	if n:
-		if maxSize > 0 and n > maxSize:
+	nChars = sendMessageTimeout(hwnd, WM_GETTEXTLENGTH, 0, 0)
+	##nChars = nChars if maxSize < 0 else min(nChars, maxSize)		## this segfaults in TableCrab
+	if nChars:
+		if maxSize > 0 and nChars > maxSize:
 			return ''
-		p = create_unicode_buffer(n+1)
-		user32.SendMessageTimeoutW(
-				hwnd, 
-				WM_GETTEXT,
-				sizeof(p), 
-				p, 
-				SMTO_ABORTIFHUNG, 
-				MY_SMTO_TIMEOUT, 
-				byref(result)
-				)
+		p = create_unicode_buffer(nChars +1)
+		sendMessageTimeout(hwnd, WM_GETTEXT,	sizeof(p),	p)
 		return p.value
 	return ''
 
@@ -614,24 +623,14 @@ def windowFindChild(hwnd, className):
 			return hwnd
 	return None
 
-def windowSetText(hwnd, text=''):
+def windowSetText(hwnd, text='', isUnicode=True):
 		"""returns the window title of the specified window
 		@param hwnd: handle of the window
 		@todo: we currently send ANSI text only. 
 		@return: (str)
 		"""
 		if not hwnd: raise ValueError('can not set text of desktop window')
-		result = DWORD()
-		#TODO: user32.IsWindowUnicode(hwnd)
-		user32.SendMessageTimeoutA(
-				hwnd, 
-				WM_SETTEXT, 
-				0, 
-				text, 
-				SMTO_ABORTIFHUNG, 
-				MY_SMTO_TIMEOUT, 
-				byref(result)
-				)
+		sendMessageTimeout(hwnd, WM_SETTEXT, 0, text, isUnicode=isUnicode)
 
 def windowClose(hwnd):
 	"""closes the specified window
