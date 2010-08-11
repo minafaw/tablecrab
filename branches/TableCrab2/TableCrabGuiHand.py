@@ -1,6 +1,4 @@
 
-#TODO: disable context menu
-
 import TableCrabConfig
 import PokerStarsHandGrabber
 import TableCrabGuiHelp
@@ -17,6 +15,7 @@ class FrameHand(QtGui.QFrame):
 			
 		self._hasHand = False
 		self.webView = QtWebKit.QWebView(self)
+		self.webView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)	
 		self.webView.setUrl(QtCore.QUrl(''))
 		self.pokerStarsHandGrabber = PokerStarsHandGrabber.HandGrabber(
 				PokerStarsHandGrabber.HandParser(),
