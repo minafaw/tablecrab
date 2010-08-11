@@ -147,7 +147,7 @@ class ActionHandler(QtCore.QObject):
 	ClassLobby = '#32770'	# duh, stars. main windows should never be dialogs
 	def isLobby(self, hwnd):
 		if not TableCrabWin32.windowGetClassName(hwnd) == self.ClassLobby: return False
-		if not TableCrabWin32.windowGetText(hwnd).startswith(self.TitleLobby): return False
+		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleLobby)).startswith(self.TitleLobby): return False
 		if not self.isPokerStarsWindow(hwnd): return False
 		return True
 		
@@ -168,7 +168,8 @@ class ActionHandler(QtCore.QObject):
 	TitleNews = 'News'
 	def isPopupNews(self, hwnd):
 		if not TableCrabWin32.windowGetClassName(hwnd) == self.ClassNews: return False
-		if not TableCrabWin32.windowGetText(hwnd) == self.TitleNews: return False
+		TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleNews))
+		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleNews)) == self.TitleNews: return False
 		if not self.isPokerStarsWindow(hwnd): return False
 		return True
 		
@@ -176,7 +177,7 @@ class ActionHandler(QtCore.QObject):
 	ClassTourneyRegistrationMessageBox = '#32770'
 	def isTourneyRegistrationMessageBox(self, hwnd):
 		if not TableCrabWin32.windowGetClassName(hwnd) == self.ClassTourneyRegistrationMessageBox: return False
-		if not TableCrabWin32.windowGetText(hwnd) == self.TitleTourneyRegistrationMessageBox: return False
+		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleTourneyRegistrationMessageBox)) == self.TitleTourneyRegistrationMessageBox: return False
 		if not self.isPokerStarsWindow(hwnd): return False
 		return True
 		
@@ -184,7 +185,7 @@ class ActionHandler(QtCore.QObject):
 	ClassTableMessageBox = '#32770'
 	def isTableMessageBox(self, hwnd):
 		if not TableCrabWin32.windowGetClassName(hwnd) == self.ClassTableMessageBox: return False
-		if not TableCrabWin32.windowGetText(hwnd) == self.TitleTableMessageBox: return False
+		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleTableMessageBox)) == self.TitleTableMessageBox: return False
 		hwndParent = TableCrabWin32.windowGetParent(hwnd)
 		if not self.isTable(hwndParent): return False
 		return True
@@ -193,7 +194,7 @@ class ActionHandler(QtCore.QObject):
 	ClassLogIn = '#32770'
 	def isLogIn(self, hwnd):
 		if not TableCrabWin32.windowGetClassName(hwnd) == self.ClassLogIn: return False
-		if not TableCrabWin32.windowGetText(hwnd) == self.TitleLogIn: return False
+		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleLogIn)) == self.TitleLogIn: return False
 		hwndParent = TableCrabWin32.windowGetParent(hwnd)
 		if not self.isLobby(hwndParent): return False
 		return True
