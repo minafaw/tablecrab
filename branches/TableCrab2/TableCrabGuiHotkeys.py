@@ -144,7 +144,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			self.dump()
 	
 	def dump(self):
-		TableCrabConfig.dumpPersistentItems('Hotkeys', [hotkey for hotkey in self])
+		TableCrabConfig.dumpPersistentItems('Hotkeys', self)
 	
 	def editHotkey(self):
 		hotkey = self.currentItem()

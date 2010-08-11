@@ -151,7 +151,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self._templatesRead = True
 		
 	def dump(self):
-		TableCrabConfig.dumpPersistentItems('Templates', [template for template in self])
+		TableCrabConfig.dumpPersistentItems('Templates', self)
 	
 	def __iter__(self):
 		for i in xrange(self.topLevelItemCount()):
