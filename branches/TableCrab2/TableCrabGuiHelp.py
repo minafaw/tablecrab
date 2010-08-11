@@ -1,4 +1,5 @@
 
+#TODO: disable context menu
 #TODO: give feedback ++ set tree to point to current page
 #TODO: save splitter state in DialogHelp()
 #TODO: would be nice to auto-generate topics from disk. for now we have to keep track by hand.

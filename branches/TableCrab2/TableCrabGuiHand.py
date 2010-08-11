@@ -1,4 +1,6 @@
 
+#TODO: disable context menu
+
 import TableCrabConfig
 import PokerStarsHandGrabber
 import TableCrabGuiHelp
