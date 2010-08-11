@@ -54,9 +54,10 @@ class HotkeyEditor(QtGui.QDialog):
 		self.grid.addWidget(TableCrabConfig.HLine(self),98, 0, 1, 3)
 		self.grid.addWidget(self.buttonBox, 99, 0, 1, 3)
 	
-	def closeEvent(self, event):
+	def hideEvent(self, event):
 		if self.settingsKey is not None: 
 			TableCrabConfig.settingsSetValue(self.settingsKey, self.saveGeometry() )
+		return QtGui.QDialog.hideEvent(self, event)
 	
 	def exec_(self):
 		self.layout()
