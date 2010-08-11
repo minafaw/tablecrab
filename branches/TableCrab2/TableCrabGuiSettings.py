@@ -1,4 +1,5 @@
 
+#TODO: add font selector for our WeViews or make them use global font 
 #TODO: would be nice to have line numbers in HandCss editor
 
 import TableCrabConfig
