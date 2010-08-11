@@ -378,7 +378,10 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		
 	def 	gatherWindowInfo(self, hwnd):
 		def windowInfo(hwnd, level=0):
-			title = TableCrabWin32.windowGetText(hwnd).replace('\r', '')
+			if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+				title = 'Window title too long'
+			else:
+				title = TableCrabWin32.windowGetText(hwnd, maxSize=TableCrabConfig.MaxWindowText).replace('\r', '')
 			if '\n' in title: title = title.split('\n', 1)[0]
 			className = TableCrabWin32.windowGetClassName(hwnd)
 			buttons = sorted( TableCrabWin32.windowGetButtons(hwnd).keys() )
@@ -634,6 +637,7 @@ class FrameSetup(QtGui.QFrame):
 		TableCrabConfig.settingsSetValue('Gui/Setup/SplitterState', self.splitter.saveState())
 	
 	def onMouseMonitor(self):
+		
 		# find our main window hwnd
 		wid = self.effectiveWinId()	# NOTE: effectiveWinId() returns <sip.voidptr> and may be None
 		if not wid:
@@ -651,9 +655,13 @@ class FrameSetup(QtGui.QFrame):
 			return
 		
 		# found a window of another process ..give feedback
-		title = TableCrabWin32.windowGetText(hwndOther)
-		if not title:
-			return
+		#TODO: i hope win32 is doing the right thing here by not allowing more than we can swallow
+		if TableCrabWin32.windowGetTextLength(hwndOther) > TableCrabConfig.MaxWindowText:
+			title = 'Window title too long'
+		else:
+			title = TableCrabWin32.windowGetText(hwndOther, maxSize=TableCrabConfig.MaxWindowText)
+			if not title:
+				return
 		title = TableCrabConfig.truncateString(title, TableCrabConfig.MaxName)
 		rect = TableCrabWin32.windowGetClientRect(hwndOther)
 		size = TableCrabConfig.sizeToString(rect.size() )
