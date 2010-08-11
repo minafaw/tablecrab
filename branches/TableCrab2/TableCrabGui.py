@@ -37,7 +37,7 @@ class DialogException(QtGui.QDialog):
 		QtGui.QDialog. __init__(self, parent)
 		self.setWindowTitle('%s - Error' % TableCrabConfig.ApplicationName)
 		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
-		TableCrabConfig.signalConnect(self.buttonBox, self, 'accepted()', self.accept)
+		self.buttonBox.accepted.connect(self.accept)
 		self.edit = QtGui.QPlainTextEdit(self)
 		self.edit.setPlainText(ErrText % (TableCrabConfig.ApplicationName, TableCrabConfig.ErrorLogName, info) )
 		self.layout()
@@ -57,7 +57,7 @@ class Gui(TableCrabMainWindow .MainWindow):
 			QtGui.QLabel.__init__(self, *args)
 			self.setMouseTracking(True)
 		def mouseDoubleClickEvent(self, event):
-			TableCrabConfig.signalEmit(self, 'doubleClicked()')
+			self.doubleClicked.emit()
 		
 	def __init__(self):
 		TableCrabMainWindow .MainWindow.__init__(self)
