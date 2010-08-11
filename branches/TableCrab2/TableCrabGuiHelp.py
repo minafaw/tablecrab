@@ -275,14 +275,17 @@ class _DialogHelp(QtGui.QDialog):
 		
 		self.setWindowTitle(TableCrabConfig.dialogTitle('Help') )
 		self.setWindowIcon( QtGui.QIcon(TableCrabConfig.Pixmaps.tableCrab()) )
+		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
+		self.buttonBox.accepted.connect(self.accept)
 		
 		TableCrabConfig.settingsSetValue('Gui/Help/Topic', topic)
 		self.frameHelp = FrameHelp(parent=self)
+		self.layout()
 			
 	def layout(self):
-		box = GridBox(self)
+		box = TableCrabConfig.GridBox(self)
 		box.addWidget(self.frameHelp, 0, 0)
-		box.addWidget(HLine(self), 1, 0)
+		box.addWidget(TableCrabConfig.HLine(self), 1, 0)
 		box.addWidget(self.buttonBox, 2, 0)
 
 
