@@ -543,11 +543,6 @@ class DialgScreenshotInfo(QtGui.QDialog):
 		
 		self.layout()
 		self.restoreGeometry( TableCrabConfig.settingsValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', QtCore.QByteArray()).toByteArray() )
-		
-	def hideEvent(self, event):
-		TableCrabConfig.settingsSetValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', self.saveGeometry() )
-		QtGui.QDialog.hideEvent(self, event)
-		
 	
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
@@ -555,6 +550,10 @@ class DialgScreenshotInfo(QtGui.QDialog):
 		grid.addWidget(TableCrabConfig.HLine(self), 1, 0)
 		grid.addWidget(self.buttonBox, 2, 0)
 	
+	def hideEvent(self, event):
+		TableCrabConfig.settingsSetValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', self.saveGeometry() )
+		QtGui.QDialog.hideEvent(self, event)
+		
 	def onButtonHelpClicked(self, checked):
 		TableCrabGuiHelp.dialogHelp('screenshotInfo', parent=self)
 	
