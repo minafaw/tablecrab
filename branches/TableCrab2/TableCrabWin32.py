@@ -296,7 +296,7 @@ SWP_NOACTIVATE = 16
 ENUMWINDOWSPROC = WINFUNCTYPE(INT, HANDLE, LPARAM)
 
 MY_TIMEOUT = 0.1
-MY_SMTO_TIMEOUT = 1000
+MY_SMTO_TIMEOUT = 3000
 MY_MAX_CLASS_NAME = 64
 
 BM_CLICK = 245
@@ -480,29 +480,32 @@ def windowGetText(hwnd, maxSize=-1):
 	if not hwnd or maxSize == 0: return ''
 	n = user32.GetWindowTextLengthW(hwnd)
 	##n = n if maxSize < 0 else min(n, maxSize)		## this segfaults in TableCrab
-	if not n or (maxSize > 0 and n > maxSize): 
-		return  ''
-	p = create_unicode_buffer(n+1)
-	if user32.GetWindowTextW(hwnd, p, sizeof(p)):
-		return p.value
+	if n:
+		if maxSize > 0 and n > maxSize: 
+			return  ''
+		p = create_unicode_buffer(n+1)
+		if user32.GetWindowTextW(hwnd, p, sizeof(p)):
+			return p.value
 		
 	result = DWORD()
 	user32.SendMessageTimeoutW(hwnd, WM_GETTEXTLENGTH, 0, 0, SMTO_ABORTIFHUNG, MY_SMTO_TIMEOUT, byref(result))
 	n = result.value
 	##n = n if maxSize < 0 else min(n, maxSize)		## this segfaults in TableCrab
-	if not n or (maxSize > 0 and n > maxSize):
-		return ''
-	p = create_unicode_buffer(n+1)
-	user32.SendMessageTimeoutW(
-			hwnd, 
-			WM_GETTEXT,
-			sizeof(p), 
-			p, 
-			SMTO_ABORTIFHUNG, 
-			MY_SMTO_TIMEOUT, 
-			byref(result)
-			)
-	return p.value
+	if n:
+		if maxSize > 0 and n > maxSize:
+			return ''
+		p = create_unicode_buffer(n+1)
+		user32.SendMessageTimeoutW(
+				hwnd, 
+				WM_GETTEXT,
+				sizeof(p), 
+				p, 
+				SMTO_ABORTIFHUNG, 
+				MY_SMTO_TIMEOUT, 
+				byref(result)
+				)
+		return p.value
+	return ''
 
 def windowGetClassName(hwnd):
 	"""returns the class name of the specified window
