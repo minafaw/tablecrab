@@ -22,12 +22,13 @@ class ActionHandler(QtCore.QObject):
 		self._pokerStarsLoginBox = None
 			
 	def handleWindowCreated(self, hwnd):
+		
 		if self.isPopupNews(hwnd):
 			if TableCrabConfig.settingsValue('PokerStars/AutoClosePopupNews', False).toBool():
 				TableCrabWin32.windowClose(hwnd)
 				TableCrabConfig.globalObject.feedbackMessage.emit('Closed Popup News')
 			return True
-		
+				
 		elif self.isTourneyRegistrationMessageBox(hwnd):
 			if TableCrabConfig.settingsValue('PokerStars/AutoCloseTourneyRegistrationBoxes', False).toBool():
 				buttons = TableCrabWin32.windowGetButtons(hwnd)
@@ -168,7 +169,6 @@ class ActionHandler(QtCore.QObject):
 	TitleNews = 'News'
 	def isPopupNews(self, hwnd):
 		if not TableCrabWin32.windowGetClassName(hwnd) == self.ClassNews: return False
-		TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleNews))
 		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleNews)) == self.TitleNews: return False
 		if not self.isPokerStarsWindow(hwnd): return False
 		return True
@@ -196,7 +196,7 @@ class ActionHandler(QtCore.QObject):
 		if not TableCrabWin32.windowGetClassName(hwnd) == self.ClassLogIn: return False
 		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleLogIn)) == self.TitleLogIn: return False
 		hwndParent = TableCrabWin32.windowGetParent(hwnd)
-		if not self.isLobby(hwndParent): return False
+		if not self.isPokerStarsWindow(hwnd): return False
 		return True
 		
 	def tableTemplate(self, hwnd):
