@@ -158,7 +158,7 @@ def settingsRemoveKey(key):
 	##print key, _qSettings.contains(key)
 	#if _qSettings.contains(key):
 	_qSettings.remove(key)
-	
+
 #***********************************************************************************
 # global singal handling and messages
 #***********************************************************************************
