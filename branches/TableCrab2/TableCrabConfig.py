@@ -167,6 +167,7 @@ class _GlobalObject(QtCore.QObject):
 	# global signals
 	closeEvent = QtCore.pyqtSignal(QtCore.QEvent)
 	
+	#TODO: overload to accept QObject aswell
 	feedback =  QtCore.pyqtSignal(QtGui.QWidget, QtCore.QString)
 	feedbackMessage =  QtCore.pyqtSignal(QtCore.QString)
 	feedbackException =  QtCore.pyqtSignal(QtCore.QString)
