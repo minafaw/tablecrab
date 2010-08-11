@@ -1,8 +1,4 @@
 
-#TODO: tabs may want to give feedback on status bar when they are not current - to be shown as soon as 
-#				they get current.	this is not supported. right now they have to check if they are visible - if not 
-#				don't send feedback
-
 import TableCrabConfig
 import TableCrabMainWindow 
 import TableCrabGuiSettings
