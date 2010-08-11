@@ -1,0 +1,416 @@
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 656, in onMouseMonitor
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 656, in onMouseMonitor
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 656, in onMouseMonitor
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 656, in onMouseMonitor
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 656, in onMouseMonitor
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 656, in onMouseMonitor
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 656, in onMouseMonitor
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 656, in onMouseMonitor
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 656, in onMouseMonitor
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 509, in onWidgetScreenshot
+    self.gatherWindowInfo(hwnd)
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 417, in gatherWindowInfo
+    self._lastScreenshotInfo += windowInfo(hwnd)
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 381, in windowInfo
+    if TableCrabWin32.windowGetTextLength(hwndOther) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwndOther' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 509, in onWidgetScreenshot
+    self.gatherWindowInfo(hwnd)
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 417, in gatherWindowInfo
+    self._lastScreenshotInfo += windowInfo(hwnd)
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 381, in windowInfo
+    if TableCrabWin32.windowGetTextLength(hwndOther) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwndOther' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 509, in onWidgetScreenshot
+    self.gatherWindowInfo(hwnd)
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 417, in gatherWindowInfo
+    self._lastScreenshotInfo += windowInfo(hwnd)
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 381, in windowInfo
+    if TableCrabWin32.windowGetTextLength(hwndOther) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwndOther' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 509, in onWidgetScreenshot
+    self.gatherWindowInfo(hwnd)
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 417, in gatherWindowInfo
+    self._lastScreenshotInfo += windowInfo(hwnd)
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 381, in windowInfo
+    if TableCrabWin32.windowGetTextLength(hwndOther) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwndOther' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 509, in onWidgetScreenshot
+    self.gatherWindowInfo(hwnd)
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 417, in gatherWindowInfo
+    self._lastScreenshotInfo += windowInfo(hwnd)
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\TableCrabGuiSetup.py", line 381, in windowInfo
+    if TableCrabWin32.windowGetTextLength(hwndOther) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwndOther' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
+TableCrab: TableCrab2-0.1.0
+Platform: Windows XP
+PythonVersion: 2.6.2
+QtVersion: 4.6.2
+PyQtVersion: 4.7.4
+SipVersion: 4.10.3
+Traceback (most recent call last):
+  File "Z:\home\me\Scr\Poker\TableCrab\branches\TableCrab2\PokerStarsHandGrabber.py", line 769, in grabHand
+    if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+NameError: global name 'hwnd' is not defined
+
