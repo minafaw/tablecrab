@@ -6,7 +6,6 @@
 #				size acccording to the next matching templates size. CycleForward / CycleBackward maybe.
 #TODO: i kind of dislike in-place editing of template names. an "Edit" button would be more consistent but a bit of overkill right now. then .again .screenshot 
 # 			open / save is taking away screenspace already. would have to find shorter names for these actions.
-#TODO: when the mouse leaves screenshot would be nice to set coordianteddisplayed to (-1, -1) or "None"
 #TODO: check for multiple templates of the same size? currently we are using the first matching encountered that's all.
 #TODO: restore last selected template on restart? would require an attr "itemIsSelected", downside we'd have to dump the whole tree on every curent
 #				item change. so most likely a no.
@@ -269,11 +268,22 @@ class ScreenshotWidget(QtGui.QScrollArea):
 	widgetScreenshotInfo = QtCore.pyqtSignal(QtCore.QString)
 	
 	class ScreenshotLabel(QtGui.QLabel):
+		
+		class MyEventFilter(QtCore.QObject):
+			mouseLeave = QtCore.pyqtSignal()
+			def eventFilter(self, obj, event):
+				if event.type() == event.Leave:
+					self.mouseLeave.emit()
+				return QtCore.QObject.eventFilter(self, obj, event)
+		
 		ScreenshotName = 'Screenshot'
 		def __init__(self, *args):
 			QtGui.QLabel.__init__(self, *args)
 			self.setMouseTracking(True)
 			self._screenshotName = self.ScreenshotName
+			self.eventFilter = self.MyEventFilter()
+			self.installEventFilter(self.eventFilter)
+			self.eventFilter.mouseLeave.connect(self.onMouseLeave)
 				
 		def mouseDoubleClickEvent(self, event):
 			if event.button() == QtCore.Qt.LeftButton:
@@ -285,6 +295,17 @@ class ScreenshotWidget(QtGui.QScrollArea):
 					else:
 						point = QtCore.QPoint(event.pos())
 					TableCrabConfig.globalObject.widgetScreenshotDoubleClicked.emit(pixmap, point)
+		
+		def eventFilter(self, event):
+			if event.type() == event.Leave:
+					print 'leave'
+			return QtGui.QLabel.eventFilter(self, object, event)
+		
+		def onMouseLeave(self):
+			pixmap = self.pixmap()
+			if pixmap is not None and not pixmap.isNull():
+				point = TableCrabConfig.newPointNone()
+				self._giveFeedback(pixmap, point)
 		
 		def mouseMoveEvent(self, event):
 			pixmap = self.pixmap()
