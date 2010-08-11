@@ -87,7 +87,7 @@ class FrameHand(QtGui.QFrame):
 			return
 		fileName = dlg.selectedFiles()[0]
 		fp = open(fileName, 'r')
-		try:	self.webView.setHtml(fp.read() )
+		try:	self.webView.setHtml( QtCore.QString.fromUtf8(fp.read()) )
 		finally: fp.close()
 		self._hasHand = True
 		self.adjustActions()
@@ -115,14 +115,14 @@ class FrameHand(QtGui.QFrame):
 			return
 		fileName = dlg.selectedFiles()[0]
 		fp = open(fileName, 'w')
-		try: fp.write(self.webView.page().mainFrame().toHtml())
+		try: fp.write(self.webView.page().mainFrame().toHtml().toUtf8() )
 		finally: fp.close()
 		
 	def onActionHelpTriggered(self, checked):
 		TableCrabGuiHelp.dialogHelp('hand', parent=self)		
 	
 	def onPShandGrabberHandGrabbed(self, hand, data):
-		self.webView.setHtml(data)
+		self.webView.setHtml( QtCore.QString.fromUtf8(data) )
 		self._hasHand = True
 		self.adjustActions()
 		TableCrabConfig.globalObject.feedback.emit(self, 'grabbed hand')
