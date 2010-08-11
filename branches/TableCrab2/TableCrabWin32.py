@@ -1138,7 +1138,9 @@ class KeyboardHook(QtCore.QObject):
 						VK_NUMLOCK,	# we can not know lock state
 						):
 					continue
-				result.append(KEY_NAMES[vkCode])
+				keyName = KEY_NAMES.get(vkCode, None)
+				if keyName is not None:
+					result.append(keyName)
 		if result:
 			return '<%s>' % '+'.join(result)
 		return ''
