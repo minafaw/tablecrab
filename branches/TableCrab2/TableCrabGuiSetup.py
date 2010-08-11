@@ -491,10 +491,8 @@ class ScreenshotWidget(QtGui.QScrollArea):
 			self.actionInfo.setEnabled(False)
 			return
 		dlg = DialgScreenshotInfo(self._lastScreenshotInfo, parent=self)
-		dlg.restoreGeometry( TableCrabConfig.settingsValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', QtCore.QByteArray()).toByteArray() )
 		dlg.show()
-		TableCrabConfig.settingsSetValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', dlg.saveGeometry() )
-	
+		
 	def onWidgetScreenshot(self, hwnd, pixmap):
 		# make shure to not take screenshot of self
 		wid = self.effectiveWinId()	# NOTE: effectiveWinId() returns <sip.voidptr> and may be None
@@ -544,7 +542,13 @@ class DialgScreenshotInfo(QtGui.QDialog):
 		self.buttonBox.addButton(self.buttonRefresh, self.buttonBox.ActionRole)
 		
 		self.layout()
+		self.restoreGeometry( TableCrabConfig.settingsValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', QtCore.QByteArray()).toByteArray() )
 		
+	def hideEvent(self, event):
+		TableCrabConfig.settingsSetValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', self.saveGeometry() )
+		QtGui.QDialog.hideEvent(self, event)
+		
+	
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
 		grid.addWidget(self.edit, 0, 0)
