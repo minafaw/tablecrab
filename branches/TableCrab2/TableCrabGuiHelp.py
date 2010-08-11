@@ -281,19 +281,21 @@ class _DialogHelp(QtGui.QDialog):
 		TableCrabConfig.settingsSetValue('Gui/Help/Topic', topic)
 		self.frameHelp = FrameHelp(parent=self)
 		self.layout()
+		self.restoreGeometry( TableCrabConfig.settingsValue('Gui/DialogHelp/Geometry', QtCore.QByteArray()).toByteArray() )
 			
 	def layout(self):
 		box = TableCrabConfig.GridBox(self)
 		box.addWidget(self.frameHelp, 0, 0)
 		box.addWidget(TableCrabConfig.HLine(self), 1, 0)
 		box.addWidget(self.buttonBox, 2, 0)
-
+	
+	def hideEvent(self, event):
+		TableCrabConfig.settingsSetValue('Gui/DialogHelp/Geometry', self.saveGeometry() )
+		QtGui.QDialog.hideEvent(self, event)
 
 def dialogHelp(topic, parent=None):
 	dlg = _DialogHelp(topic, parent=parent)
-	dlg.restoreGeometry( TableCrabConfig.settingsValue('Gui/DialogHelp/Geometry', QtCore.QByteArray()).toByteArray() )
 	dlg.show()
-	TableCrabConfig.settingsSetValue('Gui/DialogHelp/Geometry', dlg.saveGeometry() )
 	#TODO: how to save the splitter state? code below does not work. we may have to abstract the frame a bit more to get support for this
 	##dlg.frameHelpTree.onCloseEvent(None)
 
