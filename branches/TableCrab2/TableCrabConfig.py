@@ -30,6 +30,12 @@ MaxHandGrabberPrefix = 8
 # no idea about this
 ##MaxScreenshotSize = 0
 
+Ellipsis = '..'
+MaxWindowText = 512		# maximum number of chars we retrieve as text / title from other windows
+MaxHandHistoryText = 16384
+
+
+
 #****************************************************************************************
 # setup minimal stuff to get at least some information in case something goes wrong
 #
@@ -88,7 +94,7 @@ sys.excepthook = _excepthook
 #************************************************************************************
 #
 #************************************************************************************
-import posixpath, thread, atexit
+import posixpath, thread, atexit, inspect
 from PyQt4 import QtCore, QtGui, QtWebKit
 
 import TableCrabWin32
@@ -621,16 +627,18 @@ def cleanException(exception):
 def truncateString(string, maxChars):
 	isQString = isinstance(string, QtCore.QString)
 	if maxChars > -1 and len(string) > maxChars:
-		if maxChars == 0:
-			return QtCore.QString('') if isQString else ''
-		elif maxChars == 1:
-			return QtCore.QString('.') if isQString else ''
+		if maxChars <= len(Ellipsis):
+			return QtCore.QString(Ellipsis[:maxChars])
 		else:
-			return string[:maxChars-2] + '..'
+			return string[:maxChars - len(Ellipsis)] + Ellipsis
 	return string
 
 def dialogTitle(title):
 	return '%s - %s' % (ApplicationName, title)
+
+def printStack():
+	for frame, filename, line_num, func, source_code, source_index in inspect.stack()[1:]:
+		print '%s, line %d\n  -> %s' % (filename, line_num, source_code[source_index].strip())
 
 #***********************************************************************************
 # global Application object
