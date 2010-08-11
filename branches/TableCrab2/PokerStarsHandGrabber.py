@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
 
+#TODO: make hand parser failsave
+
 '''standalone PokerStars "instant hand history" grabber
 
 this programm runs a standalone to grab, format and dump to html the hand history currently
