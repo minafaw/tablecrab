@@ -281,6 +281,8 @@ KEY_NAMES = dict([(i[1], i[0]) for i in KEY_VALUES.items()])	# vkCode --> keyNam
 	
 WM_SYSCOMMAND = 274
 WM_GETTEXT = 13
+WM_GETTEXTLENGTH = 0x000E
+
 WM_SETTEXT = 12
 
 SMTO_ABORTIFHUNG = 2
@@ -459,28 +461,47 @@ def windowWalkChildren(hwnd=None, report=False):
 					yield x
 	return walker(hwnd)
 
-def windowGetText(hwnd):
+def windowGetTextLength(hwnd):
+	n = user32.GetWindowTextLengthW(hwnd)
+	if not n:
+		result = DWORD()
+		user32.SendMessageTimeoutW(hwnd, WM_GETTEXTLENGTH, 0, 0, SMTO_ABORTIFHUNG, MY_SMTO_TIMEOUT, byref(result))
+		n = result.value
+	return n
+
+#TODO: we get unhnadled read access page faults when trying to query less than what GetWindowTextLen() returns. no idea why. ansi version works. 
+#				unicode version segfaults. so ..as a workaround we don't query at all '' if len(text) exceeds maxSize. maybe later we can introduce a new
+#				keyword "size".
+def windowGetText(hwnd, maxSize=-1):
 	"""returns the window title of the specified window
 	@param hwnd: handle of the window
 	@return: (str)
 	"""
-	if not hwnd: return ''
+	if not hwnd or maxSize == 0: return True, ''
 	n = user32.GetWindowTextLengthW(hwnd)
+	if maxSize > 0 and n > maxSize: 
+		return ''
+	##n = n if maxSize < 0 else min(n, maxSize)		## this segfaults
 	if n:		
-		result = DWORD()
-		p = create_unicode_buffer(n+ 1)
-		#
-		user32.SendMessageTimeoutW(
-				hwnd, 
-				WM_GETTEXT, 
-				sizeof(p), 
-				p, 
-				SMTO_ABORTIFHUNG, 
-				MY_SMTO_TIMEOUT, 
-				byref(result)
-				)
-		if not p.value:
-			user32.GetWindowTextW(hwnd, p, sizeof(p))
+		p = create_unicode_buffer(n+2)
+		if not user32.GetWindowTextW(hwnd, p, sizeof(p)):
+			result = DWORD()
+			user32.SendMessageTimeoutW(hwnd, WM_GETTEXTLENGTH, 0, 0, SMTO_ABORTIFHUNG, MY_SMTO_TIMEOUT, byref(result))
+			n = result.value
+			##n = n if maxSize < 0 else min(n, maxSize)		## this segfaults too
+			if n:
+				if maxSize > 0 and n > maxSize: 
+					return ''
+				p = create_unicode_buffer(n+2)
+				user32.SendMessageTimeoutW(
+						hwnd, 
+						WM_GETTEXT,
+						sizeof(p), 
+						p, 
+						SMTO_ABORTIFHUNG, 
+						MY_SMTO_TIMEOUT, 
+						byref(result)
+						)
 		return p.value
 	return ''
 
