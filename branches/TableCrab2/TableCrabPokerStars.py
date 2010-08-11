@@ -363,7 +363,8 @@ class ActionHandler(QtCore.QObject):
 		if int(newBetAmount) == newBetAmount:
 			newBetAmount = int(newBetAmount)
 		newBetAmount = str(newBetAmount)
-		TableCrabWin32.windowSetText(data['hwndBetAmountBox'], text=newBetAmount)
+		#NOTE: the box gets mesed up when unicode is thrown at it
+		TableCrabWin32.windowSetText(data['hwndBetAmountBox'], text=newBetAmount, isUnicode=False)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 			
 	def tableHandleSubtractFromBetAmount(self, hotkey, template, hwnd, inputEvent):
@@ -383,7 +384,8 @@ class ActionHandler(QtCore.QObject):
 		if int(newBetAmount) == newBetAmount:
 			newBetAmount = int(newBetAmount)
 		newBetAmount = str( 0 if newBetAmount < 0 else newBetAmount )
-		TableCrabWin32.windowSetText(data['hwndBetAmountBox'], text=newBetAmount)
+		#NOTE: the box gets mesed up when unicode is thrown at it
+		TableCrabWin32.windowSetText(data['hwndBetAmountBox'], text=newBetAmount, isUnicode=False)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 	
 	def tableHandleMultiplyBetAmount(self, hotkey, template, hwnd, inputEvent):
@@ -398,7 +400,8 @@ class ActionHandler(QtCore.QObject):
 		if int(newBetAmount) == newBetAmount:
 			newBetAmount = int(newBetAmount)
 		newBetAmount = str(newBetAmount)
-		TableCrabWin32.windowSetText(data['hwndBetAmountBox'], text=newBetAmount)
+		#NOTE: the box gets mesed up when unicode is thrown at it
+		TableCrabWin32.windowSetText(data['hwndBetAmountBox'], text=newBetAmount, isUnicode=False)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 		
 	def tableHandleHilightBetAmount(self, hotkey, template, hwnd, inputEvent):
