@@ -1,6 +1,4 @@
 
-#TODO: disable context menu
-#TODO: give feedback ++ set tree to point to current page
 #TODO: save splitter state in DialogHelp()
 #TODO: would be nice to auto-generate topics from disk. for now we have to keep track by hand.
 # auto-generating woul drequire some naming scheme to get the hirarchy - we only support flat
@@ -114,6 +112,7 @@ class TableCrabReply(QtNetwork.QNetworkReply):
 		return data
 
 class NetworkAccessManager(QtNetwork.QNetworkAccessManager):
+	
 	def __init__(self, oldManager, parent=None):
 		QtNetwork.QNetworkAccessManager.__init__(self, parent)
 		##self.oldManager = oldManager
@@ -174,43 +173,33 @@ class NetworkAccessManager(QtNetwork.QNetworkAccessManager):
 #
 #**********************************************************************************************
 
-class FrameHelpView(QtGui.QFrame):
-	def __init__(self, parent=None):
-		QtGui.QFrame.__init__(self, parent)
-		self.webView = QtWebKit.QWebView(self)
-		self.webView.setUrl(QtCore.QUrl(''))
-		oldManager = self.webView.page().networkAccessManager()
-		self.networkAccessManager = NetworkAccessManager(oldManager, parent=self)
-		self.webView.page().setNetworkAccessManager(self.networkAccessManager)
-		##self.webView.page().setForwardUnsupportedContent(True)
-		
-		self.layout()
-	def layout(self):
-		box = TableCrabConfig.GridBox(self)
-		box.addWidget(self.webView, 0, 0)
-	def setUrl(self, url):
-		self.webView.setUrl(url)
-	
-
 class FrameHelp(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 		
-		self.frameHelpView = FrameHelpView(self)
-		
+		self.webView = QtWebKit.QWebView(self)
+		self.webView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)		#
+		self.webView.setUrl(QtCore.QUrl(''))
+		oldManager = self.webView.page().networkAccessManager()
+		self.networkAccessManager = NetworkAccessManager(oldManager, parent=self)
+		page = self.webView.page()
+		page.setNetworkAccessManager(self.networkAccessManager)
+		page.setLinkDelegationPolicy(page.DelegateAllLinks)
+		page.linkClicked.connect(self.onLinkClicked)
+			
 		self.tree = QtGui.QTreeWidget(self)
 		self.tree.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
 		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(self.onSettingAlternatingRowColorsChanged)
 		
 		self.splitter = QtGui.QSplitter(self)
 		self.splitter.addWidget(self.tree)
-		self.splitter.addWidget(self.frameHelpView)
+		self.splitter.addWidget(self.webView)
 				
 		self.tree.setExpandsOnDoubleClick(False)
 		self.tree.setRootIsDecorated(False)
 		self.tree.header().setVisible(False)
 			
-		self.toolBar = TableCrabConfig.WebViewToolBar(self.frameHelpView.webView,
+		self.toolBar = TableCrabConfig.WebViewToolBar(self.webView,
 				settingsKeyZoomFactor='Gui/Help/ZoomFactor',
 				settingsKeyZoomIncrement='Gui/WebView/ZoomIncrement',
 				)
@@ -261,8 +250,17 @@ class FrameHelp(QtGui.QFrame):
 		topic = item.data(0, QtCore.Qt.UserRole).toString()
 		#url = QtCore.QUrl('TableCrab://HtmlPage/%s' % topic)
 		url = QtCore.QUrl('%s.html' % topic)
-		self.frameHelpView.setUrl(url)
+		self.webView.setUrl(url)
 		TableCrabConfig.settingsSetValue('Gui/Help/Topic', topic)
+		
+	def onLinkClicked(self, url):
+		fileInfo = QtCore.QFileInfo(url.path())
+		topic = fileInfo.baseName()
+		for item in TableCrabConfig.TreeWidgetItemIterator(self.tree):
+			myTopic = item.data(0, QtCore.Qt.UserRole).toString()
+			if myTopic == topic:
+				self.tree.setCurrentItem(item)
+		#TODO: ??? on topic not found
 		
 	def onCloseEvent(self, event):
 		TableCrabConfig.settingsSetValue('Gui/Help/SplitterState', self.splitter.saveState() )
