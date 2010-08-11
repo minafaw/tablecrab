@@ -327,7 +327,7 @@ class HandParser(object):
 				
 			if lineno == 0:
 				if self.matchGameHeader(hand, streetCurrent, line): continue
-				return None
+				return 'No gane header found', None
 			
 			# determine street we are in
 			if line.startswith('*** HOLE CARDS ***'):
@@ -379,8 +379,7 @@ class HandParser(object):
 		
 		# errorcheck
 		if hand.seatNoButton is None:
-			raise ValueError('could not determine button player')
-		
+			None
 		return hand	
 	
 #********************************************************************************************************
@@ -739,27 +738,61 @@ if sys.platform == 'win32':
 			self._lastHandHistory = None
 			self._timer = QtCore.QTimer(self)
 			self._timer.setInterval(TableCrabConfig.HandGrabberTimeout * 1000)
-			self.connect(self._timer, QtCore.SIGNAL('timeout()'), self._run)
+			self._timer.timeout.connect(self.grabHand)
+			self._hwndDialog = None
+			self._hwndEdit = None
+			
+			TableCrabConfig.windowHook.windowCreated.connect(self.onWindowCreated)
+			TableCrabConfig.windowHook.windowDestroyed.connect(self.onWindowDestroyed)
+		
 		def stop(self):
 			self._timer.stop()
+			pass
 		def start(self):
-			self._timer.start()
-		def _run(self):
-			# find "instant hand history" dialog
-			for hwnd in TableCrabWin32.windowChildren(None):
-				if TableCrabWin32.windowGetClassName(hwnd) != self.WindowClassName: continue
-				if TableCrabWin32.windowGetText(hwnd) != self.WindowTitle: continue
-				# find hand history in dialog
+			pass
+				
+		def onWindowCreated(self, hwnd):
+			if TableCrabWin32.windowGetClassName(hwnd) == self.WindowClassName:
+				self._hwndDialog = hwnd
 				for hwnd in TableCrabWin32.windowChildren(hwnd):
-					if TableCrabWin32.windowGetClassName(hwnd) != self.WidgetClassName: continue
-					handHistory = TableCrabWin32.windowGetText(hwnd)
-					if handHistory and handHistory != self._lastHandHistory:
-						self._lastHandHistory = handHistory
-						hand = self.handParser.parse(handHistory)
-						if hand is not None:
-							data = self.handFormatter.dump(hand)
-							self.handGrabbed.emit(hand, data)
-					break
-				break
+					if TableCrabWin32.windowGetClassName(hwnd) == self.WidgetClassName:
+						self._hwndEdit = hwnd
+			if self._hwndEdit is not None:
+				self._timer.start()
+			else:
+				self._hwndDialog = None
 			
+		def onWindowDestroyed(self, hwnd):
+			if hwnd == self._hwndDialog:
+				self._hwndDialog = None
+				self._hwndEdit = None
+				self._timer.stop()
+			
+		def grabHand(self):
+			if self._hwndEdit is None: return
+				
+			#NOTE: we could be faced with an arbitrary windowat this point or an inavlid handle
+			if TableCrabWin32.windowGetTextLength(self._hwndEdit) > TableCrabConfig.MaxHandHistoryText:
+				TableCrabConfig.globalObject.feedback.emit(self.parent(), 'Hand text too long')
+				return
+			handHistory = TableCrabWin32.windowGetText(self._hwndEdit, maxSize=TableCrabConfig.MaxHandHistoryText)
+			if handHistory and handHistory != self._lastHandHistory:
+				self._lastHandHistory = handHistory
+					
+				#TODO: very sloppy test to minimize risk we are grabbing 'show summary only' in instant hand history
+				if not '*** HOLE CARDS ***' in handHistory:
+					TableCrabConfig.globalObject.feedback.emit(self.parent(), 'Could not parse hand')
+					return
+				#TODO: our parser accepts everything  that looks halfway like a PokerStars game header, but fails easily on arbitrary text following.
+				#				we could make it failsave to any gibberish thrown at it. otherwise we may get strange errors
+				hand = self.handParser.parse(handHistory)
+				if hand is None:
+					#TODO: we have to overload signal feedback() to allow passing QObject* 
+					TableCrabConfig.globalObject.feedback.emit(self.parent(), 'Could not parse hand')
+				else:
+					data = self.handFormatter.dump(hand)
+					self.handGrabbed.emit(hand, data)
+
+		
+		
 	
