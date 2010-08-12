@@ -1,4 +1,7 @@
 
+#TODO: we have to find a way to limit text length in QPlainTextEdit
+
+
 #************************************************************************************
 # consts
 #************************************************************************************
@@ -21,6 +24,7 @@ HandGrabberTimeout = 0.4
 MouseMonitorTimeout = 0.5
 StatusBarMessageTimeout = 3
 MaxHandGrabberPrefix = 8
+MaxHandStyleSheet = 9000
 
 #TODO: implement these
 # not very easy to limit this. QPlaintextEdit has no idea of its lenght
@@ -354,16 +358,32 @@ class LineEdit(QtGui.QLineEdit):
 			if self.settingsKey is not None: settingsSetValue(self.settingsKey, self.text())
 
 class PlainTextEdit(QtGui.QPlainTextEdit):
-	def __init__(self, default='', settingsKey=None, parent=None):
+	
+	maxCharsExceeded = QtCore.pyqtSignal(bool)
+	
+	def __init__(self, default='', settingsKey=None, parent=None, maxChars=-1):
 		QtGui.QPlainTextEdit.__init__(self, parent)
 		self.settingsKey = settingsKey
+		self._maxChars = maxChars
+		self._lastText = default
+		if self._maxChars >= 0 and len(default) > self._maxChars:
+			raise ValueError('maxChars exceeded')
 		if self.settingsKey is None:
 			self.setPlainText(default)
 		else:
 			self.setPlainText( settingsValue(self.settingsKey, default).toString() )
 			self.textChanged.connect(self.onValueChanged)
+	
+	#TODO: cheap implementation of mxText. we have to find a better way to do so
 	def onValueChanged(self):
+		if self._maxChars >= 0:
+			if self.toPlainText().length() > self._maxChars:
+				self.maxCharsExceeded.emit(True)
+				return
+			else:
+				self.maxCharsExceeded.emit(False)
 		if self.settingsKey is not None: settingsSetValue(self.settingsKey, self.toPlainText())
+
 
 class DoubleSpinBox(QtGui.QDoubleSpinBox):
 	def __init__(self, default=1.0, minimum=0.0, maximum=99.99, step=1.0, precision=2, settingsKey=None, parent=None):
