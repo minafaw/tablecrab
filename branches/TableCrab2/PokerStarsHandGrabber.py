@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
 
+#TODO: rename (rework) this module to TableCrabHandGrabber.py
+
 import re, time, sys, cStringIO, thread
 from PyQt4 import QtCore
 
