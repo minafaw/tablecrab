@@ -23,7 +23,7 @@ WindowHookTimeout = 0.2
 HandGrabberTimeout = 0.4
 MouseMonitorTimeout = 0.5
 StatusBarMessageTimeout = 3
-MaxHandGrabberPrefix = 8
+MaxHandGrabberPrefix = 8	# + postfix
 MaxHandStyleSheet = 9000
 
 #TODO: implement these
@@ -35,6 +35,7 @@ MaxHandStyleSheet = 9000
 Ellipsis = '..'
 MaxWindowText = 512		# maximum number of chars we retrieve as text / title from other windows
 MaxHandHistoryText = 16384
+MaxPokerStarsBetAmountBoxText = 16	# maximum number of chars to retrieve from PS bet amount box
 
 #****************************************************************************************
 # setup minimal stuff to get at least some information in case something goes wrong

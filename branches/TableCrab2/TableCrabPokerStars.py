@@ -214,7 +214,7 @@ class ActionHandler(QtCore.QObject):
 	ClassTableBetAmountBox = 'PokerStarsSliderEditorClass'
 	def tableReadData(self, hwnd):
 		data = {}
-		text = TableCrabWin32.windowGetText(hwnd)
+		text = TableCrabWin32.windowGetText(hwnd, maxSize=TableCrabConfig.MaxPokerStarsBetAmountBoxText)
 		if not text: return data
 		match = self.PatAmountSB.match(text)
 		if match is None:
