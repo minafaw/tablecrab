@@ -1,7 +1,5 @@
 # -*- coding: UTF-8 -*-
 
-#TODO: make hand parser failsave
-
 import re, time, sys, cStringIO, thread
 from PyQt4 import QtCore
 
@@ -371,7 +369,7 @@ class HandParser(object):
 		
 		# errorcheck
 		if hand.seatNoButton is None:
-			None
+			raise ValueError('Could not determine button player')
 		return hand	
 	
 #********************************************************************************************************
@@ -779,15 +777,19 @@ if sys.platform == 'win32':
 				if not '*** HOLE CARDS ***' in handHistory:
 					TableCrabConfig.globalObject.feedback.emit(self.parent(), 'Could not parse hand')
 					return
-				#TODO: our parser accepts everything  that looks halfway like a PokerStars game header, but fails easily on arbitrary text following.
-				#				we could make it failsave to any gibberish thrown at it. otherwise we may get strange errors
-				hand = self.handParser.parse(handHistory)
-				if hand is None:
-					#TODO: we have to overload signal feedback() to allow passing QObject* 
-					TableCrabConfig.globalObject.feedback.emit(self.parent(), 'Could not parse hand')
+				#NOTE: we are let TableCrabConfig handle errors because we are maybe working with arbitrary data
+				# from an unknown window
+				try:
+					hand = self.handParser.parse(handHistory)
+				except:
+					TableCrabConfig.handleException('\n' + handHistory)
 				else:
-					data = self.handFormatter.dump(hand)
-					self.handGrabbed.emit(hand, data)
+					if hand is None:
+						#TODO: we have to overload signal feedback() to allow passing QObject* 
+						TableCrabConfig.globalObject.feedback.emit(self.parent(), 'Could not parse hand')
+					else:
+						data = self.handFormatter.dump(hand)
+						self.handGrabbed.emit(hand, data)
 
 		
 		
