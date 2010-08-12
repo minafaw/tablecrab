@@ -307,24 +307,27 @@ class FrameSettingsHand(QtGui.QFrame):
 		TableCrabGuiHelp.dialogHelp('settingsHand', parent=self)
 		
 
-class FrameSettingsHandCss(QtGui.QFrame):
+class FrameSettingsHandSyleSheet(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 		self.edit = TableCrabConfig.PlainTextEdit(
-				settingsKey='PokerStarsHandGrabber/handFornmatterHtmlTabular/Css', 
-				default=PokerStarsHandGrabber.HandFormatterHtmlTabular.Css
+				settingsKey='PokerStarsHandGrabber/handFornmatterHtmlTabular/StyleSheet', 
+				default=PokerStarsHandGrabber.HandFormatterHtmlTabular.StyleSheet
 				)
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 		
 		self.buttonRestoreDefault = QtGui.QPushButton('Restore Default', self)
 		self.buttonRestoreDefault.clicked.connect(self.onButtonRestoreDefaultClicked)
+		self.buttonRestoreDefault.setToolTip('Restores the default style sheet')
 		self.buttonBox.addButton(self.buttonRestoreDefault, self.buttonBox.ResetRole)
 		
 		self.buttonOpen = QtGui.QPushButton('Open..', self)
+		self.buttonOpen.setToolTip('Loads a style sheet from disk')
 		self.buttonOpen.clicked.connect(self.onButtonOpenClicked)
 		self.buttonBox.addButton(self.buttonOpen, self.buttonBox.ActionRole)
 		
 		self.buttonSave = QtGui.QPushButton('Save..', self)
+		self.buttonSave.setToolTip('Saves the style sheet to disk')
 		self.buttonSave.clicked.connect(self.onButtonSaveClicked)
 		self.buttonBox.addButton(self.buttonSave, self.buttonBox.ActionRole)
 		
@@ -348,9 +351,9 @@ class FrameSettingsHandCss(QtGui.QFrame):
 		fileName = TableCrabConfig.dlgOpenSaveFile(
 				parent=self,
 				openFile=True,
-				title='Open Stylesheet..',
-				fileFilters=('Stylesheets (*.css)', 'All Files (*)'), 
-				settingsKey='Gui/Settings/HandCss/DialogOpen/State',
+				title='Open Style Sheet..',
+				fileFilters=('Style sheets (*.css)', 'All Files (*)'), 
+				settingsKey='Gui/Settings/HandStyleSheet/DialogOpen/State',
 				)
 		if fileName is None:
 			return
@@ -359,7 +362,7 @@ class FrameSettingsHandCss(QtGui.QFrame):
 			fp = open(fileName, 'r')
 			self.edit.setPlainText(fp.read() )
 		except Exception, d:
-			TableCrabConfig.msgWarning(self, 'Could Not Open Stylesheet\n\n%s' % d)
+			TableCrabConfig.msgWarning(self, 'Could Not Open Style sheet\n\n%s' % d)
 		finally: 
 			if fp is not None: fp.close()
 			
@@ -367,9 +370,9 @@ class FrameSettingsHandCss(QtGui.QFrame):
 		fileName = TableCrabConfig.dlgOpenSaveFile(
 				parent=self,
 				openFile=False,
-				title='Save Stylesheet..',
+				title='Save Style Sheet..',
 				fileFilters=('Stylesheets (*.css)', 'All Files (*)'), 
-				settingsKey='Gui/Settings/HandCss/DialogSave/State',
+				settingsKey='Gui/Settings/HandStyleSheet/DialogSave/State',
 				)
 		if fileName is None:
 			return
@@ -383,16 +386,16 @@ class FrameSettingsHandCss(QtGui.QFrame):
 			fp = open(fileName, 'w')
 			fp.write(self.edit.toPlainText() )
 		except Exception, d:
-			TableCrabConfig.msgWarning(self, 'Could Not Save Stylesheet\n\n%s' % d)
+			TableCrabConfig.msgWarning(self, 'Could Not Save Style sheet\n\n%s' % d)
 		finally: 
 			if fp is not None: fp.close()
 		
 	def onButtonHelpClicked(self, checked):
-		TableCrabGuiHelp.dialogHelp('settingsHandCss', parent=self)
+		TableCrabGuiHelp.dialogHelp('settingsHandStyleSheet', parent=self)
 				
 	#TODO: resetting document jumps to top of widget. store/restore position would be nice
 	def onButtonRestoreDefaultClicked(self):
-		self.edit.setPlainText(PokerStarsHandGrabber.HandFormatterHtmlTabular.Css)
+		self.edit.setPlainText(PokerStarsHandGrabber.HandFormatterHtmlTabular.StyleSheet)
 
 
 class FrameSettings(QtGui.QFrame):
@@ -427,7 +430,7 @@ class FrameSettings(QtGui.QFrame):
 		self.addSetting('Global', FrameSettingsGlobal(parent=self.stack) )
 		self.addSetting('PokerStars', FrameSettingsPokerStars(parent=self.stack) )
 		self.addSetting('Hand', FrameSettingsHand(parent=self.stack) )
-		self.addSetting('Hand-Css', FrameSettingsHandCss(parent=self.stack) )
+		self.addSetting('Hand Style Sheet', FrameSettingsHandSyleSheet(parent=self.stack) )
 			
 		self.layout()
 		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Settings/SplitterState', QtCore.QByteArray()).toByteArray() )
