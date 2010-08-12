@@ -6,7 +6,7 @@ import TableCrabConfig
 import PokerStarsHandGrabber
 import TableCrabGuiHelp
 
-from PyQt4 import QtCore, QtGui
+from PyQt4 import QtCore, QtGui, QtWebKit
 
 #**********************************************************************************************
 #
@@ -28,9 +28,13 @@ class FrameSettingsGlobal(QtGui.QFrame):
 				failsave=True,
 				parent=self,
 				)
-		self.labelGuiFont = QtGui.QLabel('Global Font:', self)
-		self.buttonGuiFont = QtGui.QPushButton('..', self)
-		self.buttonGuiFont.clicked.connect(self.onButtonGuiFontClicked)
+		self.labelFont = QtGui.QLabel('Global Font:', self)
+		self.buttonFont = QtGui.QPushButton('..', self)
+		self.buttonFont.clicked.connect(self.onButtonFontClicked)
+		
+		self.labelFixedFont = QtGui.QLabel('Fixed Font:', self)
+		self.buttonFixedFont = QtGui.QPushButton('..', self)
+		self.buttonFixedFont.clicked.connect(self.onButtonFixedFontClicked)
 		
 		self.comboGuiStyle.currentIndexChanged.connect(self.onComboGuiStyleCurrentIndexChanged)
 		self.labelZoomIncrement = QtGui.QLabel('Zoom Increment:', self)
@@ -55,6 +59,10 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
 			
+		# connect signals
+		TableCrabConfig.globalObject.fontChanged.connect(self.onFontChanged)
+		TableCrabConfig.globalObject.fontFixedChanged.connect(self.onFontFixedChanged)
+		
 		self.layout()
 	
 	def layout(self):
@@ -68,24 +76,28 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		grid.addWidget(self.comboGuiStyle, 1, 1)
 		grid.addLayout(TableCrabConfig.HStretch(), 1, 2)
 		
-		grid.addWidget(self.labelGuiFont, 2, 0)
-		grid.addWidget(self.buttonGuiFont, 2, 1)
+		grid.addWidget(self.labelFont, 2, 0)
+		grid.addWidget(self.buttonFont, 2, 1)
 		grid.addLayout(TableCrabConfig.HStretch(), 2, 2)
-				
-		grid.addWidget(self.labelZoomIncrement, 3, 0)
-		grid.addWidget(self.spinZoomIncrement, 3, 1)
+		
+		grid.addWidget(self.labelFixedFont, 3, 0)
+		grid.addWidget(self.buttonFixedFont, 3, 1)
 		grid.addLayout(TableCrabConfig.HStretch(), 3, 2)
+				
+		grid.addWidget(self.labelZoomIncrement, 4, 0)
+		grid.addWidget(self.spinZoomIncrement, 4, 1)
+		grid.addLayout(TableCrabConfig.HStretch(), 4, 2)
 			
-		grid.addWidget(self.checkRestoreMousePosition, 4, 0)
-		grid.addWidget(self.checkAlternatingRowColors, 5, 0)
-		grid.addWidget(self.checkChildItemIndicators, 6, 0)
+		grid.addWidget(self.checkRestoreMousePosition, 5, 0)
+		grid.addWidget(self.checkAlternatingRowColors, 6, 0)
+		grid.addWidget(self.checkChildItemIndicators, 7, 0)
 		
 		
-		grid.addLayout(TableCrabConfig.VStretch(), 7, 0)
-		grid.addWidget(TableCrabConfig.HLine(self), 8, 0, 1, 3)
+		grid.addLayout(TableCrabConfig.VStretch(), 8, 0)
+		grid.addWidget(TableCrabConfig.HLine(self), 9, 0, 1, 3)
 			
 		grid2 = TableCrabConfig.GridBox()
-		grid.addLayout(grid2, 9, 0, 1, 3)
+		grid.addLayout(grid2, 10, 0, 1, 3)
 		grid2.addWidget(self.buttonBox, 0, 0)
 		
 	def onButtonBackupClicked(self, checked):
@@ -132,7 +144,7 @@ class FrameSettingsGlobal(QtGui.QFrame):
 	def onButtonHelpClicked(self, checked):
 		TableCrabGuiHelp.dialogHelp('settingsGlobal', parent=self)
 		
-	def onButtonGuiFontClicked(self, checked):
+	def onButtonFontClicked(self, checked):
 		font, ok = QtGui.QFontDialog.getFont(QtGui.qApp.font(), self)
 		if ok:
 			QtGui.qApp.setFont(font)
@@ -140,7 +152,20 @@ class FrameSettingsGlobal(QtGui.QFrame):
 			#				setting style explicitely fixes this. hack fro now 
 			QtGui.qApp.setStyle(QtGui.QStyleFactory.create( TableCrabConfig.settingsValue('Gui/Style', '').toString() ))
 			TableCrabConfig.settingsSetValue('Gui/Font', font.toString())
-	
+			TableCrabConfig.globalObject.fontChanged.emit(font)
+		
+	def onButtonFixedFontClicked(self, checked):
+		font, ok = QtGui.QFontDialog.getFont(QtGui.qApp.font(), self)
+		if ok:
+			TableCrabConfig.settingsSetValue('Gui/FontFixed', font.toString())
+			TableCrabConfig.globalObject.fontFixedChanged.emit(font)
+		
+	def onFontChanged(self, font):
+		self.buttonFont.setText( QtCore.QString('%1 %2').arg(font.family()).arg(font.pointSize()) )
+		
+	def onFontFixedChanged(self, font):
+		self.buttonFixedFont.setText( QtCore.QString('%1 %2').arg(font.family()).arg(font.pointSize()) )
+		
 	def onComboGuiStyleCurrentIndexChanged(self, index):
 		QtGui.qApp.setStyle(QtGui.QStyleFactory.create(self.comboGuiStyle.itemText(index)) )
 		
