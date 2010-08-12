@@ -27,6 +27,8 @@ class FrameSettingsGlobal(QtGui.QFrame):
 				failsave=True,
 				parent=self,
 				)
+		self.comboGuiStyle.currentIndexChanged.connect(self.onComboGuiStyleCurrentIndexChanged)
+			
 		self.labelFont = QtGui.QLabel('Global Font:', self)
 		self.buttonFont = QtGui.QPushButton('..', self)
 		self.buttonFont.clicked.connect(self.onButtonFontClicked)
@@ -34,8 +36,7 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		self.labelFixedFont = QtGui.QLabel('Fixed Font:', self)
 		self.buttonFixedFont = QtGui.QPushButton('..', self)
 		self.buttonFixedFont.clicked.connect(self.onButtonFixedFontClicked)
-		
-		self.comboGuiStyle.currentIndexChanged.connect(self.onComboGuiStyleCurrentIndexChanged)
+			
 		self.labelZoomIncrement = QtGui.QLabel('Zoom Increment:', self)
 		self.spinZoomIncrement = TableCrabConfig.DoubleSpinBox(
 				settingsKey='Gui/WebView/ZoomIncrement', 
@@ -52,7 +53,7 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		self.checkAlternatingRowColors.stateChanged.connect(self.onAlternatingRowColorsChanged)
 		self.checkChildItemIndicators = TableCrabConfig.CheckBox('Show Child Item Indicators', default=True, settingsKey='Gui/ChildItemIndicators', parent=self)
 		self.checkChildItemIndicators.stateChanged.connect(self.onChildItemIndicatorsChanged)
-					
+			
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		self.buttonHelp.clicked.connect(self.onButtonHelpClicked)
 		self.buttonBox = QtGui.QDialogButtonBox(self)
@@ -223,8 +224,7 @@ class FrameSettingsPokerStars(QtGui.QFrame):
 		self.buttonHelp.clicked.connect(self.onButtonHelpClicked)
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
-		
-		
+			
 		self.layout()
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
@@ -337,6 +337,7 @@ class FrameSettingsHandSyleSheet(QtGui.QFrame):
 				maxChars=TableCrabConfig.MaxHandStyleSheet,
 				)
 		self.edit.maxCharsExceeded.connect(self.onMaxCharsExceeded)	
+		
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 		
 		self.buttonRestoreDefault = QtGui.QPushButton('Restore Default', self)
@@ -364,7 +365,6 @@ class FrameSettingsHandSyleSheet(QtGui.QFrame):
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
 		grid.addWidget(self.edit, 0, 0)
-		
 		grid.addWidget(TableCrabConfig.HLine(self), 1, 0)
 		grid2 = TableCrabConfig.GridBox()
 		grid.addLayout(grid2, 2, 0)
@@ -440,16 +440,18 @@ class FrameSettings(QtGui.QFrame):
 		
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
-		self.splitter = QtGui.QSplitter(self)
+			
 		self.listWidget = self.ListWidget(self)
+		self.listWidget.itemPressed.connect(self.onSettingSelected)
+		self.listWidget.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
+		
 		self.stack = QtGui.QStackedWidget(self)
 		
+		self.splitter = QtGui.QSplitter(self)
 		self.splitter.addWidget(self.listWidget)
 		self.splitter.addWidget(self.stack)
-		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
-		self.listWidget.itemPressed.connect(self.onSettingSelected)
 		
-		self.listWidget.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
+		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
 		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(self.onSettingAlternatingRowColorsChanged)	
 		
 		#
