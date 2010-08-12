@@ -52,12 +52,15 @@ logger.addHandler(handlers.RotatingFileHandler(
 		maxBytes=32000,
 		backupCount=0,
 		))
+
 def _excepthook(type, value, tb, 
 			sys=sys, 
 			traceback=traceback, 
 			logger=logger,
 			releaseName=ReleaseName,
 			platform=platform,
+			suppressException=False,
+			data=None,
 			):
 	# as failsave as possible
 	p = ''
@@ -68,28 +71,41 @@ def _excepthook(type, value, tb,
 		from PyQt4.QtCore import qVersion, PYQT_VERSION_STR
 		p += 'QtVersion: %s\n' % qVersion()
 		p += 'PyQtVersion: %s\n' % PYQT_VERSION_STR
-	except:
+	except Exception,d: 
+		print d
 		p += 'QtVersion: Unknown\n'
 		p += 'PyQtVersion: Unknown\n'
 	try:
 		import sipconfig
 		p += 'SipVersion: %s\n' % sipconfig.Configuration().sip_version_str
-	except:
+	except  Exception,d:
+		print d
 		p += 'SipVersion: Unknown\n'
 	p += ''.join(traceback.format_exception(type, value, tb))
-	try:
-		lastTraceback = p
-	except: pass
+	if data is not None:
+		try:
+			p += data
+		except Exception,d: 
+			print d
 	try:
 		globalObject.feedbackException.emit(p)
-	except: pass
+	except Exception, d: 
+		print d
 	try:	# try to log
 		logger.critical(p)
-	except:	# no success ..write to console
-		print p
-	
-	raise type(value)
+	except Exception, d:
+		print d
+	if not suppressException:
+		raise type(value)
 sys.excepthook = _excepthook
+
+
+def handleException(data=None):
+	'''handles an exception without raising it
+	@param data:(str) additional data topass along with the exception
+	'''
+	type, value, tb = sys.exc_info()
+	_excepthook(type, value, tb, suppressException=True, data=data)
 
 #************************************************************************************
 #
