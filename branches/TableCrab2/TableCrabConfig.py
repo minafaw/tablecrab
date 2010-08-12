@@ -172,6 +172,9 @@ class _GlobalObject(QtCore.QObject):
 	feedbackMessage =  QtCore.pyqtSignal(QtCore.QString)
 	feedbackException =  QtCore.pyqtSignal(QtCore.QString)
 	
+	fontChanged= QtCore.pyqtSignal(QtGui.QFont)
+	fontFixedChanged= QtCore.pyqtSignal(QtGui.QFont)
+	
 	settingAlternatingRowColorsChanged = QtCore.pyqtSignal(bool)
 	settingChildItemIndicatorsChanged = QtCore.pyqtSignal(bool)	
 	
