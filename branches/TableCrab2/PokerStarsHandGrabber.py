@@ -433,7 +433,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
         border-spacing: 0px; 
         border-collapse: collapse;
         }
-.handSource{margin-top: 10em;}
+.handSource{margin-top: 1em;}
 
 
 .playerCell{
