@@ -428,7 +428,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	PrefixCheck = 'ck'
 	PrefixFold = 'f'
 	MaxPlayerName = -1
-	Css = '''.handBody{}
+	StyleSheet = '''.handBody{}
 .handTable{
         border-spacing: 0px; 
         border-collapse: collapse;
@@ -610,7 +610,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		p >> '<head>'
 		p | '<meta name="author" content="TableCrab">'
 		p | '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
-		p | '<style type="text/css"><!-- %s --></style>' % TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/Css', self.Css).toString()
+		p | '<style type="text/css"><!-- %s --></style>' % TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/Css', self.StyleSheet).toString()
 		p << '</head>'
 		
 		p >> '<body class="handBody">'
