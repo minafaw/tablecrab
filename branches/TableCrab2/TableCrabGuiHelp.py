@@ -189,7 +189,11 @@ class FrameHelp(QtGui.QFrame):
 			
 		self.tree = QtGui.QTreeWidget(self)
 		self.tree.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
+		
+		# connect signals
 		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(self.onSettingAlternatingRowColorsChanged)
+		TableCrabConfig.globalObject.fontChanged.connect(self.onFontChanged)
+		TableCrabConfig.globalObject.fontFixedChanged.connect(self.onFontFixedChanged)
 		
 		self.splitter = QtGui.QSplitter(self)
 		self.splitter.addWidget(self.tree)
@@ -243,6 +247,14 @@ class FrameHelp(QtGui.QFrame):
 		box.addWidget(self.toolBar, 0, 0)
 		box.addWidget(self.splitter, 1, 0)
 		
+	def onFontChanged(self, font):
+		self.webView.settings().setFontFamily(QtWebKit.QWebSettings.StandardFont, font.family() )
+		self.webView.settings().setFontSize(QtWebKit.QWebSettings.DefaultFontSize, font.pointSize() )
+		
+	def onFontFixedChanged(self, font):
+		self.webView.settings().setFontFamily(QtWebKit.QWebSettings.FixedFont, font.family() )
+		self.webView.settings().setFontSize(QtWebKit.QWebSettings.DefaultFixedFontSize, font.pointSize() )
+	
 	def onItemSelectionChanged(self):
 		items = self.tree.selectedItems()
 		if not items: return

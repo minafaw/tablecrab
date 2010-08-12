@@ -23,6 +23,8 @@ class FrameHand(QtGui.QFrame):
 				parent=self,
 				)
 		self.pokerStarsHandGrabber.handGrabbed.connect(self.onPShandGrabberHandGrabbed)
+		TableCrabConfig.globalObject.fontChanged.connect(self.onFontChanged)
+		TableCrabConfig.globalObject.fontFixedChanged.connect(self.onFontFixedChanged)
 		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
 		self.webView.setZoomFactor( TableCrabConfig.settingsValue('Gui/Hand/ZoomFactor',  self.webView.zoomFactor() ).toDouble()[0] )
 		
@@ -122,14 +124,20 @@ class FrameHand(QtGui.QFrame):
 	def onActionHelpTriggered(self, checked):
 		TableCrabGuiHelp.dialogHelp('hand', parent=self)		
 	
+	def onFontChanged(self, font):
+		self.webView.settings().setFontFamily(QtWebKit.QWebSettings.StandardFont, font.family() )
+		self.webView.settings().setFontSize(QtWebKit.QWebSettings.DefaultFontSize, font.pointSize() )
+		
+	def onFontFixedChanged(self, font):
+		self.webView.settings().setFontFamily(QtWebKit.QWebSettings.FixedFont, font.family() )
+		self.webView.settings().setFontSize(QtWebKit.QWebSettings.DefaultFixedFontSize, font.pointSize() )
+	
 	def onPShandGrabberHandGrabbed(self, hand, data):
 		self.webView.setHtml( QtCore.QString.fromUtf8(data) )
 		self._hasHand = True
 		self.adjustActions()
 		TableCrabConfig.globalObject.feedback.emit(self, 'grabbed hand')
 	
-	
-
 #**********************************************************************************************
 #
 #**********************************************************************************************
