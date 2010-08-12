@@ -27,18 +27,14 @@ MaxHandGrabberPrefix = 8
 MaxHandStyleSheet = 9000
 
 #TODO: implement these
-# not very easy to limit this. QPlaintextEdit has no idea of its lenght
-##MaxHandGrabberCss = 8112
-# we could popup a message box that's all
+# let QWebKit deal with it
 ##MaxHandHtml = 0
-# no idea about this
+# no idea about this one
 ##MaxScreenshotSize = 0
 
 Ellipsis = '..'
 MaxWindowText = 512		# maximum number of chars we retrieve as text / title from other windows
 MaxHandHistoryText = 16384
-
-
 
 #****************************************************************************************
 # setup minimal stuff to get at least some information in case something goes wrong
@@ -684,17 +680,13 @@ def formatNum(num, precission=2):
 		tail = '%.*f' % (precission, tail)
 		tail = tail[1:]
 	return head + tail
-	
-	
 
 #***********************************************************************************
 # global Application object
 #***********************************************************************************
 application = QtGui.QApplication(sys.argv)
 
-#***********************************************************************************
-#
-#***********************************************************************************
+
 
 	
 	
