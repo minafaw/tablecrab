@@ -1,5 +1,4 @@
 
-#TODO: save splitter state in DialogHelp()
 #TODO: would be nice to auto-generate topics from disk. for now we have to keep track by hand.
 # auto-generating woul drequire some naming scheme to get the hirarchy - we only support flat
 # directories in our NetworkAccessmanager()  ++ some Html parsing to retrieve the desired title
@@ -260,7 +259,6 @@ class FrameHelp(QtGui.QFrame):
 		if not items: return
 		item = items[0]
 		topic = item.data(0, QtCore.Qt.UserRole).toString()
-		#url = QtCore.QUrl('TableCrab://HtmlPage/%s' % topic)
 		url = QtCore.QUrl('%s.html' % topic)
 		self.webView.setUrl(url)
 		TableCrabConfig.settingsSetValue('Gui/Help/Topic', topic)
@@ -293,6 +291,7 @@ class _DialogHelp(QtGui.QDialog):
 		self.frameHelp = FrameHelp(parent=self)
 		self.layout()
 		self.restoreGeometry( TableCrabConfig.settingsValue('Gui/DialogHelp/Geometry', QtCore.QByteArray()).toByteArray() )
+		self.frameHelp.splitter.restoreState( TableCrabConfig.settingsValue('Gui/DialogHelp/SplitterState', QtCore.QByteArray()).toByteArray() )
 			
 	def layout(self):
 		box = TableCrabConfig.GridBox(self)
@@ -302,14 +301,13 @@ class _DialogHelp(QtGui.QDialog):
 	
 	def hideEvent(self, event):
 		TableCrabConfig.settingsSetValue('Gui/DialogHelp/Geometry', self.saveGeometry() )
+		TableCrabConfig.settingsSetValue('Gui/Help/SplitterState', self.frameHelp.splitter.saveState() )
 		QtGui.QDialog.hideEvent(self, event)
 
 def dialogHelp(topic, parent=None):
 	dlg = _DialogHelp(topic, parent=parent)
 	dlg.show()
-	#TODO: how to save the splitter state? code below does not work. we may have to abstract the frame a bit more to get support for this
-	##dlg.frameHelpTree.onCloseEvent(None)
-
+	
 #**********************************************************************************************
 #
 #**********************************************************************************************
