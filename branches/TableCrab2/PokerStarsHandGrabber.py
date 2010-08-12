@@ -536,11 +536,15 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	def __init__(self):
 		''''''
 			
+	def settingsValue(self, key, default):
+		return TableCrabConfig.settingsValue(TableCrabConfig.settingsKeyJoin('PokerStarsHandGrabber/HandFornmatterHtmlTabular', key), default)
+		
+	
 	def formatNum(self, hand, num):
 		if not num:
 			result = ''
 		elif hand.hasCents:
-			if TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/NoFloatingPoint', QtCore.QVariant(False)).toBool():
+			if self.settingsValue('NoFloatingPoint', QtCore.QVariant(False)).toBool():
 				result = TableCrabConfig.formatNum(num*100, precission=0)
 			else:
 				result = TableCrabConfig.formatNum(num, precission=2)
@@ -581,7 +585,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			
 	#TODO: use TableCrabConfig.truncateString()
 	def formatPlayerName(self, playerName):
-		maxPlayerName = TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/MaxPlayerName', self.MaxPlayerName).toInt()[0]
+		maxPlayerName = self.settingsValue('MaxPlayerName', self.MaxPlayerName).toInt()[0]
 		if maxPlayerName > -1 and len(playerName) > maxPlayerName:
 			if maxPlayerName <= 0:
 				playerName = ''
@@ -600,7 +604,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		p >> '<head>'
 		p | '<meta name="author" content="TableCrab">'
 		p | '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
-		p | '<style type="text/css"><!-- %s --></style>' % TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/StyleSheet', self.StyleSheet).toString()
+		p | '<style type="text/css"><!-- %s --></style>' % self.settingsValue('StyleSheet', self.StyleSheet).toString()
 		p << '</head>'
 		
 		p >> '<body class="handBody">'
@@ -631,38 +635,38 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 				nActions = None
 				for nActions, action in enumerate(actions):
 					if action.type == action.TypeFold: 
-						p | '<div class="playerActionFold">%s</div>' % TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/PrefixFold', self.PrefixFold).toString()
+						p | '<div class="playerActionFold">%s</div>' % self.settingsValue('PrefixFold', self.PrefixFold).toString()
 					elif action.type == action.TypeCheck: 
-						p |  '<div class="playerActionCheck">%s</div>' % TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/PrefixCheck', self.PrefixCheck).toString()
+						p |  '<div class="playerActionCheck">%s</div>' % self.settingsValue('PrefixCheck', self.PrefixCheck).toString()
 					elif action.type == action.TypeBet:
 						p | '<div class="playerActionBet">%s%s%s</div>' % (
-								TableCrabConfig.settingsValue('PokerStarsHandGrabber/handFornmatterHtmlTabular/PrefixBet', self.PrefixBet).toString(), 
+								self.settingsValue('PrefixBet', self.PrefixBet).toString(), 
 								self.formatNum(hand, action.amount), 
-								TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/PostfixBet', self.PostfixBet).toString()
+								self.settingsValue('PostfixBet', self.PostfixBet).toString()
 								)
 					elif action.type == action.TypeRaise:
 						p | '<div class="playerActionRaise">%s%s%s</div>' % (
-								TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/PrefixRaise', self.PrefixRaise).toString(), 
+								self.settingsValue('PrefixRaise', self.PrefixRaise).toString(), 
 								self.formatNum(hand, action.amount), 
-								TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/PostfixRaise', self.PostfixRaise).toString()
+								self.settingsValue('PostfixRaise', self.PostfixRaise).toString()
 								)
 					elif action.type == action.TypeCall:
 						p | '<div class="playerActionCall">%s%s%s</div>' % (
-								TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/PrefixCall', self.PrefixCall).toString(), 
+								self.settingsValue('PrefixCall', self.PrefixCall).toString(), 
 								self.formatNum(hand, action.amount), 
-								TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/PotfixCall', self.PostfixCall).toString()
+								self.settingsValue('PotfixCall', self.PostfixCall).toString()
 								)
 					elif action.type == action.TypePostBlindBig:
 						p | '<div class="playerActionPostBlindBig">%s%s%s</div>' % (
-								TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/PrefixBigBlind', self.PrefixBigBlind).toString(), 
+								self.settingsValue('PrefixBigBlind', self.PrefixBigBlind).toString(), 
 								self.formatNum(hand, action.amount), 
-								TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/PostfixBigBlind', self.PostfixBigBlind).toString()
+								self.settingsValue('PostfixBigBlind', self.PostfixBigBlind).toString()
 								)
 					elif action.type == action.TypePostBlindSmall:
 						p | '<div class="playerActionPostBlindSmall">%s%s%s</div>' % (
-								TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/PrefixSmallBlind', self.PrefixSmallBlind).toString(), 
+								self.settingsValue('PrefixSmallBlind', self.PrefixSmallBlind).toString(), 
 								self.formatNum(hand, action.amount), 
-								TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/PostfixSmallBlind', self.PostfixSmallBlind).toString()
+								self.settingsValue('PostfixSmallBlind', self.PostfixSmallBlind).toString()
 								)
 				
 				if nActions is None:
@@ -676,9 +680,9 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		pot = hand.calcPotSizes()
 		#TODO: to save some space we don't display ante for individual player. good idea or not?
 		potCellExtra = (
-				TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/PrefixAnte', 'ante ').toString() + 
+				self.settingsValue('PrefixAnte', 'ante ').toString() + 
 				self.formatNum(hand, hand.blindAnte) + 
-				TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/PostfixAnte', '').toString()
+				self.settingsValue('PostfixAnte', '').toString()
 				) if hand.blindAnte else '&nbsp;'
 		p | '<td colspan="2" class="potCellExtra">%s</td>' % potCellExtra
 		p | '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetBlinds])
