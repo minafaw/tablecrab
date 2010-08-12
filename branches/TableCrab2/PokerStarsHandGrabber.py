@@ -116,6 +116,8 @@ class Hand(QtCore.QObject):
 class HandParser(object):
 	"""hand history parser
 	"""	
+	
+	Currencies = u'$€£'
 	GameTypeMapping= {
 			"Hold'em No Limit": {
 					'gameType': Hand.GameTypeHoldem | Hand.GameLimitNoLimit,
@@ -180,7 +182,7 @@ class HandParser(object):
 			hand.seatNoButton = int(result.group('seatNoButton'))
 		return result is not None
 			
-	PatternSeat = re.compile('^Seat \s(?P<seatNo>[1-9]+)\:\s   (?P<player>.*?) \s\( [$EUR]? (?P<stack>.*?)\s.*  \)', re.X)
+	PatternSeat = re.compile('^Seat \s(?P<seatNo>[1-9]+)\:\s   (?P<player>.*?) \s\( [%s]? (?P<stack>.*?)\s.*  \)' % Currencies, re.X)
 	def matchSeat(self, hand, streetCurrent, line):
 		result= self.PatternSeat.match(line)
 		if result is not None:
@@ -203,7 +205,7 @@ class HandParser(object):
 	#FIXME: determine hand.BlindAnte/BlindSmall/BlindBig from what player posted is quite stupid. have to parse hand header 
 	#            instead. but ..dont like parsing this mess + it is broken anyways. ante is not mentioned for cash games. maybe 
 	#            stars get their stuff sorted out somedays. gogogogo stars
-	PatternPostAnte =  re.compile('^(?P<player>.*?)\: \s posts \s the \s ante \s [$EUR]? (?P<amount>[0-9\.\,]+ )', re.X)
+	PatternPostAnte =  re.compile('^(?P<player>.*?)\: \s posts \s the \s ante \s [%s]? (?P<amount>[0-9\.\,]+ )' % Currencies, re.X)
 	def matchPostAnte(self, hand, streetCurrent, line):
 		result = self.PatternPostAnte.match(line)
 		if result is not None:
@@ -214,7 +216,7 @@ class HandParser(object):
 			hand.blindAnte = max(amount, hand.blindAnte)
 		return result is not None
 		
-	PatternPostSmallBlind = re.compile('^(?P<player>.*?)\: \s posts \s small \s blind \s [$EUR]? (?P<amount>[0-9\.\,]+)', re.X)
+	PatternPostSmallBlind = re.compile('^(?P<player>.*?)\: \s posts \s small \s blind \s [%s]? (?P<amount>[0-9\.\,]+)'  % Currencies, re.X)
 	def matchPostSmallBlind(self, hand, streetCurrent, line):
 		result = self.PatternPostSmallBlind.match(line)
 		if result is not None:
@@ -225,7 +227,7 @@ class HandParser(object):
 			hand.blindSmall = max(amount, hand.blindSmall)
 		return result is not None
 	
-	PatternPostBigBlind = re.compile('^(?P<player>.*?)\: \s posts \s big \s blind \s [$EUR]? (?P<amount>[0-9\.\,]+ )', re.X)
+	PatternPostBigBlind = re.compile('^(?P<player>.*?)\: \s posts \s big \s blind \s [%s]? (?P<amount>[0-9\.\,]+ )' % Currencies, re.X)
 	def matchPostBigBlind(self, hand, streetCurrent, line):
 		result = self.PatternPostBigBlind.match(line)
 		if result is not None:
@@ -282,7 +284,7 @@ class HandParser(object):
 			hand.actions[streetCurrent].append(action)
 		return result is not None
 	
-	PatternCall = re.compile('^(?P<player>.+?) \:\s calls \s [$EUR]? (?P<amount>[0-9\.\,]+)', re.X)
+	PatternCall = re.compile('^(?P<player>.+?) \:\s calls \s [%s]? (?P<amount>[0-9\.\,]+)' % Currencies, re.X)
 	def matchCall(self, hand, streetCurrent, line):
 		result = self.PatternCall.match(line)
 		if result is not None:
@@ -291,7 +293,7 @@ class HandParser(object):
 			hand.actions[streetCurrent].append(action)
 		return result is not None
 	
-	PatternBet = re.compile('^(?P<player>.+?) \:\s bets \s [$EUR]? (?P<amount>[0-9\.\,]+)', re.X)
+	PatternBet = re.compile('^(?P<player>.+?) \:\s bets \s [%s]? (?P<amount>[0-9\.\,]+)'  % Currencies, re.X)
 	def matchBet(self, hand, streetCurrent, line):
 		result = self.PatternBet.match(line)
 		if result is not None:
@@ -300,7 +302,7 @@ class HandParser(object):
 			hand.actions[streetCurrent].append(action)
 		return result is not None
 	
-	PatternRaise = re.compile('^(?P<player>.+?) \:\s raises \s  .*?\s to \s [$EUR]? (?P<amount>[0-9\.\,]+)', re.X)
+	PatternRaise = re.compile('^(?P<player>.+?) \:\s raises \s  .*?\s to \s [%s]? (?P<amount>[0-9\.\,]+)'  % Currencies, re.X)
 	def matchRaise(self, hand, streetCurrent, line):
 		result = self.PatternRaise.match(line)
 		if result is not None:
@@ -546,16 +548,16 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	def __init__(self):
 		''''''
 			
-	def formatNum(self, hand, num, toInt=False):
+	def formatNum(self, hand, num):
 		if not num:
 			result = ''
 		elif hand.hasCents:
 			if TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/NoFloatingPoint', QtCore.QVariant(False)).toBool():
-				result = str(int(num*100))
+				result = TableCrabConfig.formatNum(num*100, precission=0)
 			else:
-				result = str(num)
+				result = TableCrabConfig.formatNum(num, precission=2)
 		else:
-			result = str(int(num))
+			result = TableCrabConfig.formatNum(num, precission=0)
 		return result
 			
 	def htmlEscapeString(self, string, spaces=True):
