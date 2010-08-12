@@ -51,7 +51,7 @@ Topics = [
 				('settingsGlobal', 'Global'),
 				('settingsPokerStars', 'PokerStars'),
 				('settingsHand', 'Hand'),
-				('settingsHandCss', 'Hand-Css'),
+				('settingsHandStyleSheet', 'Hand Style Sheet'),
 				],
 			],
 		('versionHistory.html', 'Version History'),
