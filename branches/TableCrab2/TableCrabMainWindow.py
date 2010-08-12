@@ -18,18 +18,6 @@ class MainWindow(QtGui.QMainWindow):
 		self.restoreGeometry( TableCrabConfig.settingsValue('Gui/Geometry', QtCore.QByteArray()).toByteArray() )
 		self.siteManager = TableCrabSiteManager.SiteManager(parent=self)
 	def show(self):
-		
-		font = QtGui.qApp.font()
-		font.fromString(TableCrabConfig.settingsValue('Gui/Font', '').toString() )
-		QtGui.qApp.setFont(font)
-		TableCrabConfig.globalObject.fontChanged.emit(font)
-			
-		font = QtGui.QFont( QtWebKit.QWebSettings.globalSettings().fontFamily(QtWebKit.QWebSettings.FixedFont) )
-		font.fromString(TableCrabConfig.settingsValue('Gui/FontFixed', '').toString() )
-		TableCrabConfig.globalObject.fontFixedChanged.emit(font)
-			
-		style = TableCrabConfig.settingsValue('Gui/Style', '').toString()
-		QtGui.qApp.setStyle(QtGui.QStyleFactory.create(style))
 		QtGui.QMainWindow.show(self)
 		TableCrabConfig.mouseHook.start()
 		TableCrabConfig.keyboardHook.start()

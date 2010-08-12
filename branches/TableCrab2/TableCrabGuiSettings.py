@@ -58,11 +58,11 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
 			
-		# connect signals
-		TableCrabConfig.globalObject.fontChanged.connect(self.onFontChanged)
-		TableCrabConfig.globalObject.fontFixedChanged.connect(self.onFontFixedChanged)
-		
+		# set all aplplication fonts
+		self.setFont()
+		self.setFixedFont()
 		self.layout()
+		
 	
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
@@ -90,14 +90,40 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		grid.addWidget(self.checkRestoreMousePosition, 5, 0)
 		grid.addWidget(self.checkAlternatingRowColors, 6, 0)
 		grid.addWidget(self.checkChildItemIndicators, 7, 0)
-		
-		
+			
 		grid.addLayout(TableCrabConfig.VStretch(), 8, 0)
 		grid.addWidget(TableCrabConfig.HLine(self), 9, 0, 1, 3)
 			
 		grid2 = TableCrabConfig.GridBox()
 		grid.addLayout(grid2, 10, 0, 1, 3)
 		grid2.addWidget(self.buttonBox, 0, 0)
+		
+	def setFont(self):
+		font = QtGui.QFont()
+		# try to read font from config, if not take application font
+		if font.fromString( TableCrabConfig.settingsValue('Gui/Font', '').toString() ):
+			QtGui.qApp.setFont(font)
+		else:
+			font = QtGui.qApp.font()
+		# we have to reload style on font changes anyways, so global style setting is dome here
+		QtGui.qApp.setStyle(QtGui.QStyleFactory.create( TableCrabConfig.settingsValue('Gui/Style', '').toString() ))
+		self.buttonFont.setText( QtCore.QString('%1 %2').arg(font.family()).arg(font.pointSize()) )
+		# take QWebKit StandardFont from application font
+		settings = QtWebKit.QWebSettings.globalSettings()
+		settings.setFontFamily(settings.StandardFont, font.family() )
+		settings.setFontSize(settings.DefaultFontSize, font.pointSize() )
+	
+	def setFixedFont(self):
+		font = QtGui.QFont()
+		settings = QtWebKit.QWebSettings.globalSettings()
+		# try to read QWebKit FixedFont from config, if not take it from QWebKit FixedFont
+		if font.fromString(TableCrabConfig.settingsValue('Gui/FontFixed', '').toString() ):
+			settings.setFontFamily(settings.FixedFont, font.family() )
+			settings.setFontSize(settings.DefaultFixedFontSize, font.pointSize() )
+		else:
+			font.setFamily( settings.fontFamily(settings.FixedFont) )
+			font.setPointSize( settings.fontSize(settings.DefaultFixedFontSize) )
+		self.buttonFixedFont.setText( QtCore.QString('%1 %2').arg(font.family()).arg(font.pointSize()) )
 		
 	def onButtonBackupClicked(self, checked):
 		dlg = QtGui.QFileDialog(self)
@@ -146,24 +172,18 @@ class FrameSettingsGlobal(QtGui.QFrame):
 	def onButtonFontClicked(self, checked):
 		font, ok = QtGui.QFontDialog.getFont(QtGui.qApp.font(), self)
 		if ok:
-			QtGui.qApp.setFont(font)
-			#TODO: for some reason font changes are reflected when we run this module but not when we run from TableCrabGui.py
-			#				setting style explicitely fixes this. hack fro now 
-			QtGui.qApp.setStyle(QtGui.QStyleFactory.create( TableCrabConfig.settingsValue('Gui/Style', '').toString() ))
 			TableCrabConfig.settingsSetValue('Gui/Font', font.toString())
-			TableCrabConfig.globalObject.fontChanged.emit(font)
-		
+			self.setFont()
+			
 	def onButtonFixedFontClicked(self, checked):
-		font, ok = QtGui.QFontDialog.getFont(QtGui.qApp.font(), self)
+		font = QtGui.QFont()
+		settings = QtWebKit.QWebSettings.globalSettings()
+		font.setFamily( settings.fontFamily(settings.FixedFont) )
+		font.setPointSize( settings.fontSize(settings.DefaultFixedFontSize) )
+		font, ok = QtGui.QFontDialog.getFont(font, self)
 		if ok:
 			TableCrabConfig.settingsSetValue('Gui/FontFixed', font.toString())
-			TableCrabConfig.globalObject.fontFixedChanged.emit(font)
-		
-	def onFontChanged(self, font):
-		self.buttonFont.setText( QtCore.QString('%1 %2').arg(font.family()).arg(font.pointSize()) )
-		
-	def onFontFixedChanged(self, font):
-		self.buttonFixedFont.setText( QtCore.QString('%1 %2').arg(font.family()).arg(font.pointSize()) )
+			self.setFixedFont()
 		
 	def onComboGuiStyleCurrentIndexChanged(self, index):
 		QtGui.qApp.setStyle(QtGui.QStyleFactory.create(self.comboGuiStyle.itemText(index)) )
@@ -173,6 +193,7 @@ class FrameSettingsGlobal(QtGui.QFrame):
 	
 	def onChildItemIndicatorsChanged(self, state):
 		TableCrabConfig.globalObject.settingChildItemIndicatorsChanged.emit(state == QtCore.Qt.Checked)
+
 
 class FrameSettingsPokerStars(QtGui.QFrame):
 	def __init__(self, parent=None):
