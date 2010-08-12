@@ -2,18 +2,6 @@
 
 #TODO: make hand parser failsave
 
-'''standalone PokerStars "instant hand history" grabber
-
-this programm runs a standalone to grab, format and dump to html the hand history currently
-displayed in PokerStars "instant hand history". there is no viewer for the file, so an idea is to load 
-the dumped file into a browser and set the browser to autorefresh every N seconds.
-
-@requires: python >= 2.6
-@usage: path/to/python PokerStarsHandHistoryGrabber.py [path/toMyConfig.cfg]
-
-'''
-
-
 import re, time, sys, cStringIO, thread
 from PyQt4 import QtCore
 
