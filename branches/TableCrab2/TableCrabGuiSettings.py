@@ -308,12 +308,15 @@ class FrameSettingsHand(QtGui.QFrame):
 		
 
 class FrameSettingsHandSyleSheet(QtGui.QFrame):
+		
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 		self.edit = TableCrabConfig.PlainTextEdit(
 				settingsKey='PokerStarsHandGrabber/handFornmatterHtmlTabular/StyleSheet', 
-				default=PokerStarsHandGrabber.HandFormatterHtmlTabular.StyleSheet
+				default=PokerStarsHandGrabber.HandFormatterHtmlTabular.StyleSheet,
+				maxChars=TableCrabConfig.MaxHandStyleSheet,
 				)
+		self.edit.maxCharsExceeded.connect(self.onMaxCharsExceeded)	
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 		
 		self.buttonRestoreDefault = QtGui.QPushButton('Restore Default', self)
@@ -396,6 +399,9 @@ class FrameSettingsHandSyleSheet(QtGui.QFrame):
 	#TODO: resetting document jumps to top of widget. store/restore position would be nice
 	def onButtonRestoreDefaultClicked(self):
 		self.edit.setPlainText(PokerStarsHandGrabber.HandFormatterHtmlTabular.StyleSheet)
+	
+	def onMaxCharsExceeded(self, flag):
+		TableCrabConfig.globalObject.feedback.emit(self, ('Style sheet too big -- maximum Is %s chars' % TableCrabConfig.MaxHandStyleSheet) if flag else '')
 
 
 class FrameSettings(QtGui.QFrame):
