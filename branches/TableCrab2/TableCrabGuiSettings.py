@@ -219,6 +219,11 @@ class FrameSettingsPokerStars(QtGui.QFrame):
 				settingsKey='PokerStars/AutoCloseLogin',
 				default=False
 				)
+		self.checkMoveMouseToActiveTable = TableCrabConfig.CheckBox(
+				'Move Mouse To Active table',
+				settingsKey='PokerStars/MoveMouseToActiveTable',
+				default=False
+				)
 
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		self.buttonHelp.clicked.connect(self.onButtonHelpClicked)
@@ -232,11 +237,14 @@ class FrameSettingsPokerStars(QtGui.QFrame):
 		grid.addWidget(self.checkAutoCloseTourneyRegistrationBoxes, 1, 0)
 		grid.addWidget(self.checkAutoCloseTableMessageBoxes, 2, 0)
 		grid.addWidget(self.checkAutoLogIn, 3, 0)
-		grid.addLayout(TableCrabConfig.VStretch(), 4, 0)
-		grid.addWidget(TableCrabConfig.HLine(self), 5, 0)
+		grid.addWidget(self.checkMoveMouseToActiveTable, 4, 0)
+
+
+		grid.addLayout(TableCrabConfig.VStretch(), 5, 0)
+		grid.addWidget(TableCrabConfig.HLine(self), 6, 0)
 
 		grid2 = TableCrabConfig.GridBox()
-		grid.addLayout(grid2, 6, 0)
+		grid.addLayout(grid2, 7, 0)
 		grid2.addWidget(self.buttonBox, 0, 0)
 
 	def onButtonHelpClicked(self, checked):

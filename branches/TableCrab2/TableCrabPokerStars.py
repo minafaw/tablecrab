@@ -69,6 +69,11 @@ class ActionHandler(QtCore.QObject):
 		template = self.tableTemplate(hwnd)
 		if template is not None:
 			TableCrabConfig.globalObject.feedbackMessage.emit(template.name)
+			if TableCrabConfig.settingsValue('PokerStars/MoveMouseToActiveTable', False).toBool():
+				if not TableCrabWin32.mouseButtonsDown():
+					point = template.emptySpace
+					point = TableCrabWin32.windowClientPointToScreenPoint(hwnd, point)
+					TableCrabWin32.mouseSetPos(point)
 			return True
 		return False
 
