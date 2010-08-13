@@ -73,29 +73,29 @@ def _excepthook(type, value, tb,
 		p += 'QtVersion: %s\n' % qVersion()
 		p += 'PyQtVersion: %s\n' % PYQT_VERSION_STR
 	except Exception,d: 
-		print d
+		print releaseName + ': ' + d
 		p += 'QtVersion: Unknown\n'
 		p += 'PyQtVersion: Unknown\n'
 	try:
 		import sipconfig
 		p += 'SipVersion: %s\n' % sipconfig.Configuration().sip_version_str
 	except  Exception,d:
-		print d
+		print releaseName + ': ' + d
 		p += 'SipVersion: Unknown\n'
 	p += ''.join(traceback.format_exception(type, value, tb))
 	if data is not None:
 		try:
 			p += data
 		except Exception,d: 
-			print d
+			print releaseName + ': ' + d
 	try:
 		globalObject.feedbackException.emit(p)
 	except Exception, d: 
-		print d
+		print releaseName + ': ' + d
 	try:	# try to log
 		logger.critical(p)
 	except Exception, d:
-		print d
+		print releaseName + ': ' + d
 	if not suppressException:
 		raise type(value)
 sys.excepthook = _excepthook
