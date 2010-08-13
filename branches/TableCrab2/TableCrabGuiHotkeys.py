@@ -13,7 +13,7 @@ from PyQt4 import QtCore, QtGui
 #**********************************************************************************************
 
 class HotkeyWidget(QtGui.QTreeWidget):
-	
+
 	class ActionNewHotkey(QtGui.QAction):
 		def __init__(self, hotkeyProto, parent=None):
 			QtGui.QAction.__init__(self, parent)
@@ -22,24 +22,26 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			self.triggered.connect(self.onTriggered)
 		def onTriggered(self):
 			self.parent().createHotkey(self.hotkeyProto)
-		
+
 	def __init__(self, parent=None):
 		QtGui.QTreeWidget.__init__(self, parent)
-		
+
 		TableCrabConfig.hotkeyManager = self
-			
+
 		# setup treeWidget
 		self.setColumnCount(2)
 		self.setRootIsDecorated(False)
 		self.setSelectionBehavior(self.SelectRows)
 		self.header().setVisible(False)
-		self.header().setResizeMode (0, QtGui.QHeaderView.ResizeToContents)
-		self.header().setResizeMode (1, QtGui.QHeaderView.ResizeToContents)
-		self.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
-		
+		self.header().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
+		self.header().setResizeMode(1, QtGui.QHeaderView.ResizeToContents)
+		self.setAlternatingRowColors(
+				TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool()
+				)
+
 		# setup actions
 		self._actions = []
-		
+
 		menu = QtGui.QMenu(self)
 		for hotkeyProto in TableCrabHotkeys.Hotkeys:
 			menu.addAction(self.ActionNewHotkey(hotkeyProto, parent=self) )
@@ -78,21 +80,23 @@ class HotkeyWidget(QtGui.QTreeWidget):
 				slot=self.removeHotkey,
 				)
 		self._actions.append(self.actionRemove)
-			
+
 		# connect signals
-		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(self.onSetAlternatingRowColors),
+		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(
+				self.onSetAlternatingRowColors
+				)
 		self.itemDoubleClicked.connect(self.onHotkeyDoubleClicked)
 		self.itemSelectionChanged.connect(self.adjustActions)
-		
+
 		self.adjustActions()
-		
+
 	def __iter__(self):
 		for i in xrange(self.topLevelItemCount()):
 			yield self.topLevelItem(i)
-		
+
 	def onSetAlternatingRowColors(self, flag):
 		self.setAlternatingRowColors(flag)
-	
+
 	def keyReleaseEvent(self, event):
 		#TODO: for some reason the first enter when the widget is created is not accepted
 		if event.key() == QtCore.Qt.Key_Return and not event.modifiers():
@@ -102,9 +106,9 @@ class HotkeyWidget(QtGui.QTreeWidget):
 				self.editHotkey()
 			return
 		return QtGui.QTreeWidget.keyReleaseEvent(self, event)
-	
+
 	def actions(self): return self._actions
-		
+
 	def adjustActions(self):
 		hotkey = self.currentItem()
 		self.actionNew.setEnabled(self.topLevelItemCount() < TableCrabConfig.MaxHotkeys)
@@ -118,7 +122,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			self.actionDown.setEnabled(self.canMoveHotkeyDown() )
 			self.actionRemove.setEnabled(True)
 			self.actionEdit.setEnabled(True)
-	
+
 	def canMoveHotkeyDown(self):
 		hotkey = self.currentItem()
 		if hotkey is None:
@@ -126,7 +130,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		else:
 			return self.indexOfTopLevelItem(hotkey) < self.topLevelItemCount() -1
 		return False
-			
+
 	def canMoveHotkeyUp(self):
 		hotkey = self.currentItem()
 		if hotkey is None:
@@ -134,27 +138,35 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		else:
 			return self.indexOfTopLevelItem(hotkey) > 0
 		return False
-		
+
 	def createHotkey(self, hotkeyProto):
 		hotkey = hotkeyProto()
-		hotkey = hotkey.createEditor(parent=self, settingsKey='Gui/DialogHotkeyEditor/Geometry', isEdit=False)
+		hotkey = hotkey.createEditor(
+				parent=self,
+				settingsKey='Gui/DialogHotkeyEditor/Geometry',
+				isEdit=False
+				)
 		if hotkey is not None:
 			self.addTopLevelItem(hotkey)
 			self.setCurrentItem(hotkey)
 			self.dump()
-	
+
 	def dump(self):
 		TableCrabConfig.dumpPersistentItems('Hotkeys', self)
-	
+
 	def editHotkey(self):
 		hotkey = self.currentItem()
 		if hotkey is None:
 			self.actionEdit.setEnabled(False)
 			return
-		hotkey = hotkey.createEditor(parent=self, settingsKey='Gui/DialogHotkeyEditor/Geometry', isEdit=True)
+		hotkey = hotkey.createEditor(
+				parent=self,
+				settingsKey='Gui/DialogHotkeyEditor/Geometry',
+				isEdit=True
+				)
 		if hotkey is not None:
 			self.dump()
-		
+
 	def moveHotkeyDown(self):
 		hotkey = self.currentItem()
 		if hotkey is None:
@@ -165,7 +177,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self.insertTopLevelItem(index +1, hotkey)
 		self.setCurrentItem(hotkey)
 		self.dump()
-		
+
 	def moveHotkeyUp(self):
 		hotkey = self.currentItem()
 		if hotkey is None:
@@ -176,16 +188,20 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			self.insertTopLevelItem(index -1, hotkey)
 			self.setCurrentItem(hotkey)
 			self.dump()
-	
+
 	def read(self):
 		hotkey = None
-		for hotkey in TableCrabConfig.readPersistentItems('Hotkeys', maxItems=TableCrabConfig.MaxHotkeys, itemProtos=TableCrabHotkeys.Hotkeys):
+		for hotkey in TableCrabConfig.readPersistentItems(
+				'Hotkeys',
+				maxItems=TableCrabConfig.MaxHotkeys,
+				itemProtos=TableCrabHotkeys.Hotkeys
+				):
 			self.addTopLevelItem(hotkey)
 		# set at least one hotkey as default
 		if hotkey is None:
 			hotkey = TableCrabHotkeys.HotkeyScreenshot(hotkey='<F1+LeftControl>')
 			self.addTopLevelItem(hotkey)
-		
+
 	def removeHotkey(self):
 		hotkey = self.currentItem()
 		if hotkey is None:
@@ -193,13 +209,13 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			return
 		self.takeTopLevelItem(self.indexOfTopLevelItem(hotkey) )
 		self.dump()
-		
+
 	def onHotkeyDoubleClicked(self, hotkey):
 		self.editHotkey()
-	
+
 
 class FrameHotkeys(QtGui.QFrame):
-			
+
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 		self.HotkeyWidget = HotkeyWidget(self)
@@ -213,15 +229,15 @@ class FrameHotkeys(QtGui.QFrame):
 				)
 		self.toolBar.addAction(self.actionHelp)
 		self.layout()
-		
+
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
 		grid.addWidget(self.toolBar, 0, 0)
 		grid.addWidget(self.HotkeyWidget, 1, 0)
-	
+
 	def onActionHelpTriggered(self):
 		TableCrabGuiHelp.dialogHelp('hotkeys', parent=self)
-		
+
 #**********************************************************************************************
 #
 #**********************************************************************************************
@@ -230,5 +246,5 @@ if __name__ == '__main__':
 	g = TableCrabMainWindow.MainWindow()
 	g.setCentralWidget(FrameHotkeys(g))
 	g.start()
-	
-	
+
+
