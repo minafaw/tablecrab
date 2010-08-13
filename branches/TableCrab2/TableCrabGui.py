@@ -139,7 +139,7 @@ class Gui(TableCrabMainWindow .MainWindow):
 			widget = widget.parent()
 			if widget is None: break
 		if tab is None:
-			raise valueError('widget is not on one of our tabs')
+			raise ValueError('widget is not on one of our tabs')
 		# store data for tab changes
 		self._feedbackMessages[tab] = string
 		if tab is self.tabWidget.currentWidget():
