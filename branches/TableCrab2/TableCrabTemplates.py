@@ -21,14 +21,14 @@ class ChildItem(QtGui.QTreeWidgetItem):
 		self.setText(1, value)
 	def toplevel(self):
 		return self.parent()
-	
+
 class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
-	_PointNames = ('buttonCheck', 'buttonFold', 'buttonRaise', 'checkboxFold', 'checkboxCheckFold', 
+	_PointNames = ('buttonCheck', 'buttonFold', 'buttonRaise', 'checkboxFold', 'checkboxCheckFold',
 			'betSliderStart', 'betSliderEnd', 'instantHandHistory', 'replayer')
-	def __init__(self, 
-			parent=None, 
+	def __init__(self,
+			parent=None,
 			name='',
-			size=None, 
+			size=None,
 			buttonCheck=None,
 			buttonFold=None,
 			buttonRaise=None,
@@ -53,8 +53,8 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 		self.instantHandHistory = newValidPoint(instantHandHistory)
 		self.replayer = newValidPoint(replayer)
 		self.itemIsExpanded = itemIsExpanded
-		
-				
+
+
 		self.setFirstColumnSpanned(True)
 		self.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
 		self.setIcon(0, QtGui.QIcon(TableCrabConfig.Pixmaps.stars()) )
@@ -63,7 +63,7 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 		self.setFont(0, font)
 		self.setExpanded( self.itemIsExpanded)
 		self.setText(0, self.name)
-		
+
 		self.itemType = ChildItem('Type:',  self.menuName(), parent=self)
 		self.itemType.setDisabled(True)
 		self.itemSize = ChildItem('Size:',  TableCrabConfig.sizeToString(self.size), parent=self)
@@ -74,29 +74,29 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 			item = ChildItem(pointName[0].upper() + pointName[1:],  TableCrabConfig.pointToString(point), parent=self)
 			item.setDisabled(True)
 			self.itemsPoint.append( (pointName, item) )
-	
+
 	def toplevel(self):
 		return self
-	
+
 	def handleEditingFinished(self, item):
 		if item is self:
 			if self.text(0) != self.name:
 				self.name = self.text(0)
 				return True
 		return False
-		
+
 	def handleItemExpanded(self, item):
 		if item is self:
 			self.itemIsExpanded = True
 			return True
 		return False
-			
+
 	def handleItemCollapsed(self, item):
 		if item is self:
 			self.itemIsExpanded = False
 			return True
 		return False
-		
+
 	def handleScreenshotSet(self, pixmap):
 		if pixmap.isNull():
 			for _, item in self.itemsPoint:
@@ -110,7 +110,7 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 		else:
 			for _, item in self.itemsPoint:
 				item.setDisabled(True)
-		
+
 	def handleScreenshotDoubleClicked(self, item, pixmap, point):
 		if item.isDisabled():
 			return False
@@ -127,7 +127,7 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 		else:
 			raise ValueError('no item found')
 		return False
-		
+
 	@classmethod
 	def id(klass):
 		return 'PokerStarsTable'
@@ -144,7 +144,7 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 		if not size.isValid():
 			size = TableCrabConfig.newSizeNone()
 		attrs['size'] = size
-		attrs['itemIsExpanded'] = TableCrabConfig.settingsValue( (key, 'ItemIsExpanded'), False).toBool()	
+		attrs['itemIsExpanded'] = TableCrabConfig.settingsValue( (key, 'ItemIsExpanded'), False).toBool()
 		for pointName in klass._PointNames:
 			keyName = pointName[0].upper() + pointName[1:]
 			point = TableCrabConfig.settingsValue( (key, keyName), TableCrabConfig.newPointNone() ).toPoint()
@@ -166,6 +166,6 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 			keyName = pointName[0].upper() + pointName[1:]
 			TableCrabConfig.settingsSetValue( (key, keyName), getattr(self, pointName) )
 		return True
-		
+
 Templates.append(TemplatePokerStarsTable)
 
