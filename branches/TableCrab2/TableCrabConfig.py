@@ -54,9 +54,9 @@ logger.addHandler(handlers.RotatingFileHandler(
 		backupCount=0,
 		))
 
-def _excepthook(type, value, tb, 
-			sys=sys, 
-			traceback=traceback, 
+def _excepthook(type, value, tb,
+			sys=sys,
+			traceback=traceback,
 			logger=logger,
 			releaseName=ReleaseName,
 			platform=platform,
@@ -72,7 +72,7 @@ def _excepthook(type, value, tb,
 		from PyQt4.QtCore import qVersion, PYQT_VERSION_STR
 		p += 'QtVersion: %s\n' % qVersion()
 		p += 'PyQtVersion: %s\n' % PYQT_VERSION_STR
-	except Exception,d: 
+	except Exception,d:
 		print releaseName + ': ' + d
 		p += 'QtVersion: Unknown\n'
 		p += 'PyQtVersion: Unknown\n'
@@ -86,11 +86,11 @@ def _excepthook(type, value, tb,
 	if data is not None:
 		try:
 			p += data
-		except Exception,d: 
+		except Exception,d:
 			print releaseName + ': ' + d
 	try:
 		globalObject.feedbackException.emit(p)
-	except Exception, d: 
+	except Exception, d:
 		print releaseName + ': ' + d
 	try:	# try to log
 		logger.critical(p)
@@ -140,7 +140,7 @@ class SingleApplication(object):
 		self.hMutex = TableCrabWin32.kernel32.CreateMutexA(None, 1, 'Local\\73524668475460800279396959888864133024')
 		atexit.register(self.close)
 		if TableCrabWin32.GetLastError() == TableCrabWin32.ERROR_INVALID_HANDLE:
-			#TODO: we could try to find the app holding the mutex (hopefuly us up and alive) and activate it 
+			#TODO: we could try to find the app holding the mutex (hopefuly us up and alive) and activate it
 			# gut feeling it is be better to raise and log here. so we get at least some information in case someone blocks our mutex
 			##sys.exit(1)
 			raise RuntimeError('%s is already running' % ApplicationName)
@@ -171,7 +171,7 @@ def settingsSetValue(key, value):
 	_qSettings.setValue(key, QtCore.QVariant(value) )
 def settingsRemoveKey(key):
 	key = settingsKeyJoin(configKey, key)
-	#TODO: for some reason QSettings.contains(key) always return false here even if the key exists 
+	#TODO: for some reason QSettings.contains(key) always return false here even if the key exists
 	##print key, _qSettings.contains(key)
 	#if _qSettings.contains(key):
 	_qSettings.remove(key)
@@ -180,18 +180,18 @@ def settingsRemoveKey(key):
 # global singal handling and messages
 #***********************************************************************************
 class _GlobalObject(QtCore.QObject):
-	
+
 	# global signals
 	closeEvent = QtCore.pyqtSignal(QtCore.QEvent)
-	
+
 	#TODO: overload to accept QObject aswell
 	feedback =  QtCore.pyqtSignal(QtGui.QWidget, QtCore.QString)
 	feedbackMessage =  QtCore.pyqtSignal(QtCore.QString)
 	feedbackException =  QtCore.pyqtSignal(QtCore.QString)
-	
+
 	settingAlternatingRowColorsChanged = QtCore.pyqtSignal(bool)
-	settingChildItemIndicatorsChanged = QtCore.pyqtSignal(bool)	
-	
+	settingChildItemIndicatorsChanged = QtCore.pyqtSignal(bool)
+
 	# new screenshot created (hwnd, pixmap)
 	widgetScreenshot = QtCore.pyqtSignal(int, QtGui.QPixmap)
 	# a screenshot has been double clicked in the screenshot widget
@@ -200,7 +200,7 @@ class _GlobalObject(QtCore.QObject):
 	widgetScreenshotQuery = QtCore.pyqtSignal()
 	# a sceenshot has been set to screenshot widget. a null pixmap is passed if no screenshot has been set
 	widgetScreenshotSet = QtCore.pyqtSignal(QtGui.QPixmap)
-	
+
 globalObject = _GlobalObject()
 
 #***********************************************************************************
@@ -250,14 +250,14 @@ def readPersistentItems(settingsKey, maxItems=0, itemProtos=None):
 	if forceDump:
 		dumpPersistentItems(settignsKey, items)
 	return items
-	
+
 #***********************************************************************************
 # global objects
 #***********************************************************************************
 windowHook = TableCrabWin32.WindowHook(parent=None, timeout=WindowHookTimeout)
 mouseHook = TableCrabWin32.MouseHook(parent=None)
 keyboardHook = TableCrabWin32.KeyboardHook(parent=None)
-#TODO: not with about this ..both only get set if and when the according widgets are created
+#TODO: ..both below only get set if and when the according widgets are created
 hotkeyManager = None
 templateManager = None
 
@@ -265,9 +265,9 @@ templateManager = None
 # Qt widgets
 #***********************************************************************************
 class Action(QtGui.QAction):
-	def __init__(self, 
+	def __init__(self,
 				parent=None,
-				text='', 
+				text='',
 				menu=None,
 				icon=None,
 				slot=None,
@@ -288,7 +288,7 @@ class Action(QtGui.QAction):
 		self.setAutoRepeat(autoRepeat)
 		if shortcut is not None:
 			self.setShortcut(QtGui.QKeySequence(shortcut) )
-		
+
 class WebViewToolBar(QtGui.QToolBar):
 	ZoomIncrement = 0.1
 	MaxZoom = 7
@@ -298,13 +298,13 @@ class WebViewToolBar(QtGui.QToolBar):
 		self.webView = webView
 		self.settingsKeyZoomFactor = settingsKeyZoomFactor
 		self.settingsKeyZoomIncrement = settingsKeyZoomIncrement
-		
+
 		if self.settingsKeyZoomFactor is not None:
 			self.webView.setZoomFactor( settingsValue(settingsKeyZoomFactor, self.webView.zoomFactor() ).toDouble()[0] )
-		
+
 		self.addAction( self.webView.pageAction(QtWebKit.QWebPage.Back) )
 		self.addAction( self.webView.pageAction(QtWebKit.QWebPage.Forward) )
-		
+
 		self.actionZoomIn = Action(
 				parent=self,
 				text='Zoom+',
@@ -314,7 +314,7 @@ class WebViewToolBar(QtGui.QToolBar):
 				slot=self.onActionZoomInTriggered,
 				)
 		self.addAction(self.actionZoomIn)
-		
+
 		self.actionZoomOut = Action(
 				parent=self,
 				text='Zoom-',
@@ -324,18 +324,18 @@ class WebViewToolBar(QtGui.QToolBar):
 				slot=self.onActionZoomOutTriggered,
 				)
 		self.addAction(self.actionZoomOut)
-		
+
 		self.adjustActions()
-	
+
 	def _zoomIncrement(self):
 		if self.settingsKeyZoomIncrement is not None:
 			return settingsValue(self.settingsKeyZoomIncrement, self.ZoomIncrement).toDouble()[0]
 		return self.ZoomIncrement
-	
+
 	def adjustActions(self):
 		self.actionZoomIn.setEnabled(self.webView.zoomFactor() + self._zoomIncrement() < self.MaxZoom)
 		self.actionZoomOut.setEnabled(self.webView.zoomFactor() -  + self._zoomIncrement() > self.MinZoom)
-	
+
 	def onActionZoomInTriggered(self):
 		zoomIncrement = self._zoomIncrement()
 		zoom = self.webView.zoomFactor() + zoomIncrement
@@ -344,7 +344,7 @@ class WebViewToolBar(QtGui.QToolBar):
 			if self.settingsKeyZoomFactor is not None:
 				settingsSetValue(self.settingsKeyZoomFactor, self.webView.zoomFactor())
 		self.adjustActions()
-		
+
 	def onActionZoomOutTriggered(self):
 		zoomIncrement = self._zoomIncrement()
 		zoom = self.webView.zoomFactor() - zoomIncrement
@@ -353,8 +353,8 @@ class WebViewToolBar(QtGui.QToolBar):
 			if self.settingsKeyZoomFactor is not None:
 				settingsSetValue(self.settingsKeyZoomFactor, self.webView.zoomFactor())
 		self.adjustActions()
-			
-	
+
+
 class LineEdit(QtGui.QLineEdit):
 	def __init__(self, default='', settingsKey=None, parent=None):
 		QtGui.QLineEdit.__init__(self, parent)
@@ -368,9 +368,9 @@ class LineEdit(QtGui.QLineEdit):
 			if self.settingsKey is not None: settingsSetValue(self.settingsKey, self.text())
 
 class PlainTextEdit(QtGui.QPlainTextEdit):
-	
+
 	maxCharsExceeded = QtCore.pyqtSignal(bool)
-	
+
 	def __init__(self, default='', settingsKey=None, parent=None, maxChars=-1):
 		QtGui.QPlainTextEdit.__init__(self, parent)
 		self.settingsKey = settingsKey
@@ -383,7 +383,7 @@ class PlainTextEdit(QtGui.QPlainTextEdit):
 		else:
 			self.setPlainText( settingsValue(self.settingsKey, default).toString() )
 			self.textChanged.connect(self.onValueChanged)
-	
+
 	#TODO: cheap implementation of mxText. we have to find a better way to do so
 	def onValueChanged(self):
 		if self._maxChars >= 0:
@@ -409,7 +409,7 @@ class DoubleSpinBox(QtGui.QDoubleSpinBox):
 			self.valueChanged.connect(self.onValueChanged)
 	def onValueChanged(self):
 			if self.settingsKey is not None: settingsSetValue(self.settingsKey, self.value())
-				
+
 class SpinBox(QtGui.QSpinBox):
 	def __init__(self, default=1, minimum=0, maximum=99, settingsKey=None, parent=None):
 		QtGui.QSpinBox.__init__(self, parent)
@@ -458,7 +458,7 @@ class VBox(QtGui.QVBoxLayout):
 	def __init__(self, *args):
 		QtGui.QVBoxLayout.__init__(self, *args)
 		self.setContentsMargins(contentsMargins)
-		
+
 class HBox(QtGui.QHBoxLayout):
 	def __init__(self, *args):
 		QtGui.QHBoxLayout.__init__(self, *args)
@@ -477,7 +477,7 @@ class GridBox(QtGui.QGridLayout):
 				else:
 					self.addLayout(item, row, col)
 			row += 1
-	
+
 class HLine(QtGui.QFrame):
 	def __init__(self, *args):
 		QtGui.QFrame.__init__(self, *args)
@@ -491,7 +491,7 @@ class VStretch(VBox):
 		VBox.__init__(self, *args)
 		self.addStretch(999)
 
-#NOTE: kind of a guess ..PyQt4 single shot timers are segfaulting from time to time. 
+#NOTE: kind of a guess ..PyQt4 single shot timers are segfaulting from time to time.
 class Timer(QtCore.QTimer):
 	def __init__(self, parent=None, singleShot=False, interval=0, slot=None, userData=None):
 		QtCore.QTimer.__init__(self, parent)
@@ -527,18 +527,18 @@ class HotkeyBox(QtGui.QComboBox):
 			if hotkey is not None:
 				self.setItemText(0, hotkey)
 		keyboardHook.inputEvent.connect(self.onInputEvent)
-	
+
 	#TODO: works for now, but have to rework this. we open popup if the user clicks the combo twice
 	def focusInEvent(self, event):
 		self._counter = 1
 		return QtGui.QComboBox.focusInEvent(self, event)
-		
+
 	def mousePressEvent(self, event):
 		if self._counter > 0:
 			self._counter -= 1
 		else:
 			return QtGui.QComboBox.mousePressEvent(self, event)
-	
+
 	def keyPressEvent(self, event):
 		if event.key() == QtCore.Qt.Key_Space and not event.modifiers():
 			QtGui.QComboBox.keyPressEvent(self, event)
@@ -588,7 +588,7 @@ def dlgOpenSaveFile(
 			settingsKey=None,
 			):
 	pass
-	
+
 	dlg = QtGui.QFileDialog(parent)
 	dlg.setAcceptMode(dlg.AcceptOpen if openFile else dlg.AcceptSave)
 	dlg.setWindowTitle(title)
@@ -601,8 +601,8 @@ def dlgOpenSaveFile(
 		dlg.setConfirmOverwrite(True)
 	if settingsKey is not None:
 		dlg.restoreState( settingsValue(settingsKey, QtCore.QByteArray()).toByteArray() )
-	
-	
+
+
 	result = dlg.exec_()
 	if settingsKey is not None:
 		settingsSetValue(settingsKey, dlg.saveState() )
@@ -642,7 +642,7 @@ def uniqueName(name, names):
 		i += 1
 		newName = name + ' (%s)' % i
 	return newName
-		
+
 def cleanException(exception):
 	p = QtCore.QString()
 	for line in exception.split('\n'):
@@ -654,7 +654,7 @@ def cleanException(exception):
 			fileName = line[start:stop]
 			fileInfo = QtCore.QFileInfo(fileName)
 			line = QtCore.QString('%1%2%3').arg(line[:start]).arg(fileInfo.fileName()).arg(line[stop:])
-		p += line 
+		p += line
 		p += '\n'
 	return p
 
@@ -674,7 +674,7 @@ def printStack():
 	for frame, filename, line_num, func, source_code, source_index in inspect.stack()[1:]:
 		print '%s, line %d\n  -> %s' % (filename, line_num, source_code[source_index].strip())
 
-#NOTE: we format numbers by hand because we need US formatting and on some oses locale.setlocale(locale.LC_ALL, 'en_US') fails 
+#NOTE: we format numbers by hand because we need US formatting and on some oses locale.setlocale(locale.LC_ALL, 'en_US') fails
 def formatNum(num, precission=2):
 	"""formats a number
 	@param num: (int, float) number to format
@@ -705,8 +705,8 @@ application = QtGui.QApplication(sys.argv)
 
 
 
-	
-	
+
+
 
 
 
