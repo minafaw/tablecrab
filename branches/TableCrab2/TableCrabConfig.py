@@ -23,7 +23,7 @@ WindowHookTimeout = 0.2
 HandGrabberTimeout = 0.4
 MouseMonitorTimeout = 0.5
 StatusBarMessageTimeout = 3
-MaxHandGrabberPrefix = 8	# + postfix
+MaxHandGrabberPrefix = 16	# + postfix
 MaxHandStyleSheet = 9000
 
 #TODO: implement these
