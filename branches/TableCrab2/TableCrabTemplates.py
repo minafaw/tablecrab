@@ -15,20 +15,23 @@ def newValidPoint(point):
 	return TableCrabConfig.newPointNone() if point is None else point
 
 class ChildItem(QtGui.QTreeWidgetItem):
-	def __init__(self, text, value, parent=None):
+	def __init__(self, pointName, text, value, parent=None):
 		QtGui.QTreeWidgetItem.__init__(self, parent)
+		self.pointName = pointName
 		self.setText(0, text)
 		self.setText(1, value)
 	def toplevel(self):
 		return self.parent()
 
 class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
-	_PointNames = ('buttonCheck', 'buttonFold', 'buttonRaise', 'checkboxFold', 'checkboxCheckFold',
-			'betSliderStart', 'betSliderEnd', 'instantHandHistory', 'replayer')
+	_PointNames = ('emptySpace', 'buttonCheck', 'buttonFold', 'buttonRaise',
+			'checkboxFold', 'checkboxCheckFold', 'betSliderStart', 'betSliderEnd',
+			'instantHandHistory', 'replayer')
 	def __init__(self,
 			parent=None,
 			name='',
 			size=None,
+			emptySpace=None,
 			buttonCheck=None,
 			buttonFold=None,
 			buttonRaise=None,
@@ -43,6 +46,7 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 		QtGui.QTreeWidgetItem.__init__(self, parent)
 		self.name = name if name else self.menuName()
 		self.size = newValidSize(size)
+		self.emptySpace = newValidPoint(emptySpace)
 		self.buttonCheck = newValidPoint(buttonCheck)
 		self.buttonFold = newValidPoint(buttonFold)
 		self.buttonRaise = newValidPoint(buttonRaise)
@@ -54,7 +58,6 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 		self.replayer = newValidPoint(replayer)
 		self.itemIsExpanded = itemIsExpanded
 
-
 		self.setFirstColumnSpanned(True)
 		self.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
 		self.setIcon(0, QtGui.QIcon(TableCrabConfig.Pixmaps.stars()) )
@@ -64,14 +67,19 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 		self.setExpanded( self.itemIsExpanded)
 		self.setText(0, self.name)
 
-		self.itemType = ChildItem('Type:',  self.menuName(), parent=self)
+		self.itemType = ChildItem(None, 'Type:',  self.menuName(), parent=self)
 		self.itemType.setDisabled(True)
-		self.itemSize = ChildItem('Size:',  TableCrabConfig.sizeToString(self.size), parent=self)
+		self.itemSize = ChildItem(None, 'Size:',  TableCrabConfig.sizeToString(self.size), parent=self)
 		self.itemSize.setDisabled(True)
 		self.itemsPoint = []
 		for pointName in self._PointNames:
 			point = getattr(self, pointName)
-			item = ChildItem(pointName[0].upper() + pointName[1:],  TableCrabConfig.pointToString(point), parent=self)
+			item = ChildItem(
+					pointName,
+					pointName[0].upper() + pointName[1:],
+					TableCrabConfig.pointToString(point),
+					parent=self
+					)
 			item.setDisabled(True)
 			self.itemsPoint.append( (pointName, item) )
 
@@ -120,8 +128,12 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 				self.size.setHeight(pixmap.height())
 				self.itemSize.setText(1, TableCrabConfig.sizeToString(self.size) )
 				myPoint = getattr(self, pointName)
-				myPoint.setX(point.x() )
-				myPoint.setY(point.y() )
+				if item.pointName == 'emptySpace' and point == TableCrabConfig.PointNone:
+					myPoint.setX(1)
+					myPoint.setY(1)
+				else:
+					myPoint.setX(point.x() )
+					myPoint.setY(point.y() )
 				item.setText(1, TableCrabConfig.pointToString(myPoint) )
 				return True
 		else:
@@ -147,7 +159,14 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 		attrs['itemIsExpanded'] = TableCrabConfig.settingsValue( (key, 'ItemIsExpanded'), False).toBool()
 		for pointName in klass._PointNames:
 			keyName = pointName[0].upper() + pointName[1:]
-			point = TableCrabConfig.settingsValue( (key, keyName), TableCrabConfig.newPointNone() ).toPoint()
+			point = TableCrabConfig.settingsValue(
+					(key, keyName),
+					TableCrabConfig.newPointNone()
+					).toPoint()
+			if pointName == 'emptySpace':
+					# make shure point is not empty, we need it
+					if point == TableCrabConfig.PointNone:
+						point = QtCore.QPoint(1, 1)
 			if not TableCrabConfig.pointInSize(size, point):
 				point = TableCrabConfig.newPointNone()
 			attrs[pointName] = point
