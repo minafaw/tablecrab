@@ -296,11 +296,6 @@ class ScreenshotWidget(QtGui.QScrollArea):
 						point = QtCore.QPoint(event.pos())
 					TableCrabConfig.globalObject.widgetScreenshotDoubleClicked.emit(pixmap, point)
 
-		def eventFilter(self, event):
-			if event.type() == event.Leave:
-					print 'leave'
-			return QtGui.QLabel.eventFilter(self, object, event)
-
 		def onMouseLeave(self):
 			pixmap = self.pixmap()
 			if pixmap is not None and not pixmap.isNull():
@@ -530,7 +525,6 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		self.adjustActions()
 
 	def onWidgetScreenshotQuery(self):
-		print 'on query'
 		pixmap = self.label.pixmap()
 		if pixmap is None:
 			pixmap = QtGui.QPixmap()
