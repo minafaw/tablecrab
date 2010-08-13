@@ -18,17 +18,17 @@ from PyQt4 import QtCore
 class ActionHandler(QtCore.QObject):
 	def __init__(self, parent=None):
 		QtCore.QObject.__init__(self, parent)
-		
+
 		self._pokerStarsLoginBox = None
-			
+
 	def handleWindowCreated(self, hwnd):
-		
+
 		if self.isPopupNews(hwnd):
 			if TableCrabConfig.settingsValue('PokerStars/AutoClosePopupNews', False).toBool():
 				TableCrabWin32.windowClose(hwnd)
 				TableCrabConfig.globalObject.feedbackMessage.emit('Closed Popup News')
 			return True
-				
+
 		elif self.isTourneyRegistrationMessageBox(hwnd):
 			if TableCrabConfig.settingsValue('PokerStars/AutoCloseTourneyRegistrationBoxes', False).toBool():
 				buttons = TableCrabWin32.windowGetButtons(hwnd)
@@ -38,7 +38,7 @@ class ActionHandler(QtCore.QObject):
 				TableCrabWin32.windowClickButton(buttons['OK'])
 				TableCrabConfig.globalObject.feedbackMessage.emit('Closed Tourney Registration Message Box')
 			return True
-		
+
 		elif self.isTableMessageBox(hwnd):
 			if TableCrabConfig.settingsValue('PokerStars/AutoCloseTableMessageBoxes', False).toBool():
 				buttons = TableCrabWin32.windowGetButtons(hwnd)
@@ -47,9 +47,9 @@ class ActionHandler(QtCore.QObject):
 				TableCrabWin32.windowClickButton(buttons['OK'])
 				TableCrabConfig.globalObject.feedbackMessage.emit('Closed Table Message Box')
 			return True
-		
+
 		elif self.isLogIn(hwnd):
-			if self._pokerStarsLoginBox is None: 
+			if self._pokerStarsLoginBox is None:
 				self._pokerStarsLoginBox = hwnd
 				if TableCrabConfig.settingsValue('PokerStars/AutoCloseLogin', False).toBool():
 					buttons = TableCrabWin32.windowGetButtons(hwnd)
@@ -59,22 +59,22 @@ class ActionHandler(QtCore.QObject):
 								TableCrabWin32.windowClickButton(buttons['OK'])
 								TableCrabConfig.globalObject.feedbackMessage.emit('Closed Log In Box')
 				return True
-			
+
 		return False
-	
+
 	def handleWindowDestroyed(self, hwnd):
 		return False
-		
+
 	def handleWindowGainedForeground(self, hwnd):
 		template = self.tableTemplate(hwnd)
 		if template is not None:
 			TableCrabConfig.globalObject.feedbackMessage.emit(template.name)
 			return True
 		return False
-	
+
 	def handleWindowLostForeground(self, hwnd):
 		return False
-	
+
 	def handleInputEvent(self, hwnd, hotkey, inputEvent):
 		template = self.tableTemplate(hwnd)
 		if template is None:
@@ -84,9 +84,9 @@ class ActionHandler(QtCore.QObject):
 		if not inputEvent.keyIsDown:
 			inputEvent.accept = True
 			return True
-			
+
 		actionID = hotkey.id()
-			
+
 		if actionID == TableCrabHotkeys.HotkeyCheck.id():
 			self.tableHandleCheck(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
@@ -94,15 +94,15 @@ class ActionHandler(QtCore.QObject):
 		elif actionID == TableCrabHotkeys.HotkeyFold.id():
 			self.tableHandleFold(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
-			return True		
+			return True
 		elif actionID == TableCrabHotkeys.HotkeyRaise.id():
 			self.tableHandleRaise(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
-			return True	
+			return True
 		elif actionID == TableCrabHotkeys.HotkeyAll_In.id():
 			self.tableHandleAll_In(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
-			return True	
+			return True
 		elif actionID == TableCrabHotkeys.HotkeyHilightBetAmount.id():
 			self.tableHandleHilightBetAmount(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
@@ -110,15 +110,15 @@ class ActionHandler(QtCore.QObject):
 		elif actionID == TableCrabHotkeys.HotkeyAddToBetAmount.id():
 			self.tableHandleAddToBetAmount(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
-			return True	
+			return True
 		elif actionID == TableCrabHotkeys.HotkeySubtractFromBetAmount.id():
 			self.tableHandleSubtractFromBetAmount(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
-			return True	
+			return True
 		elif actionID == TableCrabHotkeys.HotkeyMultiplyBetAmount.id():
 			self.tableHandleMultiplyBetAmount(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
-			return True	
+			return True
 		elif actionID == TableCrabHotkeys.HotkeyReplayer.id():
 			self.tableHandleReplayer(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
@@ -127,9 +127,9 @@ class ActionHandler(QtCore.QObject):
 			self.tableHandleInstantHandHistory(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
 			return True
-			
+
 		return False
-		
+
 	#NOTE: not easy to determine if a window is a PokerStarswindow. i don't feel like messing around with psapi.dll to get the exefilename.
 	# so ..i use a hack. we identify a window as being a stars window if it (or one of its parents) contains a widget classname.startswith('PokerStars')
 	# nasty and errorprone, but the most reasonalbe i could come up with now
@@ -137,13 +137,13 @@ class ActionHandler(QtCore.QObject):
 		for hwnd in TableCrabWin32.windowChildren(hwnd):
 			if TableCrabWin32.windowGetClassName(hwnd).startswith('PokerStars'):	return True
 		return False
-	
+
 	def isPokerStarsWindow(self, hwnd):
 		while hwnd:
 			if self.hasPokerStarsWidgets(hwnd): return True
 			hwnd = TableCrabWin32.windowGetParent(hwnd)
-		return False	
-		
+		return False
+
 	TitleLobby = 'PokerStars Lobby'
 	ClassLobby = '#32770'	# duh, stars. main windows should never be dialogs
 	def isLobby(self, hwnd):
@@ -151,12 +151,12 @@ class ActionHandler(QtCore.QObject):
 		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleLobby)).startswith(self.TitleLobby): return False
 		if not self.isPokerStarsWindow(hwnd): return False
 		return True
-		
+
 	ClassTable = 'PokerStarsTableFrameClass'
 	def isTable(self, hwnd):
 		if not TableCrabWin32.windowGetClassName(hwnd) == self.ClassTable: return False
 		return True
-		
+
 	ClassInstantHandHistory = '#32770'
 	TitleInstantHandHistory = 'Instant Hand History'
 	def isInstantHandHistory(self, hwnd):
@@ -164,7 +164,7 @@ class ActionHandler(QtCore.QObject):
 		if not TableCrabWin32.windowGetText(hwnd) == self.TitleInstantHandHistory: return False
 		if not self.isPokerStarsWindow(hwnd): return False
 		return True
-		
+
 	ClassNews = '#32770'
 	TitleNews = 'News'
 	def isPopupNews(self, hwnd):
@@ -172,7 +172,7 @@ class ActionHandler(QtCore.QObject):
 		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleNews)) == self.TitleNews: return False
 		if not self.isPokerStarsWindow(hwnd): return False
 		return True
-		
+
 	TitleTourneyRegistrationMessageBox = 'Tournament Registration'
 	ClassTourneyRegistrationMessageBox = '#32770'
 	def isTourneyRegistrationMessageBox(self, hwnd):
@@ -180,7 +180,7 @@ class ActionHandler(QtCore.QObject):
 		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleTourneyRegistrationMessageBox)) == self.TitleTourneyRegistrationMessageBox: return False
 		if not self.isPokerStarsWindow(hwnd): return False
 		return True
-		
+
 	TitleTableMessageBox = 'PokerStars'
 	ClassTableMessageBox = '#32770'
 	def isTableMessageBox(self, hwnd):
@@ -189,7 +189,7 @@ class ActionHandler(QtCore.QObject):
 		hwndParent = TableCrabWin32.windowGetParent(hwnd)
 		if not self.isTable(hwndParent): return False
 		return True
-		
+
 	TitleLogIn = 'Log In'
 	ClassLogIn = '#32770'
 	def isLogIn(self, hwnd):
@@ -198,7 +198,7 @@ class ActionHandler(QtCore.QObject):
 		hwndParent = TableCrabWin32.windowGetParent(hwnd)
 		if not self.isPokerStarsWindow(hwnd): return False
 		return True
-		
+
 	def tableTemplate(self, hwnd):
 		if self.isTable(hwnd):
 			rect = TableCrabWin32.windowGetClientRect(hwnd)
@@ -207,7 +207,7 @@ class ActionHandler(QtCore.QObject):
 					if template.size == rect.size():
 						return template
 		return None
-		
+
 	#TODO: are there tables where BB/SB is not present in caption? closed tourneys ...?
 	PatAmountSB = re.compile('.*(?: [^0-9\.]|\s)   ( (?: 0\.[0-9]{2})   |    (?: [0-9]+))/.*', re.X|re.I)
 	PatAmountBB = re.compile('.*/[^0-9\.]?(   (?: 0\.[0-9]{2})   |    (?: [0-9]+)).*', re.X|re.I)
@@ -245,15 +245,15 @@ class ActionHandler(QtCore.QObject):
 		className = TableCrabWin32.windowGetClassName(hwndUnderMouse)
 		if className in (self.ClassNoteEditor, self.ClassChatEditor, self.ClassNoteEditorBox):
 			return False
-		return True	
-		
+		return True
+
 	def tableHandleCheck(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
 		pointCurrent = TableCrabWin32.mouseGetPos()
 		if data['hwndBetAmountBox'] and data['betAmountBoxIsVisible']:
 			point = template.buttonCheck
-			if point == TableCrabConfig.PointNone: 
+			if point == TableCrabConfig.PointNone:
 				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point ButtonCheck Not Set -' % template.name)
 				return
 			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClickDouble(point, hwnd=hwnd).send()
@@ -261,7 +261,7 @@ class ActionHandler(QtCore.QObject):
 		# bet amount box created yet
 		else:
 			point = template.checkboxCheckFold
-			if point == TableCrabConfig.PointNone: 
+			if point == TableCrabConfig.PointNone:
 				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- CheckboxCheckFold Not Set -' % template.name)
 				return
 			# looks like we have to double click here
@@ -271,14 +271,14 @@ class ActionHandler(QtCore.QObject):
 			##mi.move(pointCurrent, hwnd=None).send()
 			TableCrabWin32.mouseSetPos(pointCurrent)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
-		
+
 	def tableHandleFold(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
 		pointCurrent = TableCrabWin32.mouseGetPos()
 		if data['hwndBetAmountBox'] and data['betAmountBoxIsVisible']:
 			point = template.buttonFold
-			if point == TableCrabConfig.PointNone: 
+			if point == TableCrabConfig.PointNone:
 				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point ButtonFold Not Set -' % template.name)
 				return
 			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
@@ -286,7 +286,7 @@ class ActionHandler(QtCore.QObject):
 		# bet amount box created yet
 		else:
 			point = template.checkboxFold
-			if point == TableCrabConfig.PointNone: 
+			if point == TableCrabConfig.PointNone:
 				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point CheckboxFold Not Set -' % template.name)
 				return
 			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).send()
@@ -297,7 +297,7 @@ class ActionHandler(QtCore.QObject):
 			##mi.move(pointCurrent, hwnd=None).send()
 			TableCrabWin32.mouseSetPos(pointCurrent)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
-		
+
 	def tableHandleRaise(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
@@ -305,7 +305,7 @@ class ActionHandler(QtCore.QObject):
 		#NOTE: betAmountBox may not be visible when a player is all-in
 		##if not data['betAmountBoxIsVisible']: return
 		point = template.buttonRaise
-		if point == TableCrabConfig.PointNone: 
+		if point == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point Buttonraise Not Set -' % template.name)
 			return
 		pointCurrent = TableCrabWin32.mouseGetPos()
@@ -315,7 +315,7 @@ class ActionHandler(QtCore.QObject):
 			##mi.move(pointCurrent, hwnd=None).send()
 			TableCrabWin32.mouseSetPos(pointCurrent)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
-		
+
 	#NOTE: there is another way to handle all-in. no reliable one but could be a fallback. looks like bet amount box accepts
 	# values up to some hard coded PS wide maximum. if this maximum is exceeded the bet box resets to 0.
 	# played a bit around with this:
@@ -323,18 +323,18 @@ class ActionHandler(QtCore.QObject):
 	# 21.000.000 ok
 	# 24.000.000 reset
 	# funny enough you can enter up to 9 digits into the box when the maximum is actually located somewhere in the 8 digits region.
-	# either a bug or feature that is. 
+	# either a bug or feature that is.
 	def tableHandleAll_In(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
 		if not data['hwndBetAmountBox']: return
 		if not data['betAmountBoxIsVisible']: return
 		pointStart = template.betSliderStart
-		if pointStart == TableCrabConfig.PointNone: 
+		if pointStart == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point BetSliderStart Not Set -' % template.name)
 			return
 		pointEnd = template.betSliderEnd
-		if pointEnd == TableCrabConfig.PointNone: 
+		if pointEnd == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point BetSliderEnd Not Set -' % template.name)
 			return
 		pointCurrent = TableCrabWin32.mouseGetPos()
@@ -345,7 +345,7 @@ class ActionHandler(QtCore.QObject):
 			##mi.move(pointCurrent, hwnd=None).send()
 			TableCrabWin32.mouseSetPos(pointCurrent)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
-		
+
 	def tableHandleAddToBetAmount(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
@@ -366,7 +366,7 @@ class ActionHandler(QtCore.QObject):
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		TableCrabWin32.windowSetText(data['hwndBetAmountBox'], text=newBetAmount, isUnicode=False)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
-			
+
 	def tableHandleSubtractFromBetAmount(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
@@ -387,7 +387,7 @@ class ActionHandler(QtCore.QObject):
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		TableCrabWin32.windowSetText(data['hwndBetAmountBox'], text=newBetAmount, isUnicode=False)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
-	
+
 	def tableHandleMultiplyBetAmount(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
@@ -403,14 +403,14 @@ class ActionHandler(QtCore.QObject):
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		TableCrabWin32.windowSetText(data['hwndBetAmountBox'], text=newBetAmount, isUnicode=False)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
-		
+
 	def tableHandleHilightBetAmount(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
 		hwndBetAmountBox = data['hwndBetAmountBox']
 		if not hwndBetAmountBox: return
 		if not data['betAmountBoxIsVisible']: return
-			
+
 		pointCurrent = TableCrabWin32.mouseGetPos()
 		point = QtCore.QPoint(2, 2)
 		mi = TableCrabWin32.MouseInput().move(point, hwnd=hwndBetAmountBox).send()
@@ -420,31 +420,30 @@ class ActionHandler(QtCore.QObject):
 			##mi.move(pointCurrent, hwnd=None).send()
 			TableCrabWin32.mouseSetPos(pointCurrent)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
-		
+
 	def _tableClickRestoreFocus(self, hwnd, point, template):
 		pointCurrent = TableCrabWin32.mouseGetPos()
 		# click point
 		mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
-		# replayer gains focus, so we have to wait a bit and send another click to reactivate the table. 
+		# replayer gains focus, so we have to wait a bit and send another click to reactivate the table.
 		#TODO: for some reason (linux/wine?) table regain focus but is not activated when the replayer is opend for the first time
-		#TODO: make this point user adjustable?
-		mi.move(QtCore.QPoint(1, 1), hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
+		mi.move(template.emptySpace, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
 		if TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool():
 			#NOTE: the SendInput() is always off a few pixels so we use mouseSetPos() instead
 			##mi.move(pointCurrent, hwnd=None).send()
 			TableCrabWin32.mouseSetPos(pointCurrent)
-	
+
 	def tableHandleReplayer(self, hotkey, template, hwnd, inputEvent):
 		point = template.replayer
-		if point == TableCrabConfig.PointNone: 
+		if point == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point Replayer Not Set -' % template.name)
 		else:
 			self._tableClickRestoreFocus(hwnd, template.replayer, template)
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
-		
+
 	def tableHandleInstantHandHistory(self, hotkey, template, hwnd, inputEvent):
 		point = template.instantHandHistory
-		if point == TableCrabConfig.PointNone: 
+		if point == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point InstantHandHistory Not Set -' % template.name)
 		else:
 			self._tableClickRestoreFocus(hwnd, template.instantHandHistory, template)
