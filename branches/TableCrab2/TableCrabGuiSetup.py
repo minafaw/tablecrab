@@ -317,12 +317,12 @@ class ScreenshotWidget(QtGui.QScrollArea):
 			result = False
 			if pixmap is None:
 				self.setScaledContents(True)
-				self.setFrameShape(QtGui.QFrame.NoFrame)
 				self.setText(self._screenshotName)
+				self.resize(self.parent().size())		#TODO: no idea why but we need to resize now
+				self.setFrameShape(QtGui.QFrame.NoFrame)
 				pixmap = QtGui.QPixmap()
 				TableCrabConfig.globalObject.widgetScreenshotSet.emit(pixmap)
-				if self.isVisible():
-					TableCrabConfig.globalObject.feedback.emit(self, '')
+				TableCrabConfig.globalObject.feedback.emit(self, '')
 			else:
 				# manually set size of the label so we get the correct coordiantes of the mouse cursor
 				self.setPixmap(pixmap)
@@ -334,8 +334,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 				if point.x() < 0 or point.y() < 0:
 					point = QtCore.QPoint()
 				TableCrabConfig.globalObject.widgetScreenshotSet.emit(pixmap)
-				if self.isVisible():
-					self._giveFeedback(pixmap,  point)
+				self._giveFeedback(pixmap,  point)
 				result = True
 			return result
 
@@ -345,7 +344,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 
 		self._lastScreenshotInfo = None
 
-		self.label = self.ScreenshotLabel()
+		self.label = self.ScreenshotLabel(self)
 		self.label.setScreenshot(pixmap=None)
 		self.setBackgroundRole(QtGui.QPalette.Dark)
 		self.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
