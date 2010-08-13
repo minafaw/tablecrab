@@ -11,8 +11,12 @@ Templates = []
 def newValidSize(size):
 	return TableCrabConfig.newSizeNone() if size is None else size
 
-def newValidPoint(point):
-	return TableCrabConfig.newPointNone() if point is None else point
+def newPoint(point=None, x=None, y=None):
+	point = TableCrabConfig.newPointNone() if point is None else point
+	if x is not None:
+		point.setX(x)
+		point.setY(y)
+	return point
 
 class ChildItem(QtGui.QTreeWidgetItem):
 	def __init__(self, pointName, text, value, parent=None):
@@ -46,16 +50,16 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 		QtGui.QTreeWidgetItem.__init__(self, parent)
 		self.name = name if name else self.menuName()
 		self.size = newValidSize(size)
-		self.emptySpace = newValidPoint(emptySpace)
-		self.buttonCheck = newValidPoint(buttonCheck)
-		self.buttonFold = newValidPoint(buttonFold)
-		self.buttonRaise = newValidPoint(buttonRaise)
-		self.checkboxFold = newValidPoint(checkboxFold)
-		self.checkboxCheckFold = newValidPoint(checkboxCheckFold)
-		self.betSliderStart = newValidPoint(betSliderStart)
-		self.betSliderEnd = newValidPoint(betSliderEnd)
-		self.instantHandHistory = newValidPoint(instantHandHistory)
-		self.replayer = newValidPoint(replayer)
+		self.emptySpace = newPoint(emptySpace, x=1, y=1)
+		self.buttonCheck = newPoint(buttonCheck)
+		self.buttonFold = newPoint(buttonFold)
+		self.buttonRaise = newPoint(buttonRaise)
+		self.checkboxFold = newPoint(checkboxFold)
+		self.checkboxCheckFold = newPoint(checkboxCheckFold)
+		self.betSliderStart = newPoint(betSliderStart)
+		self.betSliderEnd = newPoint(betSliderEnd)
+		self.instantHandHistory = newPoint(instantHandHistory)
+		self.replayer = newPoint(replayer)
 		self.itemIsExpanded = itemIsExpanded
 
 		self.setFirstColumnSpanned(True)
