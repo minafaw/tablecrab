@@ -1,4 +1,5 @@
 
+#TODO: have to find a better waay to present prefix | postfix in settings hand
 #TODO: would be nice to have line numbers in HandCss editor
 
 import TableCrabConfig
