@@ -127,11 +127,11 @@ class FrameHand(QtGui.QFrame):
 		if data:
 			self._hasHand = True
 			self.adjustActions()
-			TableCrabConfig.globalObject.feedback.emit(self, 'Grabbed hand')
+			TableCrabConfig.globalObject.feedbackMessage.emit('Grabbed hand')
 		else:
 			self._hasHand = False
 			self.adjustActions()
-			TableCrabConfig.globalObject.feedback.emit(self, 'Could not grab hand')
+			TableCrabConfig.globalObject.feedbackMessage.emit('Could not grab hand')
 
 #**********************************************************************************************
 #
