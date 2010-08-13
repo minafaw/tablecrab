@@ -48,11 +48,11 @@ class FrameSettingsGlobal(QtGui.QFrame):
 				parent=self
 				)
 
-		self.checkRestoreMousePosition = TableCrabConfig.CheckBox('Restore Mouse Position', default=False, settingsKey='RestoreMousePosition', parent=self)
 		self.checkAlternatingRowColors = TableCrabConfig.CheckBox('Show Alternating Row Colors', default=False, settingsKey='Gui/AlternatingRowColors', parent=self)
 		self.checkAlternatingRowColors.stateChanged.connect(self.onAlternatingRowColorsChanged)
 		self.checkChildItemIndicators = TableCrabConfig.CheckBox('Show Child Item Indicators', default=True, settingsKey='Gui/ChildItemIndicators', parent=self)
 		self.checkChildItemIndicators.stateChanged.connect(self.onChildItemIndicatorsChanged)
+		self.checkRestoreMousePosition = TableCrabConfig.CheckBox('Restore Mouse Position', default=False, settingsKey='RestoreMousePosition', parent=self)
 
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		self.buttonHelp.clicked.connect(self.onButtonHelpClicked)
@@ -88,9 +88,9 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		grid.addWidget(self.spinZoomIncrement, 4, 1)
 		grid.addLayout(TableCrabConfig.HStretch(), 4, 2)
 
-		grid.addWidget(self.checkRestoreMousePosition, 5, 0)
-		grid.addWidget(self.checkAlternatingRowColors, 6, 0)
-		grid.addWidget(self.checkChildItemIndicators, 7, 0)
+		grid.addWidget(self.checkAlternatingRowColors, 5, 0)
+		grid.addWidget(self.checkChildItemIndicators, 6, 0)
+		grid.addWidget(self.checkRestoreMousePosition, 7, 0)
 
 		grid.addLayout(TableCrabConfig.VStretch(), 8, 0)
 		grid.addWidget(TableCrabConfig.HLine(self), 9, 0, 1, 3)
