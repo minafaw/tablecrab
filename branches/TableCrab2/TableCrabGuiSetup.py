@@ -678,7 +678,6 @@ class FrameSetup(QtGui.QFrame):
 			return
 
 		# found a window of another process ..give feedback
-		#TODO: i hope win32 is doing the right thing here by not allowing more than we can swallow
 		if TableCrabWin32.windowGetTextLength(hwndOther) > TableCrabConfig.MaxWindowText:
 			title = 'Window title too long'
 		else:
