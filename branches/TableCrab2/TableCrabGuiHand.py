@@ -122,11 +122,16 @@ class FrameHand(QtGui.QFrame):
 	def onActionHelpTriggered(self, checked):
 		TableCrabGuiHelp.dialogHelp('hand', parent=self)		
 	
-	def onPShandGrabberHandGrabbed(self, hand, data):
+	def onPShandGrabberHandGrabbed(self, data):
 		self.webView.setHtml( QtCore.QString.fromUtf8(data) )
-		self._hasHand = True
-		self.adjustActions()
-		TableCrabConfig.globalObject.feedback.emit(self, 'grabbed hand')
+		if data:
+			self._hasHand = True
+			self.adjustActions()
+			TableCrabConfig.globalObject.feedback.emit(self, 'Grabbed hand')
+		else:
+			self._hasHand = False
+			self.adjustActions()
+			TableCrabConfig.globalObject.feedback.emit(self, 'Could not grab hand')
 	
 #**********************************************************************************************
 #

@@ -319,7 +319,7 @@ class HandParser(object):
 				
 			if lineno == 0:
 				if self.matchGameHeader(hand, streetCurrent, line): continue
-				return 'No gane header found', None
+				raise ValueError('No gane header found')
 			
 			# determine street we are in
 			if line.startswith('*** HOLE CARDS ***'):
@@ -722,7 +722,7 @@ if sys.platform == 'win32':
 	
 	class HandGrabber(QtCore.QObject):
 		
-		handGrabbed = QtCore.pyqtSignal(QtCore.QObject, QtCore.QString)
+		handGrabbed = QtCore.pyqtSignal(QtCore.QString)
 		
 		WindowClassName = '#32770'
 		WindowTitle = 'Instant Hand History'
@@ -731,7 +731,7 @@ if sys.platform == 'win32':
 			QtCore.QObject.__init__(self, parent)
 			self.handParser = handParser
 			self.handFormatter = handFormatter
-			self._lastHandHistory = None
+			self._data = None
 			self._timer = QtCore.QTimer(self)
 			self._timer.setInterval(TableCrabConfig.HandGrabberTimeout * 1000)
 			self._timer.timeout.connect(self.grabHand)
@@ -771,27 +771,25 @@ if sys.platform == 'win32':
 			if TableCrabWin32.windowGetTextLength(self._hwndEdit) > TableCrabConfig.MaxHandHistoryText:
 				TableCrabConfig.globalObject.feedback.emit(self.parent(), 'Hand text too long')
 				return
-			handHistory = TableCrabWin32.windowGetText(self._hwndEdit, maxSize=TableCrabConfig.MaxHandHistoryText)
-			if handHistory and handHistory != self._lastHandHistory:
-				self._lastHandHistory = handHistory
+			data = TableCrabWin32.windowGetText(self._hwndEdit, maxSize=TableCrabConfig.MaxHandHistoryText)
+			if data and data != self._data:
+				self._data = data
 					
 				#TODO: very sloppy test to minimize risk we are grabbing 'show summary only' in instant hand history
-				if not '*** HOLE CARDS ***' in handHistory:
-					TableCrabConfig.globalObject.feedback.emit(self.parent(), 'Could not parse hand')
-					return
-				#NOTE: we are let TableCrabConfig handle errors because we are maybe working with arbitrary data
-				# from an unknown window
-				try:
-					hand = self.handParser.parse(handHistory)
-				except:
-					TableCrabConfig.handleException('\n' + handHistory)
+				if not '*** HOLE CARDS ***' in data:
+					data = ''
 				else:
-					if hand is None:
-						#TODO: we have to overload signal feedback() to allow passing QObject* 
-						TableCrabConfig.globalObject.feedback.emit(self.parent(), 'Could not parse hand')
+					#NOTE: we are let TableCrabConfig handle errors because we are maybe working with arbitrary data
+					# from an unknown window
+					try:
+						hand = self.handParser.parse(data)
+					except:
+						TableCrabConfig.handleException('\n' + data)
+						data = ''
 					else:
 						data = self.handFormatter.dump(hand)
-						self.handGrabbed.emit(hand, data)
+				self.handGrabbed.emit(data)
+						
 
 		
 		
