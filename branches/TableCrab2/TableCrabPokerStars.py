@@ -219,7 +219,7 @@ class ActionHandler(QtCore.QObject):
 	ClassTableBetAmountBox = 'PokerStarsSliderEditorClass'
 	def tableReadData(self, hwnd):
 		data = {}
-		text = TableCrabWin32.windowGetText(hwnd, maxSize=TableCrabConfig.MaxPokerStarsBetAmountBoxText)
+		text = TableCrabWin32.windowGetText(hwnd, maxSize=TableCrabConfig.MaxWindowText )
 		if not text: return data
 		match = self.PatAmountSB.match(text)
 		if match is None:
@@ -234,7 +234,7 @@ class ActionHandler(QtCore.QObject):
 		data['betAmountBoxIsVisible'] = TableCrabWin32.windowIsVisible(hwndBetAmountBox) if hwndBetAmountBox else False
 		data['betAmount'] = None
 		if data['hwndBetAmountBox']:
-			p = TableCrabWin32.windowGetText(hwndBetAmountBox)
+			p = TableCrabWin32.windowGetText(hwndBetAmountBox, maxSize=TableCrabConfig.MaxPokerStarsBetAmountBoxText)
 			try:
 				data['betAmount'] = float(p)
 			except ValueError: pass
