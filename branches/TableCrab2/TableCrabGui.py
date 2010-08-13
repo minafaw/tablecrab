@@ -1,6 +1,6 @@
 
 import TableCrabConfig
-import TableCrabMainWindow 
+import TableCrabMainWindow
 import TableCrabGuiSettings
 import TableCrabGuiSetup
 import TableCrabGuiHotkeys
@@ -11,7 +11,7 @@ from PyQt4 import QtCore, QtGui
 
 #**********************************************************************************************
 #
-#**********************************************************************************************
+#**********************************************************************************************q
 #TODO: there seems to be no way to set the first label on status bar without frame
 TableCrabConfig.application.setStyleSheet("QStatusBar::item { border: 0px solid black }; ")
 
@@ -21,7 +21,7 @@ To help improve TableCrab please send this message to:
 mail: jUrner@arcor.de
 subject: %s-Error
 
-Notes: 
+Notes:
 - make shure that there is is no personal data contained in the message
 - not all errors a caught here. to help improve TableCrab take a look at "%s" from time to time.
 
@@ -45,7 +45,7 @@ class DialogException(QtGui.QDialog):
 
 
 class Gui(TableCrabMainWindow .MainWindow):
-	
+
 	# double clickabe label. we use this to trigger ExceptionDialog
 	class FeedbackLabel(QtGui.QLabel):
 		doubleClicked = QtCore.pyqtSignal()
@@ -54,16 +54,16 @@ class Gui(TableCrabMainWindow .MainWindow):
 			self.setMouseTracking(True)
 		def mouseDoubleClickEvent(self, event):
 			self.doubleClicked.emit()
-		
+
 	def __init__(self):
 		TableCrabMainWindow .MainWindow.__init__(self)
-		
+
 		# need to store some state data for the statusBar so we can restore on tab changes
 		# error messages are displayed as longs as there is no new feedback from the current tab
 		self._feedbackMessages = {	# widget/tab --> feedbackData
 				None: '',		# reserved for lastError
-				}		
-			
+				}
+
 		# setup StatusBar
 		statusBar = self.statusBar()
 		#BUG: QTBUG-5566 sizegrip is broken on windows
@@ -72,7 +72,7 @@ class Gui(TableCrabMainWindow .MainWindow):
 		statusBar.addWidget(self.labelStatus, 0)
 		self.labelFeedback = self.FeedbackLabel('', self)
 		statusBar.addWidget(self.labelFeedback, 99)
-				
+
 		# setup TabWidget
 		self.tabWidget = QtGui.QTabWidget(self)
 		self.setCentralWidget(self.tabWidget)
@@ -84,7 +84,7 @@ class Gui(TableCrabMainWindow .MainWindow):
 					(TableCrabGuiHelp.FrameHelp, 'Help'),
 					):
 			self._addTab(widgetProto, name)
-				
+
 		# connect signals
 		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
 		TableCrabConfig.globalObject.feedback.connect(self.onFeedback)
@@ -92,18 +92,18 @@ class Gui(TableCrabMainWindow .MainWindow):
 		TableCrabConfig.globalObject.feedbackMessage.connect(self.onFeedbackMessage)
 		self.labelFeedback.doubleClicked.connect(self.onLabelFeedbackDoubleClicked)
 		self.tabWidget.currentChanged.connect(self.onTabCurrentChanged)
-			
+
 		# restore last selected tab
 		self.tabWidget.setCurrentIndex( TableCrabConfig.settingsValue('Gui/TabCurrent', QtCore.QVariant()).toInt()[0] )
-		
+
 	def _addTab(self, widgetProto, name):
 		widget = widgetProto(parent=self)
 		self.tabWidget.addTab(widget, name)
 		self._feedbackMessages[widget] = ''
-	
+
 	def onCloseEvent(self, event):
 		TableCrabConfig.settingsSetValue('Gui/TabCurrent', self.tabWidget.currentIndex())
-	
+
 	def onTabCurrentChanged(self, index):
 		if index < 0:
 			return
@@ -114,7 +114,7 @@ class Gui(TableCrabMainWindow .MainWindow):
 			widget = self.tabWidget.widget(index)
 			data = self._feedbackMessages[widget]
 			self.labelFeedback.setText(data)
-		
+
 	def onFeedback(self, widget, string):
 		# clear last error
 		self._feedbackMessages[None] = ''
@@ -127,14 +127,14 @@ class Gui(TableCrabMainWindow .MainWindow):
 			widget = widget.parent()
 			if widget is None: break
 		if tab is None:
-			raise valueError('widget is not on one of our tabs')	
+			raise valueError('widget is not on one of our tabs')
 		# store data for tab changes
 		self._feedbackMessages[tab] = string
 		if tab is self.tabWidget.currentWidget():
 			# set message to statusBar
 			self.labelStatus.setText('Ready: ')
 			self.labelFeedback.setText(string)
-		
+
 	def onFeedbackException(self, exception):
 		#NOTE: we assume "exception" is never empty string
 		# clean exception here to make shure only relavant data is included + privacy issues for users
@@ -142,10 +142,10 @@ class Gui(TableCrabMainWindow .MainWindow):
 		self.labelStatus.setText('Error: ')
 		# hide label CurrentObject so it does not interfere with the error message
 		self.labelFeedback.setText('an error occured. double click me for details')
-		
+
 	def onFeedbackMessage(self, qString):
 		self.statusBar().showMessage('>>' + qString, TableCrabConfig.StatusBarMessageTimeout * 1000)
-		
+
 	def onLabelFeedbackDoubleClicked(self):
 		lastError = self._feedbackMessages[None]
 		if lastError:
@@ -153,9 +153,8 @@ class Gui(TableCrabMainWindow .MainWindow):
 			dlg.restoreGeometry( TableCrabConfig.settingsValue('Gui/DialogException/Geometry', QtCore.QByteArray()).toByteArray())
 			dlg.exec_()
 			TableCrabConfig.settingsSetValue('Gui/DialogException/Geometry', dlg.saveGeometry() )
-	
+
 #***********************************************************************************
 #
 #***********************************************************************************
 if __name__ == '__main__': Gui().start()
-	
