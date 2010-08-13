@@ -15,6 +15,8 @@ from PyQt4 import QtCore, QtGui
 #TODO: there seems to be no way to set the first label on status bar without frame
 TableCrabConfig.application.setStyleSheet("QStatusBar::item { border: 0px solid black }; ")
 
+
+ErrMessage = '<div style="color: red;background-color: white;">&nbsp;Error: double click for details</div>'
 ErrText = '''An error occured and TableCrab may no longer work as expected.
 To help improve TableCrab please send this message to:
 
@@ -22,7 +24,7 @@ mail: jUrner@arcor.de
 subject: %s-Error
 
 Notes:
-- make shure that there is is no personal data contained in the message
+- make shure that there is is no personal data contained in the message below
 - not all errors a caught here. to help improve TableCrab take a look at "%s" from time to time.
 
 --------------------------------------------------------------------------------------------------------
@@ -31,9 +33,17 @@ Notes:
 class DialogException(QtGui.QDialog):
 	def __init__(self, info, parent=None):
 		QtGui.QDialog. __init__(self, parent)
+		self.clearError = False
+
 		self.setWindowTitle('%s - Error' % TableCrabConfig.ApplicationName)
 		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
 		self.buttonBox.accepted.connect(self.accept)
+
+		self.buttonClearError = QtGui.QPushButton('Clear Error', self)
+		self.buttonClearError.setToolTip('Clears error as soon as dialog is closed')
+		self.buttonClearError.clicked.connect(self.onButtonClearErrorClicked)
+		self.buttonBox.addButton(self.buttonClearError, self.buttonBox.ActionRole)
+
 		self.edit = QtGui.QPlainTextEdit(self)
 		self.edit.setPlainText(ErrText % (TableCrabConfig.ApplicationName, TableCrabConfig.ErrorLogName, info) )
 		self.layout()
@@ -42,12 +52,14 @@ class DialogException(QtGui.QDialog):
 		grid.addWidget(self.edit, 0, 0)
 		grid.addWidget(TableCrabConfig.HLine(self), 1, 0)
 		grid.addWidget(self.buttonBox, 2, 0)
-
+	def onButtonClearErrorClicked(self, checked):
+		self.clearError = True
+		self.buttonClearError.setEnabled(False)
 
 class Gui(TableCrabMainWindow .MainWindow):
 
 	# double clickabe label. we use this to trigger ExceptionDialog
-	class FeedbackLabel(QtGui.QLabel):
+	class ClickableLabel(QtGui.QLabel):
 		doubleClicked = QtCore.pyqtSignal()
 		def __init__(self, *args):
 			QtGui.QLabel.__init__(self, *args)
@@ -68,9 +80,12 @@ class Gui(TableCrabMainWindow .MainWindow):
 		statusBar = self.statusBar()
 		#BUG: QTBUG-5566 sizegrip is broken on windows
 		statusBar.setSizeGripEnabled(False)
-		self.labelStatus = QtGui.QLabel('Ready: ', self)
+		self.labelStatus = self.ClickableLabel('Ready: ', self)
+		self.labelStatus.setTextFormat(QtCore.Qt.RichText)
+		self.labelStatus.doubleClicked.connect(self.onLabelFeedbackDoubleClicked)
 		statusBar.addWidget(self.labelStatus, 0)
-		self.labelFeedback = self.FeedbackLabel('', self)
+
+		self.labelFeedback = QtGui.QLabel('', self)
 		statusBar.addWidget(self.labelFeedback, 99)
 
 		# setup TabWidget
@@ -90,7 +105,6 @@ class Gui(TableCrabMainWindow .MainWindow):
 		TableCrabConfig.globalObject.feedback.connect(self.onFeedback)
 		TableCrabConfig.globalObject.feedbackException.connect(self.onFeedbackException)
 		TableCrabConfig.globalObject.feedbackMessage.connect(self.onFeedbackMessage)
-		self.labelFeedback.doubleClicked.connect(self.onLabelFeedbackDoubleClicked)
 		self.tabWidget.currentChanged.connect(self.onTabCurrentChanged)
 
 		# restore last selected tab
@@ -116,8 +130,6 @@ class Gui(TableCrabMainWindow .MainWindow):
 			self.labelFeedback.setText(data)
 
 	def onFeedback(self, widget, string):
-		# clear last error
-		self._feedbackMessages[None] = ''
 		#find tab widget
 		tab = None
 		while True:
@@ -132,16 +144,12 @@ class Gui(TableCrabMainWindow .MainWindow):
 		self._feedbackMessages[tab] = string
 		if tab is self.tabWidget.currentWidget():
 			# set message to statusBar
-			self.labelStatus.setText('Ready: ')
 			self.labelFeedback.setText(string)
 
 	def onFeedbackException(self, exception):
 		#NOTE: we assume "exception" is never empty string
-		# clean exception here to make shure only relavant data is included + privacy issues for users
 		self._feedbackMessages[None] = TableCrabConfig.cleanException(exception)
-		self.labelStatus.setText('Error: ')
-		# hide label CurrentObject so it does not interfere with the error message
-		self.labelFeedback.setText('an error occured. double click me for details')
+		self.labelStatus.setText(ErrMessage)
 
 	def onFeedbackMessage(self, qString):
 		self.statusBar().showMessage('>>' + qString, TableCrabConfig.StatusBarMessageTimeout * 1000)
@@ -153,6 +161,9 @@ class Gui(TableCrabMainWindow .MainWindow):
 			dlg.restoreGeometry( TableCrabConfig.settingsValue('Gui/DialogException/Geometry', QtCore.QByteArray()).toByteArray())
 			dlg.exec_()
 			TableCrabConfig.settingsSetValue('Gui/DialogException/Geometry', dlg.saveGeometry() )
+			if dlg.clearError:
+				self.labelStatus.setText('Ready: ')
+				self._feedbackMessages[None] = ''
 
 #***********************************************************************************
 #
