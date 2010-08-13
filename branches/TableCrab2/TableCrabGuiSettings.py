@@ -323,7 +323,7 @@ class FrameSettingsHand(QtGui.QFrame):
 				grid.addWidget(editPostfix, i+1, 2)
 		grid.addWidget(self.labelMaxPlayerName, i+2, 0)
 		grid.addWidget(self.spinMaxPlayerName, i+2, 1)
-		grid.addWidget(self.checkNoFloatingPoint, i+3, 0)
+		grid.addWidget(self.checkNoFloatingPoint, i+3, 0, 1, 2)
 
 		grid.addLayout(TableCrabConfig.VStretch(), i+4, 0)
 
