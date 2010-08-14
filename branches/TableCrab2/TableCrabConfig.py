@@ -35,7 +35,7 @@ MaxHandStyleSheet = 9000
 Ellipsis = '..'
 MaxWindowText = 512		# maximum number of chars we retrieve as text / title from other windows
 MaxHandHistoryText = 16384
-MaxPokerStarsBetAmountBoxText = 16	# maximum number of chars to retrieve from PS bet amount box
+MaxPokerStarsBetBoxText = 16	# maximum number of chars to retrieve from PS bet amount box
 
 #****************************************************************************************
 # setup minimal stuff to get at least some information in case something goes wrong

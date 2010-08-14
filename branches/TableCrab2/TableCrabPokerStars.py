@@ -108,20 +108,20 @@ class ActionHandler(QtCore.QObject):
 			self.tableHandleAll_In(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
 			return True
-		elif actionID == TableCrabHotkeys.HotkeyHilightBetAmount.id():
-			self.tableHandleHilightBetAmount(hotkey, template, hwnd, inputEvent)
+		elif actionID == TableCrabHotkeys.HotkeyHilightBet.id():
+			self.tableHandleHilightBet(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
 			return True
-		elif actionID == TableCrabHotkeys.HotkeyAddToBetAmount.id():
-			self.tableHandleAddToBetAmount(hotkey, template, hwnd, inputEvent)
+		elif actionID == TableCrabHotkeys.HotkeyAddToBet.id():
+			self.tableHandleAddToBet(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
 			return True
-		elif actionID == TableCrabHotkeys.HotkeySubtractFromBetAmount.id():
-			self.tableHandleSubtractFromBetAmount(hotkey, template, hwnd, inputEvent)
+		elif actionID == TableCrabHotkeys.HotkeySubtractFromBet.id():
+			self.tableHandleSubtractFromBet(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
 			return True
-		elif actionID == TableCrabHotkeys.HotkeyMultiplyBetAmount.id():
-			self.tableHandleMultiplyBetAmount(hotkey, template, hwnd, inputEvent)
+		elif actionID == TableCrabHotkeys.HotkeyMultiplyBet.id():
+			self.tableHandleMultiplyBet(hotkey, template, hwnd, inputEvent)
 			inputEvent.accept = True
 			return True
 		elif actionID == TableCrabHotkeys.HotkeyReplayer.id():
@@ -216,7 +216,7 @@ class ActionHandler(QtCore.QObject):
 	#TODO: are there tables where BB/SB is not present in caption? closed tourneys ...?
 	PatAmountSB = re.compile('.*(?: [^0-9\.]|\s)   ( (?: 0\.[0-9]{2})   |    (?: [0-9]+))/.*', re.X|re.I)
 	PatAmountBB = re.compile('.*/[^0-9\.]?(   (?: 0\.[0-9]{2})   |    (?: [0-9]+)).*', re.X|re.I)
-	ClassTableBetAmountBox = 'PokerStarsSliderEditorClass'
+	ClassTableBetBox = 'PokerStarsSliderEditorClass'
 	def tableReadData(self, hwnd):
 		data = {}
 		text = TableCrabWin32.windowGetText(hwnd, maxSize=TableCrabConfig.MaxWindowText )
@@ -229,26 +229,28 @@ class ActionHandler(QtCore.QObject):
 		if match is None:
 			raise ValueError('could not determine smallBlind: %r' % text)
 		data['bigBlind'] = float(match.group(1))
-		hwndBetAmountBox = TableCrabWin32.windowFindChild(hwnd, self.ClassTableBetAmountBox)
-		data['hwndBetAmountBox'] =  hwndBetAmountBox
-		data['betAmountBoxIsVisible'] = TableCrabWin32.windowIsVisible(hwndBetAmountBox) if hwndBetAmountBox else False
-		data['betAmount'] = None
-		if data['hwndBetAmountBox']:
-			p = TableCrabWin32.windowGetText(hwndBetAmountBox, maxSize=TableCrabConfig.MaxPokerStarsBetAmountBoxText)
+		hwndBetBox = TableCrabWin32.windowFindChild(hwnd, self.ClassTableBetBox)
+		data['hwndBetBox'] =  hwndBetBox
+		data['betBoxIsVisible'] = TableCrabWin32.windowIsVisible(hwndBetBox) if hwndBetBox else False
+		data['bet'] = None
+		if data['hwndBetBox']:
+			p = TableCrabWin32.windowGetText(hwndBetBox, maxSize=TableCrabConfig.MaxPokerStarsBetBoxText)
 			try:
-				data['betAmount'] = float(p)
+				data['bet'] = float(p)
 			except ValueError: pass
 		return data
 
+	#TODO: fo some reason hotkeys are stillenabled when mouse is over notes editor with editor not having focus
 	ClassChatEditor = 'PokerStarsChatEditorClass'
 	ClassNoteEditor = 'PokerStarsNoteEditorClass'
+	ClassInfoBox = 'PokerStarsInfoClass'
 	#NOTE: "Edit" is actually a child widget of 'PokerStarsNoteSelectorClass', so we could add more tests in code below if required
 	ClassNoteEditorBox = 'Edit'
 	def tableHotkeysEnabled(self, hwnd):
 		point = TableCrabWin32.mouseGetPos()
 		hwndUnderMouse = TableCrabWin32.windowFromPoint(point)
 		className = TableCrabWin32.windowGetClassName(hwndUnderMouse)
-		if className in (self.ClassNoteEditor, self.ClassChatEditor, self.ClassNoteEditorBox):
+		if className in (self.ClassNoteEditor, self.ClassChatEditor, self.ClassNoteEditorBox, self.ClassInfoBox):
 			return False
 		return True
 
@@ -256,7 +258,7 @@ class ActionHandler(QtCore.QObject):
 		data = self.tableReadData(hwnd)
 		if not data: return
 		pointCurrent = TableCrabWin32.mouseGetPos()
-		if data['hwndBetAmountBox'] and data['betAmountBoxIsVisible']:
+		if data['hwndBetBox'] and data['betBoxIsVisible']:
 			point = template.buttonCheck
 			if point == TableCrabConfig.PointNone:
 				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point ButtonCheck Not Set -' % template.name)
@@ -281,7 +283,7 @@ class ActionHandler(QtCore.QObject):
 		data = self.tableReadData(hwnd)
 		if not data: return
 		pointCurrent = TableCrabWin32.mouseGetPos()
-		if data['hwndBetAmountBox'] and data['betAmountBoxIsVisible']:
+		if data['hwndBetBox'] and data['betBoxIsVisible']:
 			point = template.buttonFold
 			if point == TableCrabConfig.PointNone:
 				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point ButtonFold Not Set -' % template.name)
@@ -306,9 +308,9 @@ class ActionHandler(QtCore.QObject):
 	def tableHandleRaise(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
-		if not data['hwndBetAmountBox']: return
-		#NOTE: betAmountBox may not be visible when a player is all-in
-		##if not data['betAmountBoxIsVisible']: return
+		if not data['hwndBetBox']: return
+		#NOTE: BetBox may not be visible when a player is all-in
+		##if not data['betBoxIsVisible']: return
 		point = template.buttonRaise
 		if point == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point Buttonraise Not Set -' % template.name)
@@ -332,8 +334,8 @@ class ActionHandler(QtCore.QObject):
 	def tableHandleAll_In(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
-		if not data['hwndBetAmountBox']: return
-		if not data['betAmountBoxIsVisible']: return
+		if not data['hwndBetBox']: return
+		if not data['betBoxIsVisible']: return
 		pointStart = template.betSliderStart
 		if pointStart == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point BetSliderStart Not Set -' % template.name)
@@ -351,75 +353,75 @@ class ActionHandler(QtCore.QObject):
 			TableCrabWin32.mouseSetPos(pointCurrent)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
-	def tableHandleAddToBetAmount(self, hotkey, template, hwnd, inputEvent):
+	def tableHandleAddToBet(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
-		if not data['hwndBetAmountBox']: return
-		if not data['betAmountBoxIsVisible']: return
-		if data['betAmount'] is None: return
+		if not data['hwndBetBox']: return
+		if not data['betBoxIsVisible']: return
+		if data['bet'] is None: return
 		if inputEvent.steps == 0: return
 		if hotkey.baseValue() == 'BigBlind':
-			newBetAmount = data['betAmount'] + (data['bigBlind'] * hotkey.multiplier() * inputEvent.steps)
+			newBet = data['bet'] + (data['bigBlind'] * hotkey.multiplier() * inputEvent.steps)
 		elif hotkey.baseValue == 'SmallBlind':
-			newBetAmount = data['betAmount'] + (data['smallBlind'] * hotkey.multiplier() * inputEvent.steps)
+			newBet = data['bet'] + (data['smallBlind'] * hotkey.multiplier() * inputEvent.steps)
 		else:
 			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
-		newBetAmount = round(newBetAmount, 2)
-		if int(newBetAmount) == newBetAmount:
-			newBetAmount = int(newBetAmount)
-		newBetAmount = str(newBetAmount)
+		newBet = round(newBet, 2)
+		if int(newBet) == newBet:
+			newBet = int(newBet)
+		newBet = str(newBet)
 		#NOTE: the box gets mesed up when unicode is thrown at it
-		TableCrabWin32.windowSetText(data['hwndBetAmountBox'], text=newBetAmount, isUnicode=False)
+		TableCrabWin32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
-	def tableHandleSubtractFromBetAmount(self, hotkey, template, hwnd, inputEvent):
+	def tableHandleSubtractFromBet(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
-		if not data['hwndBetAmountBox']: return
-		if not data['betAmountBoxIsVisible']: return
-		if data['betAmount'] is None: return
+		if not data['hwndBetBox']: return
+		if not data['betBoxIsVisible']: return
+		if data['bet'] is None: return
 		if inputEvent.steps == 0: return
 		if hotkey.baseValue() == 'BigBlind':
-			newBetAmount = data['betAmount'] - (data['bigBlind'] * hotkey.multiplier() * inputEvent.steps)
+			newBet = data['bet'] - (data['bigBlind'] * hotkey.multiplier() * inputEvent.steps)
 		elif hotkey.baseValue == 'SmallBlind':
-			newBetAmount = data['betAmount'] - (data['smallBlind'] * hotkey.multiplier() * inputEvent.steps)
+			newBet = data['bet'] - (data['smallBlind'] * hotkey.multiplier() * inputEvent.steps)
 		else:
 			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
-		newBetAmount = round(newBetAmount, 2)
-		if int(newBetAmount) == newBetAmount:
-			newBetAmount = int(newBetAmount)
-		newBetAmount = str( 0 if newBetAmount < 0 else newBetAmount )
+		newBet = round(newBet, 2)
+		if int(newBet) == newBet:
+			newBet = int(newBet)
+		newBet = str( 0 if newBet < 0 else newBet )
 		#NOTE: the box gets mesed up when unicode is thrown at it
-		TableCrabWin32.windowSetText(data['hwndBetAmountBox'], text=newBetAmount, isUnicode=False)
+		TableCrabWin32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
-	def tableHandleMultiplyBetAmount(self, hotkey, template, hwnd, inputEvent):
+	def tableHandleMultiplyBet(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
-		if not data['hwndBetAmountBox']: return
-		if not data['betAmountBoxIsVisible']: return
-		if data['betAmount'] is None: return
+		if not data['hwndBetBox']: return
+		if not data['betBoxIsVisible']: return
+		if data['bet'] is None: return
 		if inputEvent.steps == 0: return
-		newBetAmount = data['betAmount'] * hotkey.multiplier() * inputEvent.steps
-		newBetAmount = round(newBetAmount, 2)
-		if int(newBetAmount) == newBetAmount:
-			newBetAmount = int(newBetAmount)
-		newBetAmount = str(newBetAmount)
+		newBet = data['bet'] * hotkey.multiplier() * inputEvent.steps
+		newBet = round(newBet, 2)
+		if int(newBet) == newBet:
+			newBet = int(newBet)
+		newBet = str(newBet)
 		#NOTE: the box gets mesed up when unicode is thrown at it
-		TableCrabWin32.windowSetText(data['hwndBetAmountBox'], text=newBetAmount, isUnicode=False)
+		TableCrabWin32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
-	def tableHandleHilightBetAmount(self, hotkey, template, hwnd, inputEvent):
+	def tableHandleHilightBet(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
-		hwndBetAmountBox = data['hwndBetAmountBox']
-		if not hwndBetAmountBox: return
-		if not data['betAmountBoxIsVisible']: return
+		hwndBetBox = data['hwndBetBox']
+		if not hwndBetBox: return
+		if not data['betBoxIsVisible']: return
 
 		pointCurrent = TableCrabWin32.mouseGetPos()
 		point = QtCore.QPoint(2, 2)
-		mi = TableCrabWin32.MouseInput().move(point, hwnd=hwndBetAmountBox).send()
-		mi.leftClickDouble(point, hwnd=hwndBetAmountBox).send()
+		mi = TableCrabWin32.MouseInput().move(point, hwnd=hwndBetBox).send()
+		mi.leftClickDouble(point, hwnd=hwndBetBox).send()
 		if TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool():
 			#NOTE: the SendInput() is always off a few pixels so we use mouseSetPos() instead
 			##mi.move(pointCurrent, hwnd=None).send()
