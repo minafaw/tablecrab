@@ -33,7 +33,7 @@ WM_MBUTTONUP = 520
 WM_MOUSEWHEEL = 522
 
 WHEEL_DELTA = 120
-	
+
 class MSLLHOOKSTRUCT(Structure):
 	_fields_ = [
 		('pt', POINT),
@@ -48,7 +48,7 @@ def HIWORD(dword):
 
 def GET_WHEEL_DELTA_WPARAM(wParam):
 	return c_short(HIWORD(wParam)).value
-	
+
 VK_CONTROL =  0x11
 VK_LCONTROL =  0xA2
 VK_RCONTROL =  0xA3
@@ -62,7 +62,7 @@ VK_SCROLL = 0x91
 VK_CAPITAL = 0x14
 VK_NUMLOCK = 0x90
 VK_SHIFT = 0x10
-	
+
 WH_KEYBOARD_LL = 13
 HC_ACTION = 0
 KEYBHOOKPROCLL = WINFUNCTYPE(LRESULT, c_int, WPARAM, LPARAM)
@@ -278,7 +278,7 @@ KEY_VALUES = {		# keyName --> vkCode
 		'Oem-Clear': 0xFE,
 		}
 KEY_NAMES = dict([(i[1], i[0]) for i in KEY_VALUES.items()])	# vkCode --> keyName
-	
+
 WM_SYSCOMMAND = 274
 WM_GETTEXT = 13
 WM_GETTEXTLENGTH = 0x000E
@@ -306,16 +306,16 @@ BM_CLICK = 245
 #****************************************************************************************************
 #HACK:(1)
 #wine specific hack
-#	
-#	KBDLLHOOKSTRUCT.flags is unusable when running in wine. same goses for user32.GetKeyboardState(), 
-#	user32.GetAsyncKeyState(). reason is: <quote>wine does not capture all system wide keys</quote>. 
-#	
+#
+#	KBDLLHOOKSTRUCT.flags is unusable when running in wine. same goses for user32.GetKeyboardState(),
+#	user32.GetAsyncKeyState(). reason is: <quote>wine does not capture all system wide keys</quote>.
+#
 #	we emulate the functions as much as necesssary here to track keyboard state by hand. this makes VK_MENU,
-#	VK_CONTROL and VK_SHIFT work. no way to track numlock, capslock and other toggle keys because we do not 
+#	VK_CONTROL and VK_SHIFT work. no way to track numlock, capslock and other toggle keys because we do not
 #	know their initial states. side effect is that holding own keys ahead of L{KeyboardManager.start} will never be honored.
 #
 # ..then it is up to a keyboard hook to call _setKeyDown() when appropriate
-#		
+#
 #	@todo: synchronize this stuff
 #	@warning: this hack overwrites user32.GetAsyncKeyState + user32.GetKeyboardState
 
@@ -347,7 +347,7 @@ def _setKeyDown(vkCode, flag):
 	"""
 	value = KEY_IS_DOWN if flag else 0x00
 	_keyboardState[vkCode] = value
-	if vkCode in (VK_LCONTROL, VK_RCONTROL): _keyboardState[VK_CONTROL] = value		
+	if vkCode in (VK_LCONTROL, VK_RCONTROL): _keyboardState[VK_CONTROL] = value
 	elif vkCode in (VK_LMENU, VK_RMENU): _keyboardState[VK_MENU] = value
 	elif vkCode in (VK_LSHIFT, VK_RSHIFT): _keyboardState[VK_SHIFT] = value
 
@@ -357,11 +357,11 @@ def _setKeyDown(vkCode, flag):
 #
 #****************************************************************************************************
 class InputEvent(QtCore.QObject):
-	def __init__(self, 
-				key=None, 
-				keyIsDown=False, 
+	def __init__(self,
+				key=None,
+				keyIsDown=False,
 				steps=1,
-				accept=False, 
+				accept=False,
 				parent=None
 				):
 		QtCore.QObject.__init__(self, parent)
@@ -388,7 +388,7 @@ def sendMessageTimeout(hwnd, msg, wParam,lParam, isUnicode=True):
 class WindowForegroundHook(QtCore.QObject):
 	Timeout = 0.2
 	def __init__(self, parent=None):
-		QtCore.QObject.__init__(self, parent)		
+		QtCore.QObject.__init__(self, parent)
 		self._lastWindowForeground = 0
 		self._isStarted = False
 	def lastWindowForeground(self):
@@ -400,7 +400,7 @@ class WindowForegroundHook(QtCore.QObject):
 		return self
 	def stop(self):
 		self._isStarted = False
-	def isStarted(self): 
+	def isStarted(self):
 		return self._isStarted
 	def _hookProc(self):
 		while self._isStarted:
@@ -415,9 +415,9 @@ class WindowHook(QtCore.QObject):
 	windowCreated = QtCore.pyqtSignal(int)
 	windowLostForeground = QtCore.pyqtSignal(int)
 	windowGainedForeground = QtCore.pyqtSignal(int)
-		
+
 	def __init__(self, parent=None, timeout=0.2):
-		QtCore.QObject.__init__(self, parent)		
+		QtCore.QObject.__init__(self, parent)
 		self._isRunning = False
 		self._hwndForeground = 0
 		self._hwnds = []
@@ -481,7 +481,7 @@ def windowGetTextLength(hwnd):
 		n = result.value
 	return n
 
-#TODO: we get unhnadled read access page faults when trying to query less than what GetWindowTextLen() returns. no idea why. ansi version works. 
+#TODO: we get unhnadled read access page faults when trying to query less than what GetWindowTextLen() returns. no idea why. ansi version works.
 #				unicode version segfaults. so ..as a workaround we don't query at all '' if len(text) exceeds maxSize. maybe later we can introduce a new
 #				keyword "size".
 def windowGetText(hwnd, maxSize=-1):
@@ -491,19 +491,19 @@ def windowGetText(hwnd, maxSize=-1):
 	@return: (str)
 	"""
 	if not hwnd or maxSize == 0: return ''
-	
+
 	#NOTE: see: [ http://blogs.msdn.com/b/oldnewthing/archive/2003/08/21/54675.aspx ] "the secret live of GetWindowtext" for details
-	
+
 	# try GetWindowText first
 	nChars = user32.GetWindowTextLengthW(hwnd)
-	##nChars = nChars if maxSize < 0 else min(nChars, maxSize)		## this segfaults in TableCrab
+	#nChars = nChars if maxSize < 0 else min(nChars, maxSize)		## this segfaults in TableCrab
 	if nChars:
-		if maxSize > 0 and nChars > maxSize: 
+		if maxSize > 0 and nChars > maxSize:
 			return  ''
 		p = create_unicode_buffer(nChars +1)
 		if user32.GetWindowTextW(hwnd, p, sizeof(p)):
 			return p.value
-		
+
 	# some text can only be retrieved by WM_GETTEXT, so here we go
 	result = DWORD()
 	nChars = sendMessageTimeout(hwnd, WM_GETTEXTLENGTH, 0, 0)
@@ -566,7 +566,7 @@ def windowScreenPointToClientPoint(hwnd, point):
 	"""
 	pt = POINT( point.x(), point.y() )
 	user32.ScreenToClient(hwnd, byref(pt) )
-	return QtCore.QPoint(pt.x, pt.y) 
+	return QtCore.QPoint(pt.x, pt.y)
 
 def windowClientPointToScreenPoint(hwnd, point):
 		"""converts a point in client coordiantes of a window screen coordinates
@@ -575,7 +575,7 @@ def windowClientPointToScreenPoint(hwnd, point):
 		"""
 		pt = POINT( point.x(), point.y() )
 		user32.ClientToScreen(hwnd, byref(pt) )
-		return QtCore.QPoint(pt.x, pt.y) 
+		return QtCore.QPoint(pt.x, pt.y)
 
 def windowIsVisible(hwnd):
 	return bool(user32.IsWindowVisible(hwnd))
@@ -609,14 +609,14 @@ def windowClickButton(hwndButton):
 		@param hwnd: handle of the button
 		@return: (bool) True if the button was clicked successfuly, False otherwise
 		"""
-		if user32.SendNotifyMessageW(hwndButton, BM_CLICK, 0, 0): 
+		if user32.SendNotifyMessageW(hwndButton, BM_CLICK, 0, 0):
 			return True
 		return False
 
 def windowFindChild(hwnd, className):
 	"""finds a child window of a window
 	@return: hwnd of the child window or None
-	@todo: for some reason user32.FindWindowEx() always fails with an "Access Denied" error, so we use our own impl here 
+	@todo: for some reason user32.FindWindowEx() always fails with an "Access Denied" error, so we use our own impl here
 	"""
 	for hwnd in windowChildren(hwnd):
 		if windowGetClassName(hwnd) == className:
@@ -626,7 +626,7 @@ def windowFindChild(hwnd, className):
 def windowSetText(hwnd, text='', isUnicode=True):
 		"""returns the window title of the specified window
 		@param hwnd: handle of the window
-		@todo: we currently send ANSI text only. 
+		@todo: we currently send ANSI text only.
 		@return: (str)
 		"""
 		if not hwnd: raise ValueError('can not set text of desktop window')
@@ -640,28 +640,28 @@ def windowClose(hwnd):
 	if not hwnd: raise ValueError('can not close desktop window')
 	result = DWORD()
 	user32.SendMessageTimeoutW(
-			hwnd, 
-			WM_SYSCOMMAND, 
-			SC_CLOSE, 
-			0, 
-			SMTO_ABORTIFHUNG, 
-			MY_SMTO_TIMEOUT, 
+			hwnd,
+			WM_SYSCOMMAND,
+			SC_CLOSE,
+			0,
+			SMTO_ABORTIFHUNG,
+			MY_SMTO_TIMEOUT,
 			byref(result)
 			)
 
 def windowCheckboxIsChecked(hwnd):
 	result = DWORD()
 	user32.SendMessageTimeoutW(
-			hwnd, 
-			BM_GETSTATE, 
-			0, 
-			0, 
-			SMTO_ABORTIFHUNG, 
-			MY_SMTO_TIMEOUT, 
+			hwnd,
+			BM_GETSTATE,
+			0,
+			0,
+			SMTO_ABORTIFHUNG,
+			MY_SMTO_TIMEOUT,
 			byref(result)
 			)
 	return bool( result.value & BST_CHECKED )
-	
+
 def windowGetPos(hwnd):
 	if not hwnd:
 		return QtCore.QPoint(0, 0)
@@ -673,7 +673,7 @@ def windowGetPos(hwnd):
 
 # ##############################################
 #def windowSetSize(hwnd, size):
-#	"""sets size of the specified window 
+#	"""sets size of the specified window
 #	@param hwnd: handle of the window
 #	@param size: (QSize)
 #	@return: None
@@ -713,7 +713,7 @@ def windowGetPos(hwnd):
 #		GetModuleFileNameEx = psapi.GetModuleFileNameExW
 #	except AttributeError:
 #		GetModuleFileNameEx = psapi.K32GetModuleFileNameExW
-#		
+#
 #
 #def windowGetExecutable(hwnd):
 #	pId = DWORD()
@@ -746,8 +746,8 @@ _mouseButtonsDown = []
 #
 # we have to use SendInput() to simulate mouse events cos PokerStars bet slider
 # seems to ignore everything send via user32.mouse_event(). we are not removing
-# all the user32.mouse_event() methods because we may if we need them at some 
-# point. 
+# all the user32.mouse_event() methods because we may if we need them at some
+# point.
 #***********************************************************************************
 MOUSEEVENTF_MOVE = 0x1
 MOUSEEVENTF_LEFTDOWN = 0x2
@@ -809,7 +809,7 @@ class INPUT(Structure):
 class MouseInput(object):
 	def __init__(self):
 		self._input = []
-		
+
 	def _addMousePoint(self, event, point, hwnd=None):
 		x, y = point.x(), point.y()
 		if hwnd:
@@ -826,7 +826,7 @@ class MouseInput(object):
 		input.type = INPUT_MOUSE
 		input.mi = mi
 		self._input.append(input)
-	
+
 	def _worldCoords(self, x, y):
 		x = float(x * 0xFFFF) / user32.GetSystemMetrics(SM_CXSCREEN)
 		y = float(y * 0xFFFF) / user32.GetSystemMetrics(SM_CYSCREEN)
@@ -834,7 +834,7 @@ class MouseInput(object):
 				int( round(x, 0) ),
 				int( round(y, 0) ),
 				)
-	
+
 	def send(self):
 		if not self._input:
 			raise ValueError('No input to send')
@@ -842,7 +842,7 @@ class MouseInput(object):
 		self._input = []
 		user32.SendInput(len(arr), byref(arr), sizeof(INPUT))
 		return self
-	
+
 	def leftDown(self, point, hwnd=None):
 		self._addMousePoint(MOUSEEVENTF_LEFTDOWN, point, hwnd=hwnd)
 		return self
@@ -857,7 +857,7 @@ class MouseInput(object):
 		self.leftClick(point, hwnd=hwnd)
 		self.leftClick(point, hwnd=hwnd)
 		return self
-		
+
 	def rightDown(self, point, hwnd=None):
 		self._addMousePoint(MOUSEEVENTF_RIGHTDOWN, point, hwnd=hwnd)
 		return self
@@ -868,7 +868,7 @@ class MouseInput(object):
 		self.rightDown(point, hwnd=hwnd)
 		self.rightUp(point, hwnd=hwnd)
 		return self
-	
+
 	def middleDown(self, point, hwnd=None):
 		self._addMousePoint(MOUSEEVENTF_MIDDLEDOWN, point, hwnd=hwnd)
 		return self
@@ -877,7 +877,7 @@ class MouseInput(object):
 		return self
 	def middleClick(self, point, hwnd=None):
 		self.middleDown(point, hwnd=hwnd)
-		self.middleUp(point, hwnd=hwnd)	
+		self.middleUp(point, hwnd=hwnd)
 		return self
 	def move(self, point, hwnd=None):
 		self._addMousePoint(MOUSEEVENTF_MOVE, point, hwnd=hwnd)
@@ -901,7 +901,7 @@ def mouseButtonsDown():
 	return user32.GetAsyncKeyState(KEY_VALUES['LeftButton'] & KEY_IS_DOWN) or \
 				user32.GetAsyncKeyState(KEY_VALUES['RightButton'] & KEY_IS_DOWN) or \
 				user32.GetAsyncKeyState(KEY_VALUES['MiddleButton'] & KEY_IS_DOWN)
-	
+
 def mouseButtonIsDown(button):
 	return button in _mouseButtonsDown
 
@@ -918,7 +918,7 @@ def mousePressButton(button):
 	elif button == MouseButtonMiddle:
 		bt = MOUSEEVENTF_MIDDLEDOWN
 	else:
-		raise ValueError('no such mouse button: %s' % button) 
+		raise ValueError('no such mouse button: %s' % button)
 	point = mouseGetPos()
 	user32.mouse_event(bt | MOUSEEVENTF_ABSOLUTE, point.x(), point.y(), 0, None)
 
@@ -935,16 +935,16 @@ def mouseReleaseButton(button):
 	elif button == MouseButtonMiddle:
 		bt = MOUSEEVENTF_MIDDLEUP
 	else:
-		raise ValueError('no such mouse button: %s' % button) 
+		raise ValueError('no such mouse button: %s' % button)
 	point = mouseGetPos()
-	user32.mouse_event(bt | MOUSEEVENTF_ABSOLUTE, point.x(), point.y(), 0, None)	
+	user32.mouse_event(bt | MOUSEEVENTF_ABSOLUTE, point.x(), point.y(), 0, None)
 
 def mouseClickPoint(button, nClicks=1, point=None, hwnd=None):
 	'''clicks a point with the desired mouse button
 	@param button: (str) button to click: (Button*)
 	@param nClicks: (int) number of times to click (2 for a double-click)
 	@param pt: (QPoint) absolute coordinates to click. if None, the current cursor pos is taken
-	@return: None	
+	@return: None
 	@todo: impl proper double click delay. GetSystemMetrics could do the trick if there is something like a min-double-click-interval defined
 	@NOTE: the mouse is moved to the specified position in the call
 	'''
@@ -960,7 +960,7 @@ def mouseClickPoint(button, nClicks=1, point=None, hwnd=None):
 		mouseReleaseButton(button)
 		if rng:
 			time.sleep(0.1)
-	
+
 def mouseClickLeft(point, hwnd=None):
 	"""clicks the left mouse button at the specified point"""
 	return mouseClickPoint(MouseButtonLeft, point=point, nClicks=1, hwnd=hwnd)
@@ -1001,23 +1001,23 @@ def mouseSetPos(point, step=4, hwnd=None):
 	curX, curY = point2.x(), point2.y()
 	pt = POINT()
 	while curX != ptX or curY != ptY:
-		if curX < ptX: 
+		if curX < ptX:
 			curX += step
 			if curX > ptX: curX = ptX
 		elif curX == ptX: pass
-		else: 
+		else:
 			curX -= step
 			if curX < ptX: curX = ptX
-		if curY < ptY: 
+		if curY < ptY:
 			curY += step
 			if curY > ptY: curY = ptY
 		elif curY == ptY: pass
-		else: 
+		else:
 			curY -= step
 			if curY < ptY: curY = ptY
 		pt.x, pt.y = curX, curY
 		user32.SetCursorPos(pt)
-		
+
 
 class MouseHook(QtCore.QObject):
 	"""win32 keyboard manager implementation
@@ -1025,9 +1025,9 @@ class MouseHook(QtCore.QObject):
 	@event EvtMouseButtonDown: event triggerered when a mosue button is released. arg = Button*
 	@event EvtMouseWheelScrolled: event triggerered when the mosue wheel is scrolled. arg = stepsScrolled
 	"""
-	
+
 	inputEvent = QtCore.pyqtSignal(QtCore.QObject)
-	
+
 	def __init__(self, parent=None, eventHandler=None):
 		"""
 		@param cb: (function) event handler
@@ -1037,10 +1037,10 @@ class MouseHook(QtCore.QObject):
 		self._hHook = None
 		self._pHookProc = MOUSEHOOKPROCLL(self._hookProc)
 		self._eventHandler = eventHandler
-		
+
 	def _hookProc(self, code, wParam, lParam):
 		"""private method, MOUSEHOOKPROCLL implementation"""
-		
+
 		if code == HC_ACTION:
 			if wParam == WM_LBUTTONDOWN:
 				_setKeyDown(KEY_VALUES['LeftButton'], True)
@@ -1065,24 +1065,24 @@ class MouseHook(QtCore.QObject):
 					if e.accept:
 						return TRUE
 		return user32.CallNextHookEx(self._hHook, code, wParam, lParam)
-	
-	def isStarted(self): 
+
+	def isStarted(self):
 		"""cheks if the mouse manager is started"""
 		return self._isStarted
-	
+
 	def start(self):
 		"""starts the mouse manager"""
 		if self._hHook is None:
 			self._hHook = user32.SetWindowsHookExW(
-				WH_MOUSE_LL, 
-				self._pHookProc, 
-				kernel32.GetModuleHandleA(None), 
+				WH_MOUSE_LL,
+				self._pHookProc,
+				kernel32.GetModuleHandleA(None),
 				0
 				)
 			if not self._hHook:
 				self._hHook = None
 				raise WindowsError(GetLastError())
-				
+
 	def stop(self):
 		"""stops the mouse manager"""
 		if self._hHook is not None:
@@ -1095,9 +1095,9 @@ class MouseHook(QtCore.QObject):
 #***********************************************************************************
 class KeyboardHook(QtCore.QObject):
 	"""win32 keyboard hook implementation"""
-	
+
 	inputEvent = QtCore.pyqtSignal(QtCore.QObject)
-	
+
 	def __init__(self, parent=None, eventHandler=None):
 		"""
 		@param cb: (function) event handler
@@ -1107,7 +1107,7 @@ class KeyboardHook(QtCore.QObject):
 		self._hHook = None
 		self._pHookProc = KEYBHOOKPROCLL(self._hookProc)
 		self._eventHandler = eventHandler
-		
+
 	def _hookProc(self, code, wParam, lParam):
 		"""private method, KEYBHOOKPROCLL implementation"""
 		if code == HC_ACTION:
@@ -1125,7 +1125,7 @@ class KeyboardHook(QtCore.QObject):
 				if e.accept:
 					return TRUE
 		return user32.CallNextHookEx(self._hHook, code, wParam, lParam)
-		
+
 	def _keyFromKeyboardState(self, keyboardState):
 		"""@param keyboardState: (c_ubyte*256) holding a keyboard state"""
 		result = []
@@ -1146,24 +1146,24 @@ class KeyboardHook(QtCore.QObject):
 		if result:
 			return '<%s>' % '+'.join(result)
 		return ''
-	
-	def isStarted(self): 
+
+	def isStarted(self):
 		"""cheks if the keyboard manager is started"""
 		return self._isStarted
-	
+
 	def start(self):
 		"""starts the keyboard manager"""
 		if self._hHook is None:
 			self._hHook = user32.SetWindowsHookExW(
-				WH_KEYBOARD_LL, 
-				self._pHookProc, 
-				kernel32.GetModuleHandleA(None), 
+				WH_KEYBOARD_LL,
+				self._pHookProc,
+				kernel32.GetModuleHandleA(None),
 				0
 				)
 			if not self._hHook:
 				self._hHook = None
 				raise WindowsError(GetLastError())
-			
+
 	def stop(self):
 		"""stops the keyboard manager"""
 		if self._hHook is not None:
