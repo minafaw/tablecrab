@@ -1058,9 +1058,9 @@ class MouseHook(QtCore.QObject):
 				mouseInfo = MSLLHOOKSTRUCT.from_address(lParam)
 				wheelDelta = GET_WHEEL_DELTA_WPARAM(mouseInfo.mouseData)
 				nSteps = wheelDelta / WHEEL_DELTA
+				key = MouseWheelUp if nSteps >= 0 else MouseWheelDown
 				if nSteps:
-					key = MouseWheelUp if nSteps >= 0 else MouseWheelDown
-					e = InputEvent(key=key, steps=abs(nSteps), accept=False, parent=self)
+					e = InputEvent(key=key, steps=abs(nSteps), accept=False, keyIsDown=True, parent=self)
 					self.inputEvent.emit(e)
 					if e.accept:
 						return TRUE
