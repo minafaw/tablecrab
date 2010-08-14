@@ -38,10 +38,10 @@ Topics = [
 				('hotkeyFold', 'Fold'),
 				('hotkeyRaise', 'Raise'),
 				('hotkeyAll_In', 'All-in'),
-				('hotkeyHilightBetAmount', 'Hilight Bet Amount'),
-				('hotkeyMultiplyBetAmount', 'Multiply Bet Amount'),
-				('hotkeyAddToBetAmount', 'Add To Bet Amount'),
-				('hotkeySubtractFromBetAmount', 'Subtract From Bet Amount'),
+				('hotkeyHilightBet', 'Hilight Bet'),
+				('hotkeyMultiplyBet', 'Multiply Bet'),
+				('hotkeyAddToBet', 'Add To Bet'),
+				('hotkeySubtractFromBet', 'Subtract From Bet'),
 				('hotkeyReplayer', 'Replayer'),
 				('hotkeyInstantHandHistory', 'Instant Hand History'),
 				('hotkeyScreenshot', 'Screenshot'),
@@ -56,7 +56,7 @@ Topics = [
 			],
 		('versionHistory.html', 'Version History'),
 		]
-		
+
 def walkTopics():
 	def walker(item, level=0):
 		if not isinstance(item, list):
@@ -75,7 +75,7 @@ class ByteArrayBuffer(object):
 	def __init__(self, byteArray=None):
 		self._byteArray = byteArray
 		self._pos = 0
-	def __len__(self): 
+	def __len__(self):
 		if self._byteArray is None: return 0
 		return len(self._byteArray)
 	def setByteArray(self, byteArray=None):
@@ -111,7 +111,7 @@ class TableCrabReply(QtNetwork.QNetworkReply):
 		return data
 
 class NetworkAccessManager(QtNetwork.QNetworkAccessManager):
-	
+
 	def __init__(self, oldManager, parent=None):
 		QtNetwork.QNetworkAccessManager.__init__(self, parent)
 		##self.oldManager = oldManager
@@ -120,20 +120,20 @@ class NetworkAccessManager(QtNetwork.QNetworkAccessManager):
 		self.setProxy(oldManager.proxy())
 		self.setProxyFactory(oldManager.proxyFactory())
 	def createRequest(self, operation, request, data):
-		
+
 		#NOTE: from previous versions of Qt i found we can not keep the url bcause Qt nulls it on return
 		url = QtCore.QUrl(request.url())
-			
+
 		# serve local files from our resource modules
 		if url.scheme() == "file" and operation == self.GetOperation:
 			fileInfo = QtCore.QFileInfo(url.path())
 			name = str(fileInfo.baseName() )		#NOTE: we need to string it ..getattr() crasches otherwise
 			ext = fileInfo.suffix()
-			
+
 			buffer = ByteArrayBuffer()
 			reply = TableCrabReply(buffer, parent=self)
 			reply.setUrl(url)
-			
+
 			if ext == 'html':
 				reply.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader, QtCore.QVariant("text/html; charset=UTF-8"))
 				func = getattr(TableCrabConfig.HtmlPages, name, None)
@@ -144,7 +144,7 @@ class NetworkAccessManager(QtNetwork.QNetworkAccessManager):
 				else:
 					buffer.setByteArray(QtCore.QByteArray('<h2>404: File Not Found</h2>'))
 				return reply
-				
+
 			elif ext == 'png':
 				reply.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader, QtCore.QVariant("image/png"))
 				func = getattr(TableCrabConfig.Pixmaps, name, None)
@@ -156,7 +156,7 @@ class NetworkAccessManager(QtNetwork.QNetworkAccessManager):
 					px.save(p, 'png')
 					buffer.setByteArray(arr)
 					return reply
-			
+
 			elif ext == 'css':
 				reply.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader, QtCore.QVariant("text/css"))
 				func = getattr(TableCrabConfig.StyleSheets, name, None)
@@ -164,8 +164,8 @@ class NetworkAccessManager(QtNetwork.QNetworkAccessManager):
 					arr = QtCore.QByteArray()
 					arr+= func()
 					buffer.setByteArray(arr)
-					return reply	
-			
+					return reply
+
 		return QtNetwork.QNetworkAccessManager.createRequest(self, operation, request, data)
 
 #**********************************************************************************************
@@ -175,7 +175,7 @@ class NetworkAccessManager(QtNetwork.QNetworkAccessManager):
 class FrameHelp(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
-		
+
 		self.webView = QtWebKit.QWebView(self)
 		self.webView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)		#
 		self.webView.setUrl(QtCore.QUrl(''))
@@ -185,26 +185,26 @@ class FrameHelp(QtGui.QFrame):
 		page.setNetworkAccessManager(self.networkAccessManager)
 		page.setLinkDelegationPolicy(page.DelegateAllLinks)
 		page.linkClicked.connect(self.onLinkClicked)
-			
+
 		self.tree = QtGui.QTreeWidget(self)
 		self.tree.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
-		
+
 		# connect signals
 		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(self.onSettingAlternatingRowColorsChanged)
-			
+
 		self.splitter = QtGui.QSplitter(self)
 		self.splitter.addWidget(self.tree)
 		self.splitter.addWidget(self.webView)
-				
+
 		self.tree.setExpandsOnDoubleClick(False)
 		self.tree.setRootIsDecorated(False)
 		self.tree.header().setVisible(False)
-			
+
 		self.toolBar = TableCrabConfig.WebViewToolBar(self.webView,
 				settingsKeyZoomFactor='Gui/Help/ZoomFactor',
 				settingsKeyZoomIncrement='Gui/WebView/ZoomIncrement',
 				)
-		
+
 		#
 		lastTopic = TableCrabConfig.settingsValue('Gui/Help/Topic', '').toString()
 		lastTopicItem = None
@@ -218,7 +218,7 @@ class FrameHelp(QtGui.QFrame):
 			else:
 				item = QtGui.QTreeWidgetItem(self.tree, [topicName, ])
 			item.setData(0, QtCore.Qt.UserRole, QtCore.QVariant(topic))
-			
+
 			#TODO: for some reason DontShowIndicator items are never expanded. seems to be a but in Qt4
 			#item.setChildIndicatorPolicy(item.DontShowIndicator)
 			item.setExpanded(True)
@@ -227,7 +227,7 @@ class FrameHelp(QtGui.QFrame):
 				lastTopicItem = item
 			if firstTopicItem is None:
 				firstTopicItem = item
-			
+
 		self.tree.itemSelectionChanged.connect(self.onItemSelectionChanged)
 		self.tree.itemActivated.connect(self.onItemSelectionChanged)
 		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
@@ -235,15 +235,15 @@ class FrameHelp(QtGui.QFrame):
 			self.tree.setCurrentItem(lastTopicItem)
 		else:
 			self.tree.setCurrentItem(firstTopicItem)
-		
+
 		self.layout()
 		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Help/SplitterState', QtCore.QByteArray()).toByteArray() )
-		
+
 	def layout(self):
 		box = TableCrabConfig.GridBox(self)
 		box.addWidget(self.toolBar, 0, 0)
 		box.addWidget(self.splitter, 1, 0)
-		
+
 	def onItemSelectionChanged(self):
 		items = self.tree.selectedItems()
 		if not items: return
@@ -252,7 +252,7 @@ class FrameHelp(QtGui.QFrame):
 		url = QtCore.QUrl('%s.html' % topic)
 		self.webView.setUrl(url)
 		TableCrabConfig.settingsSetValue('Gui/Help/Topic', topic)
-		
+
 	def onLinkClicked(self, url):
 		fileInfo = QtCore.QFileInfo(url.path())
 		topic = fileInfo.baseName()
@@ -261,7 +261,7 @@ class FrameHelp(QtGui.QFrame):
 			if myTopic == topic:
 				self.tree.setCurrentItem(item)
 		#TODO: ??? on topic not found
-		
+
 	def onCloseEvent(self, event):
 		TableCrabConfig.settingsSetValue('Gui/Help/SplitterState', self.splitter.saveState() )
 
@@ -271,24 +271,24 @@ class FrameHelp(QtGui.QFrame):
 class _DialogHelp(QtGui.QDialog):
 	def __init__(self, topic, parent=None):
 		QtGui.QDialog.__init__(self, parent)
-		
+
 		self.setWindowTitle(TableCrabConfig.dialogTitle('Help') )
 		self.setWindowIcon( QtGui.QIcon(TableCrabConfig.Pixmaps.tableCrab()) )
 		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
 		self.buttonBox.accepted.connect(self.accept)
-		
+
 		TableCrabConfig.settingsSetValue('Gui/Help/Topic', topic)
 		self.frameHelp = FrameHelp(parent=self)
 		self.layout()
 		self.restoreGeometry( TableCrabConfig.settingsValue('Gui/DialogHelp/Geometry', QtCore.QByteArray()).toByteArray() )
 		self.frameHelp.splitter.restoreState( TableCrabConfig.settingsValue('Gui/DialogHelp/SplitterState', QtCore.QByteArray()).toByteArray() )
-			
+
 	def layout(self):
 		box = TableCrabConfig.GridBox(self)
 		box.addWidget(self.frameHelp, 0, 0)
 		box.addWidget(TableCrabConfig.HLine(self), 1, 0)
 		box.addWidget(self.buttonBox, 2, 0)
-	
+
 	def hideEvent(self, event):
 		TableCrabConfig.settingsSetValue('Gui/DialogHelp/Geometry', self.saveGeometry() )
 		TableCrabConfig.settingsSetValue('Gui/Help/SplitterState', self.frameHelp.splitter.saveState() )
@@ -297,7 +297,7 @@ class _DialogHelp(QtGui.QDialog):
 def dialogHelp(topic, parent=None):
 	dlg = _DialogHelp(topic, parent=parent)
 	dlg.show()
-	
+
 #**********************************************************************************************
 #
 #**********************************************************************************************
@@ -306,7 +306,7 @@ if __name__ == '__main__':
 	g = TableCrabMainWindow.MainWindow()
 	g.setCentralWidget(FrameHelp(g))
 	g.start()
-	
-	
+
+
 
 

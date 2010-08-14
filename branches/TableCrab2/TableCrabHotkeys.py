@@ -22,7 +22,7 @@ class HotkeyEditor(QtGui.QDialog):
 			self.setWindowTitle('Edit hotkey: %s' % hotkey.menuName() )
 		else:
 			self.setWindowTitle('Create hotkey: %s' % hotkey.menuName() )
-		
+
 		self.hotkey = hotkey
 		self.settingsKey = settingsKey
 		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
@@ -31,7 +31,7 @@ class HotkeyEditor(QtGui.QDialog):
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
 		self.buttonBox.accepted.connect(self.accept)
 		self.buttonBox.rejected.connect(self.reject)
-		
+
 		self.labelAction = QtGui.QLabel('Action:', self)
 		self.editAction = QtGui.QLineEdit(self)
 		self.editAction.setText(self.hotkey.action())
@@ -47,31 +47,31 @@ class HotkeyEditor(QtGui.QDialog):
 				(self.labelHotkey, self.hotkeyBox),
 				(self.labelHotkeyName, self.editHotkeyName),
 				]
-	
+
 	def layout(self):
 		self.grid.addFields(*self.fields)
 		self.grid.setRowStretch(97, 99)
 		self.grid.addWidget(TableCrabConfig.HLine(self),98, 0, 1, 3)
 		self.grid.addWidget(self.buttonBox, 99, 0, 1, 3)
-	
+
 	def hideEvent(self, event):
-		if self.settingsKey is not None: 
+		if self.settingsKey is not None:
 			TableCrabConfig.settingsSetValue(self.settingsKey, self.saveGeometry() )
 		return QtGui.QDialog.hideEvent(self, event)
-	
+
 	def exec_(self):
 		self.layout()
-		if self.settingsKey is not None: 
+		if self.settingsKey is not None:
 			self.restoreGeometry( TableCrabConfig.settingsValue(self.settingsKey, QtCore.QByteArray()).toByteArray() )
 		return QtGui.QDialog.exec_(self)
-	
+
 	def accept(self):
 		self.hotkey.setHotkey(self.hotkeyBox.hotkey() )
 		self.hotkey.setHotkeyName(self.editHotkeyName.text() )
 		QtGui.QDialog.accept(self)
-	
+
 	def onButtonHelpClicked(self, checked):
-		TableCrabGuiHelp.dialogHelp('hotkey%s' % self.hotkey.id(), parent=self)	
+		TableCrabGuiHelp.dialogHelp('hotkey%s' % self.hotkey.id(), parent=self)
 
 
 class HotkeyEditorWithMultiplier(HotkeyEditor):
@@ -79,10 +79,10 @@ class HotkeyEditorWithMultiplier(HotkeyEditor):
 		HotkeyEditor.__init__(self, *args,**kws)
 		self.labelMultiplier = QtGui.QLabel('multiplier:', self)
 		self.spinMultiplier = TableCrabConfig.DoubleSpinBox(
-				default=self.hotkey.multiplier(), 
-				minimum=self.hotkey.MultiplierMin, 
-				maximum=self.hotkey.MultiplierMax, 
-				step=0.1, 
+				default=self.hotkey.multiplier(),
+				minimum=self.hotkey.MultiplierMin,
+				maximum=self.hotkey.MultiplierMax,
+				step=0.1,
 				precision=1,
 				parent=self,
 				)
@@ -90,11 +90,11 @@ class HotkeyEditorWithMultiplier(HotkeyEditor):
 		self.fields.extend((
 				(self.labelMultiplier, self.spinMultiplier),
 				))
-		
+
 	def setNewActionName(self,*args):
 		self.hotkey.setMultiplier(self.spinMultiplier.value() )
 		self.editAction.setText(self.hotkey.action() )
-	
+
 	def accept(self):
 		self.hotkey.setMultiplier(self.spinMultiplier.value() )
 		return HotkeyEditor.accept(self)
@@ -106,17 +106,17 @@ class HotkeyEditorWithMultiplierAndBaseValue(HotkeyEditorWithMultiplier):
 		self.labelBasevalue = QtGui.QLabel('BaseValue:', self)
 		self.comboBaseValue = TableCrabConfig.ComboBox(choices=self.hotkey.BaseValues, default=self.hotkey.baseValue(), parent=self)
 		self.comboBaseValue.currentIndexChanged.connect(self.setNewActionName)
-		self.fields.insert(-1, 
+		self.fields.insert(-1,
 				(self.labelBasevalue, self.comboBaseValue),
-				)	
+				)
 	def setNewActionName(self,*args):
 		self.hotkey.setBaseValue(self.comboBaseValue.currentText() )
 		HotkeyEditorWithMultiplier.setNewActionName(self,*args)
-	
+
 	def accept(self):
 		self.hotkey.setBaseValue(self.comboBaseValue.currentText() )
 		return HotkeyEditor.accept(self)
-		
+
 
 
 
@@ -147,7 +147,7 @@ class HotkeyCheck(QtGui.QTreeWidgetItem):
 		hotkey = TableCrabConfig.settingsValue( (key, 'Hotkey'), TableCrabConfig.HotkeyNone).toString()
 		if hotkey == TableCrabConfig.HotkeyNone: return None
 		hotkeyName = TableCrabConfig.settingsValue( (key, 'HotkeyName'), '').toString()
-		return {'hotkey': hotkey, 'hotkeyName': hotkeyName}	
+		return {'hotkey': hotkey, 'hotkeyName': hotkeyName}
 	@classmethod
 	def fromConfig(klass, key):
 		attrs = klass.attrsFromConfig(key, klass.id() )
@@ -166,7 +166,7 @@ class HotkeyCheck(QtGui.QTreeWidgetItem):
 		if dlg.exec_() == dlg.Accepted:
 			self.update(other)
 			return self
-		
+
 Hotkeys.append(HotkeyCheck)
 
 class HotkeyFold(HotkeyCheck):
@@ -190,21 +190,21 @@ class HotkeyAll_In(HotkeyCheck):
 	def menuName(klass): return 'All-In'
 Hotkeys.append(HotkeyAll_In)
 
-class HotkeyHilightBetAmount(HotkeyCheck):
+class HotkeyHilightBet(HotkeyCheck):
 	@classmethod
-	def id(klass): return 'HilightBetAmount'
+	def id(klass): return 'HilightBet'
 	@classmethod
-	def menuName(klass): return 'Hilight Bet Amount'
-Hotkeys.append(HotkeyHilightBetAmount)
+	def menuName(klass): return 'Hilight bet'
+Hotkeys.append(HotkeyHilightBet)
 
-class HotkeyMultiplyBetAmount(HotkeyCheck):
+class HotkeyMultiplyBet(HotkeyCheck):
 	MultiplierMax = 99.0
 	MultiplierMin = 1.0
 	MultiplierDefault = 1.0
 	@classmethod
-	def id(klass): return 'MultiplyBetAmount'
+	def id(klass): return 'MultiplyBet'
 	@classmethod
-	def menuName(klass): return 'Multiply bet amount'
+	def menuName(klass): return 'Multiply bet'
 	def __init__(self, parent=None, hotkey='', hotkeyName='', multiplier=1.0):
 		self._multiplier = multiplier
 		HotkeyCheck.__init__(self, parent=parent, hotkey=hotkey, hotkeyName=hotkeyName)
@@ -215,9 +215,9 @@ class HotkeyMultiplyBetAmount(HotkeyCheck):
 	def setMultiplier(self, multiplier): self._multiplier = round(multiplier, 1)
 	def action(self):
 		if int(self._multiplier) == self._multiplier:
-			text = 'Multiply Bet Amount By %s' % int(self._multiplier)
+			text = 'Multiply bet by %s' % int(self._multiplier)
 		else:
-			text = 'Multiply Bet Amount By %s' % self._multiplier
+			text = 'Multiply bet by %s' % self._multiplier
 		return text
 	@classmethod
 	def attrsFromConfig(klass, key, klassID):
@@ -249,16 +249,16 @@ class HotkeyMultiplyBetAmount(HotkeyCheck):
 			self.update(other)
 			return self
 
-Hotkeys.append(HotkeyMultiplyBetAmount)
-	
-class HotkeyAddToBetAmount(HotkeyMultiplyBetAmount):
+Hotkeys.append(HotkeyMultiplyBet)
+
+class HotkeyAddToBet(HotkeyMultiplyBet):
 	BaseValues = ('BigBlind', 'SmallBlind')
 	def __init__(self, parent=None, hotkey='', hotkeyName='', multiplier=1.0,baseValue='BigBlind'):
 		self._baseValue = baseValue
-		HotkeyMultiplyBetAmount.__init__(self, parent=parent, hotkey=hotkey, hotkeyName=hotkeyName, multiplier=multiplier)
+		HotkeyMultiplyBet.__init__(self, parent=parent, hotkey=hotkey, hotkeyName=hotkeyName, multiplier=multiplier)
 	def update(self, other):
 		self._baseValue = other.baseValue()
-		HotkeyMultiplyBetAmount.update(self, other)
+		HotkeyMultiplyBet.update(self, other)
 	def action(self):
 		if self._multiplier == 1:
 			baseValue = 'big blind' if self._baseValue == 'BigBlind' else 'small blind'
@@ -269,16 +269,16 @@ class HotkeyAddToBetAmount(HotkeyMultiplyBetAmount):
 		else:
 			baseValue = 'big blinds' if self._baseValue == 'BigBlind' else 'small blinds'
 			multiplier = self._multiplier
-		return 'Add %s %s' % (multiplier, baseValue)
+		return 'Add %s %s to bet' % (multiplier, baseValue)
 	def baseValue(self): return self._baseValue
 	def setBaseValue(self, baseValue): self._baseValue = baseValue
 	@classmethod
-	def id(klass): return 'AddToBetAmount'
+	def id(klass): return 'AddToBet'
 	@classmethod
-	def menuName(klass): return 'Add to bet amount'
+	def menuName(klass): return 'Add to bet'
 	@classmethod
 	def attrsFromConfig(klass, key, klassID):
-		attrs = HotkeyMultiplyBetAmount.attrsFromConfig(key, klassID)
+		attrs = HotkeyMultiplyBet.attrsFromConfig(key, klassID)
 		if attrs is not None:
 			baseValue = TableCrabConfig.settingsValue( (key, 'BaseValue'), '').toString()
 			if baseValue not in klass.BaseValues: return None
@@ -286,14 +286,14 @@ class HotkeyAddToBetAmount(HotkeyMultiplyBetAmount):
 			return attrs
 	@classmethod
 	def fromConfig(klass, key):
-		attrs = HotkeyMultiplyBetAmount.attrsFromConfig(key, klass.id() )
+		attrs = HotkeyMultiplyBet.attrsFromConfig(key, klass.id() )
 		if attrs is not None:
 			myAttrs = klass.attrsFromConfig(key, klass.id() )
 			if myAttrs is not None:
 				attrs.update(myAttrs)
 				return klass(**attrs)
 	def toConfig(self, key):
-		HotkeyMultiplyBetAmount.toConfig(self, key)
+		HotkeyMultiplyBet.toConfig(self, key)
 		TableCrabConfig.settingsSetValue( (key, 'BaseValue'), self._baseValue)
 		return True
 	def createEditor(self, parent=None, settingsKey=None, isEdit=True):
@@ -305,13 +305,13 @@ class HotkeyAddToBetAmount(HotkeyMultiplyBetAmount):
 			self.update(other)
 			return self
 
-Hotkeys.append(HotkeyAddToBetAmount)
+Hotkeys.append(HotkeyAddToBet)
 
-class HotkeySubtractFromBetAmount(HotkeyAddToBetAmount):
+class HotkeySubtractFromBet(HotkeyAddToBet):
 	@classmethod
-	def id(klass): return 'SubtractFromBetAmount'
+	def id(klass): return 'SubtractFromBet'
 	@classmethod
-	def menuName(klass): return 'Subtract from bet amount'
+	def menuName(klass): return 'Subtract from bet'
 	def action(self):
 		if self._multiplier == 1:
 			baseValue = 'big blind' if self._baseValue == 'BigBlind' else 'small blind'
@@ -322,9 +322,9 @@ class HotkeySubtractFromBetAmount(HotkeyAddToBetAmount):
 		else:
 			baseValue = 'big blinds' if self._baseValue == 'BigBlind' else 'small blinds'
 			multiplier = self._multiplier
-		return 'Subtract %s %s' % (multiplier, baseValue)
-		
-Hotkeys.append(HotkeySubtractFromBetAmount)
+		return 'Subtract %s %s from bet' % (multiplier, baseValue)
+
+Hotkeys.append(HotkeySubtractFromBet)
 
 class HotkeyReplayer(HotkeyCheck):
 	@classmethod
@@ -347,4 +347,4 @@ class HotkeyScreenshot(HotkeyCheck):
 	def menuName(klass): return 'Screenshot'
 Hotkeys.append(HotkeyScreenshot)
 
-	
+
