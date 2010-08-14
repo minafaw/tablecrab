@@ -275,17 +275,17 @@ class FrameSettingsHand(QtGui.QFrame):
 			editPrefix = TableCrabConfig.LineEdit(
 					settingsKey='PokerStarsHandGrabber/handFornmatterHtmlTabular/%s' % actionPrefix,
 					default=getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, actionPrefix),
-					parent=self
+					maxLength=TableCrabConfig.MaxHandGrabberPrefix,
+					parent=self,
 					)
-			editPrefix.setMaxLength(TableCrabConfig.MaxHandGrabberPrefix)
 			labelAction = QtGui.QLabel(actionName, self)
 			if actionPostfix is not None:
 				editPostfix = TableCrabConfig.LineEdit(
 						settingsKey='PokerStarsHandGrabber/handFornmatterHtmlTabular/%s' % actionPostfix,
 						default=getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, actionPostfix),
-						parent=self
+						maxLength=TableCrabConfig.MaxHandGrabberPrefix,
+						parent=self,
 						)
-				editPostfix.setMaxLength(TableCrabConfig.MaxHandGrabberPrefix)
 			else:
 				editPostfix = None
 			self.actionSettings.append( (editPrefix, labelAction, editPostfix) )
@@ -321,9 +321,10 @@ class FrameSettingsHand(QtGui.QFrame):
 			grid.addWidget(labelAction, i+1, 1)
 			if editPostfix is not None:
 				grid.addWidget(editPostfix, i+1, 2)
+
 		grid.addWidget(self.labelMaxPlayerName, i+2, 0)
 		grid.addWidget(self.spinMaxPlayerName, i+2, 1)
-		grid.addWidget(self.checkNoFloatingPoint, i+3, 0, 1, 2)
+		grid.addWidget(self.checkNoFloatingPoint, i+3, 0, 1, 3)
 
 		grid.addLayout(TableCrabConfig.VStretch(), i+4, 0)
 

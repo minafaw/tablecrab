@@ -356,16 +356,18 @@ class WebViewToolBar(QtGui.QToolBar):
 
 
 class LineEdit(QtGui.QLineEdit):
-	def __init__(self, default='', settingsKey=None, parent=None):
+	def __init__(self, default='', settingsKey=None, maxLength=-1, parent=None):
 		QtGui.QLineEdit.__init__(self, parent)
-		self.settingsKey = settingsKey
-		if self.settingsKey is None:
+		self._settingsKey = settingsKey
+		if maxLength > -1:
+			self.setMaxLength(maxLength)
+		if self._settingsKey is None:
 			self.setText(default)
 		else:
-			self.setText( settingsValue(self.settingsKey, default).toString() )
+			self.setText( settingsValue(self._settingsKey, default).toString() )
 			self.editingFinished.connect(self.onValueChanged)
 	def onValueChanged(self):
-			if self.settingsKey is not None: settingsSetValue(self.settingsKey, self.text())
+			if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.text())
 
 class PlainTextEdit(QtGui.QPlainTextEdit):
 
