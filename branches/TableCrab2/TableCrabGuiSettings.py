@@ -1,5 +1,5 @@
 
-#TODO: have to find a better waay to present prefix | postfix in settings hand
+#TODO: have to find a better way to present prefix | postfix in settings hand
 #TODO: would be nice to have line numbers in HandCss editor
 
 import TableCrabConfig
@@ -270,7 +270,7 @@ class FrameSettingsHand(QtGui.QFrame):
 			('PrefixBigBlind', 'BigBlind', 'PostfixBigBlind'),
 			('PrefixSmallBlind', 'SmallBlind', 'PostfixSmallBlind'),
 			)
-		self.actionSettings = []
+		self.actionWidgets = []
 		for actionPrefix, actionName, actionPostfix in actionSettings:
 			editPrefix = TableCrabConfig.LineEdit(
 					settingsKey='PokerStarsHandGrabber/handFornmatterHtmlTabular/%s' % actionPrefix,
@@ -288,7 +288,7 @@ class FrameSettingsHand(QtGui.QFrame):
 						)
 			else:
 				editPostfix = None
-			self.actionSettings.append( (editPrefix, labelAction, editPostfix) )
+			self.actionWidgets.append( (editPrefix, labelAction, editPostfix, actionPrefix, actionPostfix) )
 
 		self.labelMaxPlayerName = QtGui.QLabel('Max Player Name:', self)
 		self.spinMaxPlayerName = TableCrabConfig.SpinBox(
@@ -304,9 +304,15 @@ class FrameSettingsHand(QtGui.QFrame):
 					default=False,
 				parent=self
 				)
+
+		self.buttonBox = QtGui.QDialogButtonBox(self)
+
+		self.buttonRestoreDefault = QtGui.QPushButton('Restore Default', self)
+		self.buttonRestoreDefault.clicked.connect(self.onButtonRestoreDefaultClicked)
+		self.buttonBox.addButton(self.buttonRestoreDefault, self.buttonBox.ResetRole)
+
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		self.buttonHelp.clicked.connect(self.onButtonHelpClicked)
-		self.buttonBox = QtGui.QDialogButtonBox(self)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
 
 		self.layout()
@@ -316,7 +322,7 @@ class FrameSettingsHand(QtGui.QFrame):
 		grid.addWidget(self.labelPrefix, 0, 0)
 		grid.addWidget(self.labelAction, 0, 1)
 		grid.addWidget(self.labelPostfix, 0, 2)
-		for i, (editPrefix, labelAction, editPostfix) in enumerate(self.actionSettings):
+		for i, (editPrefix, labelAction, editPostfix, _, _) in enumerate(self.actionWidgets):
 			grid.addWidget(editPrefix, i+1, 0)
 			grid.addWidget(labelAction, i+1, 1)
 			if editPostfix is not None:
@@ -332,6 +338,16 @@ class FrameSettingsHand(QtGui.QFrame):
 		grid2 = TableCrabConfig.GridBox()
 		grid.addLayout(grid2, i+7, 0, 1, 3)
 		grid2.addWidget(self.buttonBox, 0, 0)
+
+	def onButtonRestoreDefaultClicked(self):
+		for editPrefix, _, editPostfix, actionPrefix, actionPostfix in self.actionWidgets:
+			default = getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, actionPrefix)
+			editPrefix.setText(default)
+			editPrefix.editingFinished.emit()
+			if actionPostfix is not None:
+				default = getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, actionPostfix)
+				editPostfix.setText(default)
+				editPostfix.editingFinished.emit()
 
 	def onButtonHelpClicked(self, checked):
 		TableCrabGuiHelp.dialogHelp('settingsHand', parent=self)
