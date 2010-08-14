@@ -248,7 +248,7 @@ def readPersistentItems(settingsKey, maxItems=0, itemProtos=None):
 		lastSlot = slot
 		items.append(item)
 	if forceDump:
-		dumpPersistentItems(settignsKey, items)
+		dumpPersistentItems(settingsKey, items)
 	return items
 
 #***********************************************************************************
