@@ -784,6 +784,7 @@ if sys.platform == 'win32':
 				#TODO: very sloppy test to minimize risk we are grabbing 'show summary only' in instant hand history
 				if not '*** HOLE CARDS ***' in data:
 					data = ''
+					TableCrabConfig.globalObject.feedbackMessage.emit('Could not grab hand')
 				else:
 					#NOTE: we are let TableCrabConfig handle errors because we are maybe working with arbitrary data
 					# from an unknown window
@@ -792,8 +793,11 @@ if sys.platform == 'win32':
 					except:
 						TableCrabConfig.handleException('\n' + data)
 						data = ''
+						TableCrabConfig.globalObject.feedbackMessage.emit('Could not grab hand')
 					else:
 						data = self.handFormatter.dump(hand)
+						TableCrabConfig.globalObject.feedbackMessage.emit('Grabbed hand')
+
 				self.handGrabbed.emit(data)
 
 
