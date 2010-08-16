@@ -288,7 +288,7 @@ class ActionHandler(QtCore.QObject):
 			if point == TableCrabConfig.PointNone:
 				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point ButtonFold Not Set -' % template.name)
 				return
-			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
+			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClickDouble(point, hwnd=hwnd).send()
 		# we always allow checkboxCheckFold ..stars may show this box when we are newly seated at a table without having the
 		# bet amount box created yet
 		else:
