@@ -153,7 +153,6 @@ class SingleApplication(object):
 #***********************************************************************************
 # global QSettings
 #***********************************************************************************
-configKey = ''		# for testing. set this to save settings to a different key
 def settingsKeyJoin(*keys):
 	keys = [(str(key) if isinstance(key, QtCore.QString) else key) for key in keys]
 	return QtCore.QString( posixpath.join(*keys) )
@@ -162,15 +161,11 @@ def settings():
 	return qSettings
 def settingsValue(key, default):
 	if isinstance(key, tuple):
-		key = settingsKeyJoin(configKey, *key)
-	else:
-		key = settingsKeyJoin(configKey, key)
+		key = settingsKeyJoin(*key)
 	return qSettings.value(key, default)
 def settingsSetValue(key, value):
 	if isinstance(key, tuple):
 		key = settingsKeyJoin(configKey, *key)
-	else:
-		key = settingsKeyJoin(configKey, key)
 	qSettings.setValue(key, QtCore.QVariant(value) )
 def settingsRemoveKey(key):
 	key = settingsKeyJoin(configKey, key)
