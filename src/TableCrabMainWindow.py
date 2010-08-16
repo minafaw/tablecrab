@@ -10,8 +10,8 @@ from PyQt4 import QtCore, QtGui, QtWebKit
 #**********************************************************************************************
 class MainWindow(QtGui.QMainWindow):
 	def __init__(self):
-		self._singleApplication = TableCrabConfig.SingleApplication()
-			
+		self.singleApplication = TableCrabConfig.SingleApplication()
+
 		QtGui.QMainWindow.__init__(self)
 		self.setWindowTitle(TableCrabConfig.ReleaseName)
 		self.setWindowIcon( QtGui.QIcon(TableCrabConfig.Pixmaps.tableCrab()) )
@@ -28,6 +28,7 @@ class MainWindow(QtGui.QMainWindow):
 			TableCrabConfig.templateManager.read()
 		self.siteManager.tableCrabActionHandler().setHwndMain(self.effectiveWinId() )
 	def closeEvent(self, event):
+		self.singleApplication.close()
 		TableCrabConfig.globalObject.closeEvent.emit(event)
 		TableCrabConfig.mouseHook.stop()
 		TableCrabConfig.keyboardHook.stop()
@@ -37,9 +38,8 @@ class MainWindow(QtGui.QMainWindow):
 	def start(self):
 		self.show()
 		TableCrabConfig.application.exec_()
-	
+
 #***********************************************************************************
 #
 #***********************************************************************************
 if __name__ == '__main__': MainWindow().start()
-	
