@@ -94,7 +94,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		for i in xrange(self.topLevelItemCount()):
 			yield self.topLevelItem(i)
 
-	def keyReleaseEvent(self, event):
+	def keyPressEvent(self, event):
 		#TODO: for some reason the first enter when the widget is created is not accepted
 		if event.key() == QtCore.Qt.Key_Return and not event.modifiers():
 			event.accept()
@@ -102,7 +102,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			if hotkey is not None:
 				self.editHotkey()
 			return
-		return QtGui.QTreeWidget.keyReleaseEvent(self, event)
+		return QtGui.QTreeWidget.keyPressEvent(self, event)
 
 	def actions(self): return self._actions
 
