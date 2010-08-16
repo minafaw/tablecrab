@@ -73,29 +73,29 @@ def _excepthook(type, value, tb,
 		p += 'QtVersion: %s\n' % qVersion()
 		p += 'PyQtVersion: %s\n' % PYQT_VERSION_STR
 	except Exception,d:
-		print releaseName + ': ' + d
+		print '%s: %s' % (releaseName, d)
 		p += 'QtVersion: Unknown\n'
 		p += 'PyQtVersion: Unknown\n'
 	try:
 		import sipconfig
 		p += 'SipVersion: %s\n' % sipconfig.Configuration().sip_version_str
 	except  Exception,d:
-		print releaseName + ': ' + d
+		print '%s: %s' % (releaseName, d)
 		p += 'SipVersion: Unknown\n'
 	p += ''.join(traceback.format_exception(type, value, tb))
 	if data is not None:
 		try:
 			p += data
-		except Exception,d:
-			print releaseName + ': ' + d
+		except Exception, d:
+			print '%s: %s' % (releaseName, d)
 	try:
 		globalObject.feedbackException.emit(p)
 	except Exception, d:
-		print releaseName + ': ' + d
+		print '%s: %s' % (releaseName, d)
 	try:	# try to log
 		logger.critical(p)
 	except Exception, d:
-		print releaseName + ': ' + d
+		print '%s: %s' % (releaseName, d)
 	if not suppressException:
 		raise type(value)
 sys.excepthook = _excepthook
@@ -118,19 +118,22 @@ import TableCrabWin32
 from TableCrabRes import Pixmaps, HtmlPages, StyleSheets
 
 # grab settings from commandline if possible
-_qSettings = None
+qSettings = None
 if '--config' in sys.argv:
 	i = sys.argv.index('--config')
 	del sys.argv[i]
 	try:
 		fileName = sys.argv[i]
-	except IndexError: pass
+	except IndexError:
+		raise ValueError('Option --config present but no config file specified')
 	else:
+		del sys.argv[i]
 		if os.path.isfile(fileName) or os.path.islink(fileName):
-			del sys.argv[i]
-			_qSettings = QtCore.QSettings(fileName, QtCore.QSettings.IniFormat)
-if _qSettings is None:
-	_qSettings = QtCore.QSettings(Author, ApplicationName)
+			qSettings = QtCore.QSettings(fileName, QtCore.QSettings.IniFormat)
+		else:
+			raise ValueError('No such config file: %s' % fileName)
+if qSettings is None:
+	qSettings = QtCore.QSettings(Author, ApplicationName)
 
 #***********************************************************************************
 # enshure we run a single application instance only
@@ -156,25 +159,25 @@ def settingsKeyJoin(*keys):
 	return QtCore.QString( posixpath.join(*keys) )
 
 def settings():
-	return _qSettings
+	return qSettings
 def settingsValue(key, default):
 	if isinstance(key, tuple):
 		key = settingsKeyJoin(configKey, *key)
 	else:
 		key = settingsKeyJoin(configKey, key)
-	return _qSettings.value(key, default)
+	return qSettings.value(key, default)
 def settingsSetValue(key, value):
 	if isinstance(key, tuple):
 		key = settingsKeyJoin(configKey, *key)
 	else:
 		key = settingsKeyJoin(configKey, key)
-	_qSettings.setValue(key, QtCore.QVariant(value) )
+	qSettings.setValue(key, QtCore.QVariant(value) )
 def settingsRemoveKey(key):
 	key = settingsKeyJoin(configKey, key)
 	#TODO: for some reason QSettings.contains(key) always return false here even if the key exists
-	##print key, _qSettings.contains(key)
-	#if _qSettings.contains(key):
-	_qSettings.remove(key)
+	##print key, qSettings.contains(key)
+	#if qSettings.contains(key):
+	qSettings.remove(key)
 
 #***********************************************************************************
 # global singal handling and messages
