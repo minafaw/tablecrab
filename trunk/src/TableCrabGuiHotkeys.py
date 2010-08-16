@@ -94,9 +94,6 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		for i in xrange(self.topLevelItemCount()):
 			yield self.topLevelItem(i)
 
-	def onSetAlternatingRowColors(self, flag):
-		self.setAlternatingRowColors(flag)
-
 	def keyReleaseEvent(self, event):
 		#TODO: for some reason the first enter when the widget is created is not accepted
 		if event.key() == QtCore.Qt.Key_Return and not event.modifiers():
@@ -212,6 +209,9 @@ class HotkeyWidget(QtGui.QTreeWidget):
 
 	def onHotkeyDoubleClicked(self, hotkey):
 		self.editHotkey()
+
+	def onSetAlternatingRowColors(self, flag):
+		self.setAlternatingRowColors(flag)
 
 
 class FrameHotkeys(QtGui.QFrame):
