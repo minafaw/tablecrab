@@ -165,10 +165,11 @@ def settingsValue(key, default):
 	return qSettings.value(key, default)
 def settingsSetValue(key, value):
 	if isinstance(key, tuple):
-		key = settingsKeyJoin(configKey, *key)
+		key = settingsKeyJoin(*key)
 	qSettings.setValue(key, QtCore.QVariant(value) )
 def settingsRemoveKey(key):
-	key = settingsKeyJoin(configKey, key)
+	if isinstance(key, tuple):
+		key = settingsKeyJoin(*key)
 	#TODO: for some reason QSettings.contains(key) always return false here even if the key exists
 	##print key, qSettings.contains(key)
 	#if qSettings.contains(key):
