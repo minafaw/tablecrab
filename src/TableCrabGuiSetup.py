@@ -148,19 +148,23 @@ class TemplatesWidget(QtGui.QTreeWidget):
 			self.addTopLevelItem(template)
 			template.setExpanded(True)
 		self._templatesRead = True
+		self.setCurrentItem( self.topLevelItem(0) )
 
 	def dump(self):
 		TableCrabConfig.dumpPersistentItems('Templates', self)
 
 	def __iter__(self):
-		for i in xrange(self.topLevelItemCount()):
+		for i in xrange(len(self)):
 			yield self.topLevelItem(i)
+
+	def __len__(self):
+		return self.topLevelItemCount()
 
 	def actions(self):
 		return self._actions
 
 	def adjustActions(self):
-		self.actionNew.setEnabled(self.topLevelItemCount() < TableCrabConfig.MaxTemplates)
+		self.actionNew.setEnabled(len(self) < TableCrabConfig.MaxTemplates)
 		item = self.currentItem()
 		if item is None:
 			self.actionUp.setEnabled(False)
@@ -195,7 +199,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		if item is None:
 			self.actionUp.setEnabled(False)
 		else:
-			return self.indexOfTopLevelItem(item.toplevel() ) < self.topLevelItemCount() -1
+			return self.indexOfTopLevelItem(item.toplevel() ) < len(self) -1
 		return False
 
 	def moveTemplateDown(self):

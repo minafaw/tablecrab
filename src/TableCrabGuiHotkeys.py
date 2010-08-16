@@ -91,8 +91,11 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self.adjustActions()
 
 	def __iter__(self):
-		for i in xrange(self.topLevelItemCount()):
+		for i in xrange(len(self) ):
 			yield self.topLevelItem(i)
+
+	def __len__(self):
+		return self.topLevelItemCount()
 
 	def keyPressEvent(self, event):
 		#TODO: for some reason the first enter when the widget is created is not accepted
@@ -108,7 +111,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 
 	def adjustActions(self):
 		hotkey = self.currentItem()
-		self.actionNew.setEnabled(self.topLevelItemCount() < TableCrabConfig.MaxHotkeys)
+		self.actionNew.setEnabled(len(self) < TableCrabConfig.MaxHotkeys)
 		if hotkey is None:
 			self.actionUp.setEnabled(False)
 			self.actionDown.setEnabled(False)
@@ -125,7 +128,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		if hotkey is None:
 			self.actionUp.setEnabled(False)
 		else:
-			return self.indexOfTopLevelItem(hotkey) < self.topLevelItemCount() -1
+			return self.indexOfTopLevelItem(hotkey) < len(self) -1
 		return False
 
 	def canMoveHotkeyUp(self):
@@ -198,6 +201,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		if hotkey is None:
 			hotkey = TableCrabHotkeys.HotkeyScreenshot(hotkey='<F1+LeftControl>')
 			self.addTopLevelItem(hotkey)
+		self.setCurrentItem( self.topLevelItem(0) )
 
 	def removeHotkey(self):
 		hotkey = self.currentItem()
