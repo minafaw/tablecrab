@@ -1,11 +1,11 @@
 
 import TableCrabConfig
-import TableCrabMainWindow
 import TableCrabGuiSettings
 import TableCrabGuiSetup
 import TableCrabGuiHotkeys
 import TableCrabGuiHand
 import TableCrabGuiHelp
+import TableCrabSiteManager
 
 from PyQt4 import QtCore, QtGui
 
@@ -56,7 +56,7 @@ class DialogException(QtGui.QDialog):
 		self.clearError = True
 		self.buttonClearError.setEnabled(False)
 
-class Gui(TableCrabMainWindow .MainWindow):
+class Gui(QtGui.QMainWindow):
 
 	# double clickabe label. we use this to trigger ExceptionDialog
 	class ClickableLabel(QtGui.QLabel):
@@ -68,7 +68,13 @@ class Gui(TableCrabMainWindow .MainWindow):
 			self.doubleClicked.emit()
 
 	def __init__(self):
-		TableCrabMainWindow .MainWindow.__init__(self)
+		QtGui.QMainWindow.__init__(self)
+
+		self.singleApplication = TableCrabConfig.SingleApplication()
+
+		self.setWindowTitle(TableCrabConfig.ReleaseName)
+		self.setWindowIcon( QtGui.QIcon(TableCrabConfig.Pixmaps.tableCrab()) )
+		self.restoreGeometry( TableCrabConfig.settingsValue('Gui/Geometry', QtCore.QByteArray()).toByteArray() )
 
 		# need to store some state data for the statusBar so we can restore on tab changes
 		# error messages are displayed as longs as there is no new feedback from the current tab
@@ -88,20 +94,18 @@ class Gui(TableCrabMainWindow .MainWindow):
 		self.labelFeedback = QtGui.QLabel('', self)
 		statusBar.addWidget(self.labelFeedback, 99)
 
+		self.siteManager = TableCrabSiteManager.SiteManager(parent=self)
+
 		# setup TabWidget
 		self.tabWidget = QtGui.QTabWidget(self)
 		self.setCentralWidget(self.tabWidget)
-		for widgetProto, name in (
-					(TableCrabGuiSetup.FrameSetup, 'Setup'),
-					(TableCrabGuiHotkeys.FrameHotkeys, 'Hotkeys'),
-					(TableCrabGuiHand.FrameHand, 'Hand'),
-					(TableCrabGuiSettings.FrameSettings, 'Settings'),
-					(TableCrabGuiHelp.FrameHelp, 'Help'),
-					):
-			self._addTab(widgetProto, name)
+		self.tabSetup = self._addTab(TableCrabGuiSetup.FrameSetup, 'Setup')
+		self.tabHotkeys = self._addTab(TableCrabGuiHotkeys.FrameHotkeys, 'Hotkeys')
+		self.tabHand = self._addTab(TableCrabGuiHand.FrameHand, 'Hand')
+		self.tabSettings = self._addTab(TableCrabGuiSettings.FrameSettings, 'Settings')
+		self.tabHelp = self._addTab(TableCrabGuiHelp.FrameHelp, 'Help')
 
 		# connect signals
-		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
 		TableCrabConfig.globalObject.feedback.connect(self.onFeedback)
 		TableCrabConfig.globalObject.feedbackException.connect(self.onFeedbackException)
 		TableCrabConfig.globalObject.feedbackMessage.connect(self.onFeedbackMessage)
@@ -110,13 +114,34 @@ class Gui(TableCrabMainWindow .MainWindow):
 		# restore last selected tab
 		self.tabWidget.setCurrentIndex( TableCrabConfig.settingsValue('Gui/TabCurrent', QtCore.QVariant()).toInt()[0] )
 
+	def show(self):
+		QtGui.QMainWindow.show(self)
+		TableCrabConfig.mouseHook.start()
+		TableCrabConfig.keyboardHook.start()
+		TableCrabConfig.windowHook.start()
+		TableCrabConfig.hotkeyManager.read()
+		TableCrabConfig.templateManager.read()
+		self.siteManager.tableCrabActionHandler().setHwndMain(self.effectiveWinId() )
+
+	def closeEvent(self, event):
+		self.singleApplication.close()
+		TableCrabConfig.globalObject.closeEvent.emit(event)
+		TableCrabConfig.mouseHook.stop()
+		TableCrabConfig.keyboardHook.stop()
+		TableCrabConfig.windowHook.stop()
+		TableCrabConfig.settingsSetValue('Gui/TabCurrent', self.tabWidget.currentIndex())
+		TableCrabConfig.settingsSetValue('Gui/Geometry', self.saveGeometry() )
+		return QtGui.QMainWindow.closeEvent(self, event)
+
+	def start(self):
+		self.show()
+		TableCrabConfig.application.exec_()
+
 	def _addTab(self, widgetProto, name):
 		widget = widgetProto(parent=self)
 		self.tabWidget.addTab(widget, name)
 		self._feedbackMessages[widget] = ''
-
-	def onCloseEvent(self, event):
-		TableCrabConfig.settingsSetValue('Gui/TabCurrent', self.tabWidget.currentIndex())
+		return widget
 
 	def onTabCurrentChanged(self, index):
 		if index < 0:

@@ -688,13 +688,5 @@ class FrameSetup(QtGui.QFrame):
 		TableCrabGuiHelp.dialogHelp('setup', parent=self)
 
 
-#**********************************************************************************************
-#
-#**********************************************************************************************
-if __name__ == '__main__':
-	import TableCrabMainWindow
-	g = TableCrabMainWindow.MainWindow()
-	g.setCentralWidget(FrameSetup(g))
-	g.start()
 
 

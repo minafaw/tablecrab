@@ -127,12 +127,6 @@ class FrameHand(QtGui.QFrame):
 		self.webView.setHtml( QtCore.QString.fromUtf8(data) )
 		self.adjustActions()
 
-#**********************************************************************************************
-#
-#**********************************************************************************************
-if __name__ == '__main__':
-	import TableCrabMainWindow
-	g = TableCrabMainWindow.MainWindow()
-	g.setCentralWidget(FrameHand(g))
-	g.start()
+
+
 

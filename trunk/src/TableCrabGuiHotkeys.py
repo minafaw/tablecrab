@@ -238,13 +238,5 @@ class FrameHotkeys(QtGui.QFrame):
 	def onActionHelpTriggered(self):
 		TableCrabGuiHelp.dialogHelp('hotkeys', parent=self)
 
-#**********************************************************************************************
-#
-#**********************************************************************************************
-if __name__ == '__main__':
-	import TableCrabMainWindow
-	g = TableCrabMainWindow.MainWindow()
-	g.setCentralWidget(FrameHotkeys(g))
-	g.start()
 
 

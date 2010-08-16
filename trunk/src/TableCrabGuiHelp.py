@@ -298,15 +298,6 @@ def dialogHelp(topic, parent=None):
 	dlg = _DialogHelp(topic, parent=parent)
 	dlg.show()
 
-#**********************************************************************************************
-#
-#**********************************************************************************************
-if __name__ == '__main__':
-	import TableCrabMainWindow
-	g = TableCrabMainWindow.MainWindow()
-	g.setCentralWidget(FrameHelp(g))
-	g.start()
-
 
 
 

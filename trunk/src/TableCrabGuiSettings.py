@@ -511,12 +511,4 @@ class FrameSettings(QtGui.QFrame):
 		self.listWidget.setAlternatingRowColors(flag)
 
 
-#**********************************************************************************************
-#
-#**********************************************************************************************
-if __name__ == '__main__':
-	import TableCrabMainWindow
-	g = TableCrabMainWindow.MainWindow()
-	g.setCentralWidget(FrameSettings(g))
-	g.start()
 
