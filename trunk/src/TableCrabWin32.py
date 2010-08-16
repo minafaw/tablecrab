@@ -767,6 +767,11 @@ INPUT_MOUSE = 0x0
 INPUT_KEYBOARD = 0x1
 INPUT_HARDWARE = 0x2
 
+KEYEVENTF_EXTENDEDKEY = 0x1
+KEYEVENTF_KEYUP = 0x2
+KEYEVENTF_SCANCODE = 0x8
+KEYEVENTF_UNICODE = 0x4
+
 SM_CXSCREEN = 0
 SM_CYSCREEN = 1
 
@@ -805,6 +810,43 @@ class INPUT(Structure):
 		('u', _U),
 		]
 	_anonymous_ = ("u",)
+
+class KeyboardInput(object):
+	def __init__(self):
+		self._input = []
+
+	def keyDown(self, vk):
+		ki = KEYBDINPUT()
+		ki.wVK = vk
+		input = INPUT()
+		input.type = INPUT_KEYBOARD
+		input.mi = mi
+		self._input.append(input)
+		return self
+
+	def keyUp(self, vk):
+		ki = KEYBDINPUT()
+		ki.wVK = vk
+		ki.dwFlags = KEYEVENTF_KEYUP
+		input = INPUT()
+		input.type = INPUT_KEYBOARD
+		input.mi = mi
+		self._input.append(input)
+		return self
+
+	def keyPress(self, vk):
+		self.keyDown(vk)
+		self.keyUp(vk)
+		return self
+
+	def send(self):
+		if not self._input:
+			raise ValueError('No input to send')
+		arr = (INPUT*len(self._input))(*self._input)
+		self._input = []
+		user32.SendInput(len(arr), byref(arr), sizeof(INPUT))
+		return self
+
 
 class MouseInput(object):
 	def __init__(self):
