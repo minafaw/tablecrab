@@ -49,9 +49,9 @@ class FrameSettingsGlobal(QtGui.QFrame):
 				parent=self
 				)
 
-		self.checkAlternatingRowColors = TableCrabConfig.CheckBox('Show Alternating Row Colors', default=False, settingsKey='Gui/AlternatingRowColors', parent=self)
+		self.checkAlternatingRowColors = TableCrabConfig.CheckBox('Alternating Row Colors', default=False, settingsKey='Gui/AlternatingRowColors', parent=self)
 		self.checkAlternatingRowColors.stateChanged.connect(self.onAlternatingRowColorsChanged)
-		self.checkChildItemIndicators = TableCrabConfig.CheckBox('Show Child Item Indicators', default=True, settingsKey='Gui/ChildItemIndicators', parent=self)
+		self.checkChildItemIndicators = TableCrabConfig.CheckBox('Child Item Indicators', default=True, settingsKey='Gui/ChildItemIndicators', parent=self)
 		self.checkChildItemIndicators.stateChanged.connect(self.onChildItemIndicatorsChanged)
 		self.checkRestoreMousePosition = TableCrabConfig.CheckBox('Restore Mouse Position', default=False, settingsKey='RestoreMousePosition', parent=self)
 
@@ -201,22 +201,22 @@ class FrameSettingsPokerStars(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 		self.checkAutoClosePopupNews = TableCrabConfig.CheckBox(
-				'Auto-Close Popup News',
+				'Close Popup News',
 				settingsKey='PokerStars/AutoClosePopupNews',
 				default=False
 				)
 		self.checkAutoCloseTourneyRegistrationBoxes = TableCrabConfig.CheckBox(
-				'Auto-Close Tourney Registration Boxes',
+				'Close Tourney Registration Boxes',
 				settingsKey='PokerStars/AutoCloseTourneyRegistrationBoxes',
 				default=False
 				)
 		self.checkAutoCloseTableMessageBoxes = TableCrabConfig.CheckBox(
-				'Auto-Close Table Message Boxes',
+				'Close Table Message Boxes',
 				settingsKey='PokerStars/AutoCloseTableMessageBoxes',
 				default=False
 				)
 		self.checkAutoLogIn = TableCrabConfig.CheckBox(
-				'Auto-Close Log In Box',
+				'Close Log In Box',
 				settingsKey='PokerStars/AutoCloseLogin',
 				default=False
 				)
