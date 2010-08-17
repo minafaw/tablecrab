@@ -257,52 +257,47 @@ class ActionHandler(QtCore.QObject):
 	def tableHandleCheck(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
-		pointCurrent = TableCrabWin32.mouseGetPos()
 		if data['hwndBetBox'] and data['betBoxIsVisible']:
 			point = template.buttonCheck
 			if point == TableCrabConfig.PointNone:
 				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point ButtonCheck Not Set -' % template.name)
 				return
-			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClickDouble(point, hwnd=hwnd).send()
-		# we always allow checkboxFold ..stars may show this box when we are newly seated at a table without having the
+		# we always allow checkboxcCheckFold ..stars may show this box when we are newly seated at a table without having the
 		# bet amount box created yet
 		else:
 			point = template.checkboxCheckFold
 			if point == TableCrabConfig.PointNone:
 				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- CheckboxCheckFold Not Set -' % template.name)
 				return
-			# looks like we have to double click here
-			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClickDouble(point, hwnd=hwnd).send()
-		if TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool():
-			#NOTE: the SendInput() is always off a few pixels so we use mouseSetPos() instead
-			##mi.move(pointCurrent, hwnd=None).send()
-			TableCrabWin32.mouseSetPos(pointCurrent)
+		#NOTE: we always double click. seems to work more reliably
+		TableCrabWin32.mouseInputLeftClickDouble(
+				point,
+				hwnd=hwnd,
+				restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool(),
+				)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def tableHandleFold(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
-		pointCurrent = TableCrabWin32.mouseGetPos()
 		if data['hwndBetBox'] and data['betBoxIsVisible']:
-			point = template.buttonFold
+			point =  template.buttonFold
 			if point == TableCrabConfig.PointNone:
 				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point ButtonFold Not Set -' % template.name)
 				return
-			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClickDouble(point, hwnd=hwnd).send()
-		# we always allow checkboxCheckFold ..stars may show this box when we are newly seated at a table without having the
+		# we always allow checkboxFold ..stars may show this box when we are newly seated at a table without having the
 		# bet amount box created yet
 		else:
 			point = template.checkboxFold
 			if point == TableCrabConfig.PointNone:
-				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point CheckboxFold Not Set -' % template.name)
+				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- CheckboxFold Not Set -' % template.name)
 				return
-			mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).send()
-			# looks like we have to double click here
-			mi.leftClick(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
-		if TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool():
-			#NOTE: the SendInput() is always off a few pixels so we use mouseSetPos() instead
-			##mi.move(pointCurrent, hwnd=None).send()
-			TableCrabWin32.mouseSetPos(pointCurrent)
+		#NOTE: we always double click. seems to work more reliably
+		TableCrabWin32.mouseInputLeftClickDouble(
+				point,
+				hwnd=hwnd,
+				restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool(),
+				)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def tableHandleRaise(self, hotkey, template, hwnd, inputEvent):
@@ -311,16 +306,15 @@ class ActionHandler(QtCore.QObject):
 		if not data['hwndBetBox']: return
 		#NOTE: BetBox may not be visible when a player is all-in
 		##if not data['betBoxIsVisible']: return
-		point = template.buttonRaise
-		if point == TableCrabConfig.PointNone:
+		if  template.buttonRaise == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point Buttonraise Not Set -' % template.name)
 			return
-		pointCurrent = TableCrabWin32.mouseGetPos()
-		mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClickDouble(point, hwnd=hwnd).send()
-		if TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool():
-			#NOTE: the SendInput() is always off a few pixels so we use mouseSetPos() instead
-			##mi.move(pointCurrent, hwnd=None).send()
-			TableCrabWin32.mouseSetPos(pointCurrent)
+		#NOTE: we always double click. seems to work more reliably
+		TableCrabWin32.mouseInputLeftClickDouble(
+				template.buttonRaise,
+				hwnd=hwnd,
+				restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool(),
+				)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	#NOTE: there is another way to handle all-in. no reliable one but could be a fallback. looks like bet amount box accepts
@@ -336,21 +330,18 @@ class ActionHandler(QtCore.QObject):
 		if not data: return
 		if not data['hwndBetBox']: return
 		if not data['betBoxIsVisible']: return
-		pointStart = template.betSliderStart
-		if pointStart == TableCrabConfig.PointNone:
+		if template.betSliderStart == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point BetSliderStart Not Set -' % template.name)
 			return
-		pointEnd = template.betSliderEnd
-		if pointEnd == TableCrabConfig.PointNone:
+		if template.betSliderEnd == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point BetSliderEnd Not Set -' % template.name)
 			return
-		pointCurrent = TableCrabWin32.mouseGetPos()
-		mi = TableCrabWin32.MouseInput().move(pointStart, hwnd=hwnd).send()
-		mi.leftDown(pointStart, hwnd=hwnd).move(pointEnd, hwnd=hwnd).leftUp(pointEnd, hwnd=hwnd).send()
-		if TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool():
-			#NOTE: the SendInput() is always off a few pixels so we use mouseSetPos() instead
-			##mi.move(pointCurrent, hwnd=None).send()
-			TableCrabWin32.mouseSetPos(pointCurrent)
+		TableCrabWin32.mouseInputMouseDrag(
+				template.betSliderStart,
+				template.betSliderEnd,
+				hwnd=hwnd,
+				restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool(),
+				)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def tableHandleAddToBet(self, hotkey, template, hwnd, inputEvent):
@@ -417,28 +408,28 @@ class ActionHandler(QtCore.QObject):
 		hwndBetBox = data['hwndBetBox']
 		if not hwndBetBox: return
 		if not data['betBoxIsVisible']: return
-
-		pointCurrent = TableCrabWin32.mouseGetPos()
 		point = QtCore.QPoint(2, 2)
-		mi = TableCrabWin32.MouseInput().move(point, hwnd=hwndBetBox).send()
-		mi.leftClickDouble(point, hwnd=hwndBetBox).send()
-		if TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool():
-			#NOTE: the SendInput() is always off a few pixels so we use mouseSetPos() instead
-			##mi.move(pointCurrent, hwnd=None).send()
-			TableCrabWin32.mouseSetPos(pointCurrent)
+		TableCrabWin32.mouseInputLeftClickDouble(
+				point,
+				hwnd=hwndBetBox,
+				restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool(),
+				)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def _tableClickRestoreFocus(self, hwnd, point, template):
-		pointCurrent = TableCrabWin32.mouseGetPos()
-		# click point
-		mi = TableCrabWin32.MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
+		#NOTE: we always double click. not realy necessary here
+		TableCrabWin32.mouseInputLeftClickDouble(
+				point,
+				hwnd=hwnd,
+				restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool(),
+				)
 		# replayer gains focus, so we have to wait a bit and send another click to reactivate the table.
 		#TODO: for some reason (linux/wine?) table regain focus but is not activated when the replayer is opend for the first time
-		mi.move(template.emptySpace, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
-		if TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool():
-			#NOTE: the SendInput() is always off a few pixels so we use mouseSetPos() instead
-			##mi.move(pointCurrent, hwnd=None).send()
-			TableCrabWin32.mouseSetPos(pointCurrent)
+		TableCrabWin32.mouseInputLeftClickDouble(
+				template.emptySpace,
+				hwnd=hwnd,
+				restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool(),
+				)
 
 	def tableHandleReplayer(self, hotkey, template, hwnd, inputEvent):
 		point = template.replayer
