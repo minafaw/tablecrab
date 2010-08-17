@@ -277,7 +277,9 @@ class Action(QtGui.QAction):
 				toolTip=None,
 				autoRepeat=True,
 				shortcut=None,
+				userData=None,
 				):
+		self.userData = userData
 		if icon is not None:
 			QtGui.QAction.__init__(self, icon, text, parent)
 		else:
