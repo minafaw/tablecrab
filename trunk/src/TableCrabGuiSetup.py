@@ -383,7 +383,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		self.actionInfo = TableCrabConfig.Action(
 				parent=self,
 				text='Info..',
-				toolTip='Display detailed screenshot information (Alt+N)',
+				toolTip='Display detailed screenshot info (Alt+N)',
 				slot=self.onActionInfoTriggered,
 				shortcut='Alt+N',
 				)
