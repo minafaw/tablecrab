@@ -117,6 +117,9 @@ from PyQt4 import QtCore, QtGui, QtWebKit
 import TableCrabWin32
 from TableCrabRes import Pixmaps, HtmlPages, StyleSheets
 
+# explicitely set locale to US
+QtCore.QLocale.setDefault(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates) )
+
 # grab settings from commandline if possible
 qSettings = None
 if '--config' in sys.argv:
@@ -377,6 +380,7 @@ class LineEdit(QtGui.QLineEdit):
 			self.editingFinished.connect(self.onValueChanged)
 	def onValueChanged(self):
 			if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.text())
+
 
 class PlainTextEdit(QtGui.QPlainTextEdit):
 
