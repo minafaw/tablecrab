@@ -151,6 +151,8 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 	def menuName(klass):
 		return 'PokerStars table'
 	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+P')
+	@classmethod
 	def attrsFromConfig(klass, key, klassID):
 		attrs = {}
 		id = TableCrabConfig.settingsValue( (key, 'ID'), '').toString()
