@@ -1,4 +1,6 @@
 
+#TODO: when opening a hand - enable navigate back?
+
 import TableCrabConfig
 import PokerStarsHandGrabber
 import TableCrabGuiHelp
@@ -34,23 +36,27 @@ class FrameHand(QtGui.QFrame):
 		self.actionOpen = TableCrabConfig.Action(
 				parent=self.toolBar,
 				text='Open..',
-				toolTip='Open a hand',
-				slot=self.onActionOpenTriggered
+				toolTip='Open a hand (Alt+O)',
+				slot=self.onActionOpenTriggered,
+				shortcut='Alt+O',
 				)
 		self.toolBar.addAction(self.actionOpen)
 
 		self.actionSave = TableCrabConfig.Action(
 				parent=self.toolBar,
 				text='Save..',
-				toolTip='save hand',
-				slot=self.onActionSaveTriggered
+				toolTip='Save hand (Alt+S)',
+				slot=self.onActionSaveTriggered,
+				shortcut='Alt+S',
 				)
 		self.toolBar.addAction(self.actionSave)
 
 		self.actionHelp = TableCrabConfig.Action(
 				parent=self.toolBar,
 				text='Help',
-				slot=self.onActionHelpTriggered
+				toolTip='Help (F1)',
+				slot=self.onActionHelpTriggered,
+				shortcut='F1',
 				)
 		self.toolBar.addAction(self.actionHelp)
 

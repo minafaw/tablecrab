@@ -40,6 +40,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 			QtGui.QAction.__init__(self, parent)
 			self.templateProto = templateProto
 			self.setText(self.templateProto.menuName() )
+			self.setShortcut(self.templateProto.shortcut() )
 			self, self.triggered.connect(self.onTriggered)
 		def onTriggered(self):
 			self.parent().createTemplate(self.templateProto)
@@ -81,22 +82,25 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self.actionDown = TableCrabConfig.Action(
 				parent=self,
 				text='Down',
-				toolTip='Move template down',
+				toolTip='Move template down (Alt+Down)',
 				slot=self.moveTemplateDown,
+				shortcut='Alt+Down',
 				)
 		self._actions.append(self.actionDown)
 		self.actionUp = TableCrabConfig.Action(
 				parent=self,
 				text='Up',
-				toolTip='Move template up',
+				toolTip='Move template up (Alt+Up)',
 				slot=self.moveTemplateUp,
+				shortcut='Alt+Up',
 				)
 		self._actions.append(self.actionUp)
 		self.actionRemove = TableCrabConfig.Action(
 				parent=self,
 				text='Remove',
-				toolTip='Remove template',
+				toolTip='Remove template (Alt+Del)',
 				slot=self.removeTemplate,
+				shortcut='Alt+Del',
 				)
 		self._actions.append(self.actionRemove)
 
@@ -360,24 +364,27 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		self.actionOpen = TableCrabConfig.Action(
 				parent=self,
 				text='Open screenshot..',
-				toolTip='Open a screenshot from file',
+				toolTip='Open a screenshot from file (Alt+O)',
 				slot=self.onActionOpenTriggered,
+				shortcut='Alt+O',
 				)
 		self._actions.append(self.actionOpen)
 
 		self.actionSave = TableCrabConfig.Action(
 				parent=self,
 				text='Save screenshot..',
-				toolTip='Save screenshot to file',
+				toolTip='Save screenshot to file (Alt+S)',
 				slot=self.onActionSaveTriggered,
+				shortcut='Alt+O',
 				)
 		self._actions.append(self.actionSave)
 
 		self.actionInfo = TableCrabConfig.Action(
 				parent=self,
 				text='Info..',
-				toolTip='Display detailed screenshot information',
+				toolTip='Display detailed screenshot information (Alt+N)',
 				slot=self.onActionInfoTriggered,
+				shortcut='Alt+N',
 				)
 		self._actions.append(self.actionInfo)
 
@@ -635,6 +642,8 @@ class FrameSetup(QtGui.QFrame):
 				parent=self,
 				text='Help',
 				slot=self.onActionHelpTriggered,
+				shortcut='F1',
+				toolTip='Help (F1)',
 				)
 		self.toolBar.addAction(self.actionHelp)
 

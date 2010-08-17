@@ -19,6 +19,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			QtGui.QAction.__init__(self, parent)
 			self.hotkeyProto = hotkeyProto
 			self.setText(self.hotkeyProto.menuName())
+			self.setShortcut(self.hotkeyProto.shortcut() )
 			self.triggered.connect(self.onTriggered)
 		def onTriggered(self):
 			self.parent().createHotkey(self.hotkeyProto)
@@ -55,29 +56,33 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self.actionEdit = TableCrabConfig.Action(
 				parent=self,
 				text='Edit..',
-				toolTip='Edit hotkey',
+				toolTip='Edit hotkey (Alt+E)',
 				slot=self.editHotkey,
+				shortcut='Alt+E'
 				)
 		self._actions.append(self.actionEdit)
 		self.actionUp = TableCrabConfig.Action(
 				parent=self,
 				text='Up',
-				toolTip='Move hotkey up',
+				toolTip='Move hotkey up (Alt+Up)',
 				slot=self.moveHotkeyUp,
+				shortcut='Alt+Up',
 				)
 		self._actions.append(self.actionUp)
 		self.actionDown = TableCrabConfig.Action(
 				parent=self,
 				text='Down',
-				toolTip='Move hotkey down',
+				toolTip='Move hotkey down (Alt+Down)',
 				slot=self.moveHotkeyDown,
+				shortcut='Alt+Down',
 				)
 		self._actions.append(self.actionDown)
 		self.actionRemove = TableCrabConfig.Action(
 				parent=self,
 				text='Remove',
-				toolTip='Remove hotkey',
+				toolTip='Remove hotkey (Alt+Del)',
 				slot=self.removeHotkey,
+				shortcut='Alt+Del',
 				)
 		self._actions.append(self.actionRemove)
 
@@ -229,7 +234,9 @@ class FrameHotkeys(QtGui.QFrame):
 		self.actionHelp = TableCrabConfig.Action(
 				parent=self,
 				text='Help',
+				toolTip='Help (F1)',
 				slot=self.onActionHelpTriggered,
+				shortcut='F1',
 				)
 		self.toolBar.addAction(self.actionHelp)
 		self.layout()
