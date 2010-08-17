@@ -1,4 +1,6 @@
 
+#TODO: accelerators in DialogException
+
 import TableCrabConfig
 import TableCrabGuiSettings
 import TableCrabGuiSetup
