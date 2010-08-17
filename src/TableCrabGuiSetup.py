@@ -1,4 +1,5 @@
 
+#TODO: accelerators in DialogScreenshotInfo
 #TODO: would be nice to have some information on how many templates are left until hitting MaxTemplates
 #TODO: in wine we-1.2 can not resize windows belonging to other processes. this a bug in wine [ http://bugs.winehq.org/show_bug.cgi?id=23940 ]
 #				user32.SetWindowPos() does not work for other processes. used to work in wine-1.1.41, stopped working in wine-1.1.42. as soon as SetWindowPos()
