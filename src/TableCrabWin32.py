@@ -936,6 +936,27 @@ class MouseInput(object):
 		self._input.append(input)
 		return self
 
+def mouseInputLeftClickDouble(point, hwnd=None, restoreCursor=False):
+	pointLast = mouseGetPos()
+	MouseInput().move(point, hwnd=hwnd).leftClickDouble(point, hwnd=hwnd).send()
+	#NOTE: on wine the mouse cursor is always moved around
+	if restoreCursor and pointLast != mouseGetPos():
+		mouseSetPos(pointLast, hwnd=None)
+	#NOTE: looks like on winXP we can not move the cursor around
+	#elif pointLast == mouseGetPos():
+	#	mouseSetPos(point, hwnd=hwnd)
+
+def mouseInputMouseDrag(pointStart, pointEnd, hwnd=None, restoreCursor=False):
+	pointLast = mouseGetPos()
+	mi = MouseInput().move(pointStart, hwnd=hwnd).leftDown(pointStart, hwnd=hwnd)
+	mi.move(pointEnd, hwnd=hwnd).leftUp(pointEnd, hwnd=hwnd).send()
+	#NOTE: on wine the mouse cursor is always moved around
+	if restoreCursor and pointLast != mouseGetPos():
+			mouseSetPos(pointLast, hwnd=None)
+	#NOTE: looks like on winXP we can not move the cursor around
+	#elif pointLast == mouseGetPos():
+	#	mouseSetPos(pointEnd, hwnd=hwnd)
+
 def mouseButtonsDown():
 	"""checks if any mouse buttons are down
 	@return: (bool) True if any of the mouse buttons are down, False otherwise
