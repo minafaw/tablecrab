@@ -1,4 +1,7 @@
 
+#TODO: accelerators for settings "Hand Style Sheet"
+#TODO: tooltips flapping out on settings selector pane are ugly. no way to set tooltip delay in Qt4
+#			so we may have to reimplement tool tips
 #TODO: have to find a better way to present prefix | postfix in settings hand
 #TODO: would be nice to have line numbers in HandCss editor
 
@@ -16,11 +19,11 @@ class FrameSettingsGlobal(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
-		self.labelBackup = QtGui.QLabel('Backup TableCrab:', self)
 		self.buttonBackup = QtGui.QPushButton('..', self)
 		self.buttonBackup.clicked.connect(self.onButtonBackupClicked)
+		self.labelBackup = QtGui.QLabel('&Backup TableCrab:', self)
+		self.labelBackup.setBuddy(self.buttonBackup)
 
-		self.labelGuiStyle = QtGui.QLabel('Global Style:', self)
 		self.comboGuiStyle = TableCrabConfig.ComboBox(
 				[style for style in QtGui.QStyleFactory().keys()] ,
 				settingsKey='Gui/Style',
@@ -29,16 +32,19 @@ class FrameSettingsGlobal(QtGui.QFrame):
 				parent=self,
 				)
 		self.comboGuiStyle.currentIndexChanged.connect(self.onComboGuiStyleCurrentIndexChanged)
+		self.labelGuiStyle = QtGui.QLabel('Global &Style:', self)
+		self.labelGuiStyle.setBuddy(self.comboGuiStyle)
 
-		self.labelFont = QtGui.QLabel('Global Font:', self)
 		self.buttonFont = QtGui.QPushButton('..', self)
 		self.buttonFont.clicked.connect(self.onButtonFontClicked)
+		self.labelFont = QtGui.QLabel('Global &Font:', self)
+		self.labelFont.setBuddy(self.buttonFont)
 
-		self.labelFixedFont = QtGui.QLabel('Fixed Font:', self)
 		self.buttonFixedFont = QtGui.QPushButton('..', self)
 		self.buttonFixedFont.clicked.connect(self.onButtonFixedFontClicked)
+		self.labelFixedFont = QtGui.QLabel('Fi&xed Font:', self)
+		self.labelFixedFont.setBuddy(self.buttonFixedFont)
 
-		self.labelZoomIncrement = QtGui.QLabel('Zoom Increment:', self)
 		self.spinZoomIncrement = TableCrabConfig.DoubleSpinBox(
 				settingsKey='Gui/WebView/ZoomIncrement',
 				default=0.1,
@@ -48,12 +54,14 @@ class FrameSettingsGlobal(QtGui.QFrame):
 				step=0.1,
 				parent=self
 				)
+		self.labelZoomIncrement = QtGui.QLabel('&Zoom Increment:', self)
+		self.labelZoomIncrement.setBuddy(self.spinZoomIncrement)
 
-		self.checkAlternatingRowColors = TableCrabConfig.CheckBox('Alternating Row Colors', default=False, settingsKey='Gui/AlternatingRowColors', parent=self)
+		self.checkAlternatingRowColors = TableCrabConfig.CheckBox('Alternating &Row Colors', default=False, settingsKey='Gui/AlternatingRowColors', parent=self)
 		self.checkAlternatingRowColors.stateChanged.connect(self.onAlternatingRowColorsChanged)
-		self.checkChildItemIndicators = TableCrabConfig.CheckBox('Child Item Indicators', default=True, settingsKey='Gui/ChildItemIndicators', parent=self)
+		self.checkChildItemIndicators = TableCrabConfig.CheckBox('&Child Item Indicators', default=True, settingsKey='Gui/ChildItemIndicators', parent=self)
 		self.checkChildItemIndicators.stateChanged.connect(self.onChildItemIndicatorsChanged)
-		self.checkRestoreMousePosition = TableCrabConfig.CheckBox('Restore Mouse Position', default=False, settingsKey='RestoreMousePosition', parent=self)
+		self.checkRestoreMousePosition = TableCrabConfig.CheckBox('Restore Mouse &Position', default=False, settingsKey='RestoreMousePosition', parent=self)
 
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		self.buttonHelp.clicked.connect(self.onButtonHelpClicked)
@@ -201,27 +209,27 @@ class FrameSettingsPokerStars(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 		self.checkAutoClosePopupNews = TableCrabConfig.CheckBox(
-				'Close Popup News',
+				'Close Popup &News',
 				settingsKey='PokerStars/AutoClosePopupNews',
 				default=False
 				)
 		self.checkAutoCloseTourneyRegistrationBoxes = TableCrabConfig.CheckBox(
-				'Close Tourney Registration Boxes',
+				'Close T&ourney Registration Boxes',
 				settingsKey='PokerStars/AutoCloseTourneyRegistrationBoxes',
 				default=False
 				)
 		self.checkAutoCloseTableMessageBoxes = TableCrabConfig.CheckBox(
-				'Close Table Message Boxes',
+				'Close Ta&ble Message Boxes',
 				settingsKey='PokerStars/AutoCloseTableMessageBoxes',
 				default=False
 				)
 		self.checkAutoLogIn = TableCrabConfig.CheckBox(
-				'Close Log In Box',
+				'Close &Log In Box',
 				settingsKey='PokerStars/AutoCloseLogin',
 				default=False
 				)
 		self.checkMoveMouseToActiveTable = TableCrabConfig.CheckBox(
-				'Move Mouse To Active table',
+				'Move &Mouse To Active table',
 				settingsKey='PokerStars/MoveMouseToActiveTable',
 				default=False
 				)
@@ -261,14 +269,14 @@ class FrameSettingsHand(QtGui.QFrame):
 		self.labelPostfix = QtGui.QLabel('Postfix', self)
 
 		actionSettings = (
-			('PrefixBet', 'Bet', 'PostfixBet'),
-			('PrefixCall', 'Call', 'PostfixCall'),
-			('PrefixCheck', 'Check', None),
-			('PrefixFold', 'Fold', None),
-			('PrefixRaise', 'Raise', 'PostfixRaise'),
-			('PrefixAnte', 'Ante', 'PostfixAnte'),
-			('PrefixBigBlind', 'BigBlind', 'PostfixBigBlind'),
-			('PrefixSmallBlind', 'SmallBlind', 'PostfixSmallBlind'),
+			('PrefixBet', '&Bet', 'PostfixBet'),
+			('PrefixCall', '&Call', 'PostfixCall'),
+			('PrefixCheck', 'Ch&eck', None),
+			('PrefixFold', '&Fold', None),
+			('PrefixRaise', '&Raise', 'PostfixRaise'),
+			('PrefixAnte', 'A&nte', 'PostfixAnte'),
+			('PrefixBigBlind', 'B&igBlind', 'PostfixBigBlind'),
+			('PrefixSmallBlind', '&SmallBlind', 'PostfixSmallBlind'),
 			)
 		self.actionWidgets = []
 		for actionPrefix, actionName, actionPostfix in actionSettings:
@@ -279,6 +287,7 @@ class FrameSettingsHand(QtGui.QFrame):
 					parent=self,
 					)
 			labelAction = QtGui.QLabel(actionName, self)
+			labelAction.setBuddy(editPrefix)
 			if actionPostfix is not None:
 				editPostfix = TableCrabConfig.LineEdit(
 						settingsKey='PokerStarsHandGrabber/handFornmatterHtmlTabular/%s' % actionPostfix,
@@ -290,7 +299,6 @@ class FrameSettingsHand(QtGui.QFrame):
 				editPostfix = None
 			self.actionWidgets.append( (editPrefix, labelAction, editPostfix, actionPrefix, actionPostfix) )
 
-		self.labelMaxPlayerName = QtGui.QLabel('Max Player Name:', self)
 		self.spinMaxPlayerName = TableCrabConfig.SpinBox(
 				settingsKey='PokerStarsHandGrabber/HandFornmatterHtmlTabular/MaxPlayerName',
 				default=PokerStarsHandGrabber.HandFormatterHtmlTabular.MaxPlayerName,
@@ -298,8 +306,11 @@ class FrameSettingsHand(QtGui.QFrame):
 				maximum=999,
 				parent=self
 				)
+		self.labelMaxPlayerName = QtGui.QLabel('Ma&x Player Name:', self)
+		self.labelMaxPlayerName.setBuddy(self.spinMaxPlayerName)
+
 		self.checkNoFloatingPoint = TableCrabConfig.CheckBox(
-				'Floating Point To Integer',
+				'Floating &Point To Integer',
 				settingsKey='PokerStarsHandGrabber/HandFornmatterHtmlTabular/NoFloatingPoint',
 					default=False,
 				parent=self
@@ -480,11 +491,13 @@ class FrameSettings(QtGui.QFrame):
 		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
 		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(self.onSettingAlternatingRowColorsChanged)
 
+		self.actions = []
+
 		#
-		self.addSetting('Global', FrameSettingsGlobal(parent=self.stack) )
-		self.addSetting('PokerStars', FrameSettingsPokerStars(parent=self.stack) )
-		self.addSetting('Hand', FrameSettingsHand(parent=self.stack) )
-		self.addSetting('Hand Style Sheet', FrameSettingsHandSyleSheet(parent=self.stack) )
+		self.settingsGlobal = self.addSetting('Global', FrameSettingsGlobal(parent=self.stack), 'Shift+G', 'Global (Shift+G)')
+		self.settingsPokerStars = self.addSetting('PokerStars', FrameSettingsPokerStars(parent=self.stack), 'Shift+P', 'PokerStars (Shift+P)')
+		self.settingsHand = self.addSetting('Hand', FrameSettingsHand(parent=self.stack), 'Shift+H', 'Hand (Shift+H)')
+		self.settingsHandStyleSheet = self.addSetting('Hand Style Sheet', FrameSettingsHandSyleSheet(parent=self.stack), 'Shift+S', 'Hand Style Sheet (Shift+S)')
 
 		self.layout()
 		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Settings/SplitterState', QtCore.QByteArray()).toByteArray() )
@@ -495,9 +508,25 @@ class FrameSettings(QtGui.QFrame):
 		grid = TableCrabConfig.GridBox(self)
 		grid.addWidget(self.splitter, 0, 0)
 
-	def addSetting(self, name, widget):
-		self.listWidget.addItem(QtGui.QListWidgetItem(name, self.listWidget))
+	def addSetting(self, name, widget, shortcut, toolTip):
+		item = QtGui.QListWidgetItem(name, self.listWidget)
+		item.setToolTip(toolTip)
+		self.listWidget.addItem(item)
 		self.stack.addWidget(widget)
+		action = TableCrabConfig.Action(
+				parent=self,
+				shortcut=shortcut,
+				slot=self.onShortcut,
+				userData=item,
+				)
+		self.addAction(action)
+		self.actions.append(action)
+		return widget
+
+	def onShortcut(self):
+		item = self.sender().userData
+		self.listWidget.setCurrentItem(item)
+		self.onSettingSelected(item)
 
 	def onSettingSelected(self, item):
 		settings = self.stack.currentWidget()
