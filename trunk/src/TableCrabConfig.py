@@ -286,7 +286,10 @@ class Action(QtGui.QAction):
 		if toolTip is not None: self.setToolTip(toolTip)
 		self.setAutoRepeat(autoRepeat)
 		if shortcut is not None:
-			self.setShortcut(QtGui.QKeySequence(shortcut) )
+			if isinstance(shortcut, QtGui.QKeySequence.StandardKey):
+				self.setShortcut(shortcut)
+			else:
+				self.setShortcut(QtGui.QKeySequence(shortcut) )
 
 class WebViewToolBar(QtGui.QToolBar):
 	ZoomIncrement = 0.1
@@ -301,12 +304,19 @@ class WebViewToolBar(QtGui.QToolBar):
 		if self.settingsKeyZoomFactor is not None:
 			self.webView.setZoomFactor( settingsValue(settingsKeyZoomFactor, self.webView.zoomFactor() ).toDouble()[0] )
 
-		self.addAction( self.webView.pageAction(QtWebKit.QWebPage.Back) )
-		self.addAction( self.webView.pageAction(QtWebKit.QWebPage.Forward) )
+		#NOTE:
+		back = self.webView.pageAction(QtWebKit.QWebPage.Back)
+		back.setShortcut(QtGui.QKeySequence.Back)
+		back.setToolTip('Back (Alt+-)')
+		self.addAction(back)
+		forward = self.webView.pageAction(QtWebKit.QWebPage.Forward)
+		forward.setToolTip('Forward (Alt++)')
+		forward.setShortcut(QtGui.QKeySequence.Forward)
+		self.addAction(forward)
 
 		self.actionZoomIn = Action(
 				parent=self,
-				text='Zoom+',
+				text='ZoomIn (Ctrl++)',
 				icon=QtGui.QIcon(Pixmaps.magnifierPlus() ),
 				autoRepeat=True,
 				shortcut=QtGui.QKeySequence.ZoomIn,
@@ -316,7 +326,7 @@ class WebViewToolBar(QtGui.QToolBar):
 
 		self.actionZoomOut = Action(
 				parent=self,
-				text='Zoom-',
+				text='ZoomOut (Ctrl+-)',
 				icon=QtGui.QIcon(Pixmaps.magnifierMinus() ),
 				autoRepeat=True,
 				shortcut=QtGui.QKeySequence.ZoomOut,
