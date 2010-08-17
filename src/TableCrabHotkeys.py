@@ -27,6 +27,8 @@ class HotkeyEditor(QtGui.QDialog):
 		self.settingsKey = settingsKey
 		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
 		self.buttonHelp = QtGui.QPushButton('Help', self)
+		self.buttonHelp.setToolTip('Help (F1)')
+		self.buttonHelp.setShortcut(QtGui.QKeySequence('F1'))
 		self.buttonHelp.clicked.connect(self.onButtonHelpClicked)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
 		self.buttonBox.accepted.connect(self.accept)
@@ -36,11 +38,18 @@ class HotkeyEditor(QtGui.QDialog):
 		self.editAction = QtGui.QLineEdit(self)
 		self.editAction.setText(self.hotkey.action())
 		self.editAction.setEnabled(False)
-		self.labelHotkey = QtGui.QLabel('Hotkey:', self)
+
+		self.labelHotkey = QtGui.QLabel('Hot&key:', self)
 		self.hotkeyBox = TableCrabConfig.HotkeyBox(hotkey=self.hotkey.hotkey(), parent=self)
-		self.labelHotkeyName = QtGui.QLabel('HotkeyName:', self)
+		self.hotkeyBox.setToolTip('Hotkey (Alt+K)')
+		self.labelHotkey.setBuddy(self.hotkeyBox)
+
+		self.labelHotkeyName = QtGui.QLabel('HotkeyN&ame:', self)
 		self.editHotkeyName = QtGui.QLineEdit(self)
+		self.editHotkeyName.setToolTip('Edit shortcut name (Alt+A)')
+		self.labelHotkeyName.setBuddy(self.editHotkeyName)
 		self.editHotkeyName.setText(self.hotkey.hotkeyName()  )
+
 		self.grid = TableCrabConfig.GridBox(self)
 		self.fields = [
 				(self.labelAction, self.editAction),
@@ -83,7 +92,7 @@ class HotkeyEditor(QtGui.QDialog):
 class HotkeyEditorWithMultiplier(HotkeyEditor):
 	def __init__(self, *args, **kws):
 		HotkeyEditor.__init__(self, *args,**kws)
-		self.labelMultiplier = QtGui.QLabel('multiplier:', self)
+		self.labelMultiplier = QtGui.QLabel('&Multiplier:', self)
 		self.spinMultiplier = TableCrabConfig.DoubleSpinBox(
 				default=self.hotkey.multiplier(),
 				minimum=self.hotkey.MultiplierMin,
@@ -92,6 +101,9 @@ class HotkeyEditorWithMultiplier(HotkeyEditor):
 				precision=1,
 				parent=self,
 				)
+		self.spinMultiplier.setToolTip('Multiplier (Alt+M)')
+		self.labelMultiplier.setBuddy(self.spinMultiplier)
+
 		self.spinMultiplier.valueChanged.connect(self.setNewActionName)
 		self.fields.extend((
 				(self.labelMultiplier, self.spinMultiplier),
@@ -109,9 +121,13 @@ class HotkeyEditorWithMultiplier(HotkeyEditor):
 class HotkeyEditorWithMultiplierAndBaseValue(HotkeyEditorWithMultiplier):
 	def __init__(self, *args, **kws):
 		HotkeyEditorWithMultiplier.__init__(self, *args,**kws)
-		self.labelBasevalue = QtGui.QLabel('BaseValue:', self)
+		self.labelBasevalue = QtGui.QLabel('&BaseValue:', self)
 		self.comboBaseValue = TableCrabConfig.ComboBox(choices=self.hotkey.BaseValues, default=self.hotkey.baseValue(), parent=self)
 		self.comboBaseValue.currentIndexChanged.connect(self.setNewActionName)
+		self.comboBaseValue.setToolTip('Base value (Atl+B)')
+		self.labelBasevalue.setBuddy(self.comboBaseValue)
+
+
 		self.fields.insert(-1,
 				(self.labelBasevalue, self.comboBaseValue),
 				)
@@ -141,6 +157,8 @@ class HotkeyCheck(QtGui.QTreeWidgetItem):
 	def id(klass): return 'Check'
 	@classmethod
 	def menuName(klass): return 'Check'
+	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+C')
 	def action(self): return self.menuName()
 	def hotkey(self): return self._hotkey
 	def setHotkey(self, hotkey): self._hotkey = hotkey
@@ -180,6 +198,8 @@ class HotkeyFold(HotkeyCheck):
 	def id(klass): return 'Fold'
 	@classmethod
 	def menuName(klass): return 'Fold'
+	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+F')
 Hotkeys.append(HotkeyFold)
 
 class HotkeyRaise(HotkeyCheck):
@@ -187,6 +207,8 @@ class HotkeyRaise(HotkeyCheck):
 	def id(klass): return 'Raise'
 	@classmethod
 	def menuName(klass): return 'Raise'
+	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+R')
 Hotkeys.append(HotkeyRaise)
 
 class HotkeyAll_In(HotkeyCheck):
@@ -194,6 +216,8 @@ class HotkeyAll_In(HotkeyCheck):
 	def id(klass): return 'All_In'
 	@classmethod
 	def menuName(klass): return 'All-In'
+	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+L')
 Hotkeys.append(HotkeyAll_In)
 
 class HotkeyHilightBet(HotkeyCheck):
@@ -201,6 +225,8 @@ class HotkeyHilightBet(HotkeyCheck):
 	def id(klass): return 'HilightBet'
 	@classmethod
 	def menuName(klass): return 'Hilight bet'
+	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+I')
 Hotkeys.append(HotkeyHilightBet)
 
 class HotkeyMultiplyBet(HotkeyCheck):
@@ -211,6 +237,8 @@ class HotkeyMultiplyBet(HotkeyCheck):
 	def id(klass): return 'MultiplyBet'
 	@classmethod
 	def menuName(klass): return 'Multiply bet'
+	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+M')
 	def __init__(self, parent=None, hotkey='', hotkeyName='', multiplier=1.0):
 		self._multiplier = multiplier
 		HotkeyCheck.__init__(self, parent=parent, hotkey=hotkey, hotkeyName=hotkeyName)
@@ -283,6 +311,8 @@ class HotkeyAddToBet(HotkeyMultiplyBet):
 	@classmethod
 	def menuName(klass): return 'Add to bet'
 	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+A')
+	@classmethod
 	def attrsFromConfig(klass, key, klassID):
 		attrs = HotkeyMultiplyBet.attrsFromConfig(key, klassID)
 		if attrs is not None:
@@ -318,6 +348,8 @@ class HotkeySubtractFromBet(HotkeyAddToBet):
 	def id(klass): return 'SubtractFromBet'
 	@classmethod
 	def menuName(klass): return 'Subtract from bet'
+	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+S')
 	def action(self):
 		if self._multiplier == 1:
 			baseValue = 'big blind' if self._baseValue == 'BigBlind' else 'small blind'
@@ -337,6 +369,8 @@ class HotkeyReplayer(HotkeyCheck):
 	def id(klass): return 'Replayer'
 	@classmethod
 	def menuName(klass): return 'Replayer'
+	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+P')
 Hotkeys.append(HotkeyReplayer)
 
 class HotkeyInstantHandHistory(HotkeyCheck):
@@ -344,6 +378,8 @@ class HotkeyInstantHandHistory(HotkeyCheck):
 	def id(klass): return 'InstantHandHistory'
 	@classmethod
 	def menuName(klass): return 'Instant hand history'
+	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+H')
 Hotkeys.append(HotkeyInstantHandHistory)
 
 class HotkeyScreenshot(HotkeyCheck):
@@ -351,6 +387,8 @@ class HotkeyScreenshot(HotkeyCheck):
 	def id(klass): return 'Screenshot'
 	@classmethod
 	def menuName(klass): return 'Screenshot'
+	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+O')
 Hotkeys.append(HotkeyScreenshot)
 
 

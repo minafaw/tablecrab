@@ -99,11 +99,11 @@ class Gui(QtGui.QMainWindow):
 		# setup TabWidget
 		self.tabWidget = QtGui.QTabWidget(self)
 		self.setCentralWidget(self.tabWidget)
-		self.tabSetup = self._addTab(TableCrabGuiSetup.FrameSetup, 'Setup')
-		self.tabHotkeys = self._addTab(TableCrabGuiHotkeys.FrameHotkeys, 'Hotkeys')
-		self.tabHand = self._addTab(TableCrabGuiHand.FrameHand, 'Hand')
-		self.tabSettings = self._addTab(TableCrabGuiSettings.FrameSettings, 'Settings')
-		self.tabHelp = self._addTab(TableCrabGuiHelp.FrameHelp, 'Help')
+		self.tabSetup = self._addTab(TableCrabGuiSetup.FrameSetup, 'Se&tup')
+		self.tabHotkeys = self._addTab(TableCrabGuiHotkeys.FrameHotkeys, 'Hot&keys')
+		self.tabHand = self._addTab(TableCrabGuiHand.FrameHand, 'H&and')
+		self.tabSettings = self._addTab(TableCrabGuiSettings.FrameSettings, 'Settin&gs')
+		self.tabHelp = self._addTab(TableCrabGuiHelp.FrameHelp, '&Help')
 
 		# connect signals
 		TableCrabConfig.globalObject.feedback.connect(self.onFeedback)
