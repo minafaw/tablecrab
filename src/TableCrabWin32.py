@@ -671,30 +671,41 @@ def windowGetPos(hwnd):
 	point = windowClientPointToScreenPoint(hwnd, QtCore.QPoint(0, 0) )
 	return windowScreenPointToClientPoint(hwndParent, point)
 
-# ##############################################
-#def windowSetSize(hwnd, size):
-#	"""sets size of the specified window
-#	@param hwnd: handle of the window
-#	@param size: (QSize)
-#	@return: None
-#	"""
-#	if not hwnd: raise ValueError('can not set posAndSize of desktop window')
-#	#NOTE: SetWindowPos broken in wine 1.1.42
-#	user32.SetWindowPos(hwnd, None, 0, 0, size.width(), size.height(), SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE)
-#
-#def windowSetClientSize(hwnd, size):
-#	"""adjusts the specified windows size to fit the specified size of the client area
-#	@param hwnd: handle of the window
-#	@param size: (QSize)
-#	@return: None
-#	"""
-#	if not hwnd: raise ValueError('can not set clientSize of desktop window')
-#	rect = windowGetRect(hwnd)
-#	rectCli = windowGetClientRect(hwnd)
-#	newW = rect.width() - rectCl.width() + size.width()
-#	newH = rect.height() - rectCl.wheight() + size.height()
-#	size = QtCore.QSize(newW, newH)
-#	windowSetSize(hwnd, size)
+
+
+#NOTE: wine is not sending enter- exitsizemove messages. that is why PokerStars tables do not get repainted
+# on resizing. found that manually wrapping resizes in in enter- exitsizemove messages around resizes
+# triggers repainting as expected
+WM_ENTERSIZEMOVE = 0x0231
+WM_EXITSIZEMOVE = 0x0232
+def windowSetSize(hwnd, size, sendSizeMove=False):
+	"""sets size of the specified window
+	@param hwnd: handle of the window
+	@param size: (QSize)
+	@return: None
+	"""
+	if not hwnd: raise ValueError('can not set posAndSize of desktop window')
+	#NOTE: SetWindowPos broken in wine 1.1.42 - wine 1.3.X
+	if sendSizeMove:
+		user32.SendNotifyMessageA(hwnd, WM_ENTERSIZEMOVE, 0, 0)
+	user32.SetWindowPos(hwnd, None, 0, 0, size.width(), size.height(), SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE)
+	if sendSizeMove:
+		user32.SendNotifyMessageA(hwnd, WM_EXITSIZEMOVE, 0, 0)
+
+
+def windowSetClientSize(hwnd, size, sendSizeMove=False):
+	"""adjusts the specified windows size to fit the specified size of the client area
+	@param hwnd: handle of the window
+	@param size: (QSize)
+	@return: None
+	"""
+	if not hwnd: raise ValueError('can not set clientSize of desktop window')
+	rect = windowGetRect(hwnd)
+	rectCli = windowGetClientRect(hwnd)
+	newW = rect.width() - rectCli.width() + size.width()
+	newH = rect.height() - rectCli.height() + size.height()
+	size = QtCore.QSize(newW, newH)
+	windowSetSize(hwnd, size, sendSizeMove=sendSizeMove)
 
 # ################################################
 # alternative: use GetModuleFileNameEx to query executable filepath
@@ -818,19 +829,21 @@ class KeyboardInput(object):
 	def keyDown(self, vk):
 		ki = KEYBDINPUT()
 		ki.wVK = vk
+		ki.wScan = user32.MapVirtualKeyW(vk, 0)
 		input = INPUT()
 		input.type = INPUT_KEYBOARD
-		input.mi = mi
+		input.ki = ki
 		self._input.append(input)
 		return self
 
 	def keyUp(self, vk):
 		ki = KEYBDINPUT()
 		ki.wVK = vk
+		ki.wScan = user32.MapVirtualKeyW(vk, 0)
 		ki.dwFlags = KEYEVENTF_KEYUP
 		input = INPUT()
 		input.type = INPUT_KEYBOARD
-		input.mi = mi
+		input.ki = ki
 		self._input.append(input)
 		return self
 
