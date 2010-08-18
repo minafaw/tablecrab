@@ -391,4 +391,13 @@ class HotkeyScreenshot(HotkeyCheck):
 	def shortcut(klass): return QtGui.QKeySequence('Shift+O')
 Hotkeys.append(HotkeyScreenshot)
 
+class HotkeyTableSizeNext(HotkeyCheck):
+	@classmethod
+	def id(klass): return 'TableSizeNext'
+	@classmethod
+	def menuName(klass): return 'Table Size Next'
+	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+X')
+Hotkeys.append(HotkeyTableSizeNext)
+
 

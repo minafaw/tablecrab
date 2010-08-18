@@ -45,6 +45,7 @@ Topics = [
 				('hotkeyReplayer', 'Replayer'),
 				('hotkeyInstantHandHistory', 'Instant Hand History'),
 				('hotkeyScreenshot', 'Screenshot'),
+				('hotkeyTableSizeNext', 'Table Size Next'),
 				],
 			('hand', 'Hand'),
 			('settings', 'Settings'), [
