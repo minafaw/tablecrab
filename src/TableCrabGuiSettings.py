@@ -68,11 +68,9 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
 
-		# set all aplplication fonts
-		self.setFont()
-		self.setFixedFont()
-		self.layout()
+		TableCrabConfig.globalObject.init.connect(self.onInit)
 
+		self.layout()
 
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
@@ -117,6 +115,7 @@ class FrameSettingsGlobal(QtGui.QFrame):
 			font = QtGui.qApp.font()
 		# we have to reload style on font changes anyways, so global style setting is dome here
 		QtGui.qApp.setStyle(QtGui.QStyleFactory.create( TableCrabConfig.settingsValue('Gui/Style', '').toString() ))
+		self.comboGuiStyle.adjust()
 		self.buttonFont.setText( QtCore.QString('%1 %2').arg(font.family()).arg(font.pointSize()) )
 		# take QWebKit StandardFont from application font
 		settings = QtWebKit.QWebSettings.globalSettings()
@@ -204,6 +203,13 @@ class FrameSettingsGlobal(QtGui.QFrame):
 	def onChildItemIndicatorsChanged(self, state):
 		TableCrabConfig.globalObject.settingChildItemIndicatorsChanged.emit(state == QtCore.Qt.Checked)
 
+	def onInit(self):
+		self.setFont()	#NOTE: sets gui style aswell
+		self.setFixedFont()
+		self.spinZoomIncrement.adjust()
+		self.checkAlternatingRowColors.adjust()
+		self.checkChildItemIndicators.adjust()
+		self.checkRestoreMousePosition.adjust()
 
 class FrameSettingsPokerStars(QtGui.QFrame):
 	def __init__(self, parent=None):
@@ -239,6 +245,8 @@ class FrameSettingsPokerStars(QtGui.QFrame):
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
 
+		TableCrabConfig.globalObject.init.connect(self.onInit)
+
 		self.layout()
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
@@ -247,7 +255,6 @@ class FrameSettingsPokerStars(QtGui.QFrame):
 		grid.addWidget(self.checkAutoCloseTableMessageBoxes, 2, 0)
 		grid.addWidget(self.checkAutoLogIn, 3, 0)
 		grid.addWidget(self.checkMoveMouseToActiveTable, 4, 0)
-
 
 		grid.addLayout(TableCrabConfig.VStretch(), 5, 0)
 		grid.addWidget(TableCrabConfig.HLine(self), 6, 0)
@@ -259,6 +266,12 @@ class FrameSettingsPokerStars(QtGui.QFrame):
 	def onButtonHelpClicked(self, checked):
 		TableCrabGuiHelp.dialogHelp('settingsPokerStars', parent=self)
 
+	def onInit(self):
+		self.checkAutoClosePopupNews.adjust()
+		self.checkAutoCloseTourneyRegistrationBoxes.adjust()
+		self.checkAutoCloseTableMessageBoxes.adjust()
+		self.checkAutoLogIn.adjust()
+		self.checkMoveMouseToActiveTable.adjust()
 
 class FrameSettingsHand(QtGui.QFrame):
 
@@ -326,6 +339,8 @@ class FrameSettingsHand(QtGui.QFrame):
 		self.buttonHelp.clicked.connect(self.onButtonHelpClicked)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
 
+		TableCrabConfig.globalObject.init.connect(self.onInit)
+
 		self.layout()
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
@@ -363,6 +378,13 @@ class FrameSettingsHand(QtGui.QFrame):
 	def onButtonHelpClicked(self, checked):
 		TableCrabGuiHelp.dialogHelp('settingsHand', parent=self)
 
+	def onInit(self):
+		self.spinMaxPlayerName.adjust()
+		self.checkNoFloatingPoint.adjust()
+		for editPrefix, labelAction, editPostfix, _, _ in self.actionWidgets:
+			editPrefix.adjust()
+			if editPostfix is not None:
+				editPostfix.adjust()
 
 class FrameSettingsHandSyleSheet(QtGui.QFrame):
 
@@ -397,8 +419,9 @@ class FrameSettingsHandSyleSheet(QtGui.QFrame):
 		self.buttonHelp.clicked.connect(self.onButtonHelpClicked)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
 
-
+		TableCrabConfig.globalObject.init.connect(self.onInit)
 		self.layout()
+
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
 		grid.addWidget(self.edit, 0, 0)
@@ -457,6 +480,9 @@ class FrameSettingsHandSyleSheet(QtGui.QFrame):
 	def onButtonRestoreDefaultClicked(self):
 		self.edit.setPlainText(PokerStarsHandGrabber.HandFormatterHtmlTabular.StyleSheet)
 
+	def onInit(self):
+		self.edit.adjust()
+
 	def onMaxCharsExceeded(self, flag):
 		TableCrabConfig.globalObject.feedback.emit(self, ('Style sheet too big -- maximum Is %s chars' % TableCrabConfig.MaxHandStyleSheet) if flag else '')
 
@@ -480,7 +506,6 @@ class FrameSettings(QtGui.QFrame):
 
 		self.listWidget = self.ListWidget(self)
 		self.listWidget.itemPressed.connect(self.onSettingSelected)
-		self.listWidget.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
 
 		self.stack = QtGui.QStackedWidget(self)
 
@@ -499,10 +524,8 @@ class FrameSettings(QtGui.QFrame):
 		self.settingsHand = self.addSetting('Hand', FrameSettingsHand(parent=self.stack), 'Shift+H', 'Hand (Shift+H)')
 		self.settingsHandStyleSheet = self.addSetting('Hand Style Sheet', FrameSettingsHandSyleSheet(parent=self.stack), 'Shift+S', 'Hand Style Sheet (Shift+S)')
 
+		TableCrabConfig.globalObject.init.connect(self.onInit)
 		self.layout()
-		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Settings/SplitterState', QtCore.QByteArray()).toByteArray() )
-		self.listWidget.setCurrentRow( TableCrabConfig.settingsValue('Gui/Settings/CurrentIndex', 0).toInt()[0] )
-		self.onSettingSelected(self.listWidget.currentItem())
 
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
@@ -535,6 +558,12 @@ class FrameSettings(QtGui.QFrame):
 	def onCloseEvent(self, event):
 		TableCrabConfig.settingsSetValue('Gui/Settings/SplitterState', self.splitter.saveState())
 		TableCrabConfig.settingsSetValue('Gui/Settings/CurrentIndex', self.stack.currentIndex())
+
+	def onInit(self):
+		self.listWidget.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
+		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Settings/SplitterState', QtCore.QByteArray()).toByteArray() )
+		self.listWidget.setCurrentRow( TableCrabConfig.settingsValue('Gui/Settings/CurrentIndex', 0).toInt()[0] )
+		self.onSettingSelected(self.listWidget.currentItem())
 
 	def onSettingAlternatingRowColorsChanged(self, flag):
 		self.listWidget.setAlternatingRowColors(flag)

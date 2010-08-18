@@ -59,8 +59,6 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self.header().setVisible(False)
 		self.header().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
 		self.header().setResizeMode(1, QtGui.QHeaderView.ResizeToContents)
-		self.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
-		self.setRootIsDecorated( TableCrabConfig.settingsValue('Gui/ChildItemIndicators', True).toBool() )
 
 		self.myDelegate = self.MyDelegate(parent=self)
 		self.setItemDelegate(self.myDelegate)
@@ -112,6 +110,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		TableCrabConfig.globalObject.widgetScreenshotDoubleClicked.connect(self.onWidgetScreenshotDoubleClicked)
 
 		# connect to TreeWidget signals
+		TableCrabConfig.globalObject.init.connect(self.onInit)
 		self.itemDoubleClicked.connect(self.onEditItem)
 		self.itemExpanded.connect(self.onItemExpanded)
 		self.itemCollapsed.connect(self.onItemCollapsed)
@@ -121,6 +120,23 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self.myDelegate.editingFinished.connect(self.onTemplateEditingFinished)
 
 		self.adjustActions()
+
+	def onInit(self):
+		self.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
+		self.setRootIsDecorated( TableCrabConfig.settingsValue('Gui/ChildItemIndicators', True).toBool() )
+		self.clear()
+		template = None
+		for template in TableCrabConfig.readPersistentItems('Templates', maxItems=TableCrabConfig.MaxTemplates, itemProtos=TableCrabTemplates.Templates):
+			self.addTopLevelItem(template)
+			template.setExpanded(template.itemIsExpanded)
+		# set at least one template as default
+		if template is None:
+			template = TableCrabTemplates.TemplatePokerStarsTable()
+			self.addTopLevelItem(template)
+			template.setExpanded(True)
+		self._templatesRead = True
+		self.setCurrentItem( self.topLevelItem(0) )
+
 
 	def onSetAlternatingRowColors(self, flag):
 		self.setAlternatingRowColors(flag)
@@ -141,19 +157,6 @@ class TemplatesWidget(QtGui.QTreeWidget):
 						self.editItem(item)
 			return
 		return QtGui.QTreeWidget.keyReleaseEvent(self, event)
-
-	def read(self):
-		template = None
-		for template in TableCrabConfig.readPersistentItems('Templates', maxItems=TableCrabConfig.MaxTemplates, itemProtos=TableCrabTemplates.Templates):
-			self.addTopLevelItem(template)
-			template.setExpanded(template.itemIsExpanded)
-		# set at least one template as default
-		if template is None:
-			template = TableCrabTemplates.TemplatePokerStarsTable()
-			self.addTopLevelItem(template)
-			template.setExpanded(True)
-		self._templatesRead = True
-		self.setCurrentItem( self.topLevelItem(0) )
 
 	def dump(self):
 		TableCrabConfig.dumpPersistentItems('Templates', self)
@@ -628,7 +631,7 @@ class FrameSetup(QtGui.QFrame):
 
 		self.splitter.addWidget(self.templatesWidget)
 		self.splitter.addWidget(self.screenshotWidget)
-		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Setup/SplitterState', QtCore.QByteArray()).toByteArray() )
+		TableCrabConfig.globalObject.init.connect(self.onInit)
 		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
 
 		self.toolBar = QtGui.QToolBar(self)
@@ -665,6 +668,9 @@ class FrameSetup(QtGui.QFrame):
 
 	def onCloseEvent(self, event):
 		TableCrabConfig.settingsSetValue('Gui/Setup/SplitterState', self.splitter.saveState())
+
+	def onInit(self):
+		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Setup/SplitterState', QtCore.QByteArray()).toByteArray() )
 
 	def onMouseMonitor(self):
 
