@@ -220,7 +220,7 @@ class FrameHelp(QtGui.QFrame):
 				item = QtGui.QTreeWidgetItem(self.tree, [topicName, ])
 			item.setData(0, QtCore.Qt.UserRole, QtCore.QVariant(topic))
 
-			#TODO: for some reason DontShowIndicator items are never expanded. seems to be a but in Qt4
+			#TODO: for some reason items are never expanded. seems to be a bug in Qt4
 			#item.setChildIndicatorPolicy(item.DontShowIndicator)
 			item.setExpanded(True)
 			stack.append(item)
