@@ -121,21 +121,7 @@ from TableCrabRes import Pixmaps, HtmlPages, StyleSheets
 QtCore.QLocale.setDefault(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates) )
 
 # grab settings from commandline if possible
-qSettings = None
-if '--config' in sys.argv:
-	i = sys.argv.index('--config')
-	del sys.argv[i]
-	try:
-		fileName = sys.argv[i]
-	except IndexError:
-		raise ValueError('Option --config present but no config file specified')
-	else:
-		del sys.argv[i]
-		if os.path.isfile(fileName) or os.path.islink(fileName):
-			qSettings = QtCore.QSettings(fileName, QtCore.QSettings.IniFormat)
-		else:
-			raise ValueError('No such config file: %s' % fileName)
-if qSettings is None:
+class Settings:
 	qSettings = QtCore.QSettings(Author, ApplicationName)
 
 #***********************************************************************************
@@ -151,7 +137,9 @@ class SingleApplication(object):
 			##sys.exit(1)
 			raise RuntimeError('%s is already running' % ApplicationName)
 	def close(self, closeFunc=TableCrabWin32.kernel32.CloseHandle):	# need to hold reference to CloseHandle here. we get garbage collected otherwise
-		closeFunc(self.hMutex)
+		if self.hMutex is not None:
+			closeFunc(self.hMutex)
+			self.hMutex = None
 
 #***********************************************************************************
 # global QSettings
@@ -160,23 +148,27 @@ def settingsKeyJoin(*keys):
 	keys = [(str(key) if isinstance(key, QtCore.QString) else key) for key in keys]
 	return QtCore.QString( posixpath.join(*keys) )
 
+def setSettings(settings):
+	Settings.qSettings = settings
+	globalObject.init.emit()
+
 def settings():
-	return qSettings
+	return Settings.qSettings
 def settingsValue(key, default):
 	if isinstance(key, tuple):
 		key = settingsKeyJoin(*key)
-	return qSettings.value(key, default)
+	return Settings.qSettings.value(key, default)
 def settingsSetValue(key, value):
 	if isinstance(key, tuple):
 		key = settingsKeyJoin(*key)
-	qSettings.setValue(key, QtCore.QVariant(value) )
+	Settings.qSettings.setValue(key, QtCore.QVariant(value) )
 def settingsRemoveKey(key):
 	if isinstance(key, tuple):
 		key = settingsKeyJoin(*key)
 	#TODO: for some reason QSettings.contains(key) always return false here even if the key exists
 	##print key, qSettings.contains(key)
 	#if qSettings.contains(key):
-	qSettings.remove(key)
+	Settings.qSettings.remove(key)
 
 #***********************************************************************************
 # global singal handling and messages
@@ -184,6 +176,7 @@ def settingsRemoveKey(key):
 class _GlobalObject(QtCore.QObject):
 
 	# global signals
+	init = QtCore.pyqtSignal()
 	closeEvent = QtCore.pyqtSignal(QtCore.QEvent)
 
 	#TODO: overload to accept QObject aswell
@@ -306,10 +299,6 @@ class WebViewToolBar(QtGui.QToolBar):
 		self.settingsKeyZoomFactor = settingsKeyZoomFactor
 		self.settingsKeyZoomIncrement = settingsKeyZoomIncrement
 
-		if self.settingsKeyZoomFactor is not None:
-			self.webView.setZoomFactor( settingsValue(settingsKeyZoomFactor, self.webView.zoomFactor() ).toDouble()[0] )
-
-		#NOTE:
 		back = self.webView.pageAction(QtWebKit.QWebPage.Back)
 		back.setShortcut(QtGui.QKeySequence.Back)
 		back.setToolTip('Back (Alt+-)')
@@ -339,6 +328,9 @@ class WebViewToolBar(QtGui.QToolBar):
 				)
 		self.addAction(self.actionZoomOut)
 
+	def adjust(self):
+		if self.settingsKeyZoomFactor is not None:
+			self.webView.setZoomFactor( settingsValue(self.settingsKeyZoomFactor, self.webView.zoomFactor() ).toDouble()[0] )
 		self.adjustActions()
 
 	def _zoomIncrement(self):
@@ -373,15 +365,18 @@ class LineEdit(QtGui.QLineEdit):
 	def __init__(self, default='', settingsKey=None, maxLength=-1, parent=None):
 		QtGui.QLineEdit.__init__(self, parent)
 		self._settingsKey = settingsKey
+		self._default = default
 		if maxLength > -1:
 			self.setMaxLength(maxLength)
-		if self._settingsKey is None:
-			self.setText(default)
-		else:
-			self.setText( settingsValue(self._settingsKey, default).toString() )
-			self.editingFinished.connect(self.onValueChanged)
+		self.setText(default)
+		self.editingFinished.connect(self.onValueChanged)
+
+	def adjust(self):
+		if self._settingsKey is not None:
+			self.setText( settingsValue(self._settingsKey, self._default).toString() )
+
 	def onValueChanged(self):
-			if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.text())
+		if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.text())
 
 
 class PlainTextEdit(QtGui.QPlainTextEdit):
@@ -390,16 +385,18 @@ class PlainTextEdit(QtGui.QPlainTextEdit):
 
 	def __init__(self, default='', settingsKey=None, parent=None, maxChars=-1):
 		QtGui.QPlainTextEdit.__init__(self, parent)
-		self.settingsKey = settingsKey
+		self._settingsKey = settingsKey
 		self._maxChars = maxChars
 		self._lastText = default
+		self._default = default
 		if self._maxChars >= 0 and len(default) > self._maxChars:
 			raise ValueError('maxChars exceeded')
-		if self.settingsKey is None:
-			self.setPlainText(default)
-		else:
-			self.setPlainText( settingsValue(self.settingsKey, default).toString() )
-			self.textChanged.connect(self.onValueChanged)
+		self.setPlainText(default)
+		self.textChanged.connect(self.onValueChanged)
+
+	def adjust(self):
+		if self._settingsKey is not None:
+			self.setPlainText( settingsValue(self._settingsKey, self._default).toString() )
 
 	#TODO: cheap implementation of mxText. we have to find a better way to do so
 	def onValueChanged(self):
@@ -409,66 +406,83 @@ class PlainTextEdit(QtGui.QPlainTextEdit):
 				return
 			else:
 				self.maxCharsExceeded.emit(False)
-		if self.settingsKey is not None: settingsSetValue(self.settingsKey, self.toPlainText())
+		if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.toPlainText())
 
 
 class DoubleSpinBox(QtGui.QDoubleSpinBox):
 	def __init__(self, default=1.0, minimum=0.0, maximum=99.99, step=1.0, precision=2, settingsKey=None, parent=None):
 		QtGui.QDoubleSpinBox.__init__(self, parent)
-		self.settingsKey = settingsKey
+		self._settingsKey = settingsKey
+		self._default = default
 		self.setRange(minimum, maximum)
 		self.setSingleStep(step)
 		self.setDecimals(precision)
-		if self.settingsKey is None:
-			self.setValue(default)
-		else:
-			self.setValue(  settingsValue(self.settingsKey, default).toDouble()[0] )
-			self.valueChanged.connect(self.onValueChanged)
+		self.setValue(default)
+		self.valueChanged.connect(self.onValueChanged)
+
+	def adjust(self):
+		if self._settingsKey is not None:
+			self.setValue(  settingsValue(self._settingsKey, self._default).toDouble()[0] )
+
 	def onValueChanged(self):
-			if self.settingsKey is not None: settingsSetValue(self.settingsKey, self.value())
+		if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.value())
 
 class SpinBox(QtGui.QSpinBox):
 	def __init__(self, default=1, minimum=0, maximum=99, settingsKey=None, parent=None):
 		QtGui.QSpinBox.__init__(self, parent)
-		self.settingsKey = settingsKey
+		self._settingsKey = settingsKey
+		self._default = default
 		self.setRange(minimum, maximum)
-		if self.settingsKey is None:
-			self.setValue(default)
-		else:
-			self.setValue(  settingsValue(self.settingsKey, default).toInt()[0] )
-			self.valueChanged.connect(self.onValueChanged)
+		self.setValue(default)
+		self.valueChanged.connect(self.onValueChanged)
+
+	def adjust(self):
+		if self._settingsKey is not None:
+			self.setValue(  settingsValue(self._settingsKey, self._default).toInt()[0] )
+
 	def onValueChanged(self):
-		if self.settingsKey is not None: settingsSetValue(self.settingsKey, self.value())
+		if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.value())
 
 class CheckBox(QtGui.QCheckBox):
 	def __init__(self, text, default=False, settingsKey=None, parent=None):
 		QtGui.QCheckBox.__init__(self, text, parent)
-		self.settingsKey = settingsKey
-		if self.settingsKey is None:
-			self.setCheckState(  QtCore.Qt.Checked if default else QtCore.Qt.Unchecked )
-		else:
-			self.setCheckState(  QtCore.Qt.Checked if settingsValue(self.settingsKey, default).toBool() else QtCore.Qt.Unchecked )
-			self.stateChanged.connect(self.onStateChanged)
+		self._settingsKey = settingsKey
+		self._default = default
+		self.setCheckState(  QtCore.Qt.Checked if default else QtCore.Qt.Unchecked )
+		self.stateChanged.connect(self.onStateChanged)
+
+	def adjust(self):
+		if self._settingsKey is not None:
+			self.setCheckState(  QtCore.Qt.Checked if settingsValue(self._settingsKey, self._default).toBool() else QtCore.Qt.Unchecked )
+
 	def onStateChanged(self):
-		if self.settingsKey is not None: settingsSetValue(self.settingsKey, self.checkState() == QtCore.Qt.Checked)
+		if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.checkState() == QtCore.Qt.Checked)
 
 class ComboBox(QtGui.QComboBox):
 	def __init__(self, choices, default='', failsave=False, settingsKey=None, parent=None):
 		QtGui.QComboBox.__init__(self, parent)
 		self.addItems(choices)
-		self.settingsKey = settingsKey
-		if self.settingsKey is None:
-			value = default
+		self._settingsKey = settingsKey
+		self._default = default
+		self.failsave = failsave
+		self.choices = choices
+		if default in self.choices:
+			self.setCurrentIndex(choices.index(default))
 		else:
-			value = settingsValue(self.settingsKey, default).toString()
-			self.currentIndexChanged.connect(self.onCurrentIndexChanged)
-		if failsave:
-			if value in choices:
-				self.setCurrentIndex(choices.index(value))
-		else:
-			self.setCurrentIndex(choices.index(value))
-	def 	onCurrentIndexChanged(self, index):
-		if self.settingsKey is not None: settingsSetValue(self.settingsKey, self.itemText(index))
+			pass
+		self.currentIndexChanged.connect(self.onCurrentIndexChanged)
+
+	def adjust(self):
+		if self._settingsKey is not None:
+			value = settingsValue(self._settingsKey, self._default).toString()
+			if self.failsave:
+				if value in self.choices:
+					self.setCurrentIndex(self.choices.index(value))
+			else:
+				self.setCurrentIndex(self.choices.index(value))
+
+	def onCurrentIndexChanged(self, index):
+		if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.itemText(index))
 
 contentsMargins = QtCore.QMargins(2, 2, 2, 2)
 class VBox(QtGui.QVBoxLayout):
@@ -715,10 +729,6 @@ def formatNum(num, precission=2):
 		tail = tail[1:]
 	return head + tail
 
-#***********************************************************************************
-# global Application object
-#***********************************************************************************
-application = QtGui.QApplication(sys.argv)
 
 
 

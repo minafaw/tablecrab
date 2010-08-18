@@ -10,14 +10,11 @@ import TableCrabGuiHelp
 import TableCrabSiteManager
 
 from PyQt4 import QtCore, QtGui
+import sys, os
 
 #**********************************************************************************************
 #
 #**********************************************************************************************q
-#TODO: there seems to be no way to set the first label on status bar without frame
-TableCrabConfig.application.setStyleSheet("QStatusBar::item { border: 0px solid black }; ")
-
-
 ErrMessage = '<div style="color: red;background-color: white;">&nbsp;Error: double click for details</div>'
 ErrText = '''An error occured and TableCrab may no longer work as expected.
 To help improve TableCrab please send this message to:
@@ -70,9 +67,9 @@ class Gui(QtGui.QMainWindow):
 			self.doubleClicked.emit()
 
 	def __init__(self):
-		QtGui.QMainWindow.__init__(self)
-
 		self.singleApplication = TableCrabConfig.SingleApplication()
+
+		QtGui.QMainWindow.__init__(self)
 
 		self.setWindowTitle(TableCrabConfig.ReleaseName)
 		self.setWindowIcon( QtGui.QIcon(TableCrabConfig.Pixmaps.tableCrab()) )
@@ -108,22 +105,19 @@ class Gui(QtGui.QMainWindow):
 		self.tabHelp = self._addTab(TableCrabGuiHelp.FrameHelp, '&Help')
 
 		# connect signals
+		TableCrabConfig.globalObject.init.connect(self.onInit)
 		TableCrabConfig.globalObject.feedback.connect(self.onFeedback)
 		TableCrabConfig.globalObject.feedbackException.connect(self.onFeedbackException)
 		TableCrabConfig.globalObject.feedbackMessage.connect(self.onFeedbackMessage)
 		self.tabWidget.currentChanged.connect(self.onTabCurrentChanged)
-
-		# restore last selected tab
-		self.tabWidget.setCurrentIndex( TableCrabConfig.settingsValue('Gui/TabCurrent', QtCore.QVariant()).toInt()[0] )
 
 	def show(self):
 		QtGui.QMainWindow.show(self)
 		TableCrabConfig.mouseHook.start()
 		TableCrabConfig.keyboardHook.start()
 		TableCrabConfig.windowHook.start()
-		TableCrabConfig.hotkeyManager.read()
-		TableCrabConfig.templateManager.read()
 		self.siteManager.tableCrabActionHandler().setHwndMain(self.effectiveWinId() )
+		TableCrabConfig.globalObject.init.emit()
 
 	def closeEvent(self, event):
 		self.singleApplication.close()
@@ -135,15 +129,14 @@ class Gui(QtGui.QMainWindow):
 		TableCrabConfig.settingsSetValue('Gui/Geometry', self.saveGeometry() )
 		return QtGui.QMainWindow.closeEvent(self, event)
 
-	def start(self):
-		self.show()
-		TableCrabConfig.application.exec_()
-
 	def _addTab(self, widgetProto, name):
 		widget = widgetProto(parent=self)
 		self.tabWidget.addTab(widget, name)
 		self._feedbackMessages[widget] = ''
 		return widget
+
+	def onInit(self):
+		self.tabWidget.setCurrentIndex( TableCrabConfig.settingsValue('Gui/TabCurrent', QtCore.QVariant()).toInt()[0] )
 
 	def onTabCurrentChanged(self, index):
 		if index < 0:
@@ -192,7 +185,36 @@ class Gui(QtGui.QMainWindow):
 				self.labelStatus.setText('Ready: ')
 				self._feedbackMessages[None] = ''
 
-#***********************************************************************************
+
+def main(argv=None, run=True):
+	argv = [] if argv is None else argv
+	if '--config' in argv:
+		i = argv.index('--config')
+		del argv[i]
+		try:
+			fileName = argv[i]
+		except IndexError:
+			raise ValueError('Option --config present but no config file specified')
+		else:
+			del argv[i]
+			if os.path.isfile(fileName) or os.path.islink(fileName):
+				TableCrabConfig.setSettings(QtCore.QSettings(fileName, QtCore.QSettings.IniFormat))
+			else:
+				raise ValueError('No such config file: %s' % fileName)
+
+	application = QtGui.QApplication(argv)
+	#TODO: there seems to be no way to set the first label on status bar without frame
+	application.setStyleSheet("QStatusBar::item{ border: 0px solid black }; ")
+	gui = Gui()
+	gui.show()
+	if run:
+		application.exec_()
+	else:
+		return gui
+
+#***********************************************************************s***********
 #
 #***********************************************************************************
-if __name__ == '__main__': Gui().start()
+if __name__ == '__main__': main(sys.argv)
+
+

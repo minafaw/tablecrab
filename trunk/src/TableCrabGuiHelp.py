@@ -179,7 +179,6 @@ class FrameHelp(QtGui.QFrame):
 
 		self.webView = QtWebKit.QWebView(self)
 		self.webView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)		#
-		self.webView.setUrl(QtCore.QUrl(''))
 		oldManager = self.webView.page().networkAccessManager()
 		self.networkAccessManager = NetworkAccessManager(oldManager, parent=self)
 		page = self.webView.page()
@@ -187,25 +186,40 @@ class FrameHelp(QtGui.QFrame):
 		page.setLinkDelegationPolicy(page.DelegateAllLinks)
 		page.linkClicked.connect(self.onLinkClicked)
 
-		self.tree = QtGui.QTreeWidget(self)
-		self.tree.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
-
-		# connect signals
-		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(self.onSettingAlternatingRowColorsChanged)
-
-		self.splitter = QtGui.QSplitter(self)
-		self.splitter.addWidget(self.tree)
-		self.splitter.addWidget(self.webView)
-
-		self.tree.setExpandsOnDoubleClick(False)
-		self.tree.setRootIsDecorated(False)
-		self.tree.header().setVisible(False)
-
 		self.toolBar = TableCrabConfig.WebViewToolBar(self.webView,
 				settingsKeyZoomFactor='Gui/Help/ZoomFactor',
 				settingsKeyZoomIncrement='Gui/WebView/ZoomIncrement',
 				)
 
+		self.tree = QtGui.QTreeWidget(self)
+		self.tree.setExpandsOnDoubleClick(False)
+		self.tree.setRootIsDecorated(False)
+		self.tree.header().setVisible(False)
+
+		self.splitter = QtGui.QSplitter(self)
+		self.splitter.addWidget(self.tree)
+		self.splitter.addWidget(self.webView)
+
+		# connect signals
+		TableCrabConfig.globalObject.init.connect(self.onInit)
+		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
+		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(self.onSettingAlternatingRowColorsChanged)
+		self.tree.itemSelectionChanged.connect(self.onItemSelectionChanged)
+		self.tree.itemActivated.connect(self.onItemSelectionChanged)
+
+		self.layout()
+
+
+	def layout(self):
+		box = TableCrabConfig.GridBox(self)
+		box.addWidget(self.toolBar, 0, 0)
+		box.addWidget(self.splitter, 1, 0)
+
+	def onInit(self):
+		self.webView.setUrl(QtCore.QUrl(''))
+		self.toolBar.adjust()
+		self.tree.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
+		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Help/SplitterState', QtCore.QByteArray()).toByteArray() )
 		#
 		lastTopic = TableCrabConfig.settingsValue('Gui/Help/Topic', '').toString()
 		lastTopicItem = None
@@ -228,22 +242,10 @@ class FrameHelp(QtGui.QFrame):
 				lastTopicItem = item
 			if firstTopicItem is None:
 				firstTopicItem = item
-
-		self.tree.itemSelectionChanged.connect(self.onItemSelectionChanged)
-		self.tree.itemActivated.connect(self.onItemSelectionChanged)
-		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
 		if lastTopicItem is not None:
 			self.tree.setCurrentItem(lastTopicItem)
 		else:
 			self.tree.setCurrentItem(firstTopicItem)
-
-		self.layout()
-		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Help/SplitterState', QtCore.QByteArray()).toByteArray() )
-
-	def layout(self):
-		box = TableCrabConfig.GridBox(self)
-		box.addWidget(self.toolBar, 0, 0)
-		box.addWidget(self.splitter, 1, 0)
 
 	def onItemSelectionChanged(self):
 		items = self.tree.selectedItems()
@@ -283,6 +285,7 @@ class _DialogHelp(QtGui.QDialog):
 		self.layout()
 		self.restoreGeometry( TableCrabConfig.settingsValue('Gui/DialogHelp/Geometry', QtCore.QByteArray()).toByteArray() )
 		self.frameHelp.splitter.restoreState( TableCrabConfig.settingsValue('Gui/DialogHelp/SplitterState', QtCore.QByteArray()).toByteArray() )
+		self.frameHelp.onInit()
 
 	def layout(self):
 		box = TableCrabConfig.GridBox(self)

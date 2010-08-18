@@ -18,15 +18,14 @@ class FrameHand(QtGui.QFrame):
 		self._hasHand = False
 		self.webView = QtWebKit.QWebView(self)
 		self.webView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-		self.webView.setUrl(QtCore.QUrl(''))
 		self.pokerStarsHandGrabber = PokerStarsHandGrabber.HandGrabber(
 				PokerStarsHandGrabber.HandParser(),
 				PokerStarsHandGrabber.HandFormatterHtmlTabular(),
 				parent=self,
 				)
 		self.pokerStarsHandGrabber.handGrabbed.connect(self.onPShandGrabberHandGrabbed)
+		TableCrabConfig.globalObject.init.connect(self.onInit)
 		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
-		self.webView.setZoomFactor( TableCrabConfig.settingsValue('Gui/Hand/ZoomFactor',  self.webView.zoomFactor() ).toDouble()[0] )
 
 		self.toolBar = TableCrabConfig.WebViewToolBar(self.webView,
 				settingsKeyZoomFactor='Gui/Hand/ZoomFactor',
@@ -127,6 +126,10 @@ class FrameHand(QtGui.QFrame):
 
 	def onActionHelpTriggered(self, checked):
 		TableCrabGuiHelp.dialogHelp('hand', parent=self)
+
+	def onInit(self):
+		self.webView.setUrl(QtCore.QUrl(''))
+		self.toolBar.adjust()
 
 	def onPShandGrabberHandGrabbed(self, data):
 		self._hasHand = bool(data)

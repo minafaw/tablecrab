@@ -36,9 +36,6 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self.header().setVisible(False)
 		self.header().setResizeMode(0, QtGui.QHeaderView.ResizeToContents)
 		self.header().setResizeMode(1, QtGui.QHeaderView.ResizeToContents)
-		self.setAlternatingRowColors(
-				TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool()
-				)
 
 		# setup actions
 		self._actions = []
@@ -87,6 +84,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self._actions.append(self.actionRemove)
 
 		# connect signals
+		TableCrabConfig.globalObject.init.connect(self.onInit)
 		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(
 				self.onSetAlternatingRowColors
 				)
@@ -194,7 +192,22 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			self.setCurrentItem(hotkey)
 			self.dump()
 
-	def read(self):
+	def removeHotkey(self):
+		hotkey = self.currentItem()
+		if hotkey is None:
+			self.actionRemove.setEnabled(False)
+			return
+		self.takeTopLevelItem(self.indexOfTopLevelItem(hotkey) )
+		self.dump()
+
+	def onHotkeyDoubleClicked(self, hotkey):
+		self.editHotkey()
+
+	def onInit(self):
+		self.setAlternatingRowColors(
+				TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool()
+				)
+		self.clear()
 		hotkey = None
 		for hotkey in TableCrabConfig.readPersistentItems(
 				'Hotkeys',
@@ -207,17 +220,6 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			hotkey = TableCrabHotkeys.HotkeyScreenshot(hotkey='<F1+LeftControl>')
 			self.addTopLevelItem(hotkey)
 		self.setCurrentItem( self.topLevelItem(0) )
-
-	def removeHotkey(self):
-		hotkey = self.currentItem()
-		if hotkey is None:
-			self.actionRemove.setEnabled(False)
-			return
-		self.takeTopLevelItem(self.indexOfTopLevelItem(hotkey) )
-		self.dump()
-
-	def onHotkeyDoubleClicked(self, hotkey):
-		self.editHotkey()
 
 	def onSetAlternatingRowColors(self, flag):
 		self.setAlternatingRowColors(flag)
