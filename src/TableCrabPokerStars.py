@@ -12,14 +12,17 @@ import TableCrabTemplates
 import re, time
 
 from PyQt4 import QtCore
+
 #***************************************************************************************************
 #
 #***************************************************************************************************
 class ActionHandler(QtCore.QObject):
+
 	def __init__(self, parent=None):
 		QtCore.QObject.__init__(self, parent)
 
 		self._pokerStarsLoginBox = None
+
 
 	def handleWindowCreated(self, hwnd):
 
@@ -81,6 +84,36 @@ class ActionHandler(QtCore.QObject):
 		return False
 
 	def handleInputEvent(self, hwnd, hotkey, inputEvent):
+
+		if hotkey.id() == TableCrabHotkeys.HotkeyTableSizeNext.id():
+			if self.isTable(hwnd):
+				if inputEvent.keyIsDown:
+					#  find next table template that is not of current tables size
+					size = TableCrabWin32.windowGetClientRect(hwnd).size()
+					template = None
+					pickNext = False
+					for i, tmp_template in enumerate(TableCrabConfig.templateManager):
+						if tmp_template.id() == TableCrabTemplates.TemplatePokerStarsTable.id():
+							if tmp_template.size	== TableCrabConfig.SizeNone:
+								continue
+							if pickNext:
+								template = tmp_template
+								break
+							if template is None:
+								template = tmp_template
+							if tmp_template.size == size:
+								pickNext = True
+					# resize table to next templates size
+					if template is not None:
+						#NOTE: on wine tables do not get redrawn on resize [ http://bugs.winehq.org/show_bug.cgi?id=5941 ].
+						# 	for some reson sending F5 via KeyboardInput has no effect whatsoever, so we tell TableCrabWin32
+						# to wrap resizing into enter- exitsizemove messages. tested on winXP aswell - works nicely
+						TableCrabWin32.windowSetClientSize(hwnd, template.size, sendSizeMove=True)
+				inputEvent.accept = True
+				return True
+			return False
+
+
 		template = self.tableTemplate(hwnd)
 		if template is None:
 			return False
