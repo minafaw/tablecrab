@@ -10,12 +10,12 @@ from PyQt4 import QtCore, QtGui, QtWebKit
 #*******************************************************************************************
 #
 #*******************************************************************************************
-
 class FrameHand(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
 		self._hasHand = False
+
 		self.webView = QtWebKit.QWebView(self)
 		self.webView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		self.pokerStarsHandGrabber = PokerStarsHandGrabber.HandGrabber(
@@ -63,18 +63,24 @@ class FrameHand(QtGui.QFrame):
 		self.layout()
 		self.pokerStarsHandGrabber.start()
 
+	#----------------------------------------------------------------------------------------------------------------
+	# methods
+	#---------------------------------------------------------------------------------------------------------------
+	def adjustActions(self):
+		self.toolBar.actionZoomIn.setEnabled(bool(self._hasHand))
+		self.toolBar.actionZoomOut.setEnabled(bool(self._hasHand))
+		self.actionSave.setEnabled(bool(self._hasHand))
+
 	def layout(self):
 		box = TableCrabConfig.GridBox(self)
 		box.addWidget(self.toolBar, 0,0)
 		box.addWidget(self.webView, 1, 0)
 
-	def onCloseEvent(self, event):
-		self.pokerStarsHandGrabber.stop()
-
-	def adjustActions(self):
-		self.toolBar.actionZoomIn.setEnabled(bool(self._hasHand))
-		self.toolBar.actionZoomOut.setEnabled(bool(self._hasHand))
-		self.actionSave.setEnabled(bool(self._hasHand))
+	#--------------------------------------------------------------------------------------------------------------
+	# event handlers
+	#--------------------------------------------------------------------------------------------------------------
+	def onActionHelpTriggered(self, checked):
+		TableCrabGuiHelp.dialogHelp('hand', parent=self)
 
 	def onActionOpenTriggered(self):
 		dlg = QtGui.QFileDialog(self)
@@ -124,8 +130,8 @@ class FrameHand(QtGui.QFrame):
 		try: fp.write(self.webView.page().mainFrame().toHtml().toUtf8() )
 		finally: fp.close()
 
-	def onActionHelpTriggered(self, checked):
-		TableCrabGuiHelp.dialogHelp('hand', parent=self)
+	def onCloseEvent(self, event):
+		self.pokerStarsHandGrabber.stop()
 
 	def onInit(self):
 		self.webView.setUrl(QtCore.QUrl(''))
