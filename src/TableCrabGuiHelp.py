@@ -217,7 +217,6 @@ class FrameHelp(QtGui.QFrame):
 
 	def onInit(self):
 		self.webView.setUrl(QtCore.QUrl(''))
-		self.toolBar.adjust()
 		self.tree.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
 		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Help/SplitterState', QtCore.QByteArray()).toByteArray() )
 		#

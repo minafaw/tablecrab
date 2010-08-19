@@ -115,7 +115,7 @@ class FrameSettingsGlobal(QtGui.QFrame):
 			font = QtGui.qApp.font()
 		# we have to reload style on font changes anyways, so global style setting is dome here
 		QtGui.qApp.setStyle(QtGui.QStyleFactory.create( TableCrabConfig.settingsValue('Gui/Style', '').toString() ))
-		self.comboGuiStyle.adjust()
+		self.comboGuiStyle.onInit()
 		self.buttonFont.setText( QtCore.QString('%1 %2').arg(font.family()).arg(font.pointSize()) )
 		# take QWebKit StandardFont from application font
 		settings = QtWebKit.QWebSettings.globalSettings()
@@ -204,12 +204,9 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		TableCrabConfig.globalObject.settingChildItemIndicatorsChanged.emit(state == QtCore.Qt.Checked)
 
 	def onInit(self):
-		self.setFont()	#NOTE: sets gui style aswell
+		self.setFont()	#NOTE: sets gui style as well
 		self.setFixedFont()
-		self.spinZoomIncrement.adjust()
-		self.checkAlternatingRowColors.adjust()
-		self.checkChildItemIndicators.adjust()
-		self.checkRestoreMousePosition.adjust()
+
 
 class FrameSettingsPokerStars(QtGui.QFrame):
 	def __init__(self, parent=None):
@@ -245,8 +242,6 @@ class FrameSettingsPokerStars(QtGui.QFrame):
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
 
-		TableCrabConfig.globalObject.init.connect(self.onInit)
-
 		self.layout()
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
@@ -266,12 +261,6 @@ class FrameSettingsPokerStars(QtGui.QFrame):
 	def onButtonHelpClicked(self, checked):
 		TableCrabGuiHelp.dialogHelp('settingsPokerStars', parent=self)
 
-	def onInit(self):
-		self.checkAutoClosePopupNews.adjust()
-		self.checkAutoCloseTourneyRegistrationBoxes.adjust()
-		self.checkAutoCloseTableMessageBoxes.adjust()
-		self.checkAutoLogIn.adjust()
-		self.checkMoveMouseToActiveTable.adjust()
 
 class FrameSettingsHand(QtGui.QFrame):
 
@@ -339,8 +328,6 @@ class FrameSettingsHand(QtGui.QFrame):
 		self.buttonHelp.clicked.connect(self.onButtonHelpClicked)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
 
-		TableCrabConfig.globalObject.init.connect(self.onInit)
-
 		self.layout()
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
@@ -378,13 +365,6 @@ class FrameSettingsHand(QtGui.QFrame):
 	def onButtonHelpClicked(self, checked):
 		TableCrabGuiHelp.dialogHelp('settingsHand', parent=self)
 
-	def onInit(self):
-		self.spinMaxPlayerName.adjust()
-		self.checkNoFloatingPoint.adjust()
-		for editPrefix, labelAction, editPostfix, _, _ in self.actionWidgets:
-			editPrefix.adjust()
-			if editPostfix is not None:
-				editPostfix.adjust()
 
 class FrameSettingsHandSyleSheet(QtGui.QFrame):
 
@@ -419,7 +399,6 @@ class FrameSettingsHandSyleSheet(QtGui.QFrame):
 		self.buttonHelp.clicked.connect(self.onButtonHelpClicked)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
 
-		TableCrabConfig.globalObject.init.connect(self.onInit)
 		self.layout()
 
 	def layout(self):
@@ -479,9 +458,6 @@ class FrameSettingsHandSyleSheet(QtGui.QFrame):
 	#TODO: resetting document jumps to top of widget. store/restore position would be nice
 	def onButtonRestoreDefaultClicked(self):
 		self.edit.setPlainText(PokerStarsHandGrabber.HandFormatterHtmlTabular.StyleSheet)
-
-	def onInit(self):
-		self.edit.adjust()
 
 	def onMaxCharsExceeded(self, flag):
 		TableCrabConfig.globalObject.feedback.emit(self, ('Style sheet too big -- maximum Is %s chars' % TableCrabConfig.MaxHandStyleSheet) if flag else '')

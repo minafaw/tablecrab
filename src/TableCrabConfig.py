@@ -299,6 +299,8 @@ class WebViewToolBar(QtGui.QToolBar):
 		self.settingsKeyZoomFactor = settingsKeyZoomFactor
 		self.settingsKeyZoomIncrement = settingsKeyZoomIncrement
 
+		globalObject.init.connect(self.onInit)
+
 		back = self.webView.pageAction(QtWebKit.QWebPage.Back)
 		back.setShortcut(QtGui.QKeySequence.Back)
 		back.setToolTip('Back (Alt+-)')
@@ -328,7 +330,7 @@ class WebViewToolBar(QtGui.QToolBar):
 				)
 		self.addAction(self.actionZoomOut)
 
-	def adjust(self):
+	def onInit(self):
 		if self.settingsKeyZoomFactor is not None:
 			self.webView.setZoomFactor( settingsValue(self.settingsKeyZoomFactor, self.webView.zoomFactor() ).toDouble()[0] )
 		self.adjustActions()
@@ -368,12 +370,14 @@ class LineEdit(QtGui.QLineEdit):
 		self._default = default
 		if maxLength > -1:
 			self.setMaxLength(maxLength)
-		self.setText(default)
 		self.editingFinished.connect(self.onValueChanged)
+		globalObject.init.connect(self.onInit)
 
-	def adjust(self):
+	def onInit(self):
 		if self._settingsKey is not None:
 			self.setText( settingsValue(self._settingsKey, self._default).toString() )
+		else:
+			self.setText(self._default)
 
 	def onValueChanged(self):
 		if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.text())
@@ -391,12 +395,14 @@ class PlainTextEdit(QtGui.QPlainTextEdit):
 		self._default = default
 		if self._maxChars >= 0 and len(default) > self._maxChars:
 			raise ValueError('maxChars exceeded')
-		self.setPlainText(default)
 		self.textChanged.connect(self.onValueChanged)
+		globalObject.init.connect(self.onInit)
 
-	def adjust(self):
+	def onInit(self):
 		if self._settingsKey is not None:
 			self.setPlainText( settingsValue(self._settingsKey, self._default).toString() )
+		else:
+			self.setPlainText(self._default)
 
 	#TODO: cheap implementation of mxText. we have to find a better way to do so
 	def onValueChanged(self):
@@ -417,12 +423,14 @@ class DoubleSpinBox(QtGui.QDoubleSpinBox):
 		self.setRange(minimum, maximum)
 		self.setSingleStep(step)
 		self.setDecimals(precision)
-		self.setValue(default)
 		self.valueChanged.connect(self.onValueChanged)
+		globalObject.init.connect(self.onInit)
 
-	def adjust(self):
+	def onInit(self):
 		if self._settingsKey is not None:
 			self.setValue(  settingsValue(self._settingsKey, self._default).toDouble()[0] )
+		else:
+			self.setValue(self._default)
 
 	def onValueChanged(self):
 		if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.value())
@@ -433,12 +441,14 @@ class SpinBox(QtGui.QSpinBox):
 		self._settingsKey = settingsKey
 		self._default = default
 		self.setRange(minimum, maximum)
-		self.setValue(default)
 		self.valueChanged.connect(self.onValueChanged)
+		globalObject.init.connect(self.onInit)
 
-	def adjust(self):
+	def onInit(self):
 		if self._settingsKey is not None:
 			self.setValue(  settingsValue(self._settingsKey, self._default).toInt()[0] )
+		else:
+			self.setValue(self._default)
 
 	def onValueChanged(self):
 		if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.value())
@@ -448,12 +458,14 @@ class CheckBox(QtGui.QCheckBox):
 		QtGui.QCheckBox.__init__(self, text, parent)
 		self._settingsKey = settingsKey
 		self._default = default
-		self.setCheckState(  QtCore.Qt.Checked if default else QtCore.Qt.Unchecked )
 		self.stateChanged.connect(self.onStateChanged)
+		globalObject.init.connect(self.onInit)
 
-	def adjust(self):
+	def onInit(self):
 		if self._settingsKey is not None:
 			self.setCheckState(  QtCore.Qt.Checked if settingsValue(self._settingsKey, self._default).toBool() else QtCore.Qt.Unchecked )
+		else:
+			self.setCheckState(  QtCore.Qt.Checked if self._default else QtCore.Qt.Unchecked )
 
 	def onStateChanged(self):
 		if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.checkState() == QtCore.Qt.Checked)
@@ -466,20 +478,20 @@ class ComboBox(QtGui.QComboBox):
 		self._default = default
 		self.failsave = failsave
 		self.choices = choices
-		if default in self.choices:
-			self.setCurrentIndex(choices.index(default))
-		else:
-			pass
 		self.currentIndexChanged.connect(self.onCurrentIndexChanged)
+		globalObject.init.connect(self.onInit)
 
-	def adjust(self):
+	def onInit(self):
 		if self._settingsKey is not None:
 			value = settingsValue(self._settingsKey, self._default).toString()
-			if self.failsave:
-				if value in self.choices:
-					self.setCurrentIndex(self.choices.index(value))
-			else:
-				self.setCurrentIndex(self.choices.index(value))
+		else:
+			value = self._default
+		if value in self.choices:
+			self.setCurrentIndex(self.choices.index(value))
+		elif self.failsave:
+				pass
+		else:
+			self.setCurrentIndex(self.choices.index(value))
 
 	def onCurrentIndexChanged(self, index):
 		if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.itemText(index))
