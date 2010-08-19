@@ -709,14 +709,15 @@ def windowSetClientSize(hwnd, size, sendSizeMove=False):
 
 # ################################################
 # alternative: use GetModuleFileNameEx to query executable filepath
-# don't like it too much though. we would rely on this entirely. any file name
-# chenge breaks us
+# don't like it too much though. we would rely on this entirely. for example any file name
+# change breaks us
 #
 #MAX_PATH = 260
 #psapi = windll.psapi
 #PROCESS_VM_READ = 16
 #PROCESS_QUERY_INFORMATION = 1024
 #GetModuleFileNameEx = None
+## looks like GetModuleFileNameEx is a mooving target ..try to catch it
 #try:
 #	GetModuleFileNameEx = kernel32.GetModuleFileNameExW
 #except AttributeError:
