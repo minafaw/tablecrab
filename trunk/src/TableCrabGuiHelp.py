@@ -172,7 +172,6 @@ class NetworkAccessManager(QtNetwork.QNetworkAccessManager):
 #**********************************************************************************************
 #
 #**********************************************************************************************
-
 class FrameHelp(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -208,12 +207,21 @@ class FrameHelp(QtGui.QFrame):
 		self.tree.itemActivated.connect(self.onItemSelectionChanged)
 
 		self.layout()
+		self.toolBar.onInit()
 
-
+	#--------------------------------------------------------------------------------------------------------------
+	# methods
+	#--------------------------------------------------------------------------------------------------------------
 	def layout(self):
 		box = TableCrabConfig.GridBox(self)
 		box.addWidget(self.toolBar, 0, 0)
 		box.addWidget(self.splitter, 1, 0)
+
+	#--------------------------------------------------------------------------------------------------------------
+	# event handlers
+	#--------------------------------------------------------------------------------------------------------------
+	def onCloseEvent(self, event):
+		TableCrabConfig.settingsSetValue('Gui/Help/SplitterState', self.splitter.saveState() )
 
 	def onInit(self):
 		self.webView.setUrl(QtCore.QUrl(''))
@@ -264,12 +272,12 @@ class FrameHelp(QtGui.QFrame):
 				self.tree.setCurrentItem(item)
 		#TODO: ??? on topic not found
 
-	def onCloseEvent(self, event):
-		TableCrabConfig.settingsSetValue('Gui/Help/SplitterState', self.splitter.saveState() )
-
 	def onSettingAlternatingRowColorsChanged(self, flag):
 		self.tree.setAlternatingRowColors(flag)
 
+#**********************************************************************************************
+#
+#**********************************************************************************************
 class _DialogHelp(QtGui.QDialog):
 	def __init__(self, topic, parent=None):
 		QtGui.QDialog.__init__(self, parent)
@@ -286,21 +294,29 @@ class _DialogHelp(QtGui.QDialog):
 		self.frameHelp.splitter.restoreState( TableCrabConfig.settingsValue('Gui/DialogHelp/SplitterState', QtCore.QByteArray()).toByteArray() )
 		self.frameHelp.onInit()
 
+	#--------------------------------------------------------------------------------------------------------------
+	# overwritten methods
+	#--------------------------------------------------------------------------------------------------------------
+	def hideEvent(self, event):
+		TableCrabConfig.settingsSetValue('Gui/DialogHelp/Geometry', self.saveGeometry() )
+		TableCrabConfig.settingsSetValue('Gui/Help/SplitterState', self.frameHelp.splitter.saveState() )
+		QtGui.QDialog.hideEvent(self, event)
+
+	#--------------------------------------------------------------------------------------------------------------
+	# methods
+	#--------------------------------------------------------------------------------------------------------------
 	def layout(self):
 		box = TableCrabConfig.GridBox(self)
 		box.addWidget(self.frameHelp, 0, 0)
 		box.addWidget(TableCrabConfig.HLine(self), 1, 0)
 		box.addWidget(self.buttonBox, 2, 0)
 
-	def hideEvent(self, event):
-		TableCrabConfig.settingsSetValue('Gui/DialogHelp/Geometry', self.saveGeometry() )
-		TableCrabConfig.settingsSetValue('Gui/Help/SplitterState', self.frameHelp.splitter.saveState() )
-		QtGui.QDialog.hideEvent(self, event)
-
+#**********************************************************************************************
+#
+#**********************************************************************************************
 def dialogHelp(topic, parent=None):
 	dlg = _DialogHelp(topic, parent=parent)
 	dlg.show()
-
 
 
 
