@@ -512,7 +512,7 @@ def windowGetText(hwnd, maxSize=-1):
 		if maxSize > 0 and nChars > maxSize:
 			return ''
 		p = create_unicode_buffer(nChars +1)
-		sendMessageTimeout(hwnd, WM_GETTEXT,	sizeof(p),	p)
+		sendMessageTimeout(hwnd, WM_GETTEXT, sizeof(p), p)
 		return p.value
 	return ''
 
