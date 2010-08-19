@@ -129,7 +129,6 @@ class FrameHand(QtGui.QFrame):
 
 	def onInit(self):
 		self.webView.setUrl(QtCore.QUrl(''))
-		self.toolBar.adjust()
 
 	def onPShandGrabberHandGrabbed(self, data):
 		self._hasHand = bool(data)
