@@ -11,7 +11,6 @@ from PyQt4 import QtCore, QtGui
 #**********************************************************************************************
 #
 #**********************************************************************************************
-
 class HotkeyWidget(QtGui.QTreeWidget):
 
 	class ActionNewHotkey(QtGui.QAction):
@@ -93,13 +92,9 @@ class HotkeyWidget(QtGui.QTreeWidget):
 
 		self.adjustActions()
 
-	def __iter__(self):
-		for i in xrange(len(self) ):
-			yield self.topLevelItem(i)
-
-	def __len__(self):
-		return self.topLevelItemCount()
-
+	#----------------------------------------------------------------------------------------------------------------
+	# overwritten methods
+	#---------------------------------------------------------------------------------------------------------------
 	def keyPressEvent(self, event):
 		#TODO: for some reason the first enter when the widget is created is not accepted
 		if event.key() == QtCore.Qt.Key_Return and not event.modifiers():
@@ -109,6 +104,16 @@ class HotkeyWidget(QtGui.QTreeWidget):
 				self.editHotkey()
 			return
 		return QtGui.QTreeWidget.keyPressEvent(self, event)
+
+	#----------------------------------------------------------------------------------------------------------------
+	# methods
+	#---------------------------------------------------------------------------------------------------------------
+	def __iter__(self):
+		for i in xrange(len(self) ):
+			yield self.topLevelItem(i)
+
+	def __len__(self):
+		return self.topLevelItemCount()
 
 	def actions(self): return self._actions
 
@@ -200,6 +205,9 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self.takeTopLevelItem(self.indexOfTopLevelItem(hotkey) )
 		self.dump()
 
+	#--------------------------------------------------------------------------------------------------------------
+	# event handlers
+	#--------------------------------------------------------------------------------------------------------------
 	def onHotkeyDoubleClicked(self, hotkey):
 		self.editHotkey()
 
@@ -225,6 +233,9 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self.setAlternatingRowColors(flag)
 
 
+#**********************************************************************************************
+#
+#**********************************************************************************************
 class FrameHotkeys(QtGui.QFrame):
 
 	def __init__(self, parent=None):
@@ -243,11 +254,17 @@ class FrameHotkeys(QtGui.QFrame):
 		self.toolBar.addAction(self.actionHelp)
 		self.layout()
 
+	#----------------------------------------------------------------------------------------------------------------
+	# methods
+	#---------------------------------------------------------------------------------------------------------------
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
 		grid.addWidget(self.toolBar, 0, 0)
 		grid.addWidget(self.HotkeyWidget, 1, 0)
 
+	#--------------------------------------------------------------------------------------------------------------
+	# event handlers
+	#--------------------------------------------------------------------------------------------------------------
 	def onActionHelpTriggered(self):
 		TableCrabGuiHelp.dialogHelp('hotkeys', parent=self)
 
