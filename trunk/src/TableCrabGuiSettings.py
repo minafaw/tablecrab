@@ -72,33 +72,34 @@ class FrameSettingsGlobal(QtGui.QFrame):
 
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
+		grid.addWidget(TableCrabConfig.HLine(self), 0, 0, 1, 3)
 
-		grid.addWidget(self.labelBackup, 0, 0)
-		grid.addWidget(self.buttonBackup, 0, 1)
-		grid.addLayout(TableCrabConfig.HStretch(), 0, 2)
-
-		grid.addWidget(self.labelGuiStyle, 1, 0)
-		grid.addWidget(self.comboGuiStyle, 1, 1)
+		grid.addWidget(self.labelBackup, 1, 0)
+		grid.addWidget(self.buttonBackup, 1, 1)
 		grid.addLayout(TableCrabConfig.HStretch(), 1, 2)
 
-		grid.addWidget(self.labelFont, 2, 0)
-		grid.addWidget(self.buttonFont, 2, 1)
+		grid.addWidget(self.labelGuiStyle, 2, 0)
+		grid.addWidget(self.comboGuiStyle, 2, 1)
 		grid.addLayout(TableCrabConfig.HStretch(), 2, 2)
 
-		grid.addWidget(self.labelFixedFont, 3, 0)
-		grid.addWidget(self.buttonFixedFont, 3, 1)
+		grid.addWidget(self.labelFont, 3, 0)
+		grid.addWidget(self.buttonFont, 3, 1)
 		grid.addLayout(TableCrabConfig.HStretch(), 3, 2)
 
-		grid.addWidget(self.labelZoomSteps, 4, 0)
-		grid.addWidget(self.spinZoomSteps, 4, 1)
+		grid.addWidget(self.labelFixedFont, 4, 0)
+		grid.addWidget(self.buttonFixedFont, 4, 1)
 		grid.addLayout(TableCrabConfig.HStretch(), 4, 2)
 
-		grid.addWidget(self.checkAlternatingRowColors, 5, 0)
-		grid.addWidget(self.checkChildItemIndicators, 6, 0)
-		grid.addWidget(self.checkRestoreMousePosition, 7, 0)
+		grid.addWidget(self.labelZoomSteps, 5, 0)
+		grid.addWidget(self.spinZoomSteps, 5, 1)
+		grid.addLayout(TableCrabConfig.HStretch(), 5, 2)
 
-		grid.addLayout(TableCrabConfig.VStretch(), 8, 0)
-		grid.addWidget(TableCrabConfig.HLine(self), 9, 0, 1, 3)
+		grid.addWidget(self.checkAlternatingRowColors, 6, 0)
+		grid.addWidget(self.checkChildItemIndicators, 7, 0)
+		grid.addWidget(self.checkRestoreMousePosition, 8, 0)
+
+		grid.addLayout(TableCrabConfig.VStretch(), 9, 0)
+		grid.addWidget(TableCrabConfig.HLine(self), 10, 0, 1, 3)
 
 		grid2 = TableCrabConfig.GridBox()
 		grid.addLayout(grid2, 10, 0, 1, 3)
@@ -243,14 +244,16 @@ class FrameSettingsPokerStars(QtGui.QFrame):
 		self.layout()
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
-		grid.addWidget(self.checkAutoClosePopupNews, 0, 0)
-		grid.addWidget(self.checkAutoCloseTourneyRegistrationBoxes, 1, 0)
-		grid.addWidget(self.checkAutoCloseTableMessageBoxes, 2, 0)
-		grid.addWidget(self.checkAutoLogIn, 3, 0)
-		grid.addWidget(self.checkMoveMouseToActiveTable, 4, 0)
+		grid.addWidget(TableCrabConfig.HLine(self), 0, 0, 1, 3)
 
-		grid.addLayout(TableCrabConfig.VStretch(), 5, 0)
-		grid.addWidget(TableCrabConfig.HLine(self), 6, 0)
+		grid.addWidget(self.checkAutoClosePopupNews, 1, 0)
+		grid.addWidget(self.checkAutoCloseTourneyRegistrationBoxes, 2, 0)
+		grid.addWidget(self.checkAutoCloseTableMessageBoxes, 3, 0)
+		grid.addWidget(self.checkAutoLogIn, 4, 0)
+		grid.addWidget(self.checkMoveMouseToActiveTable, 5, 0)
+
+		grid.addLayout(TableCrabConfig.VStretch(), 6, 0)
+		grid.addWidget(TableCrabConfig.HLine(self), 7, 0)
 
 		grid2 = TableCrabConfig.GridBox()
 		grid.addLayout(grid2, 7, 0)
@@ -264,9 +267,9 @@ class FrameSettingsHand(QtGui.QFrame):
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
-		self.labelPrefix = QtGui.QLabel('Prefix', self)
-		self.labelAction = QtGui.QLabel('Action', self)
-		self.labelPostfix = QtGui.QLabel('Postfix', self)
+		self.labelPrefix = QtGui.QLabel('<i>Prefix</i>', self)
+		self.labelAction = QtGui.QLabel('<i>Action</i>', self)
+		self.labelPostfix = QtGui.QLabel('<i>Postfix</i>', self)
 
 		actionSettings = (
 			('PrefixBet', '&Bet', 'PostfixBet'),
@@ -286,7 +289,7 @@ class FrameSettingsHand(QtGui.QFrame):
 					maxLength=TableCrabConfig.MaxHandGrabberPrefix,
 					parent=self,
 					)
-			labelAction = QtGui.QLabel(actionName, self)
+			labelAction = QtGui.QLabel('<i>' + actionName + '</i>', self)
 			labelAction.setBuddy(editPrefix)
 			if actionPostfix is not None:
 				editPostfix = TableCrabConfig.LineEdit(
@@ -330,24 +333,28 @@ class FrameSettingsHand(QtGui.QFrame):
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
 
-		grid.addWidget(self.labelPrefix, 0, 0)
-		grid.addWidget(self.labelAction, 0, 1)
-		grid.addWidget(self.labelPostfix, 0, 2)
+		grid.addWidget(TableCrabConfig.HLine(self),0, 0, 1, 3)
+
+		grid.addWidget(self.labelMaxPlayerName, 1, 0)
+		grid.addWidget(self.spinMaxPlayerName, 1, 1)
+		grid.addWidget(self.checkNoFloatingPoint, 2, 0, 1, 3)
+
+		grid.addWidget(TableCrabConfig.HLine(self), 3, 0, 1, 3)
+
+		grid.addWidget(self.labelPrefix, 4, 0)
+		grid.addWidget(self.labelAction, 4, 1)
+		grid.addWidget(self.labelPostfix, 4, 2)
 		for i, (editPrefix, labelAction, editPostfix, _, _) in enumerate(self.actionWidgets):
-			grid.addWidget(editPrefix, i+1, 0)
-			grid.addWidget(labelAction, i+1, 1)
+			grid.addWidget(editPrefix, i+5, 0)
+			grid.addWidget(labelAction, i+5, 1)
 			if editPostfix is not None:
-				grid.addWidget(editPostfix, i+1, 2)
+				grid.addWidget(editPostfix, i+5, 2)
 
-		grid.addWidget(self.labelMaxPlayerName, i+2, 0)
-		grid.addWidget(self.spinMaxPlayerName, i+2, 1)
-		grid.addWidget(self.checkNoFloatingPoint, i+3, 0, 1, 3)
+		grid.addLayout(TableCrabConfig.VStretch(), i+6, 0)
 
-		grid.addLayout(TableCrabConfig.VStretch(), i+4, 0)
-
-		grid.addWidget(TableCrabConfig.HLine(self), i+5, 0, 1, 3)
+		grid.addWidget(TableCrabConfig.HLine(self), i+7, 0, 1, 3)
 		grid2 = TableCrabConfig.GridBox()
-		grid.addLayout(grid2, i+7, 0, 1, 3)
+		grid.addLayout(grid2, i+8, 0, 1, 3)
 		grid2.addWidget(self.buttonBox, 0, 0)
 
 	def onButtonRestoreDefaultClicked(self):
@@ -401,10 +408,12 @@ class FrameSettingsHandSyleSheet(QtGui.QFrame):
 
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
-		grid.addWidget(self.edit, 0, 0)
-		grid.addWidget(TableCrabConfig.HLine(self), 1, 0)
+		grid.addWidget(TableCrabConfig.HLine(self), 0, 0)
+
+		grid.addWidget(self.edit, 1, 0)
+		grid.addWidget(TableCrabConfig.HLine(self), 2, 0)
 		grid2 = TableCrabConfig.GridBox()
-		grid.addLayout(grid2, 2, 0)
+		grid.addLayout(grid2, 3, 0)
 		grid2.addWidget(self.buttonBox, 0, 0)
 
 	def onButtonOpenClicked(self, checked):
@@ -463,32 +472,17 @@ class FrameSettingsHandSyleSheet(QtGui.QFrame):
 
 class FrameSettings(QtGui.QFrame):
 
-	class ListWidget(QtGui.QListWidget):
-		def __init__(self, parent=None):
-			QtGui.QListWidget.__init__(self, parent)
-		def keyReleaseEvent(self, event):
-			if event.key() == QtCore.Qt.Key_Return and not event.modifiers():
-				event.accept()
-				item = self.currentItem()
-				if item is not None:
-					self.itemPressed.emit(item)
-				return
-			return QtGui.QListWidget.keyReleaseEvent(self, event)
-
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
-		self.listWidget = self.ListWidget(self)
-		self.listWidget.itemPressed.connect(self.onSettingSelected)
+		self.listWidget = QtGui.QListWidget(self)
+		self.listWidget.itemSelectionChanged.connect(self.onSettingSelected)
 
 		self.stack = QtGui.QStackedWidget(self)
 
 		self.splitter = QtGui.QSplitter(self)
 		self.splitter.addWidget(self.listWidget)
 		self.splitter.addWidget(self.stack)
-
-		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
-		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(self.onSettingAlternatingRowColorsChanged)
 
 		self.actions = []
 
@@ -499,6 +493,9 @@ class FrameSettings(QtGui.QFrame):
 		self.settingsHandStyleSheet = self.addSetting('Hand Style Sheet', FrameSettingsHandSyleSheet(parent=self.stack), 'Shift+S', 'Hand Style Sheet (Shift+S)')
 
 		TableCrabConfig.globalObject.init.connect(self.onInit)
+		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
+		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(self.onSettingAlternatingRowColorsChanged)
+
 		self.layout()
 
 	def layout(self):
@@ -523,11 +520,13 @@ class FrameSettings(QtGui.QFrame):
 	def onShortcut(self):
 		item = self.sender().userData
 		self.listWidget.setCurrentItem(item)
-		self.onSettingSelected(item)
+		self.onSettingSelected()
 
-	def onSettingSelected(self, item):
-		settings = self.stack.currentWidget()
-		self.stack.setCurrentIndex(self.listWidget.row(item))
+	def onSettingSelected(self):
+		row = self.listWidget.currentRow()
+		if row < 0:
+			row = 0
+		self.stack.setCurrentIndex(row)
 
 	def onCloseEvent(self, event):
 		TableCrabConfig.settingsSetValue('Gui/Settings/SplitterState', self.splitter.saveState())
@@ -537,7 +536,6 @@ class FrameSettings(QtGui.QFrame):
 		self.listWidget.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
 		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Settings/SplitterState', QtCore.QByteArray()).toByteArray() )
 		self.listWidget.setCurrentRow( TableCrabConfig.settingsValue('Gui/Settings/CurrentIndex', 0).toInt()[0] )
-		self.onSettingSelected(self.listWidget.currentItem())
 
 	def onSettingAlternatingRowColorsChanged(self, flag):
 		self.listWidget.setAlternatingRowColors(flag)
