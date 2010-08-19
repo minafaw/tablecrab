@@ -102,7 +102,7 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		grid.addWidget(TableCrabConfig.HLine(self), 10, 0, 1, 3)
 
 		grid2 = TableCrabConfig.GridBox()
-		grid.addLayout(grid2, 10, 0, 1, 3)
+		grid.addLayout(grid2, 11, 0, 1, 3)
 		grid2.addWidget(self.buttonBox, 0, 0)
 
 	def setFont(self):
@@ -253,10 +253,10 @@ class FrameSettingsPokerStars(QtGui.QFrame):
 		grid.addWidget(self.checkMoveMouseToActiveTable, 5, 0)
 
 		grid.addLayout(TableCrabConfig.VStretch(), 6, 0)
-		grid.addWidget(TableCrabConfig.HLine(self), 7, 0)
+		grid.addWidget(TableCrabConfig.HLine(self), 7, 0, 1, 3)
 
 		grid2 = TableCrabConfig.GridBox()
-		grid.addLayout(grid2, 7, 0)
+		grid.addLayout(grid2, 8, 0, 1, 3)
 		grid2.addWidget(self.buttonBox, 0, 0)
 
 	def onButtonHelpClicked(self, checked):
