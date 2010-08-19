@@ -29,7 +29,7 @@ class FrameHand(QtGui.QFrame):
 
 		self.toolBar = TableCrabConfig.WebViewToolBar(self.webView,
 				settingsKeyZoomFactor='Gui/Hand/ZoomFactor',
-				settingsKeyZoomIncrement='Gui/WebView/ZoomIncrement',
+				settingsKeyZoomSteps='Gui/WebView/ZoomSteps',
 				)
 
 		self.actionOpen = TableCrabConfig.Action(

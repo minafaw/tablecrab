@@ -187,7 +187,7 @@ class FrameHelp(QtGui.QFrame):
 
 		self.toolBar = TableCrabConfig.WebViewToolBar(self.webView,
 				settingsKeyZoomFactor='Gui/Help/ZoomFactor',
-				settingsKeyZoomIncrement='Gui/WebView/ZoomIncrement',
+				settingsKeyZoomSteps='Gui/WebView/ZoomSteps',
 				)
 
 		self.tree = QtGui.QTreeWidget(self)
