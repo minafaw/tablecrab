@@ -144,6 +144,9 @@ class SingleApplication(object):
 #***********************************************************************************
 # global QSettings
 #***********************************************************************************
+#TODO: what to do with deprecated settings keys?
+#'Gui/WebView/ZoomIncrement'
+
 def settingsKeyJoin(*keys):
 	keys = [(str(key) if isinstance(key, QtCore.QString) else key) for key in keys]
 	return QtCore.QString( posixpath.join(*keys) )
@@ -290,14 +293,15 @@ class Action(QtGui.QAction):
 				self.setShortcut(QtGui.QKeySequence(shortcut) )
 
 class WebViewToolBar(QtGui.QToolBar):
-	ZoomIncrement = 0.1
-	MaxZoom = 7
-	MinZoom = 0.5
-	def __init__(self, webView, settingsKeyZoomFactor=None, settingsKeyZoomIncrement=None):
+	ZoomSteps = 10
+	ZoomStepsMax = 40
+	ZoomMin = 0.5
+	ZoomMax = 7
+	def __init__(self, webView, settingsKeyZoomFactor=None, settingsKeyZoomSteps=None):
 		QtGui.QToolBar.__init__(self, webView)
 		self.webView = webView
 		self.settingsKeyZoomFactor = settingsKeyZoomFactor
-		self.settingsKeyZoomIncrement = settingsKeyZoomIncrement
+		self.settingsKeyZoomSteps = settingsKeyZoomSteps
 
 		globalObject.init.connect(self.onInit)
 
@@ -316,7 +320,7 @@ class WebViewToolBar(QtGui.QToolBar):
 				icon=QtGui.QIcon(Pixmaps.magnifierPlus() ),
 				autoRepeat=True,
 				shortcut=QtGui.QKeySequence.ZoomIn,
-				slot=self.onActionZoomInTriggered,
+				slot=self.zoomIn,
 				)
 		self.addAction(self.actionZoomIn)
 
@@ -326,41 +330,50 @@ class WebViewToolBar(QtGui.QToolBar):
 				icon=QtGui.QIcon(Pixmaps.magnifierMinus() ),
 				autoRepeat=True,
 				shortcut=QtGui.QKeySequence.ZoomOut,
-				slot=self.onActionZoomOutTriggered,
+				slot=self.zoomOut,
 				)
 		self.addAction(self.actionZoomOut)
 
 	def onInit(self):
 		if self.settingsKeyZoomFactor is not None:
-			self.webView.setZoomFactor( settingsValue(self.settingsKeyZoomFactor, self.webView.zoomFactor() ).toDouble()[0] )
+			factor = settingsValue(self.settingsKeyZoomFactor, 1).toDouble()[0]
+			self.webView.setZoomFactor(factor)
 		self.adjustActions()
 
-	def _zoomIncrement(self):
-		if self.settingsKeyZoomIncrement is not None:
-			return settingsValue(self.settingsKeyZoomIncrement, self.ZoomIncrement).toDouble()[0]
-		return self.ZoomIncrement
+	def _zoomSteps(self):
+		if self.settingsKeyZoomSteps is not None:
+			steps = settingsValue(self.settingsKeyZoomSteps, self.ZoomSteps).toInt()[0]
+			if steps > self.ZoomStepsMax:
+				steps = self.ZoomSteps
+			elif steps < 1:
+				stape = 1
+		else:
+			steps = self.ZoomSteps
+		return steps
+
+	def _nextZoom(self, zoomIn=True):
+		factor = self.webView.zoomFactor()
+		steps = self._zoomSteps()
+		if zoomIn:
+			factor += self.ZoomMax / float(steps)
+			factor = min(factor, self.ZoomMax)
+		else:
+			factor -= self.ZoomMax / float(steps)
+			factor = max(factor, self.ZoomMin)
+		self.webView.setZoomFactor(factor)
+		if self.settingsKeyZoomFactor is not None:
+			settingsSetValue(self.settingsKeyZoomFactor, factor)
+		self.adjustActions()
+
+	def zoomIn(self):
+		self._nextZoom(zoomIn=True)
+
+	def zoomOut(self):
+		self._nextZoom(zoomIn=False)
 
 	def adjustActions(self):
-		self.actionZoomIn.setEnabled(self.webView.zoomFactor() + self._zoomIncrement() < self.MaxZoom)
-		self.actionZoomOut.setEnabled(self.webView.zoomFactor() -  + self._zoomIncrement() > self.MinZoom)
-
-	def onActionZoomInTriggered(self):
-		zoomIncrement = self._zoomIncrement()
-		zoom = self.webView.zoomFactor() + zoomIncrement
-		if zoom <= self.MaxZoom:
-			self.webView.setZoomFactor(zoom)
-			if self.settingsKeyZoomFactor is not None:
-				settingsSetValue(self.settingsKeyZoomFactor, self.webView.zoomFactor())
-		self.adjustActions()
-
-	def onActionZoomOutTriggered(self):
-		zoomIncrement = self._zoomIncrement()
-		zoom = self.webView.zoomFactor() - zoomIncrement
-		if zoom >= self.MinZoom:
-			self.webView.setZoomFactor(zoom)
-			if self.settingsKeyZoomFactor is not None:
-				settingsSetValue(self.settingsKeyZoomFactor, self.webView.zoomFactor())
-		self.adjustActions()
+		self.actionZoomIn.setEnabled(self.webView.zoomFactor() < self.ZoomMax)
+		self.actionZoomOut.setEnabled( self.webView.zoomFactor() > self.ZoomMin)
 
 
 class LineEdit(QtGui.QLineEdit):

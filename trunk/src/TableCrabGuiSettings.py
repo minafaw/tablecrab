@@ -45,17 +45,15 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		self.labelFixedFont = QtGui.QLabel('Fi&xed Font:', self)
 		self.labelFixedFont.setBuddy(self.buttonFixedFont)
 
-		self.spinZoomIncrement = TableCrabConfig.DoubleSpinBox(
-				settingsKey='Gui/WebView/ZoomIncrement',
-				default=0.1,
-				minimum=0.1,
-				maximum=2.99,
-				precision=1,
-				step=0.1,
-				parent=self
-				)
-		self.labelZoomIncrement = QtGui.QLabel('&Zoom Increment:', self)
-		self.labelZoomIncrement.setBuddy(self.spinZoomIncrement)
+		self.spinZoomSteps = TableCrabConfig.SpinBox(
+			settingsKey='Gui/WebView/ZoomSteps',
+			default=TableCrabConfig.WebViewToolBar.ZoomSteps,
+			minimum=1,
+			maximum=TableCrabConfig. WebViewToolBar.ZoomStepsMax,
+			parent=self,
+			)
+		self.labelZoomSteps = QtGui.QLabel('&Zoom Steps (%s max):' % TableCrabConfig.WebViewToolBar.ZoomStepsMax, self)
+		self.labelZoomSteps.setBuddy(self.spinZoomSteps)
 
 		self.checkAlternatingRowColors = TableCrabConfig.CheckBox('Alternating &Row Colors', default=False, settingsKey='Gui/AlternatingRowColors', parent=self)
 		self.checkAlternatingRowColors.stateChanged.connect(self.onAlternatingRowColorsChanged)
@@ -91,8 +89,8 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		grid.addWidget(self.buttonFixedFont, 3, 1)
 		grid.addLayout(TableCrabConfig.HStretch(), 3, 2)
 
-		grid.addWidget(self.labelZoomIncrement, 4, 0)
-		grid.addWidget(self.spinZoomIncrement, 4, 1)
+		grid.addWidget(self.labelZoomSteps, 4, 0)
+		grid.addWidget(self.spinZoomSteps, 4, 1)
 		grid.addLayout(TableCrabConfig.HStretch(), 4, 2)
 
 		grid.addWidget(self.checkAlternatingRowColors, 5, 0)
