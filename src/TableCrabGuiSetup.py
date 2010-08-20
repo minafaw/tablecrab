@@ -575,7 +575,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 	# event handlers
 	#--------------------------------------------------------------------------------------------------------------
 	def onActionOpenTriggered(self):
-		imageFormats = [QtCore.QString(i).toLower() for i in  QtGui.QImageReader.supportedImageFormats()]
+		imageFormats = TableCrabConfig.readWriteImageFormats()
 		fileName = TableCrabConfig.dlgOpenSaveFile(
 				parent=self,
 				openFile=True,
@@ -607,7 +607,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		if self.label.pixmap() is None:
 			self.actionSave.setEnabled(False)
 			return
-		imageFormats = [QtCore.QString(i).toLower() for i in  QtGui.QImageWriter.supportedImageFormats()]
+		imageFormats = imageFormats = TableCrabConfig.readWriteImageFormats()
 		fileName = TableCrabConfig.dlgOpenSaveFile(
 				parent=self,
 				openFile=False,
