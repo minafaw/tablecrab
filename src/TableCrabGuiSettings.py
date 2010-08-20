@@ -62,9 +62,16 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		self.checkRestoreMousePosition = TableCrabConfig.CheckBox('Restore Mouse &Position', default=False, settingsKey='RestoreMousePosition', parent=self)
 
 		self.buttonHelp = QtGui.QPushButton('Help', self)
-		self.buttonHelp.clicked.connect(self.onButtonHelpClicked)
+		self.buttonHelp.setToolTip('Help (F1)')
+		self.buttonHelp.clicked.connect(self.onHelp)
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
+		action = TableCrabConfig.Action(
+				parent=self,
+				shortcut='F1',
+				slot=self.onHelp,
+				)
+		self.addAction(action)
 
 		TableCrabConfig.globalObject.init.connect(self.onInit)
 
@@ -174,7 +181,7 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		for key in settings.allKeys():
 			newSettings.setValue(key, settings.value(key) )
 
-	def onButtonHelpClicked(self, checked):
+	def onHelp(self, *args):
 		TableCrabGuiHelp.dialogHelp('settingsGlobal', parent=self)
 
 	def onButtonFontClicked(self, checked):
@@ -236,10 +243,19 @@ class FrameSettingsPokerStars(QtGui.QFrame):
 				default=False
 				)
 
-		self.buttonHelp = QtGui.QPushButton('Help', self)
-		self.buttonHelp.clicked.connect(self.onButtonHelpClicked)
 		self.buttonBox = QtGui.QDialogButtonBox(self)
+
+		self.buttonHelp = QtGui.QPushButton('Help', self)
+		self.buttonHelp.setToolTip('Help (F1)')
+		self.buttonHelp.clicked.connect(self.onHelp)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
+		action = TableCrabConfig.Action(
+				parent=self,
+				shortcut='F1',
+				slot=self.onHelp,
+				)
+		self.addAction(action)
+
 
 		self.layout()
 	def layout(self):
@@ -259,7 +275,7 @@ class FrameSettingsPokerStars(QtGui.QFrame):
 		grid.addLayout(grid2, 8, 0, 1, 3)
 		grid2.addWidget(self.buttonBox, 0, 0)
 
-	def onButtonHelpClicked(self, checked):
+	def onHelp(self, *args):
 		TableCrabGuiHelp.dialogHelp('settingsPokerStars', parent=self)
 
 
@@ -322,12 +338,26 @@ class FrameSettingsHand(QtGui.QFrame):
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 
 		self.buttonRestoreDefault = QtGui.QPushButton('Restore Default', self)
-		self.buttonRestoreDefault.clicked.connect(self.onButtonRestoreDefaultClicked)
+		self.buttonRestoreDefault.setToolTip('Restore Default (Ctrl+R)')
+		self.buttonRestoreDefault.clicked.connect(self.onRestoreDefault)
 		self.buttonBox.addButton(self.buttonRestoreDefault, self.buttonBox.ResetRole)
+		action = TableCrabConfig.Action(
+				parent=self,
+				shortcut='Ctrl+R',
+				slot=self.onRestoreDefault,
+				)
+		self.addAction(action)
 
 		self.buttonHelp = QtGui.QPushButton('Help', self)
-		self.buttonHelp.clicked.connect(self.onButtonHelpClicked)
+		self.buttonHelp.setToolTip('Help (F1)')
+		self.buttonHelp.clicked.connect(self.onHelp)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
+		action = TableCrabConfig.Action(
+				parent=self,
+				shortcut='F1',
+				slot=self.onHelp,
+				)
+		self.addAction(action)
 
 		self.layout()
 	def layout(self):
@@ -357,7 +387,7 @@ class FrameSettingsHand(QtGui.QFrame):
 		grid.addLayout(grid2, i+8, 0, 1, 3)
 		grid2.addWidget(self.buttonBox, 0, 0)
 
-	def onButtonRestoreDefaultClicked(self):
+	def onRestoreDefault(self, *args):
 		for editPrefix, _, editPostfix, actionPrefix, actionPostfix in self.actionWidgets:
 			default = getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, actionPrefix)
 			editPrefix.setText(default)
@@ -367,7 +397,7 @@ class FrameSettingsHand(QtGui.QFrame):
 				editPostfix.setText(default)
 				editPostfix.editingFinished.emit()
 
-	def onButtonHelpClicked(self, checked):
+	def onHelp(self, *args):
 		TableCrabGuiHelp.dialogHelp('settingsHand', parent=self)
 
 
@@ -385,24 +415,48 @@ class FrameSettingsHandSyleSheet(QtGui.QFrame):
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 
 		self.buttonRestoreDefault = QtGui.QPushButton('Restore Default', self)
-		self.buttonRestoreDefault.clicked.connect(self.onButtonRestoreDefaultClicked)
-		self.buttonRestoreDefault.setToolTip('Restores the default style sheet')
+		self.buttonRestoreDefault.setToolTip('Restore Default (Ctrl+R)')
+		self.buttonRestoreDefault.clicked.connect(self.onRestoreDefault)
 		self.buttonBox.addButton(self.buttonRestoreDefault, self.buttonBox.ResetRole)
+		action = TableCrabConfig.Action(
+				parent=self,
+				shortcut='Ctrl+R',
+				slot=self.onRestoreDefault,
+				)
+		self.addAction(action)
 
 		self.buttonOpen = QtGui.QPushButton('Open..', self)
-		self.buttonOpen.setToolTip('Loads a style sheet from disk')
-		self.buttonOpen.clicked.connect(self.onButtonOpenClicked)
+		self.buttonOpen.setToolTip('Open style sheet (Ctrl+O)')
+		self.buttonOpen.clicked.connect(self.onOpen)
 		self.buttonBox.addButton(self.buttonOpen, self.buttonBox.ActionRole)
+		action = TableCrabConfig.Action(
+				parent=self,
+				shortcut='Ctrl+O',
+				slot=self.onOpen,
+				)
+		self.addAction(action)
 
 		self.buttonSave = QtGui.QPushButton('Save..', self)
-		self.buttonSave.setToolTip('Saves the style sheet to disk')
-		self.buttonSave.clicked.connect(self.onButtonSaveClicked)
+		self.buttonSave.setToolTip('Save style sheet (Ctrl+S)')
+		self.buttonSave.clicked.connect(self.onSave)
 		self.buttonBox.addButton(self.buttonSave, self.buttonBox.ActionRole)
-
+		action = TableCrabConfig.Action(
+				parent=self,
+				shortcut='Ctrl+S',
+				slot=self.onSave,
+				)
+		self.addAction(action)
 
 		self.buttonHelp = QtGui.QPushButton('Help', self)
-		self.buttonHelp.clicked.connect(self.onButtonHelpClicked)
+		self.buttonHelp.setToolTip('Help (F1)')
+		self.buttonHelp.clicked.connect(self.onHelp)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
+		action = TableCrabConfig.Action(
+				parent=self,
+				shortcut='F1',
+				slot=self.onHelp,
+				)
+		self.addAction(action)
 
 		self.layout()
 
@@ -416,7 +470,7 @@ class FrameSettingsHandSyleSheet(QtGui.QFrame):
 		grid.addLayout(grid2, 3, 0)
 		grid2.addWidget(self.buttonBox, 0, 0)
 
-	def onButtonOpenClicked(self, checked):
+	def onOpen(self, checked):
 		fileName = TableCrabConfig.dlgOpenSaveFile(
 				parent=self,
 				openFile=True,
@@ -435,7 +489,7 @@ class FrameSettingsHandSyleSheet(QtGui.QFrame):
 		finally:
 			if fp is not None: fp.close()
 
-	def onButtonSaveClicked(self, checked):
+	def onSave(self, checked):
 		fileName = TableCrabConfig.dlgOpenSaveFile(
 				parent=self,
 				openFile=False,
@@ -459,11 +513,11 @@ class FrameSettingsHandSyleSheet(QtGui.QFrame):
 		finally:
 			if fp is not None: fp.close()
 
-	def onButtonHelpClicked(self, checked):
+	def onHelp(self, *args):
 		TableCrabGuiHelp.dialogHelp('settingsHandStyleSheet', parent=self)
 
 	#TODO: resetting document jumps to top of widget. store/restore position would be nice
-	def onButtonRestoreDefaultClicked(self):
+	def onRestoreDefault(self):
 		self.edit.setPlainText(PokerStarsHandGrabber.HandFormatterHtmlTabular.StyleSheet)
 
 	def onMaxCharsExceeded(self, flag):
@@ -483,8 +537,6 @@ class FrameSettings(QtGui.QFrame):
 		self.splitter = QtGui.QSplitter(self)
 		self.splitter.addWidget(self.listWidget)
 		self.splitter.addWidget(self.stack)
-
-		self.actions = []
 
 		#
 		self.settingsGlobal = self.addSetting('Global', FrameSettingsGlobal(parent=self.stack), 'Shift+G', 'Global (Shift+G)')
@@ -510,14 +562,13 @@ class FrameSettings(QtGui.QFrame):
 		action = TableCrabConfig.Action(
 				parent=self,
 				shortcut=shortcut,
-				slot=self.onShortcut,
+				slot=self.onSettingsShortcut,
 				userData=item,
 				)
 		self.addAction(action)
-		self.actions.append(action)
 		return widget
 
-	def onShortcut(self):
+	def onSettingsShortcut(self):
 		item = self.sender().userData
 		self.listWidget.setCurrentItem(item)
 		self.onSettingSelected()
