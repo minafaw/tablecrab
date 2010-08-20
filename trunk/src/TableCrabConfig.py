@@ -754,9 +754,16 @@ def formatNum(num, precission=2):
 		tail = tail[1:]
 	return head + tail
 
-
-
-
+def readWriteImageFormats():
+	'''returns a list of image formats we can read AND write'''
+	fmts = []
+	write = [str(i) for i in QtGui.QImageWriter.supportedImageFormats()]
+	read = [str(i) for i in QtGui.QImageReader.supportedImageFormats()]
+	for fmt in write:
+		if fmt == 'ico': continue
+		if fmt in read:
+			fmts.append(fmt.lower())
+	return fmts
 
 
 
