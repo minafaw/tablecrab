@@ -1,4 +1,6 @@
 
+#TODO: use MapWindowPoints() instead of ClientToScreen() and ScreenToClient()
+
 import time
 from ctypes import *
 from ctypes.wintypes import *
@@ -555,7 +557,7 @@ def windowGetTopLevelParent(hwnd):
 	parent = hwnd
 	while parent:
 		tmp_parent = user32.GetParent(parent)
-		if not tmp_parent:	break
+		if not tmp_parent: break
 		parent = tmp_parent
 	return parent
 
