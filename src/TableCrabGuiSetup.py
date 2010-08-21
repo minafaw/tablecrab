@@ -28,20 +28,44 @@ class DialgScreenshotInfo(QtGui.QDialog):
 		self.edit = QtGui.QPlainTextEdit(self)
 		self.edit.setPlainText(info)
 		self.edit.setReadOnly(True)
-		self.buttonSave = QtGui.QPushButton('Save..', self)
-		self.buttonHelp = QtGui.QPushButton('Help', self)
-		self.buttonHelp.clicked.connect(self.onButtonHelpClicked)
-		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
-		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
-		self.buttonBox.addButton(self.buttonSave, self.buttonBox.ApplyRole )
-		self.buttonBox.accepted.connect(self.accept)
-		self.buttonSave.clicked.connect(self.onButtonSaveClicked)
 
-		#NOTE: we are modeless, so we add a refresh button
-		parent.widgetScreenshotInfo.connect(self.onWidgetScreenshotInfo)
 		self.buttonRefresh = QtGui.QPushButton('Refresh', self)
-		self.buttonRefresh.clicked.connect(self.onButtonRefreshClicked)
+		self.buttonRefresh.clicked.connect(self.onRefresh)
+		self.buttonRefresh.setToolTip('Save info (Ctrl+R)')
+		action = TableCrabConfig.Action(
+				parent=self,
+				shortcut='Ctrl+R',
+				slot=self.onRefresh,
+				)
+		self.addAction(action)
+
+		self.buttonSave = QtGui.QPushButton('Save..', self)
+		self.buttonSave.setToolTip('Save info (Ctrl+S)')
+		self.buttonSave.clicked.connect(self.onSave)
+		action = TableCrabConfig.Action(
+				parent=self,
+				shortcut='Ctrl+S',
+				slot=self.onSave,
+				)
+		self.addAction(action)
+
+		self.buttonHelp = QtGui.QPushButton('Help', self)
+		self.buttonHelp.setToolTip('Help (F1)')
+		self.buttonHelp.clicked.connect(self.onHelp)
+		action = TableCrabConfig.Action(
+				parent=self,
+				shortcut='F1',
+				slot=self.onHelp,
+				)
+		self.addAction(action)
+
+		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
 		self.buttonBox.addButton(self.buttonRefresh, self.buttonBox.ActionRole)
+		self.buttonBox.addButton(self.buttonSave, self.buttonBox.ApplyRole )
+		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
+		self.buttonBox.accepted.connect(self.accept)
+
+		parent.widgetScreenshotInfo.connect(self.onWidgetScreenshotInfo)
 
 		self.layout()
 		self.restoreGeometry( TableCrabConfig.settingsValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', QtCore.QByteArray()).toByteArray() )
@@ -65,13 +89,13 @@ class DialgScreenshotInfo(QtGui.QDialog):
 	#--------------------------------------------------------------------------------------------------------------
 	# event handlers
 	#--------------------------------------------------------------------------------------------------------------
-	def onButtonHelpClicked(self, checked):
+	def onHelp(self, *args):
 		TableCrabGuiHelp.dialogHelp('screenshotInfo', parent=self)
 
-	def onButtonRefreshClicked(self, checked):
+	def onRefresh(self, *args):
 		self.edit.setPlainText(self._lastScreenshotInfo)
 
-	def onButtonSaveClicked(self, checked):
+	def onSave(self, *args):
 		fileName = TableCrabConfig.dlgOpenSaveFile(
 				parent=self,
 				openFile=False,
