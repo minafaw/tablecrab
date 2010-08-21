@@ -3,8 +3,8 @@
 
 import TableCrabConfig
 import TableCrabWin32
-import TableCrabActionHandler
-import TableCrabPokerStars
+import TableCrabSiteTableCrab
+import TableCrabSitePokerStars
 
 from PyQt4 import QtCore
 import thread
@@ -25,10 +25,10 @@ class SiteManager(QtCore.QObject):
 		TableCrabConfig.keyboardHook.inputEvent.connect(self.onInputEvent)
 		TableCrabConfig.mouseHook.inputEvent.connect(self.onInputEvent)
 
-		self._tableCrabActionHandler = TableCrabActionHandler.ActionHandler(parent=self)
+		self._tableCrabActionHandler = TableCrabSiteTableCrab.EventHandler(parent=self)
 		self._handlers = (
 				self._tableCrabActionHandler,	# should always be first item
-				TableCrabPokerStars.ActionHandler(parent=self),
+				TableCrabSitePokerStars.EventHandler(parent=self),
 				)
 
 	def tableCrabActionHandler(self):
