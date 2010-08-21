@@ -197,13 +197,9 @@ class Gui(QtGui.QMainWindow):
 	def onTabCurrentChanged(self, index):
 		if index < 0:
 			return
-		# check if we got an error to display
-		if self._feedbackMessages[None]:
-			pass
-		else:
-			widget = self.tabWidget.widget(index)
-			data = self._feedbackMessages[widget]
-			self.labelFeedback.setText(data)
+		widget = self.tabWidget.widget(index)
+		data = self._feedbackMessages[widget]
+		self.labelFeedback.setText(data)
 
 #**********************************************************************************************
 #
