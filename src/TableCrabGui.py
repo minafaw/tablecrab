@@ -1,6 +1,4 @@
 
-#TODO: accelerators in DialogException
-
 import TableCrabConfig
 import TableCrabGuiSettings
 import TableCrabGuiSetup
@@ -39,9 +37,15 @@ class DialogException(QtGui.QDialog):
 		self.buttonBox.accepted.connect(self.accept)
 
 		self.buttonClearError = QtGui.QPushButton('Clear Error', self)
-		self.buttonClearError.setToolTip('Clear error message in main window')
-		self.buttonClearError.clicked.connect(self.onButtonClearErrorClicked)
+		self.buttonClearError.setToolTip('Clear error message in main window (Ctrl+L)')
+		self.buttonClearError.clicked.connect(self.onClearError)
 		self.buttonBox.addButton(self.buttonClearError, self.buttonBox.ActionRole)
+		action = TableCrabConfig.Action(
+				parent=self,
+				shortcut='Ctrl+L',
+				slot=self.onClearError,
+				)
+		self.addAction(action)
 
 		self.edit = QtGui.QPlainTextEdit(self)
 		self.edit.setPlainText(ErrText % (TableCrabConfig.ApplicationName, TableCrabConfig.ErrorLogName, info) )
@@ -51,7 +55,7 @@ class DialogException(QtGui.QDialog):
 		grid.addWidget(self.edit, 0, 0)
 		grid.addWidget(TableCrabConfig.HLine(self), 1, 0)
 		grid.addWidget(self.buttonBox, 2, 0)
-	def onButtonClearErrorClicked(self, checked):
+	def onClearError(self, *args):
 		TableCrabConfig.globalObject.clearException.emit()
 		self.buttonClearError.setEnabled(False)
 
