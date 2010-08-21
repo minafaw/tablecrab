@@ -39,7 +39,7 @@ class DialogException(QtGui.QDialog):
 		self.buttonBox.accepted.connect(self.accept)
 
 		self.buttonClearError = QtGui.QPushButton('Clear Error', self)
-		self.buttonClearError.setToolTip('Clears error as soon as dialog is closed')
+		self.buttonClearError.setToolTip('Clear error message in main window')
 		self.buttonClearError.clicked.connect(self.onButtonClearErrorClicked)
 		self.buttonBox.addButton(self.buttonClearError, self.buttonBox.ActionRole)
 
