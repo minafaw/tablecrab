@@ -545,11 +545,11 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			result = ''
 		elif hand.hasCents:
 			if self.settingsValue('NoFloatingPoint', QtCore.QVariant(False)).toBool():
-				result = TableCrabConfig.formatNum(num*100, precission=0)
+				result = TableCrabConfig.locale.toString( int(num*100) )
 			else:
-				result = TableCrabConfig.formatNum(num, precission=2)
+				result = TableCrabConfig.locale.toString(num, 'f', 2)
 		else:
-			result = TableCrabConfig.formatNum(num, precission=0)
+			result = TableCrabConfig.locale.toString( int(num))
 		return result
 
 	def htmlEscapeString(self, string, spaces=True):
