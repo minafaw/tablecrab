@@ -26,7 +26,7 @@ StatusBarMessageTimeout = 3
 MaxHandGrabberPrefix = 16	# + postfix
 MaxHandStyleSheet = 9000
 
-#TODO: implement these
+#TODO: implement consts
 # let QWebKit deal with it
 ##MaxHandHtml = 0
 # no idea about this one
@@ -182,7 +182,7 @@ class _GlobalObject(QtCore.QObject):
 	init = QtCore.pyqtSignal()
 	closeEvent = QtCore.pyqtSignal(QtCore.QEvent)
 
-	#TODO: overload to accept QObject aswell
+	#TODO: overload signal to accept QObject as well
 	feedback =  QtCore.pyqtSignal(QtGui.QWidget, QtCore.QString)
 	feedbackMessage =  QtCore.pyqtSignal(QtCore.QString)
 	feedbackException =  QtCore.pyqtSignal(QtCore.QString)
@@ -256,7 +256,7 @@ def readPersistentItems(settingsKey, maxItems=0, itemProtos=None):
 windowHook = TableCrabWin32.WindowHook(parent=None, timeout=WindowHookTimeout)
 mouseHook = TableCrabWin32.MouseHook(parent=None)
 keyboardHook = TableCrabWin32.KeyboardHook(parent=None)
-#TODO: ..both below only get set if and when the according widgets are created
+#TODO: how to make hotkeyManager and templateManager globally available?
 hotkeyManager = None
 templateManager = None
 
@@ -418,7 +418,7 @@ class PlainTextEdit(QtGui.QPlainTextEdit):
 		else:
 			self.setPlainText(self._default)
 
-	#TODO: cheap implementation of mxText. we have to find a better way to do so
+	#TODO: cheap implementation of maxText for QPalinTextEdit. have to find a better way to do so
 	def onValueChanged(self):
 		if self._maxChars >= 0:
 			if self.toPlainText().length() > self._maxChars:
@@ -558,7 +558,6 @@ class Timer(QtCore.QTimer):
 			self.timeout.connect(slot)
 		self.userData = userData
 
-#TODO: we have to ignore <TAB> cos it tabs away from the hotkey box
 class HotkeyBox(QtGui.QComboBox):
 	#NOTE: bit of a hack this combo
 	# x) pretty much disbled all standart keybindings for the combo. except ESCAPE and SPACE (ESCAPE
@@ -585,7 +584,7 @@ class HotkeyBox(QtGui.QComboBox):
 				self.setItemText(0, hotkey)
 		keyboardHook.inputEvent.connect(self.onInputEvent)
 
-	#TODO: works for now, but have to rework this. we open popup if the user clicks the combo twice
+	#TODO: open HotkeyBox popup when the user clicks the combo twice. good or not?
 	def focusInEvent(self, event):
 		self._counter = 1
 		return QtGui.QComboBox.focusInEvent(self, event)
