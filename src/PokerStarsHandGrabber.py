@@ -62,7 +62,7 @@ class Hand(QtCore.QObject):
 		self.blindAnte = 0.0
 		self.blindSmall = 0.0
 		self.blindBig = 0.0
-		self.hasCents = True		# flag indicating if cent bets is allowed or not
+		self.hasCents = True		# flag indicating if bet cents is discovered or not
 		self.seatNoButton = None
 		self.tableName = ''
 		self.actions = {

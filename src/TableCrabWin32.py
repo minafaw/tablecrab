@@ -1,5 +1,5 @@
 
-#TODO: use MapWindowPoints() instead of ClientToScreen() and ScreenToClient()
+#TODO: use MapWindowPoints() instead of ClientToScreen() and ScreenToClient(). rly?
 
 import time
 from ctypes import *
@@ -387,6 +387,8 @@ def sendMessageTimeout(hwnd, msg, wParam,lParam, isUnicode=True):
 #****************************************************************************************************
 # window methods
 #****************************************************************************************************
+
+#TODO: WindowForegroundHook() not used in TableCrab
 class WindowForegroundHook(QtCore.QObject):
 	Timeout = 0.2
 	def __init__(self, parent=None):
@@ -825,6 +827,7 @@ class INPUT(Structure):
 		]
 	_anonymous_ = ("u",)
 
+#TODO: KeyboardInput() not used in TableCrab
 class KeyboardInput(object):
 	def __init__(self):
 		self._input = []
@@ -940,7 +943,7 @@ class MouseInput(object):
 	def move(self, point, hwnd=None):
 		self._addMousePoint(MOUSEEVENTF_MOVE, point, hwnd=hwnd)
 		return self
-	#TODO: not tested
+	#TODO: MouseInput.wheelScroll() not tested
 	def wheelScroll(self, nSteps):
 		mi = MOUSEINPUT(
 				dwFlags= MOUSEEVENTF_WHEEL | MOUSEEVENTF_ABSOLUTE,
