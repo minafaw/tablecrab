@@ -150,6 +150,10 @@ class Gui(QtGui.QMainWindow):
 	#--------------------------------------------------------------------------------------------------------------
 	# event handlers
 	#--------------------------------------------------------------------------------------------------------------
+	def onClearException(self):
+		self._feedbackMessages[None] = ''
+		self.labelStatus.setText('Ready: ')
+
 	def onFeedback(self, widget, string):
 		#find tab widget
 		tab = None
@@ -166,10 +170,6 @@ class Gui(QtGui.QMainWindow):
 		if tab is self.tabWidget.currentWidget():
 			# set message to statusBar
 			self.labelFeedback.setText(string)
-
-	def onClearException(self):
-		self._feedbackMessages[None] = ''
-		self.labelStatus.setText('Ready: ')
 
 	def onFeedbackException(self, exception):
 		#NOTE: we assume "exception" is never empty string
