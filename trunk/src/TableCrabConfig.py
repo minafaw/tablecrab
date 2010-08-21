@@ -119,6 +119,7 @@ from TableCrabRes import Pixmaps, HtmlPages, StyleSheets
 
 # explicitely set locale to US
 QtCore.QLocale.setDefault(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates) )
+locale = QtCore.QLocale()
 
 # grab settings from commandline if possible
 class Settings:
@@ -729,30 +730,6 @@ def dialogTitle(title):
 def printStack():
 	for frame, filename, line_num, func, source_code, source_index in inspect.stack()[1:]:
 		print '%s, line %d\n  -> %s' % (filename, line_num, source_code[source_index].strip())
-
-#NOTE: we format numbers by hand because we need US formatting and on some oses locale.setlocale(locale.LC_ALL, 'en_US') fails
-def formatNum(num, precission=2):
-	"""formats a number
-	@param num: (int, float) number to format
-	@param precission: (int) floating point precission
-	@return: (str)
-	"""
-	num = round(num, precission)
-	num = str(num)
-	head, sep, tail = num.partition('.')
-	if not tail:
-		tail = '0'*precission
-	groups = []
-	for i in xrange(len(head), 0, -3):
-		start = i -3 if i -3 > 0 else 0
-		group = head[start:i]
-		groups.insert(0, group)
-	head = ','.join(groups)
-	if tail:
-		tail = float('0.' + tail)
-		tail = '%.*f' % (precission, tail)
-		tail = tail[1:]
-	return head + tail
 
 def readWriteImageFormats():
 	'''returns a list of image formats we can read AND write'''
