@@ -52,7 +52,7 @@ class DialogException(QtGui.QDialog):
 		grid.addWidget(TableCrabConfig.HLine(self), 1, 0)
 		grid.addWidget(self.buttonBox, 2, 0)
 	def onButtonClearErrorClicked(self, checked):
-		self.clearError = True
+		TableCrabConfig.globalObject.clearException.emit()
 		self.buttonClearError.setEnabled(False)
 
 #**********************************************************************************************
@@ -114,6 +114,7 @@ class Gui(QtGui.QMainWindow):
 		g.init.connect(self.onInit)
 		g.feedback.connect(self.onFeedback)
 		g.feedbackException.connect(self.onFeedbackException)
+		g.clearException.connect(self.onClearException)
 		g.feedbackMessage.connect(self.onFeedbackMessage)
 
 	#--------------------------------------------------------------------------------------------------------------
@@ -166,6 +167,10 @@ class Gui(QtGui.QMainWindow):
 			# set message to statusBar
 			self.labelFeedback.setText(string)
 
+	def onClearException(self):
+		self._feedbackMessages[None] = ''
+		self.labelStatus.setText('Ready: ')
+
 	def onFeedbackException(self, exception):
 		#NOTE: we assume "exception" is never empty string
 		self._feedbackMessages[None] = TableCrabConfig.cleanException(exception)
@@ -184,9 +189,6 @@ class Gui(QtGui.QMainWindow):
 			dlg.restoreGeometry( TableCrabConfig.settingsValue('Gui/DialogException/Geometry', QtCore.QByteArray()).toByteArray())
 			dlg.exec_()
 			TableCrabConfig.settingsSetValue('Gui/DialogException/Geometry', dlg.saveGeometry() )
-			if dlg.clearError:
-				self.labelStatus.setText('Ready: ')
-				self._feedbackMessages[None] = ''
 
 	def onTabCurrentChanged(self, index):
 		if index < 0:
