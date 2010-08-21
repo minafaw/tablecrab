@@ -1,8 +1,5 @@
 """handler for global actions"""
 
-#TODO: give feedback when taking a screenshot
-
-
 import TableCrabConfig
 import TableCrabHotkeys
 
