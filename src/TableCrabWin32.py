@@ -309,10 +309,10 @@ BM_CLICK = 245
 #HACK:(1)
 #wine specific hack
 #
-#	KBDLLHOOKSTRUCT.flags is unusable when running in wine. same goses for user32.GetKeyboardState(),
+#	KBDLLHOOKSTRUCT.flags is unusable when running in wine. same goes for user32.GetKeyboardState(),
 #	user32.GetAsyncKeyState(). reason is: <quote>wine does not capture all system wide keys</quote>.
 #
-#	we emulate the functions as much as necesssary here to track keyboard state by hand. this makes VK_MENU,
+#	we emulate the functions as much as necesssary here and track keyboard state by hand. this makes VK_MENU,
 #	VK_CONTROL and VK_SHIFT work. no way to track numlock, capslock and other toggle keys because we do not
 #	know their initial states. side effect is that holding own keys ahead of L{KeyboardManager.start} will never be honored.
 #
@@ -343,7 +343,7 @@ def _MyGetAsyncKeyState(vkCode):
 user32.GetAsyncKeyState = _MyGetAsyncKeyState
 
 def _setKeyDown(vkCode, flag):
-	"""this method should always be called whenever a keyboard manager notices a key press/release
+	"""this method should always be called whenever a keyboard hook or mouse hook notices a key press/release
 	@param vkCode: VK_*
 	@param flag: (bool) True if the key was pressed, False if it was released
 	"""
