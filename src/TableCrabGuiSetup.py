@@ -229,15 +229,18 @@ class TemplatesWidget(QtGui.QTreeWidget):
 	#----------------------------------------------------------------------------------------------------------------
 	# overwritten methods
 	#---------------------------------------------------------------------------------------------------------------
+
 	def keyReleaseEvent(self, event):
-		#TODO: for some reason the first enter when the widget is created is not accepted
+		#TODO: hitting return on the edit to end editing triggers editing again.
+		# 1) signal editingFinished() is triggered  2) we get the return in here
+		# have not found a way yet to suppress propagating.
 		if event.key() == QtCore.Qt.Key_Return and not event.modifiers():
 			event.accept()
 			item = self.currentItem()
-			if not item is None:
+			if item is not None:
 				if item.toplevel() is item:
-						self.editItem(item)
-			return
+					self.editItem(item)
+				return
 		return QtGui.QTreeWidget.keyReleaseEvent(self, event)
 
 	#----------------------------------------------------------------------------------------------------------------
