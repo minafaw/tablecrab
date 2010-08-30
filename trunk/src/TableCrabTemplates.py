@@ -30,7 +30,7 @@ class ChildItem(QtGui.QTreeWidgetItem):
 class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 	_PointNames = ('emptySpace', 'buttonCheck', 'buttonFold', 'buttonRaise',
 			'checkboxFold', 'checkboxCheckFold', 'betSliderStart', 'betSliderEnd',
-			'instantHandHistory', 'replayer')
+			'instantHandHistory', 'replayer', 'potTopLeft', 'potBottomRight')
 	def __init__(self,
 			parent=None,
 			name='',
@@ -45,6 +45,9 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 			betSliderEnd=None,
 			instantHandHistory=None,
 			replayer=None,
+			potTopLeft=None,
+			potBottomRight=None,
+
 			itemIsExpanded=False,
 			):
 		QtGui.QTreeWidgetItem.__init__(self, parent)
@@ -60,6 +63,8 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 		self.betSliderEnd = newPoint(betSliderEnd)
 		self.instantHandHistory = newPoint(instantHandHistory)
 		self.replayer = newPoint(replayer)
+		self.potTopLeft = newPoint(potTopLeft)
+		self.potBottomRight = newPoint(potBottomRight)
 		self.itemIsExpanded = itemIsExpanded
 
 		self.setFirstColumnSpanned(True)

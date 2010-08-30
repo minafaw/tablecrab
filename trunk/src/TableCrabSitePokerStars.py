@@ -8,10 +8,11 @@ import TableCrabConfig
 import TableCrabWin32
 import TableCrabHotkeys
 import TableCrabTemplates
+from TableCrabLib.gocr import gocr
 
 import re, time
 
-from PyQt4 import QtCore
+from PyQt4 import QtCore, QtGui
 
 #***************************************************************************************************
 #
@@ -159,6 +160,11 @@ class EventHandler(QtCore.QObject):
 			elif hotkeyID == TableCrabHotkeys.HotkeyMultiplyBet.id():
 				if inputEvent.keyIsDown:
 					self.tableHandleMultiplyBet(hotkey, template, hwnd, inputEvent)
+				inputEvent.accept = True
+				return True
+			elif hotkeyID == TableCrabHotkeys.HotkeyBetPot.id():
+				if inputEvent.keyIsDown:
+					self.tableHandleBetPot(hotkey, template, hwnd, inputEvent)
 				inputEvent.accept = True
 				return True
 			elif hotkeyID == TableCrabHotkeys.HotkeyReplayer.id():
@@ -402,7 +408,7 @@ class EventHandler(QtCore.QObject):
 		newBet = str(newBet)
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		TableCrabWin32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
-		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+		TableCrabConfig.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newbet))
 
 	def tableHandleSubtractFromBet(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
@@ -423,7 +429,7 @@ class EventHandler(QtCore.QObject):
 		newBet = str( 0 if newBet < 0 else newBet )
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		TableCrabWin32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
-		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+		TableCrabConfig.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
 
 	def tableHandleMultiplyBet(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
@@ -439,7 +445,103 @@ class EventHandler(QtCore.QObject):
 		newBet = str(newBet)
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		TableCrabWin32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
-		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+		TableCrabConfig.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
+
+	def _tableGetPotAmount(self, buff):
+		# scan image
+		#TODO: grayLevel threshold.
+		# 1) no real idea what it does. i guess it is a threshold in range(grayLevelMin, graylevelmax)
+		# 2) we may have to make this user adjustable per template. nasty.
+		result, err = gocr.scanImage(
+				string=buff,
+				chars='0-9.,',
+				dustSize=0,
+				#grayLevel=200
+				)
+		#NOTE: we track this case because gocr dumps warnings (other minor messages) to stderr as well
+		if err and result:
+			TableCrabConfig.logger.critical('gocr error - %s' % err)
+		if not result:
+			try:
+				raise ValueError(err)
+			except:
+				TableCrabConfig.handleException(data='gocr - could not scan image')
+			return None, 'could not scan pot'
+
+		# clean gocr output from garbage
+		num = result.replace('\x20', '').replace('\n', '').replace('\r', '')
+		# buff should be very rough bounds of pot rect so remove trailing clutter.
+		# we just hope* gocr does not recognize borders or stuff on the background as chars
+		num = num.rstrip('_').rstrip('.').rstrip(',')
+
+		#NOTE:
+		# 1. assertion: pot rect contains at least the 'T' of 'POT' so we always get an unknown char preceeding number
+		# 2. assertion: gocr does not recognize any chars following our number
+		if '_' not in num:
+			return None, 'could not scan pot'
+
+		# 'i' should be either '$' or some other currency symbol or the 'T' from 'POT'
+		i = num.rindex('_')
+		num = num[i +1:]
+
+		# try to reconstruct number
+		# get rid of commas
+		num = num.replace(',', '.')
+		num = num.split('.')
+		# check if pot is float
+		if len(num) > 1:
+			if len(num[-1]) == 2:
+				num = ''.join(num[:-1]) + '.' + num[-1]
+			else:
+				num = ''.join(num)
+		else:
+			num = num[0]
+		try:
+			num = float(num)
+		except ValueError:
+			TableCrabConfig.handleException(data='gocr - invalid number: "%s"' % result)
+			return None, 'could not scan pot'
+		return num, None
+
+	def tableHandleBetPot(self, hotkey, template, hwnd, inputEvent):
+		data = self.tableReadData(hwnd)
+		if not data: return
+		if not data['hwndBetBox']: return
+		if not data['betBoxIsVisible']: return
+
+		if template.potTopLeft == TableCrabConfig.PointNone:
+			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point Pot Top Left Not Set -' % template.name)
+			return
+		if template.potBottomRight == TableCrabConfig.PointNone:
+			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point Pot Bottom Right Not Set -' % template.name)
+			return
+
+		# grab pot rect
+		pixmap = QtGui.QPixmap.grabWindow(hwnd,
+					template.potTopLeft.x(),
+					template.potTopLeft.y(),
+					template.potBottomRight.x() - template.potTopLeft.x(),
+					template.potBottomRight.y() - template.potTopLeft.y(),
+					)
+		buff = gocr.imageToString(pixmap, 'PGM')	# looks like PGM works quite well here
+		num, err = self._tableGetPotAmount(buff)
+		if not num:
+			# try again with inverted pixels.
+			#TODO: more like praying gocr will do the right thing now. have to test this
+			image = QtGui.QImage(buff, pixmap.width(), pixmap.height(), QtGui.QImage.Format_Indexed8)
+			image.invertPixels()
+			buff = gocr.imageToString(image, 'PGM')
+			num, err = self._tableGetPotAmount(buff)
+			if not num:
+				TableCrabConfig.globalObject.feedbackMessage.emit('%s: Error - %s ' % (hotkey.action(), err) )
+				return
+
+		newBet = num + num * hotkey.multiplier()
+		if int(newBet) == newBet:
+			newBet = int(newBet)
+		newBet = str(newBet)
+		TableCrabWin32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
+		TableCrabConfig.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet) )
 
 	def tableHandleHilightBet(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
