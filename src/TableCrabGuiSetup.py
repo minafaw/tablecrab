@@ -243,9 +243,6 @@ class TemplatesWidget(QtGui.QTreeWidget):
 	#---------------------------------------------------------------------------------------------------------------
 
 	def keyReleaseEvent(self, event):
-		#TODO: hitting return on the edit to end editing triggers editing again.
-		# 1) signal editingFinished() is triggered  2) we get the return in here
-		# have not found a way yet to suppress propagating.
 		if event.key() == QtCore.Qt.Key_Return and not event.modifiers():
 			if self.myDelegate.edReturnPressed:
 				self.myDelegate.edReturnPressed = False
