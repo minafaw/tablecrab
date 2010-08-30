@@ -286,6 +286,23 @@ class HotkeyMultiplyBet(HotkeyCheck):
 
 Hotkeys.append(HotkeyMultiplyBet)
 
+
+class HotkeyBetPot(HotkeyMultiplyBet):
+	@classmethod
+	def id(klass): return 'BetPot'
+	@classmethod
+	def menuName(klass): return 'Bet pot'
+	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+T')
+	def action(self):
+		if int(self._multiplier) == self._multiplier:
+			text = 'Bet %sx pot' % int(self._multiplier)
+		else:
+			text = 'Bet %sx pot' % self._multiplier
+		return text
+
+Hotkeys.append(HotkeyBetPot)
+
 class HotkeyAddToBet(HotkeyMultiplyBet):
 	BaseValues = ('BigBlind', 'SmallBlind')
 	def __init__(self, parent=None, hotkey='', hotkeyName='', multiplier=1.0,baseValue='BigBlind'):
