@@ -61,7 +61,7 @@ def scanImage(
 		fileNameOutput=None,
 		chars=None, 		# limit to these chars A-Z notation is ok
 		dustSize=None,	# 0-N
-		#grayLevel=None,	# 0-255
+		grayLevel=None,	# 0-255
 		certainty=None,	# 0-100 - only recognize chars with sa certainity >= c
 		mode=None,		# Mode*
 		verbosity=None	# many outputs to stderr. Verbosity*
@@ -80,6 +80,7 @@ def scanImage(
 		cmd = '-o "%s" ' % fileNameOutput
 	if chars is not None: cmd += '-C %s ' % chars
 	if dustSize is not None: cmd += '-d %i ' % dustSize
+	if grayLevel is not None: cmd += '-l %i ' % grayLevel
 	if certainty is not None: cmd += '-a %i ' % certainty
 	if mode is not None: cmd += '-m %i ' % mode
 	if verbosity is not None: cmd += '-v %i ' % verbosity
@@ -94,12 +95,12 @@ def test():
 	app = QtGui.QApplication([])
 
 	pixmap = createPixmap('arial', 6, '0.1234567,89')
-	buff = imageToString(pixmap, format='PBM')
+	buff = imageToString(pixmap, format='PGM')
 	t0 = time.time()
 	stdout, stderr = scanImage(string=buff, chars='0-9,.', dustSize=0)
 	print 'time:', round(time.time() - t0, 3)
-	print 'stdout:', stdout
-	print 'stderr:', stderr
+	print 'stdout:', stdout, repr(stdout)
+	print 'stderr:', stderr, repr(stderr)
 
 if __name__ == '__main__': test()
 
