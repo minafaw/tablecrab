@@ -133,13 +133,25 @@ class TemplatesWidget(QtGui.QTreeWidget):
 
 		def __init__(self, parent=None):
 			QtGui.QItemDelegate.__init__(self, parent)
+
+			#NOTE: bit of a hack here. hitting <return> on edit ends editing, triggers
+			# editingFinished() and propagates the KeyEvent to the parent. this gets us
+			# into trouble one of our edit triggers is <return>. parent hast to clear this
+			# flag to not retrigger editing (!!) this hack is broken if Qt stops propagating
+			# <return> to parent. indicator: <return> triggers editing one time and then stops
+			# working as a trigger.
+			self.edReturnPressed= False
+
 		def createEditor(self, parent, option, index):
 			ed = QtGui.QLineEdit(parent)
 			ed.setMaxLength(TableCrabConfig.MaxName)
 			ed.editingFinished.connect(self.onEditingFinished)
+			ed.returnPressed.connect(self.onEdReturnPressed)
 			return ed
 		def onEditingFinished(self):
 			self.editingFinished.emit()
+		def onEdReturnPressed(self):
+			self.edReturnPressed= True
 
 	class ActionNewTemplate(QtGui.QAction):
 		def __init__(self, templateProto, parent=None):
@@ -235,12 +247,15 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		# 1) signal editingFinished() is triggered  2) we get the return in here
 		# have not found a way yet to suppress propagating.
 		if event.key() == QtCore.Qt.Key_Return and not event.modifiers():
-			event.accept()
-			item = self.currentItem()
-			if item is not None:
-				if item.toplevel() is item:
-					self.editItem(item)
-				return
+			if self.myDelegate.edReturnPressed:
+				self.myDelegate.edReturnPressed = False
+			else:
+				event.accept()
+				item = self.currentItem()
+				if item is not None:
+					if item.toplevel() is item:
+						self.editItem(item)
+					return
 		return QtGui.QTreeWidget.keyReleaseEvent(self, event)
 
 	#----------------------------------------------------------------------------------------------------------------
