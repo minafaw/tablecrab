@@ -75,8 +75,6 @@ class ImagePGM(object):
 		width = ''
 		height = ''
 		gray = ''
-		maxGray = -1
-		minGray = 256
 		offset = 0
 		lineno = 0
 		lastChar = ''
@@ -97,10 +95,10 @@ class ImagePGM(object):
 		if int(gray) > 255:
 			raise NotImplementedError('2bpp pgms not yet supported')
 		self._header = {
-				'w': int(width),	# width of image
-				'h': int(height),	# height of image
-				'gray': int(gray),# max gray level
-				'offset': offset,	# offset of image data
+				'w': int(width),		# width of image
+				'h': int(height),		# height of image
+				'gray': int(gray),	# max gray level
+				'offset': offset,		# offset of image data
 				}
 		return self._header
 
@@ -124,7 +122,7 @@ class ImagePGM(object):
 		newPGM._header = header
 		newPGM._minGray = minGray
 		newPGM._maxGray = maxGray
-		return  newPGM
+		return newPGM
 
 	def minGray(self):
 		return self._grayLevels()[0]
