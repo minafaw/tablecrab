@@ -14,9 +14,138 @@ import re, time
 
 from PyQt4 import QtCore, QtGui
 
-#***************************************************************************************************
+#************************************************************************************
 #
-#***************************************************************************************************
+#************************************************************************************
+
+class ScanTrace(object):
+	def __init__(self):
+		self.data = []
+		self.gocrWarinings = []
+	def __str__(self):
+		return '\n'.join(self.data)
+	def __add__(self, data):
+		self.data.append(data)
+		return self
+	def __ladd__(self, data):
+		self.__add__(data)
+		return self
+	def __radd__(self, data):
+		self.__add__(data)
+		return self
+
+def potAmountFromGocrImage(gocrImage, scanTrace=None):
+	if scanTrace is None:
+		scanTrace = ScanTrace()
+	scanTrace += repr(gocrImage.toString())
+
+	# determine gray level
+	#TODO: not shure if i am interpreting grayLevel param correcly. works nicely for
+	# regular pixmaps, but fails for inverted onse, having gocr reset to a default value
+	#
+	grayLevel = 90		# grayLevel in percent of maxGrayLevel. lower values smaller range of matching colors?
+	dustSize = 0
+	header = gocrImage.header()
+	minGray = gocrImage.minGray()
+	maxGray = gocrImage.maxGray()
+	scanTrace += '>>detemined grayLevel: %s-%s' % (minGray, maxGray)
+	absGray =  float(grayLevel) / 100 * (maxGray - minGray)
+	absGray = int(round(minGray + absGray, 0))
+	scanTrace += '>>set grayLevel: %s' % absGray
+
+	# scan image
+	#TODO: grayLevel threshold.
+	# 1) no real idea what it does. i guess it is a threshold in range(grayLevelMin, graylevelmax)
+	# 2) we may have to make this user adjustable per template. nasty.
+	result, err = gocr.scanImage(
+			string=gocrImage.toString(),
+			chars='0-9.,',
+			dustSize=dustSize,
+			grayLevel=absGray,
+			)
+	scanTrace += '>>gocr result: %r' % result
+	scanTrace += '>>gocr err: %s' % err
+	if not result:
+		return None, scanTrace
+	elif result and err:
+		scanTrace.gocrWarinings.append(err)
+
+	# clean gocr output from garbage
+	num = result.replace('\x20', '').replace('\n', '').replace('\r', '')
+	scanTrace += '>>stripped string: %s' % num
+
+	# right strip string up to last digit
+	#NOTE: obv gocr may interpret borders and background as chars. funny enough
+	# it even chars we opted out may apperar in result
+	while num:
+		char = num[-1]
+		if char.isdigit(): break
+		num = num[:-1]
+	scanTrace += '>>right stripped string: %s' % num
+
+	#NOTE:
+	# 1. assertion: pot rect contains at least the 'T' of 'POT' so we always get an unknown char preceeding number
+	# 2. assertion: gocr does not recognize any chars following our number
+	if '_' not in num:
+		scanTrace += '>>error - expected unknown char preceeding number'
+		return None, scanTrace
+
+	# 'i' should be either '$' or some other currency symbol or the 'T' from 'POT'
+	i = num.rindex('_')
+	num = num[i +1:]
+	scanTrace += '>>left stripped string: %s' % num
+
+	# try to reconstruct number
+	num = num.replace(',', '.')
+	num = num.split('.')
+	# check if pot is float
+	if len(num) > 1:
+		if len(num[-1]) == 2:
+			num = ''.join(num[:-1]) + '.' + num[-1]
+		else:
+			num = ''.join(num)
+	else:
+		num = num[0]
+	scanTrace += '>>formatted number: %s' % num
+	try:
+		num = float(num)
+	except ValueError:
+		scanTrace += '>>invalid float'
+		return None, scanTrace
+	return num, scanTrace
+
+#TODO: how to handle worst case: we get an amount but amount is garbage? no way..
+def potGetAmount(pixmap):
+	scanTrace = ScanTrace()
+	scanTrace += '>>scan pot -- original image: (%sx%s)' % (pixmap.width(), pixmap.height() )
+	gocrImage = gocr.ImagePGM.fromQImage(pixmap)
+	num, scanTrace = potAmountFromGocrImage(gocrImage, scanTrace=scanTrace)
+	if num is None:
+		# try again with inverted pixels.
+		gocrImage2 = gocrImage.inverted()
+		scanTrace += '>>scan pot -- inverted image'
+		num, scanTrace = potAmountFromGocrImage(gocrImage2, scanTrace=scanTrace)
+	return num, scanTrace
+
+
+# for quick and dirty testing
+def testPotAmount():
+buff = ''		# paste image here
+	app = QtGui.QApplication([])
+	gocrImage = gocr.ImagePGM(buff)
+	header = gocrImage.header()
+	pixmap = gocrImage.toQPixmap()
+	num, scanTrace = potGetAmount(pixmap)
+	print 'num:', num
+	print 'scanTrace:', scanTrace
+	import os
+	pixmap.save(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test-potamount.pgm'), 'PGM', 100)
+
+#testPotAmount()
+#************************************************************************************
+#
+#************************************************************************************
+
 class EventHandler(QtCore.QObject):
 
 	def __init__(self, parent=None):
@@ -447,67 +576,11 @@ class EventHandler(QtCore.QObject):
 		TableCrabWin32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
 
-	def _tableGetPotAmount(self, buff):
-		# scan image
-		#TODO: grayLevel threshold.
-		# 1) no real idea what it does. i guess it is a threshold in range(grayLevelMin, graylevelmax)
-		# 2) we may have to make this user adjustable per template. nasty.
-		result, err = gocr.scanImage(
-				string=buff,
-				chars='0-9.,',
-				dustSize=0,
-				#grayLevel=200
-				)
-		#NOTE: we track this case because gocr dumps warnings (other minor messages) to stderr as well
-		if err and result:
-			TableCrabConfig.logger.critical('gocr error - %s' % err)
-		if not result:
-			try:
-				raise ValueError(err)
-			except:
-				TableCrabConfig.handleException(data='gocr - could not scan image')
-			return None, 'could not scan pot'
-
-		# clean gocr output from garbage
-		num = result.replace('\x20', '').replace('\n', '').replace('\r', '')
-		# buff should be very rough bounds of pot rect so remove trailing clutter.
-		# we just hope* gocr does not recognize borders or stuff on the background as chars
-		num = num.rstrip('_').rstrip('.').rstrip(',')
-
-		#NOTE:
-		# 1. assertion: pot rect contains at least the 'T' of 'POT' so we always get an unknown char preceeding number
-		# 2. assertion: gocr does not recognize any chars following our number
-		if '_' not in num:
-			return None, 'could not scan pot'
-
-		# 'i' should be either '$' or some other currency symbol or the 'T' from 'POT'
-		i = num.rindex('_')
-		num = num[i +1:]
-
-		# try to reconstruct number
-		# get rid of commas
-		num = num.replace(',', '.')
-		num = num.split('.')
-		# check if pot is float
-		if len(num) > 1:
-			if len(num[-1]) == 2:
-				num = ''.join(num[:-1]) + '.' + num[-1]
-			else:
-				num = ''.join(num)
-		else:
-			num = num[0]
-		try:
-			num = float(num)
-		except ValueError:
-			TableCrabConfig.handleException(data='gocr - invalid number: "%s"' % result)
-			return None, 'could not scan pot'
-		return num, None
-
 	def tableHandleBetPot(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
-		if not data: return
-		if not data['hwndBetBox']: return
-		if not data['betBoxIsVisible']: return
+		#if not data: return
+		#if not data['hwndBetBox']: return
+		#if not data['betBoxIsVisible']: return
 
 		if template.potTopLeft == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point Pot Top Left Not Set -' % template.name)
@@ -523,17 +596,15 @@ class EventHandler(QtCore.QObject):
 					template.potBottomRight.x() - template.potTopLeft.x(),
 					template.potBottomRight.y() - template.potTopLeft.y(),
 					)
-		buff = gocr.imageToString(pixmap, 'PGM')	# looks like PGM works quite well here
-		num, err = self._tableGetPotAmount(buff)
-		if not num:
-			# try again with inverted pixels.
-			#TODO: more like praying gocr will do the right thing now. have to test this
-			image = QtGui.QImage(buff, pixmap.width(), pixmap.height(), QtGui.QImage.Format_Indexed8)
-			image.invertPixels()
-			buff = gocr.imageToString(image, 'PGM')
-			num, err = self._tableGetPotAmount(buff)
-			if not num:
-				TableCrabConfig.globalObject.feedbackMessage.emit('%s: Error - %s ' % (hotkey.action(), err) )
+		num, scanTrace = potGetAmount(pixmap)
+		#TODO: what to do with gocr warnings?
+		##num = None	# for testing, triggers exception
+		if num is None:
+			try:
+				raise ValueError(scanTrace)
+			except:
+				TableCrabConfig.handleException()
+				TableCrabConfig.globalObject.feedbackMessage.emit('%s: Error - Could not scan pot' % hotkey.action() )
 				return
 
 		newBet = num + num * hotkey.multiplier()
