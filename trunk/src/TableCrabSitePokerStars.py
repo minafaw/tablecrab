@@ -130,7 +130,7 @@ def potGetAmount(pixmap):
 
 # for quick and dirty testing
 def testPotAmount():
-buff = ''		# paste image here
+	buff = ''		# paste image here
 	app = QtGui.QApplication([])
 	gocrImage = gocr.ImagePGM(buff)
 	header = gocrImage.header()
@@ -607,7 +607,7 @@ class EventHandler(QtCore.QObject):
 				TableCrabConfig.globalObject.feedbackMessage.emit('%s: Error - Could not scan pot' % hotkey.action() )
 				return
 
-		newBet = num + num * hotkey.multiplier()
+		newBet = num * hotkey.multiplier()
 		if int(newBet) == newBet:
 			newBet = int(newBet)
 		newBet = str(newBet)
