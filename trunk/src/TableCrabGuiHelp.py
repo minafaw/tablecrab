@@ -39,6 +39,7 @@ Topics = [
 				('hotkeyRaise', 'Raise'),
 				('hotkeyAll_In', 'All-in'),
 				('hotkeyHilightBet', 'Hilight Bet'),
+				('hotkeyBetPot', 'Bet Pot'),
 				('hotkeyMultiplyBet', 'Multiply Bet'),
 				('hotkeyAddToBet', 'Add To Bet'),
 				('hotkeySubtractFromBet', 'Subtract From Bet'),
