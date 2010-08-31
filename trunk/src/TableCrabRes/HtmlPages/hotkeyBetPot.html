@@ -1,0 +1,53 @@
+<html>
+<head>
+<LINK REL=StyleSheet HREF="default.css" TYPE="text/css" MEDIA=screen>
+</head>
+<body>
+
+<div class="textBox">
+	<div class="headerBox">Hotkey Bet Pot</div>
+
+	puts current pot amount multiplied by <b>Multiplier</b> into the bet box.	use this
+	hotkey for 1/1 1/2 (...) pot sized bets. a multiplier of 0.5 for example is a good
+	choice for a hotkey to make half pot sized bets.
+
+	<br><br>
+	to use this hotkey you have to tell TableCrab where the pot is. every template on the
+	<a href="setup.html">Setup</a>	tab has two points for this: <b>PotTopLeft</b> and
+	<b>PotBottomRigth</b>. doubleclick on the locations on the screenshot. add some
+	space to the left and right as shown below just to make shure the region is still covered
+	in case PokerStars needs resize the pot to make room for bigger bets.
+
+	<br><br>
+	<pre style="font-family: courier">
+
+    PotTopLeft
+    \
+     x       ______________
+            |              |
+            | POT $15,500  |
+            |______________|
+                                x
+                                 \
+                          PotBottomRight
+    </pre>
+
+	<div class="noteBox">
+		<ul>
+		<li>this hotkey may or may not work depending on your table theme. you have
+		to find out yourself. in the background an ocr engine tries its best to make sense
+		out of the region you pointed it to. watch the messages on the status bar to get
+an idea if things are working for you or not.
+
+		<br><br>
+		as a rule of thumb: a highly contrasing background is better than low contrasing one.
+		a plain as background is better than a rough.
+
+		</ul>
+	</div>
+
+
+</div>
+
+
+</body></html>
