@@ -1,4 +1,6 @@
 
+#TODO: we should expand template if screenshot of matching size is opend or taken (???). pretty biting
+#			to setup a new template and nothing works as expected. this or check for duplicate items
 #TODO: accelerators in DialogScreenshotInfo
 #TODO: would be nice to have some information on how many templates are left until hitting MaxTemplates
 #TODO: remove MouseMontitor as soon as wine > 1.30 is out.
