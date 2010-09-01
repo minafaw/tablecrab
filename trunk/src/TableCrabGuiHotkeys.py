@@ -29,7 +29,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		TableCrabConfig.hotkeyManager = self
 
 		# setup treeWidget
-		self.setColumnCount(2)
+		self.setColumnCount(3)
 		self.setRootIsDecorated(False)
 		self.setSelectionBehavior(self.SelectRows)
 		self.header().setVisible(False)
@@ -131,6 +131,44 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			self.actionRemove.setEnabled(True)
 			self.actionEdit.setEnabled(True)
 
+	def adjustHotkeys(self):
+		self.setUpdatesEnabled(False)
+
+		#TODO: fix(1) there is a is a bug in Qt4.6.2. last items text(1) is never updated.
+		#			[http://bugreports.qt.nokia.com/browse/QTBUG-4849]. as a workaround we
+		#			remove / restore all items here to force an update
+		# fix(1)
+		currentItem = self.currentItem()
+		items = []
+		for i in xrange(len(self)):
+			items.append(self.takeTopLevelItem(0))
+		# /fix(1)
+
+		tmp_hotkeys = {}
+		#for template in self:		# fix(1)
+		for hotkey in items:	# /fix(1)
+			if hotkey.hotkey() not in tmp_hotkeys:
+				tmp_hotkeys[hotkey.hotkey()] = [hotkey]
+			else:
+				tmp_hotkeys[hotkey.hotkey()].append(hotkey)
+
+		for _, hotkeys in tmp_hotkeys.items():
+			conflicts = [i for i in hotkeys if i.hotkey()]
+			for hotkey in hotkeys:
+				flag = 'Conflict' if len(conflicts) > 1 else None
+				if flag is None:
+					hotkey.setText(2, '')
+				else:
+					hotkey.setText(2, '//%s//' % flag)
+
+		# fix(1)
+		for item in  items:
+			self.addTopLevelItem(item)
+		if currentItem is not None: self.setCurrentItem(currentItem)
+		# /fix(1)
+
+		self.setUpdatesEnabled(True)
+
 	def canMoveHotkeyDown(self):
 		hotkey = self.currentItem()
 		if hotkey is None:
@@ -158,6 +196,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			self.addTopLevelItem(hotkey)
 			self.setCurrentItem(hotkey)
 			self.dump()
+			self.adjustHotkeys()
 
 	def dump(self):
 		TableCrabConfig.dumpPersistentItems('Hotkeys', self)
@@ -174,6 +213,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 				)
 		if hotkey is not None:
 			self.dump()
+			self.adjustHotkeys()
 
 	def moveHotkeyDown(self):
 		hotkey = self.currentItem()
@@ -204,6 +244,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			return
 		self.takeTopLevelItem(self.indexOfTopLevelItem(hotkey) )
 		self.dump()
+		self.adjustHotkeys()
 
 	#--------------------------------------------------------------------------------------------------------------
 	# event handlers
@@ -212,6 +253,8 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self.editHotkey()
 
 	def onInit(self):
+		self.setUpdatesEnabled(False)
+
 		self.setAlternatingRowColors(
 				TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool()
 				)
@@ -228,6 +271,9 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			hotkey = TableCrabHotkeys.HotkeyScreenshot(hotkey='<F1+LeftControl>')
 			self.addTopLevelItem(hotkey)
 		self.setCurrentItem( self.topLevelItem(0) )
+
+		self.setUpdatesEnabled(True)
+		self.adjustHotkeys()
 
 	def onSetAlternatingRowColors(self, flag):
 		self.setAlternatingRowColors(flag)
