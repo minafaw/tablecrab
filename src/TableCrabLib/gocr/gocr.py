@@ -36,7 +36,7 @@ class ImagePGM(object):
 		self._maxGray = None
 
 	@classmethod
-	def fromQImage(klass, image):
+	def fromQPixmap(klass, image):
 		'''
 		@param image: (QImage, QPixmap)
 		'''
@@ -212,7 +212,7 @@ def _testFont():
 	import time
 	app = QtGui.QApplication([])
 	pixmap = createQPixmap('arial', 6, '0.1234567,89')
-	pgm = ImagePGM.fromQImage(pixmap)
+	pgm = ImagePGM.fromQPixmap(pixmap)
 	t0 = time.time()
 	stdout, stderr = scanImage(string=pgm.toString(), chars='0-9,.', dustSize=0)
 	print 'time:', round(time.time() - t0, 3)
@@ -230,7 +230,7 @@ def _testWin32():
 	import ctypes
 
 	pixmap = QtGui.QPixmap.grabWindow(Hwnd, *Rect)
-	pgm = ImagePGM.fromQImage(pixmap)
+	pgm = ImagePGM.fromQPixmap(pixmap)
 	result, err = scanImage(
 								string=pgm.toString(),
 								fileNameOutput=None,

@@ -118,7 +118,7 @@ def potAmountFromGocrImage(gocrImage, scanTrace=None):
 def potGetAmount(pixmap):
 	scanTrace = ScanTrace()
 	scanTrace += '>>scan pot -- original image: (%sx%s)' % (pixmap.width(), pixmap.height() )
-	gocrImage = gocr.ImagePGM.fromQImage(pixmap)
+	gocrImage = gocr.ImagePGM.fromQPixmap(pixmap)
 	num, scanTrace = potAmountFromGocrImage(gocrImage, scanTrace=scanTrace)
 	if num is None:
 		# try again with inverted pixels.
@@ -578,9 +578,9 @@ class EventHandler(QtCore.QObject):
 
 	def tableHandleBetPot(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
-		#if not data: return
-		#if not data['hwndBetBox']: return
-		#if not data['betBoxIsVisible']: return
+		if not data: return
+		if not data['hwndBetBox']: return
+		if not data['betBoxIsVisible']: return
 
 		if template.potTopLeft == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point Pot Top Left Not Set -' % template.name)
