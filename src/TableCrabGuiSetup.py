@@ -128,11 +128,11 @@ class DialgScreenshotInfo(QtGui.QDialog):
 #**********************************************************************************************
 class TemplatesWidget(QtGui.QTreeWidget):
 
-	class MyDelegate(QtGui.QItemDelegate):
+	class MyDelegate(QtGui.QStyledItemDelegate):
 		editingFinished = QtCore.pyqtSignal()
 
 		def __init__(self, parent=None):
-			QtGui.QItemDelegate.__init__(self, parent)
+			QtGui.QStyledItemDelegate.__init__(self, parent)
 
 			#NOTE: bit of a hack here. hitting <return> on edit ends editing, triggers
 			# editingFinished() and propagates the KeyEvent to the parent. this gets us
@@ -181,6 +181,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self.setItemDelegate(self.myDelegate)
 
 		self._templatesRead = False
+		self._screenshotSize = None	#  QSize
 
 		# setup actions
 		self._actions = []
@@ -280,6 +281,59 @@ class TemplatesWidget(QtGui.QTreeWidget):
 			self.actionDown.setEnabled(self.canMoveTemplateDown() )
 			self.actionRemove.setEnabled(True)
 
+	#NOTE: set at most one flag to not overwhelm user with information
+	def adjustTemplates(self):
+		self.setUpdatesEnabled(False)
+
+		#TODO: fix(1) there is a is a bug in Qt4.6.2. last items text(1) is never updated.
+		#			[http://bugreports.qt.nokia.com/browse/QTBUG-4849]. as a workaround we
+		#			remove / restore all items here to force an update
+		# fix(1)
+		currentItem = self.currentItem()
+		items = []
+		for i in xrange(len(self)):
+			items.append(self.takeTopLevelItem(0))
+		# /fix(1)
+
+		tmp_templates = {}
+		#for template in self:		# fix(1)
+		for template in items:	# /fix(1)
+			id = template.id()
+			size = template.size
+			templateType = '%s-%sx%s' % (id, template.size.width(), template.size.height())
+			if templateType not in tmp_templates:
+				tmp_templates[templateType] = [template]
+			else:
+				tmp_templates[templateType].append(template)
+
+		for templateType, templates in tmp_templates.items():
+			conflicts = [i for i in templates if i.size != TableCrabConfig.SizeNone]
+			for template in templates:
+				flag = 'Conflict' if len(conflicts) > 1 else None
+				if flag is None:
+					if self._screenshotSize == TableCrabConfig.SizeNone:
+						pass
+					elif template.size == TableCrabConfig.SizeNone:
+						flag = 'Edit'
+					elif template.size == self._screenshotSize:
+						flag = 'Edit'
+					else:
+						pass
+				if flag is None:
+					template.setText(1, '')
+				else:
+					template.setText(1, '//%s//' % flag)
+
+		# fix(1)
+		for item in  items:
+			self.addTopLevelItem(item)
+			item.setExpanded(item.itemIsExpanded)
+		if currentItem is not None: self.setCurrentItem(currentItem)
+		# /fix(1)
+
+		self.setUpdatesEnabled(True)
+
+
 	def canMoveTemplateUp(self):
 		item = self.currentItem()
 		if item is None:
@@ -344,6 +398,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		index = self.indexOfTopLevelItem(item.toplevel() )
 		self.takeTopLevelItem(index)
 		self.dump()
+		self.adjustTemplates()
 
 	#--------------------------------------------------------------------------------------------------------------
 	# event handlers
@@ -352,6 +407,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self.editItem(item)
 
 	def onInit(self):
+		self.setUpdatesEnabled(False)
 		self.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
 		self.setRootIsDecorated( TableCrabConfig.settingsValue('Gui/ChildItemIndicators', True).toBool() )
 		self.clear()
@@ -366,6 +422,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 			template.setExpanded(True)
 		self._templatesRead = True
 		self.setCurrentItem( self.topLevelItem(0) )
+		self.setUpdatesEnabled(True)
 		TableCrabConfig.globalObject.widgetScreenshotQuery.emit()
 
 	def onItemCollapsed(self, item):
@@ -398,10 +455,13 @@ class TemplatesWidget(QtGui.QTreeWidget):
 			return False
 		if item.toplevel().handleScreenshotDoubleClicked(item, pixmap, point):
 			self.dump()
+			self.adjustTemplates()
 
 	def onWidgetScreenshotSet(self, pixmap):
 		for template in self:
 			template.handleScreenshotSet(pixmap)
+		self._screenshotSize = TableCrabConfig.newSizeNone() if pixmap.isNull() else QtCore.QSize(pixmap.size())
+		self.adjustTemplates()
 
 #**********************************************************************************************
 #
