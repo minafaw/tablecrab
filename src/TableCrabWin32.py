@@ -711,6 +711,13 @@ def windowSetClientSize(hwnd, size, sendSizeMove=False):
 	size = QtCore.QSize(newW, newH)
 	windowSetSize(hwnd, size, sendSizeMove=sendSizeMove)
 
+def windowIsSameProcess(hwnd, hwndOther):
+	pid = DWORD()
+	user32.GetWindowThreadProcessId(hwnd, byref(pid))
+	pidOther = DWORD()
+	user32.GetWindowThreadProcessId(hwndOther, byref(pidOther))
+	return pid.value == pidOther.value
+
 # ################################################
 # alternative: use GetModuleFileNameEx to query executable filepath
 # don't like it too much though. we would rely on this entirely. for example any file name

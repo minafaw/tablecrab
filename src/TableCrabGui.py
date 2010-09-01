@@ -139,7 +139,10 @@ class Gui(QtGui.QMainWindow):
 		TableCrabConfig.mouseHook.start()
 		TableCrabConfig.keyboardHook.start()
 		TableCrabConfig.windowHook.start()
-		self.siteManager.tableCrabActionHandler().setHwndMain(self.effectiveWinId() )
+		hwnd = self.effectiveWinId()
+		if hwnd is None:
+			raise RuntimeError('main window has no valid hwnd')
+		self.siteManager.tableCrabActionHandler().setHwndMain( int(hwnd) )
 		TableCrabConfig.globalObject.init.emit()
 
 	#--------------------------------------------------------------------------------------------------------------

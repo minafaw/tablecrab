@@ -730,15 +730,6 @@ class ScreenshotWidget(QtGui.QScrollArea):
 			TableCrabConfig.msgWarning(self, 'Could Not Save Screenshot')
 
 	def onWidgetScreenshot(self, hwnd, pixmap):
-		# make shure to not take screenshot of self
-		wid = self.effectiveWinId()	# NOTE: effectiveWinId() returns <sip.voidptr> and may be None
-		if not wid:
-			return
-		selfHwnd = int(wid)
-		selfParent = TableCrabWin32.windowGetTopLevelParent(selfHwnd)
-		otherParent = TableCrabWin32.windowGetTopLevelParent(hwnd)
-		if selfParent == otherParent:
-			return
 		self.gatherWindowInfo(hwnd)
 		self.widgetScreenshotInfo.emit(self._lastScreenshotInfo)
 		self.setScreenshot(pixmap)
