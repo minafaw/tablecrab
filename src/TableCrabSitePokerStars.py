@@ -607,7 +607,7 @@ class EventHandler(QtCore.QObject):
 				TableCrabConfig.globalObject.feedbackMessage.emit('%s: Error - Could not scan pot' % hotkey.action() )
 				return
 
-		newBet = num * hotkey.multiplier()
+		newBet = round(num * hotkey.multiplier(), 2)
 		if int(newBet) == newBet:
 			newBet = int(newBet)
 		newBet = str(newBet)
