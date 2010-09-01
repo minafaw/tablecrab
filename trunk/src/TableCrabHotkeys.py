@@ -296,9 +296,9 @@ class HotkeyBetPot(HotkeyMultiplyBet):
 	def shortcut(klass): return QtGui.QKeySequence('Shift+T')
 	def action(self):
 		if int(self._multiplier) == self._multiplier:
-			text = 'Bet %s x pot' % int(self._multiplier)
+			text = 'Bet %sx pot' % int(self._multiplier)
 		else:
-			text = 'Bet %s x pot' % self._multiplier
+			text = 'Bet %sx pot' % self._multiplier
 		return text
 
 Hotkeys.append(HotkeyBetPot)
