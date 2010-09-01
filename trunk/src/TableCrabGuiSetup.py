@@ -6,8 +6,7 @@
 #TODO: i kind of dislike in-place editing of template names. an "Edit" button would be more consistent but a bit of overkill right now. then .again .screenshot
 # 			open / save is taking away screenspace already. would have to find shorter names for these actions.
 #TODO: check for multiple templates of the same size? currently we are using the first matching encountered that's all.
-#TODO: restore last selected template on restart? would require an attr "itemIsSelected", downside we'd have to dump the whole tree on every curent
-#				item change. so most likely a no.
+#TODO: restore last selected template on restart?
 
 import TableCrabConfig
 import TableCrabWin32
@@ -367,6 +366,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 			template.setExpanded(True)
 		self._templatesRead = True
 		self.setCurrentItem( self.topLevelItem(0) )
+		TableCrabConfig.globalObject.widgetScreenshotQuery.emit()
 
 	def onItemCollapsed(self, item):
 		if not self._templatesRead:
