@@ -5,7 +5,6 @@
 #TODO: remove MouseMontitor as soon as wine > 1.30 is out.
 #TODO: i kind of dislike in-place editing of template names. an "Edit" button would be more consistent but a bit of overkill right now. then .again .screenshot
 # 			open / save is taking away screenspace already. would have to find shorter names for these actions.
-#TODO: check for multiple templates of the same size? currently we are using the first matching encountered that's all.
 #TODO: restore last selected template on restart?
 
 import TableCrabConfig
