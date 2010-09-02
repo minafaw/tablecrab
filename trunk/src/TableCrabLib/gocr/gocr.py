@@ -176,7 +176,7 @@ def scanImage(
 	if mode is not None: cmd += '-m %i ' % mode
 	if verbosity is not None: cmd += '-v %i ' % verbosity
 
-	p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 	return p.communicate(string)
 
 #************************************************************************************
@@ -219,7 +219,7 @@ def _testFont():
 	print 'stdout:', stdout, repr(stdout)
 	print 'stderr:', stderr, repr(stderr)
 
-#_testFont()
+_testFont()
 
 
 def _testWin32():
