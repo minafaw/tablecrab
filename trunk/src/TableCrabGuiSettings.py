@@ -2,7 +2,6 @@
 #TODO: accelerators for settings "Hand Style Sheet"
 #TODO: tooltips flapping out on settings selector pane are ugly. no way to set tooltip delay in Qt4
 #			so we may have to reimplement tool tips
-#TODO: have to find a better way to present prefix | postfix in settings hand
 #TODO: would be nice to have line numbers in HandCss editor
 
 import TableCrabConfig
