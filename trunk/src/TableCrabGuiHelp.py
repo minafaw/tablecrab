@@ -1,4 +1,5 @@
 
+#TODO: implement copy action
 #TODO: would be nice to auto-generate topics from disk. for now we have to keep track by hand.
 # auto-generating woul drequire some naming scheme to get the hirarchy - we only support flat
 # directories in our NetworkAccessmanager()  ++ some Html parsing to retrieve the desired title
