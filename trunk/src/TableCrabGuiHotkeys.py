@@ -96,7 +96,6 @@ class HotkeyWidget(QtGui.QTreeWidget):
 	# overwritten methods
 	#---------------------------------------------------------------------------------------------------------------
 	def keyPressEvent(self, event):
-		#TODO: for some reason the first enter when the widget is created is not accepted
 		if event.key() == QtCore.Qt.Key_Return and not event.modifiers():
 			event.accept()
 			hotkey = self.currentItem()
