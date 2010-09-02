@@ -61,6 +61,20 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		self.checkChildItemIndicators.stateChanged.connect(self.onChildItemIndicatorsChanged)
 		self.checkRestoreMousePosition = TableCrabConfig.CheckBox('Restore Mouse &Position', default=False, settingsKey='RestoreMousePosition', parent=self)
 
+		self.comboRoundBets = TableCrabConfig.ComboBox(
+				[
+					TableCrabConfig.RoundBetsNoRounding,
+					TableCrabConfig.RoundBetsBigBlind,
+					TableCrabConfig.RoundBetsSmallBlind
+				],
+				default= TableCrabConfig.RoundBetsNoRounding,
+				failsave=True,
+				settingsKey='Settings/RoundBets',
+				parent=self,
+				)
+		self.labelRoundBets = QtGui.QLabel('Round &bets to:', self)
+		self.labelRoundBets.setBuddy(self.comboRoundBets)
+
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		self.buttonHelp.setToolTip('Help (F1)')
 		self.buttonHelp.clicked.connect(self.onHelp)
@@ -105,11 +119,16 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		grid.addWidget(self.checkChildItemIndicators, 7, 0)
 		grid.addWidget(self.checkRestoreMousePosition, 8, 0)
 
-		grid.addLayout(TableCrabConfig.VStretch(), 9, 0)
-		grid.addWidget(TableCrabConfig.HLine(self), 10, 0, 1, 3)
+		grid.addWidget(self.labelRoundBets, 9, 0)
+		grid.addWidget(self.comboRoundBets, 9, 1)
+		grid.addLayout(TableCrabConfig.HStretch(), 9, 2)
+
+
+		grid.addLayout(TableCrabConfig.VStretch(), 10, 0)
+		grid.addWidget(TableCrabConfig.HLine(self), 11, 0, 1, 3)
 
 		grid2 = TableCrabConfig.GridBox()
-		grid.addLayout(grid2, 11, 0, 1, 3)
+		grid.addLayout(grid2, 12, 0, 1, 3)
 		grid2.addWidget(self.buttonBox, 0, 0)
 
 	def setFont(self):
