@@ -98,10 +98,11 @@ class HotkeyEditorWithMultiplier(HotkeyEditor):
 				default=self.hotkey.multiplier(),
 				minimum=self.hotkey.MultiplierMin,
 				maximum=self.hotkey.MultiplierMax,
-				step=0.1,
-				precision=1,
+				step=10**-self.hotkey.Precision,
+				precision=self.hotkey.Precision,
 				parent=self,
 				)
+		self.spinMultiplier.onInit()
 		self.spinMultiplier.setToolTip('Multiplier (Alt+M)')
 		self.labelMultiplier.setBuddy(self.spinMultiplier)
 
@@ -234,20 +235,21 @@ class HotkeyMultiplyBet(HotkeyCheck):
 	MultiplierMax = 99.0
 	MultiplierMin = 1.0
 	MultiplierDefault = 1.0
+	Precision = 1
 	@classmethod
 	def id(klass): return 'MultiplyBet'
 	@classmethod
 	def menuName(klass): return 'Multiply bet'
 	@classmethod
 	def shortcut(klass): return QtGui.QKeySequence('Shift+M')
-	def __init__(self, parent=None, hotkey='', hotkeyName='', multiplier=1.0):
+	def __init__(self, parent=None, hotkey='', hotkeyName='', multiplier=MultiplierDefault):
 		self._multiplier = multiplier
 		HotkeyCheck.__init__(self, parent=parent, hotkey=hotkey, hotkeyName=hotkeyName)
 	def update(self, other):
 		self._multiplier = other.multiplier()
 		HotkeyCheck.update(self, other)
 	def multiplier(self): return self._multiplier
-	def setMultiplier(self, multiplier): self._multiplier = round(multiplier, 1)
+	def setMultiplier(self, multiplier): self._multiplier = round(multiplier, self.Precision)
 	def action(self):
 		if int(self._multiplier) == self._multiplier:
 			text = 'Multiply bet by %s' % int(self._multiplier)
@@ -288,17 +290,23 @@ Hotkeys.append(HotkeyMultiplyBet)
 
 
 class HotkeyBetPot(HotkeyMultiplyBet):
+	MultiplierMax = 99.0
+	MultiplierMin = 0.1
+	MultiplierDefault = 0.5
+	Precision = 2
 	@classmethod
 	def id(klass): return 'BetPot'
 	@classmethod
 	def menuName(klass): return 'Bet pot'
 	@classmethod
 	def shortcut(klass): return QtGui.QKeySequence('Shift+T')
+	def __init__(self, parent=None, hotkey='', hotkeyName='', multiplier=MultiplierDefault):
+		HotkeyMultiplyBet.__init__(self, parent=parent, hotkey=hotkey, hotkeyName=hotkeyName, multiplier=multiplier)
 	def action(self):
 		if int(self._multiplier) == self._multiplier:
-			text = 'Bet %sx pot' % int(self._multiplier)
+			text = 'Bet %s pot' % int(self._multiplier)
 		else:
-			text = 'Bet %sx pot' % self._multiplier
+			text = 'Bet %s pot' % self._multiplier
 		return text
 
 Hotkeys.append(HotkeyBetPot)
