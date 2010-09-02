@@ -441,7 +441,7 @@ class EventHandler(QtCore.QObject):
 		else:
 			point = template.checkboxCheckFold
 			if point == TableCrabConfig.PointNone:
-				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- CheckboxCheckFold Not Set -' % template.name)
+				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point CheckboxCheckFold Not Set -' % template.name)
 				return
 		#NOTE: we always double click. seems to work more reliably
 		TableCrabWin32.mouseInputLeftClickDouble(
@@ -464,7 +464,7 @@ class EventHandler(QtCore.QObject):
 		else:
 			point = template.checkboxFold
 			if point == TableCrabConfig.PointNone:
-				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- CheckboxFold Not Set -' % template.name)
+				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point CheckboxFold Not Set -' % template.name)
 				return
 		#NOTE: we always double click. seems to work more reliably
 		TableCrabWin32.mouseInputLeftClickDouble(
@@ -481,7 +481,7 @@ class EventHandler(QtCore.QObject):
 		#NOTE: BetBox may not be visible when a player is all-in
 		##if not data['betBoxIsVisible']: return
 		if  template.buttonRaise == TableCrabConfig.PointNone:
-			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point Buttonraise Not Set -' % template.name)
+			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point ButtonRaise Not Set -' % template.name)
 			return
 		#NOTE: we always double click. seems to work more reliably
 		TableCrabWin32.mouseInputLeftClickDouble(
@@ -531,13 +531,11 @@ class EventHandler(QtCore.QObject):
 			newBet = data['bet'] + (data['smallBlind'] * hotkey.multiplier() * inputEvent.steps)
 		else:
 			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
-		newBet = round(newBet, 2)
-		if int(newBet) == newBet:
-			newBet = int(newBet)
-		newBet = str(newBet)
+		#TODO: adjust bet to 'Settings/RoundBets' ? kind of contradictionary
+		newBet = TableCrabConfig.formatedBet(newBet, blinds=None)
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		TableCrabWin32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
-		TableCrabConfig.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newbet))
+		TableCrabConfig.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
 
 	def tableHandleSubtractFromBet(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
@@ -552,10 +550,8 @@ class EventHandler(QtCore.QObject):
 			newBet = data['bet'] - (data['smallBlind'] * hotkey.multiplier() * inputEvent.steps)
 		else:
 			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
-		newBet = round(newBet, 2)
-		if int(newBet) == newBet:
-			newBet = int(newBet)
-		newBet = str( 0 if newBet < 0 else newBet )
+		#TODO: adjust bet to 'Settings/RoundBets' ? kind of contradictionary
+		newBet = TableCrabConfig.formatedBet(newBet, blinds=None)
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		TableCrabWin32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
@@ -568,10 +564,7 @@ class EventHandler(QtCore.QObject):
 		if data['bet'] is None: return
 		if inputEvent.steps == 0: return
 		newBet = data['bet'] * hotkey.multiplier() * inputEvent.steps
-		newBet = round(newBet, 2)
-		if int(newBet) == newBet:
-			newBet = int(newBet)
-		newBet = str(newBet)
+		newBet = TableCrabConfig.formatedBet(newBet, blinds=(data['smallBlind'], data['bigBlind']) )
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		TableCrabWin32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
@@ -608,9 +601,7 @@ class EventHandler(QtCore.QObject):
 				return
 
 		newBet = round(num * hotkey.multiplier(), 2)
-		if int(newBet) == newBet:
-			newBet = int(newBet)
-		newBet = str(newBet)
+		newBet = TableCrabConfig.formatedBet(newBet, blinds=(data['smallBlind'], data['bigBlind']) )
 		TableCrabWin32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet) )
 
