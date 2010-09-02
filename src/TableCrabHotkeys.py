@@ -1,7 +1,5 @@
 
-#TODO: messy code ..clean up
-#TODO: check for conflicting hotkeys? currently we trigger the first matching, that's all
-#TODO: restore last selected hokey on restart? would rewuire an attr "itemIsSelected", downside
+#TODO: restore last selected hokey on restart? would require an attr "itemIsSelected", downside
 #				we'd have to dump the whole tree on every curent item change.
 
 
