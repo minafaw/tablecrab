@@ -1,8 +1,6 @@
 
-#TODO: we may need to expose a PointNone in our table template where our mouse cursor is set to when restoring table focus
 #TODO: for some reason ButtonCheck and ButtonRaise are not working as expected postflop (preflop is ok). we have to trigger
 #				hotkey two times (always, sometimes?) to get the desired effect. double clicking right now ..have to experiment.
-#TODO: move mouse to active table is not implemented. we'll see.
 
 import TableCrabConfig
 import TableCrabWin32
