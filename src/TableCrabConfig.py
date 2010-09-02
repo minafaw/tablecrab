@@ -625,7 +625,8 @@ class HotkeyBox(QtGui.QComboBox):
 		text = self.currentText()
 		for key, displayName in self.Hotkeys:
 			if text == displayName:
-				return key
+				#NOTE: we have to make shure to return QString here. QString hashes differenty than str
+				return QtCore.QString(key)
 		return text
 
 class TreeWidgetItemIterator(QtGui.QTreeWidgetItemIterator):
@@ -777,7 +778,10 @@ def formatedBet(bet, blinds=None):
 		bet = int(bet)
 	return str(bet)
 
-
+def setTabOrder(parent, *widgets):
+	for i, widget in enumerate(widgets):
+		if i +1 < len(widgets):
+			parent.setTabOrder(widget, widgets[i+1])
 
 
 
