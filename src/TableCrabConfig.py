@@ -37,9 +37,13 @@ MaxWindowText = 512		# maximum number of chars we retrieve as text / title from 
 MaxHandHistoryText = 16384
 MaxPokerStarsBetBoxText = 16	# maximum number of chars to retrieve from PS bet amount box
 
-RoundBetsNoRounding = 'No rounding'
-RoundBetsBigBlind = 'Big blind'
-RoundBetsSmallBlind = 'Small blind'
+
+SmallBlind = 'SmallBlind'
+BigBlind = 'BigBlind'
+
+RoundBetsNoRounding = 'NoRounding'
+RoundBetsBigBlind = BigBlind
+RoundBetsSmallBlind = SmallBlind
 
 #****************************************************************************************
 # setup minimal stuff to get at least some information in case something goes wrong
