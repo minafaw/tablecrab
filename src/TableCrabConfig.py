@@ -129,10 +129,6 @@ from TableCrabRes import Pixmaps, HtmlPages, StyleSheets
 QtCore.QLocale.setDefault(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates) )
 locale = QtCore.QLocale()
 
-# grab settings from commandline if possible
-class Settings:
-	qSettings = QtCore.QSettings(Author, ApplicationName)
-
 #***********************************************************************************
 # enshure we run a single application instance only
 #***********************************************************************************
@@ -155,6 +151,9 @@ class SingleApplication(object):
 #***********************************************************************************
 #TODO: what to do with deprecated settings keys?
 #'Gui/WebView/ZoomIncrement'
+
+class Settings:
+	qSettings = QtCore.QSettings(Author, ApplicationName)
 
 def settingsKeyJoin(*keys):
 	keys = [(str(key) if isinstance(key, QtCore.QString) else key) for key in keys]
