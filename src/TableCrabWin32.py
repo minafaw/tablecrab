@@ -387,33 +387,6 @@ def sendMessageTimeout(hwnd, msg, wParam,lParam, isUnicode=True):
 #****************************************************************************************************
 # window methods
 #****************************************************************************************************
-
-#TODO: WindowForegroundHook() not used in TableCrab
-class WindowForegroundHook(QtCore.QObject):
-	Timeout = 0.2
-	def __init__(self, parent=None):
-		QtCore.QObject.__init__(self, parent)
-		self._lastWindowForeground = 0
-		self._isStarted = False
-	def lastWindowForeground(self):
-		return self._lastWindowForeground
-	def start(self):
-		if not self._isStarted:
-			self._isStarted = True
-			thread.start_new_thread(self._hookProc, ())
-		return self
-	def stop(self):
-		self._isStarted = False
-	def isStarted(self):
-		return self._isStarted
-	def _hookProc(self):
-		while self._isStarted:
-			hwnd = user32.GetForegroundWindow()
-			if hwnd != self._lastWindowForeground:
-				self.emit(QtCore.SIGNAL('windowGainedForeground(int)'), hwnd)
-				self._lastWindowForeground = hwnd
-			time.sleep(self.Timeout)
-
 class WindowHook(QtCore.QObject):
 	windowDestroyed = QtCore.pyqtSignal(int)
 	windowCreated = QtCore.pyqtSignal(int)
