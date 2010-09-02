@@ -157,13 +157,14 @@ class HotkeyBase(QtGui.QTreeWidgetItem):
 
 	HasBaseValue = False
 	BaseValues = []
+	BaseValueDefault = None
 
-	def __init__(self, parent=None, hotkey='', hotkeyName='', multiplier=None, baseValue=TableCrabConfig.BigBlind):
+	def __init__(self, parent=None, hotkey='', hotkeyName='', multiplier=None, baseValue=None):
 		QtGui.QTreeWidgetItem.__init__(self, parent)
 		self._hotkey = hotkey
 		self._hotkeyName = hotkeyName
-		self._multiplier = multiplier
-		self._baseValue = baseValue
+		self._multiplier = self.MultiplierDefault if multiplier is None else multiplier
+		self._baseValue = self.BaseValueDefault if baseValue is None else baseValue
 		self.setText(0, self.action() )
 		self.setText(1, self.hotkeyName() if self.hotkeyName() else self.hotkey())
 
@@ -307,10 +308,10 @@ class HotkeyMultiplyBet(HotkeyBase):
 	@classmethod
 	def shortcut(klass): return QtGui.QKeySequence('Shift+M')
 	def action(self):
-		if int(self._multiplier) == self._multiplier:
-			text = 'Multiply bet by %s' % int(self._multiplier)
+		if int(self.multiplier()) == self.multiplier():
+			text = 'Multiply bet by %s' % int(self.multiplier())
 		else:
-			text = 'Multiply bet by %s' % self._multiplier
+			text = 'Multiply bet by %s' % self.multiplier()
 		return text
 Hotkeys.append(HotkeyMultiplyBet)
 
@@ -342,6 +343,7 @@ class HotkeyAddToBet(HotkeyBase):
 	MultiplierPrecision = 1
 	HasBaseValue = True
 	BaseValues = (TableCrabConfig.BigBlind, TableCrabConfig.SmallBlind)
+	BaseValueDefault = TableCrabConfig.BigBlind
 	@classmethod
 	def id(klass): return 'AddToBet'
 	@classmethod
@@ -369,6 +371,7 @@ class HotkeySubtractFromBet(HotkeyBase):
 	MultiplierPrecision = 1
 	HasBaseValue = True
 	BaseValues = (TableCrabConfig.BigBlind, TableCrabConfig.SmallBlind)
+	BaseValueDefault = TableCrabConfig.BigBlind
 	@classmethod
 	def id(klass): return 'SubtractFromBet'
 	@classmethod
