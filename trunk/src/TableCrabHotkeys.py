@@ -312,7 +312,7 @@ class HotkeyBetPot(HotkeyMultiplyBet):
 Hotkeys.append(HotkeyBetPot)
 
 class HotkeyAddToBet(HotkeyMultiplyBet):
-	BaseValues = ('BigBlind', 'SmallBlind')
+	BaseValues = (TableCrabConfig.BigBlind, TableCrabConfig.SmallBlind)
 	def __init__(self, parent=None, hotkey='', hotkeyName='', multiplier=1.0,baseValue='BigBlind'):
 		self._baseValue = baseValue
 		HotkeyMultiplyBet.__init__(self, parent=parent, hotkey=hotkey, hotkeyName=hotkeyName, multiplier=multiplier)
