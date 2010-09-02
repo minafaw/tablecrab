@@ -37,6 +37,10 @@ MaxWindowText = 512		# maximum number of chars we retrieve as text / title from 
 MaxHandHistoryText = 16384
 MaxPokerStarsBetBoxText = 16	# maximum number of chars to retrieve from PS bet amount box
 
+RoundBetsNoRounding = 'No rounding'
+RoundBetsBigBlind = 'Big blind'
+RoundBetsSmallBlind = 'Small blind'
+
 #****************************************************************************************
 # setup minimal stuff to get at least some information in case something goes wrong
 #
@@ -485,6 +489,7 @@ class CheckBox(QtGui.QCheckBox):
 	def onStateChanged(self):
 		if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.checkState() == QtCore.Qt.Checked)
 
+#TODO: have to rewrite this to untangle user visibe strings from internal strings
 class ComboBox(QtGui.QComboBox):
 	def __init__(self, choices, default='', failsave=False, settingsKey=None, parent=None):
 		QtGui.QComboBox.__init__(self, parent)
@@ -742,6 +747,33 @@ def readWriteImageFormats():
 		if fmt in read:
 			fmts.append(fmt.lower())
 	return fmts
+
+def formatedBet(bet, blinds=None):
+	'''fromats and adjusts bet size to user settings
+	@param bet: (int, float) bet size to format
+	@param blinds: (tuple) smallBlind, bigBlind
+	@return: (str) new bet size
+	'''
+	if bet < 0:
+		return '0'
+	bet = round(bet, 2)
+	if blinds is not None:
+		roundTo = settingsValue('Settings/RoundBets', '')
+		if roundTo in (RoundBetsBigBlind, RoundBetsSmallBlind):
+			blind = blinds[1] if roundTo == RoundBetsBigBlind else blinds[0]
+			bet = bet * 100
+			blind = blind * 100
+			d, r = divmod(bet, blind)
+			bet = d * blind
+			if float(r)/blind >= 0.5:
+				bet += blind
+			bet = round(bet / 100, 2)
+	print bet == int(bet)
+	if int(bet) == bet:
+		bet = int(bet)
+	return str(bet)
+
+
 
 
 
