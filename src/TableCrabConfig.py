@@ -137,14 +137,22 @@ class SingleApplication(object):
 		self.hMutex = TableCrabWin32.kernel32.CreateMutexA(None, 1, 'Local\\73524668475460800279396959888864133024')
 		atexit.register(self.close)
 		if TableCrabWin32.GetLastError() == TableCrabWin32.ERROR_INVALID_HANDLE:
-			#TODO: we could try to find the app holding the mutex (hopefuly us up and alive) and activate it
-			# gut feeling it is be better to raise and log here. so we get at least some information in case someone blocks our mutex
-			##sys.exit(1)
-			raise RuntimeError('%s is already running' % ApplicationName)
+			if not self.onMutexLocked():
+				##sys.exit(1)
+				raise RuntimeError('%s is already running' % ApplicationName)
 	def close(self, closeFunc=TableCrabWin32.kernel32.CloseHandle):	# need to hold reference to CloseHandle here. we get garbage collected otherwise
 		if self.hMutex is not None:
 			closeFunc(self.hMutex)
 			self.hMutex = None
+	def onMutexLocked(self):
+		#TODO: give feedback here, usual stuff like bring other to top, flash window, whatevs
+		#			x. FlashWindow() does not work in wine
+		# 			x. FlashWindowEx() is not implemented in wine
+		#			x. in wine there is no way to put a window to the foreground
+		# none of the above is save anyways. only way to make this a bit more secure would
+		# be to start a conversation via WM_COPYDATA, trying to find out who is holding the mutex.
+		# i'd say ..not worth the efford.
+		return False
 
 #***********************************************************************************
 # global QSettings
