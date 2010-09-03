@@ -518,7 +518,7 @@ class ScreenshotLabel(QtGui.QLabel):
 		if pixmap is None:
 			self.setScaledContents(True)
 			self.setText(self._screenshotName)
-			self.resize(self.parent().size())		#TODO: no idea why but we need to resize now
+			self.resize(self.parent().size())		#TODO: no idea why but we need to resize here
 			self.setFrameShape(QtGui.QFrame.NoFrame)
 			pixmap = QtGui.QPixmap()
 			TableCrabConfig.globalObject.widgetScreenshotSet.emit(pixmap)
