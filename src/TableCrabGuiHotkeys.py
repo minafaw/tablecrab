@@ -137,6 +137,8 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		#			[http://bugreports.qt.nokia.com/browse/QTBUG-4849]. as a workaround we
 		#			remove / restore all items here to force an update
 		# fix(1)
+		hscroll = self.horizontalScrollBar().value()
+		vscroll = self.verticalScrollBar().value()
 		currentItem = self.currentItem()
 		items = []
 		for i in xrange(len(self)):
@@ -164,6 +166,8 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		for item in  items:
 			self.addTopLevelItem(item)
 		if currentItem is not None: self.setCurrentItem(currentItem)
+		self.horizontalScrollBar().setValue(hscroll)
+		self.verticalScrollBar().setValue(vscroll)
 		# /fix(1)
 
 		self.setUpdatesEnabled(True)
