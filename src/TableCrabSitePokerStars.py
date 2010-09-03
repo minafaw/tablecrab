@@ -430,14 +430,14 @@ class EventHandler(QtCore.QObject):
 		data = self.tableReadData(hwnd)
 		if not data: return
 		if data['hwndBetBox'] and data['betBoxIsVisible']:
-			point = template.buttonCheck
+			point = template.points['ButtonCheck']
 			if point == TableCrabConfig.PointNone:
 				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point ButtonCheck Not Set -' % template.name)
 				return
 		# we always allow checkboxcCheckFold ..stars may show this box when we are newly seated at a table without having the
 		# bet amount box created yet
 		else:
-			point = template.checkboxCheckFold
+			point = template.points['CheckboxCheckFold']
 			if point == TableCrabConfig.PointNone:
 				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point CheckboxCheckFold Not Set -' % template.name)
 				return
@@ -453,14 +453,14 @@ class EventHandler(QtCore.QObject):
 		data = self.tableReadData(hwnd)
 		if not data: return
 		if data['hwndBetBox'] and data['betBoxIsVisible']:
-			point =  template.buttonFold
+			point =  template.points['ButtonFold']
 			if point == TableCrabConfig.PointNone:
 				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point ButtonFold Not Set -' % template.name)
 				return
 		# we always allow checkboxFold ..stars may show this box when we are newly seated at a table without having the
 		# bet amount box created yet
 		else:
-			point = template.checkboxFold
+			point = template.points['CheckboxFold']
 			if point == TableCrabConfig.PointNone:
 				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point CheckboxFold Not Set -' % template.name)
 				return
@@ -478,12 +478,12 @@ class EventHandler(QtCore.QObject):
 		if not data['hwndBetBox']: return
 		#NOTE: BetBox may not be visible when a player is all-in
 		##if not data['betBoxIsVisible']: return
-		if  template.buttonRaise == TableCrabConfig.PointNone:
+		if  template.points['ButtonRaise'] == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point ButtonRaise Not Set -' % template.name)
 			return
 		#NOTE: we always double click. seems to work more reliably
 		TableCrabWin32.mouseInputLeftClickDouble(
-				template.buttonRaise,
+				template.points['ButtonRaise'],
 				hwnd=hwnd,
 				restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool(),
 				)
@@ -502,15 +502,17 @@ class EventHandler(QtCore.QObject):
 		if not data: return
 		if not data['hwndBetBox']: return
 		if not data['betBoxIsVisible']: return
-		if template.betSliderStart == TableCrabConfig.PointNone:
+		pointSliderStart = template.points['BetSliderStart']
+		pointSliderEnd = template.points['BetSliderEnd']
+		if pointSliderStart == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point BetSliderStart Not Set -' % template.name)
 			return
-		if template.betSliderEnd == TableCrabConfig.PointNone:
+		if pointSliderEnd == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point BetSliderEnd Not Set -' % template.name)
 			return
 		TableCrabWin32.mouseInputMouseDrag(
-				template.betSliderStart,
-				template.betSliderEnd,
+				pointSliderStart,
+				pointSliderEnd,
 				hwnd=hwnd,
 				restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool(),
 				)
@@ -523,9 +525,9 @@ class EventHandler(QtCore.QObject):
 		if not data['betBoxIsVisible']: return
 		if data['bet'] is None: return
 		if inputEvent.steps == 0: return
-		if hotkey.baseValue() == 'BigBlind':
+		if hotkey.baseValue() == TableCrabConfig.BigBlind:
 			newBet = data['bet'] + (data['bigBlind'] * hotkey.multiplier() * inputEvent.steps)
-		elif hotkey.baseValue == 'SmallBlind':
+		elif hotkey.baseValue == TableCrabConfig.SmallBlind:
 			newBet = data['bet'] + (data['smallBlind'] * hotkey.multiplier() * inputEvent.steps)
 		else:
 			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
@@ -542,9 +544,9 @@ class EventHandler(QtCore.QObject):
 		if not data['betBoxIsVisible']: return
 		if data['bet'] is None: return
 		if inputEvent.steps == 0: return
-		if hotkey.baseValue() == 'BigBlind':
+		if hotkey.baseValue() == TableCrabConfig.BigBlind:
 			newBet = data['bet'] - (data['bigBlind'] * hotkey.multiplier() * inputEvent.steps)
-		elif hotkey.baseValue == 'SmallBlind':
+		elif hotkey.baseValue == TableCrabConfig.SmallBlind:
 			newBet = data['bet'] - (data['smallBlind'] * hotkey.multiplier() * inputEvent.steps)
 		else:
 			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
@@ -573,19 +575,21 @@ class EventHandler(QtCore.QObject):
 		if not data['hwndBetBox']: return
 		if not data['betBoxIsVisible']: return
 
-		if template.potTopLeft == TableCrabConfig.PointNone:
+		pointTopLeft = template.points['PotTopLeft']
+		pointBottomRight = template.points['PotBottomRight']
+		if pointTopLeft == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point Pot Top Left Not Set -' % template.name)
 			return
-		if template.potBottomRight == TableCrabConfig.PointNone:
+		if pointBottomRight == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point Pot Bottom Right Not Set -' % template.name)
 			return
 
 		# grab pot rect
 		pixmap = QtGui.QPixmap.grabWindow(hwnd,
-					template.potTopLeft.x(),
-					template.potTopLeft.y(),
-					template.potBottomRight.x() - template.potTopLeft.x(),
-					template.potBottomRight.y() - template.potTopLeft.y(),
+					pointTopLeft.x(),
+					pointTopLeft.y(),
+					pointBottomRight.x() - pointTopLeft.x(),
+					pointBottomRight.y() - pointTopLeft.y(),
 					)
 		num, scanTrace = potGetAmount(pixmap)
 		#TODO: what to do with gocr warnings?
@@ -627,25 +631,25 @@ class EventHandler(QtCore.QObject):
 		# replayer gains focus, so we have to wait a bit and send another click to reactivate the table.
 		#TODO: for some reason (linux/wine?) table regain focus but is not activated when the replayer is opend for the first time
 		TableCrabWin32.mouseInputLeftClickDouble(
-				template.emptySpace,
+				template.points['EmptySpace'],
 				hwnd=hwnd,
 				restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool(),
 				)
 
 	def tableHandleReplayer(self, hotkey, template, hwnd, inputEvent):
-		point = template.replayer
+		point = template.points['Replayer']
 		if point == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point Replayer Not Set -' % template.name)
 		else:
-			self._tableClickRestoreFocus(hwnd, template.replayer, template)
+			self._tableClickRestoreFocus(hwnd, point, template)
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def tableHandleInstantHandHistory(self, hotkey, template, hwnd, inputEvent):
-		point = template.instantHandHistory
+		point = template.points['InstantHandHistory']
 		if point == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point InstantHandHistory Not Set -' % template.name)
 		else:
-			self._tableClickRestoreFocus(hwnd, template.instantHandHistory, template)
+			self._tableClickRestoreFocus(hwnd, point, template)
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 
