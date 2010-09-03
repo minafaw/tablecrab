@@ -219,7 +219,7 @@ def _testFont():
 	print 'stdout:', stdout, repr(stdout)
 	print 'stderr:', stderr, repr(stderr)
 
-_testFont()
+#_testFont()
 
 
 def _testWin32():
