@@ -1,8 +1,5 @@
 
-#TODO: we should expand template if screenshot of matching size is opend or taken (???). pretty biting
-#			to setup a new template and nothing works as expected. this or check for duplicate items
 #TODO: would be nice to have some information on how many templates are left until hitting MaxTemplates
-#TODO: remove MouseMontitor as soon as wine > 1.30 is out.
 #TODO: i kind of dislike in-place editing of template names. an "Edit" button would be more consistent but a bit of overkill right now. then .again .screenshot
 # 			open / save is taking away screenspace already. would have to find shorter names for these actions.
 #TODO: restore last selected template on restart?
