@@ -18,53 +18,48 @@ def newPoint(point=None, x=None, y=None):
 		point.setY(y)
 	return point
 
-class ChildItem(QtGui.QTreeWidgetItem):
-	def __init__(self, pointName, text, value, parent=None):
+class PointItem(QtGui.QTreeWidgetItem):
+	def __init__(self, pointName, point, parent=None):
 		QtGui.QTreeWidgetItem.__init__(self, parent)
+		self.point = None
 		self.pointName = pointName
-		self.setText(0, text)
-		self.setText(1, value)
+		self.setText(0, self.pointName)
+		self.setPoint(point)
+		self.setDisabled(True)
+	def setPoint(self, point):
+		if self.pointName == 'EmptySpace' and point == TableCrabConfig.PointNone:
+			# make shure point is not empty, we need it
+			point = QtCore.QPoint(1, 1)
+		self.point = point
+		self.setText(1, TableCrabConfig.pointToString(self.point) )
 	def toplevel(self):
 		return self.parent()
 
 class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
-	_PointNames = ('emptySpace', 'buttonCheck', 'buttonFold', 'buttonRaise',
-			'checkboxFold', 'checkboxCheckFold', 'betSliderStart', 'betSliderEnd',
-			'instantHandHistory', 'replayer', 'potTopLeft', 'potBottomRight')
+	PointNames = (
+		'EmptySpace',
+		'ButtonCheck',
+		'ButtonFold',
+		'ButtonRaise',
+		'CheckboxFold',
+		'CheckboxCheckFold',
+		'BetSliderStart',
+		'BetSliderEnd',
+		'PotTopLeft',
+		'PotBottomRight',
+		'InstantHandHistory',
+		'Replayer',
+		)
 	def __init__(self,
 			parent=None,
 			name='',
 			size=None,
-			emptySpace=None,
-			buttonCheck=None,
-			buttonFold=None,
-			buttonRaise=None,
-			checkboxFold=None,
-			checkboxCheckFold=None,
-			betSliderStart=None,
-			betSliderEnd=None,
-			instantHandHistory=None,
-			replayer=None,
-			potTopLeft=None,
-			potBottomRight=None,
-
 			itemIsExpanded=False,
+			**kws
 			):
 		QtGui.QTreeWidgetItem.__init__(self, parent)
 		self.name = name if name else self.menuName()
 		self.size = newValidSize(size)
-		self.emptySpace = newPoint(emptySpace, x=1, y=1)
-		self.buttonCheck = newPoint(buttonCheck)
-		self.buttonFold = newPoint(buttonFold)
-		self.buttonRaise = newPoint(buttonRaise)
-		self.checkboxFold = newPoint(checkboxFold)
-		self.checkboxCheckFold = newPoint(checkboxCheckFold)
-		self.betSliderStart = newPoint(betSliderStart)
-		self.betSliderEnd = newPoint(betSliderEnd)
-		self.instantHandHistory = newPoint(instantHandHistory)
-		self.replayer = newPoint(replayer)
-		self.potTopLeft = newPoint(potTopLeft)
-		self.potBottomRight = newPoint(potBottomRight)
 		self.itemIsExpanded = itemIsExpanded
 
 		self.setFirstColumnSpanned(True)
@@ -76,21 +71,17 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 		self.setExpanded( self.itemIsExpanded)
 		self.setText(0, self.name)
 
-		self.itemType = ChildItem(None, 'Type:',  self.menuName(), parent=self)
+		self.itemType = QtGui.QTreeWidgetItem(self, ['Type:',  self.menuName()])
 		self.itemType.setDisabled(True)
-		self.itemSize = ChildItem(None, 'Size:',  TableCrabConfig.sizeToString(self.size), parent=self)
+		self.itemSize = QtGui.QTreeWidgetItem(self, ['Size:',  TableCrabConfig.sizeToString(self.size)])
 		self.itemSize.setDisabled(True)
-		self.itemsPoint = []
-		for pointName in self._PointNames:
-			point = getattr(self, pointName)
-			item = ChildItem(
-					pointName,
-					pointName[0].upper() + pointName[1:],
-					TableCrabConfig.pointToString(point),
-					parent=self
-					)
-			item.setDisabled(True)
-			self.itemsPoint.append( (pointName, item) )
+
+		self.points = {}
+		self.pointItems = []
+		for pointName in self.PointNames:
+			point = newPoint(kws.get(pointName, None))
+			self.points[pointName] = point
+			self.pointItems.append(PointItem(pointName, point, parent=self) )
 
 	def toplevel(self):
 		return self
@@ -116,38 +107,34 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 
 	def handleScreenshotSet(self, pixmap):
 		if pixmap.isNull():
-			for _, item in self.itemsPoint:
+			for item in self.pointItems:
 				item.setDisabled(True)
 		elif pixmap.size() == self.size:
-			for _, item in self.itemsPoint:
+			for item in self.pointItems:
 				item.setDisabled(False)
 		elif self.size == TableCrabConfig.SizeNone:
-			for _, item in self.itemsPoint:
+			for item in self.pointItems:
 				item.setDisabled(False)
 		else:
-			for _, item in self.itemsPoint:
+			for item in self.pointItems:
 				item.setDisabled(True)
 
 	def handleScreenshotDoubleClicked(self, item, pixmap, point):
 		if item.isDisabled():
 			return False
-		for pointName, tmp_item in self.itemsPoint:
-			if tmp_item is item:
-				self.size.setWidth(pixmap.width())
-				self.size.setHeight(pixmap.height())
-				self.itemSize.setText(1, TableCrabConfig.sizeToString(self.size) )
-				myPoint = getattr(self, pointName)
-				if item.pointName == 'emptySpace' and point == TableCrabConfig.PointNone:
-					myPoint.setX(1)
-					myPoint.setY(1)
-				else:
-					myPoint.setX(point.x() )
-					myPoint.setY(point.y() )
-				item.setText(1, TableCrabConfig.pointToString(myPoint) )
-				return True
+		if item not in self.pointItems:
+			return False
+		self.size.setWidth(pixmap.width())
+		self.size.setHeight(pixmap.height())
+		self.itemSize.setText(1, TableCrabConfig.sizeToString(self.size) )
+		if item.pointName == 'EmptySpace' and point == TableCrabConfig.PointNone:
+			item.point.setX(1)
+			item.point.setY(1)
 		else:
-			raise ValueError('no item found')
-		return False
+			item.point.setX(point.x())
+			item.point.setY(point.y())
+		item.setPoint(item.point)
+		return True
 
 	@classmethod
 	def id(klass):
@@ -158,43 +145,31 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 	@classmethod
 	def shortcut(klass): return QtGui.QKeySequence('Shift+P')
 	@classmethod
-	def attrsFromConfig(klass, key, klassID):
-		attrs = {}
+	def fromConfig(klass, key):
+		kws = {}
 		id = TableCrabConfig.settingsValue( (key, 'ID'), '').toString()
-		if id != klassID: return None
-		attrs['name'] = TableCrabConfig.settingsValue( (key, 'Name'), 'None').toString()
+		if id != klass.id():
+			return None
+		kws['name'] = TableCrabConfig.settingsValue( (key, 'Name'), 'None').toString()
 		size = TableCrabConfig.settingsValue( (key, 'Size'), TableCrabConfig.newSizeNone() ).toSize()
 		if not size.isValid():
 			size = TableCrabConfig.newSizeNone()
-		attrs['size'] = size
-		attrs['itemIsExpanded'] = TableCrabConfig.settingsValue( (key, 'ItemIsExpanded'), False).toBool()
-		for pointName in klass._PointNames:
-			keyName = pointName[0].upper() + pointName[1:]
-			point = TableCrabConfig.settingsValue(
-					(key, keyName),
-					TableCrabConfig.newPointNone()
-					).toPoint()
-			if pointName == 'emptySpace':
-					# make shure point is not empty, we need it
-					if point == TableCrabConfig.PointNone:
-						point = QtCore.QPoint(1, 1)
+		kws['size'] = size
+		kws['itemIsExpanded'] = TableCrabConfig.settingsValue( (key, 'ItemIsExpanded'), False).toBool()
+		for pointName in klass.PointNames:
+			point = TableCrabConfig.settingsValue((key, pointName), TableCrabConfig.newPointNone()).toPoint()
 			if not TableCrabConfig.pointInSize(size, point):
 				point = TableCrabConfig.newPointNone()
-			attrs[pointName] = point
-		return attrs
-	@classmethod
-	def fromConfig(klass, key):
-		attrs = klass.attrsFromConfig(key, klass.id() )
-		if attrs is not None:
-			return klass(**attrs)
+			kws[pointName] = point
+		return klass(**kws)
+
 	def toConfig(self, key):
 		TableCrabConfig.settingsSetValue( (key, 'ID'), self.id() )
 		TableCrabConfig.settingsSetValue( (key, 'Name'), self.name)
 		TableCrabConfig.settingsSetValue( (key, 'Size'), self.size)
 		TableCrabConfig.settingsSetValue( (key, 'ItemIsExpanded'), self.itemIsExpanded)
-		for pointName in self._PointNames:
-			keyName = pointName[0].upper() + pointName[1:]
-			TableCrabConfig.settingsSetValue( (key, keyName), getattr(self, pointName) )
+		for pointName, point in self.points.items():
+			TableCrabConfig.settingsSetValue( (key, pointName), point)
 		return True
 
 Templates.append(TemplatePokerStarsTable)
