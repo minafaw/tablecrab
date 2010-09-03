@@ -29,6 +29,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		TableCrabConfig.hotkeyManager = self
 
 		# setup treeWidget
+		self.setUniformRowHeights(True)
 		self.setColumnCount(3)
 		self.setRootIsDecorated(False)
 		self.setSelectionBehavior(self.SelectRows)

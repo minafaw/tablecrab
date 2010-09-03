@@ -169,6 +169,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		TableCrabConfig.templateManager = self
 
 		# setup treeWidget
+		self.setUniformRowHeights(True)
 		self.setColumnCount(2)
 		self.setExpandsOnDoubleClick(False)
 		self.setSelectionBehavior(self.SelectRows)

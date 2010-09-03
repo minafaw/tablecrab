@@ -193,6 +193,7 @@ class FrameHelp(QtGui.QFrame):
 				)
 
 		self.tree = QtGui.QTreeWidget(self)
+		self.tree.setUniformRowHeights(True)
 		self.tree.setExpandsOnDoubleClick(False)
 		self.tree.setRootIsDecorated(False)
 		self.tree.header().setVisible(False)
@@ -226,6 +227,8 @@ class FrameHelp(QtGui.QFrame):
 		TableCrabConfig.settingsSetValue('Gui/Help/SplitterState', self.splitter.saveState() )
 
 	def onInit(self):
+		self.tree.setUpdatesEnabled(False)
+
 		self.webView.setUrl(QtCore.QUrl(''))
 		self.tree.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
 		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Help/SplitterState', QtCore.QByteArray()).toByteArray() )
@@ -255,6 +258,8 @@ class FrameHelp(QtGui.QFrame):
 			self.tree.setCurrentItem(lastTopicItem)
 		else:
 			self.tree.setCurrentItem(firstTopicItem)
+
+		self.tree.setUpdatesEnabled(True)
 
 	def onItemSelectionChanged(self):
 		items = self.tree.selectedItems()
