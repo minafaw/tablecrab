@@ -137,14 +137,14 @@ class SingleApplication(object):
 		self.hMutex = TableCrabWin32.kernel32.CreateMutexA(None, 1, 'Local\\73524668475460800279396959888864133024')
 		atexit.register(self.close)
 		if TableCrabWin32.GetLastError() == TableCrabWin32.ERROR_INVALID_HANDLE:
-			if not self.onMutexLocked():
+			if not self.handleMutexLocked():
 				##sys.exit(1)
 				raise RuntimeError('%s is already running' % ApplicationName)
 	def close(self, closeFunc=TableCrabWin32.kernel32.CloseHandle):	# need to hold reference to CloseHandle here. we get garbage collected otherwise
 		if self.hMutex is not None:
 			closeFunc(self.hMutex)
 			self.hMutex = None
-	def onMutexLocked(self):
+	def handleMutexLocked(self):
 		#TODO: give feedback here, usual stuff like bring other to top, flash window, whatevs
 		#			x. FlashWindow() does not work in wine
 		# 			x. FlashWindowEx() is not implemented in wine
