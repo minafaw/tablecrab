@@ -752,9 +752,6 @@ class FrameSetup(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
-		# time to monitor mouse to give feedback on other windws
-		self.mouseMonitorTimer = TableCrabConfig.Timer(parent=self, singleShot=False, interval=TableCrabConfig.MouseMonitorTimeout*1000, slot=self.onMouseMonitor)
-
 		self.templatesWidget = TemplatesWidget(parent=self)
 		self.screenshotWidget =ScreenshotWidget(parent=self)
 
@@ -784,17 +781,6 @@ class FrameSetup(QtGui.QFrame):
 		self.layout()
 
 	#--------------------------------------------------------------------------------------------------------------
-	# overwritten methods
-	#--------------------------------------------------------------------------------------------------------------
-	def hideEvent(self, event):
-		self.mouseMonitorTimer.stop()
-		return QtGui.QFrame.hideEvent(self, event)
-
-	def showEvent(self, event):
-		self.mouseMonitorTimer.start()
-		return QtGui.QFrame.showEvent(self, event)
-
-	#--------------------------------------------------------------------------------------------------------------
 	# methods
 	#--------------------------------------------------------------------------------------------------------------
 	def layout(self):
@@ -813,40 +799,4 @@ class FrameSetup(QtGui.QFrame):
 
 	def onInit(self):
 		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Setup/SplitterState', QtCore.QByteArray()).toByteArray() )
-
-	def onMouseMonitor(self):
-		# find our main window hwnd
-		wid = self.effectiveWinId()	# NOTE: effectiveWinId() returns <sip.voidptr> and may be None
-		if not wid:
-			return
-		hwndSelf = int(wid)
-		hwndSelf = TableCrabWin32.windowGetTopLevelParent(hwndSelf)
-
-		# get toplevel window under mouse
-		point = TableCrabWin32.mouseGetPos()
-		hwndOther = TableCrabWin32.windowFromPoint(point)
-		hwndOther = TableCrabWin32.windowGetTopLevelParent(hwndOther)
-		if not hwndOther:
-			return
-		elif hwndOther == hwndSelf:
-			return
-
-		# found a window of another process ..give feedback
-		if TableCrabWin32.windowGetTextLength(hwndOther) > TableCrabConfig.MaxWindowText:
-			title = 'Window title too long'
-		else:
-			title = TableCrabWin32.windowGetText(hwndOther, maxSize=TableCrabConfig.MaxWindowText)
-			if not title:
-				return
-		title = TableCrabConfig.truncateString(title, TableCrabConfig.MaxName)
-		rect = TableCrabWin32.windowGetClientRect(hwndOther)
-		size = TableCrabConfig.sizeToString(rect.size() )
-		point = TableCrabWin32.windowScreenPointToClientPoint(hwndOther, point)
-		point = TableCrabConfig.pointToString(point)
-		TableCrabConfig.globalObject.feedback.emit(self, '%s -- Size: %s Mouse: %s' % (title, size, point) )
-
-
-
-
-
 
