@@ -242,6 +242,7 @@ class EventHandler(QtCore.QObject):
 						# 	for some reson sending F5 via KeyboardInput has no effect whatsoever, so we tell TableCrabWin32
 						# to wrap resizing into enter- exitsizemove messages. tested on winXP aswell - works nicely
 						TableCrabWin32.windowSetClientSize(hwnd, template.size, sendSizeMove=True)
+						TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (hotkey.menuName(), template.name) )
 				inputEvent.accept = True
 				return True
 
