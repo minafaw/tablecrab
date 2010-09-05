@@ -322,14 +322,14 @@ class WebViewToolBar(QtGui.QToolBar):
 
 		globalObject.init.connect(self.onInit)
 
-		back = self.webView.pageAction(QtWebKit.QWebPage.Back)
-		back.setShortcut(QtGui.QKeySequence.Back)
-		back.setToolTip('Back (Alt+-)')
-		self.addAction(back)
-		forward = self.webView.pageAction(QtWebKit.QWebPage.Forward)
-		forward.setToolTip('Forward (Alt++)')
-		forward.setShortcut(QtGui.QKeySequence.Forward)
-		self.addAction(forward)
+		self.actionBack = self.webView.pageAction(QtWebKit.QWebPage.Back)
+		self.actionBack.setShortcut(QtGui.QKeySequence.Back)
+		self.actionBack.setToolTip('Back (Alt+-)')
+		self.addAction(self.actionBack)
+		self.actionForward = self.webView.pageAction(QtWebKit.QWebPage.Forward)
+		self.actionForward.setToolTip('Forward (Alt++)')
+		self.actionForward.setShortcut(QtGui.QKeySequence.Forward)
+		self.addAction(self.actionForward)
 
 		self.actionZoomIn = Action(
 				parent=self,
