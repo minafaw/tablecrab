@@ -181,6 +181,7 @@ class FrameHelp(QtGui.QFrame):
 
 		self.webView = QtWebKit.QWebView(self)
 		self.webView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)		#
+		self.webView.customContextMenuRequested.connect(self.onContextMenuWebView)
 		oldManager = self.webView.page().networkAccessManager()
 		self.networkAccessManager = NetworkAccessManager(oldManager, parent=self)
 		page = self.webView.page()
@@ -188,6 +189,7 @@ class FrameHelp(QtGui.QFrame):
 		page.setLinkDelegationPolicy(page.DelegateAllLinks)
 		page.linkClicked.connect(self.onLinkClicked)
 
+		# setup tool bar
 		self.toolBar = TableCrabConfig.WebViewToolBar(self.webView,
 				settingsKeyZoomFactor='Gui/Help/ZoomFactor',
 				settingsKeyZoomSteps='Gui/WebView/ZoomSteps',
@@ -202,6 +204,15 @@ class FrameHelp(QtGui.QFrame):
 		self.splitter = QtGui.QSplitter(self)
 		self.splitter.addWidget(self.tree)
 		self.splitter.addWidget(self.webView)
+
+		# set up actions
+		self.actionCopy = self.webView.pageAction(QtWebKit.QWebPage.Copy)
+		self.actionCopy.setShortcut(QtGui.QKeySequence(QtGui.QKeySequence.Copy))
+		self.addAction(self.actionCopy)
+
+		self.actionSelectAll = self.webView.pageAction(QtWebKit.QWebPage.SelectAll)
+		self.actionSelectAll.setShortcut(QtGui.QKeySequence(QtGui.QKeySequence.SelectAll))
+		self.addAction(self.actionSelectAll)
 
 		# connect signals
 		TableCrabConfig.globalObject.init.connect(self.onInit)
@@ -226,6 +237,13 @@ class FrameHelp(QtGui.QFrame):
 	#--------------------------------------------------------------------------------------------------------------
 	def onCloseEvent(self, event):
 		TableCrabConfig.settingsSetValue('Gui/Help/SplitterState', self.splitter.saveState() )
+
+	def onContextMenuWebView(self, point):
+		menu = QtGui.QMenu(self)
+		menu.addAction(self.actionCopy)
+		menu.addAction(self.actionSelectAll)
+		point = self.webView.mapToGlobal(point)
+		menu.exec_(point)
 
 	def onInit(self):
 		self.tree.setUpdatesEnabled(False)

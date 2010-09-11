@@ -19,6 +19,8 @@ class FrameHand(QtGui.QFrame):
 
 		self.webView = QtWebKit.QWebView(self)
 		self.webView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+		self.webView.customContextMenuRequested.connect(self.onContextMenuWebView)
+
 		self.pokerStarsHandGrabber = PokerStarsHandGrabber.HandGrabber(
 				PokerStarsHandGrabber.HandParser(),
 				PokerStarsHandGrabber.HandFormatterHtmlTabular(),
@@ -32,6 +34,15 @@ class FrameHand(QtGui.QFrame):
 				settingsKeyZoomFactor='Gui/Hand/ZoomFactor',
 				settingsKeyZoomSteps='Gui/WebView/ZoomSteps',
 				)
+
+		# set up actions
+		self.actionCopy = self.webView.pageAction(QtWebKit.QWebPage.Copy)
+		self.actionCopy.setShortcut(QtGui.QKeySequence(QtGui.QKeySequence.Copy))
+		self.addAction(self.actionCopy)
+
+		self.actionSelectAll = self.webView.pageAction(QtWebKit.QWebPage.SelectAll)
+		self.actionSelectAll.setShortcut(QtGui.QKeySequence(QtGui.QKeySequence.SelectAll))
+		self.addAction(self.actionSelectAll)
 
 		self.actionOpen = TableCrabConfig.Action(
 				parent=self.toolBar,
@@ -133,6 +144,13 @@ class FrameHand(QtGui.QFrame):
 
 	def onCloseEvent(self, event):
 		self.pokerStarsHandGrabber.stop()
+
+	def onContextMenuWebView(self, point):
+		menu = QtGui.QMenu(self)
+		menu.addAction(self.actionCopy)
+		menu.addAction(self.actionSelectAll)
+		point = self.webView.mapToGlobal(point)
+		menu.exec_(point)
 
 	def onInit(self):
 		self.webView.setUrl(QtCore.QUrl(''))
