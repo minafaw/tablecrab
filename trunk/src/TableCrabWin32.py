@@ -47,6 +47,7 @@ class MSLLHOOKSTRUCT(Structure):
 
 def HIWORD(dword):
 	return DWORD(dword).value >> 16
+def MAKELONG(word1, word2): return word1 | (word2 << 16)
 
 def GET_WHEEL_DELTA_WPARAM(wParam):
 	return c_short(HIWORD(wParam)).value
@@ -382,6 +383,12 @@ def sendMessageTimeout(hwnd, msg, wParam,lParam, isUnicode=True):
 	else:
 		user32.SendMessageTimeoutA(hwnd, msg, wParam, lParam, SMTO_ABORTIFHUNG, MY_SMTO_TIMEOUT, byref(result))
 	return result.value
+
+def postMessage(hwnd,msg,wp,lp,isUnicode=True):
+	if isUnicode:
+		return user32.PostMessageW(hwnd,msg,wp,lp)
+	else:
+		return user32.PostMessageA(hwnd,msg,wp,lp)
 
 
 #****************************************************************************************************
@@ -935,6 +942,17 @@ class MouseInput(object):
 		self._input.append(input)
 		return self
 
+def mouseInputLeftClick(point, hwnd=None, restoreCursor=False):
+	pointLast = mouseGetPos()
+	MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
+	#NOTE: on wine the mouse cursor is always moved around. SendInput() is very inaccurate
+	# so we use mouseSetPos() to restore the cursor position
+	if restoreCursor and pointLast != mouseGetPos():
+		mouseSetPos(pointLast, hwnd=None)
+	#NOTE: looks like on winXP we can not move the cursor around
+	#elif pointLast == mouseGetPos():
+	#	mouseSetPos(point, hwnd=hwnd)
+
 def mouseInputLeftClickDouble(point, hwnd=None, restoreCursor=False):
 	pointLast = mouseGetPos()
 	MouseInput().move(point, hwnd=hwnd).leftClickDouble(point, hwnd=hwnd).send()
@@ -1082,6 +1100,9 @@ def mouseSetPos(point, step=4, hwnd=None):
 		pt.x, pt.y = curX, curY
 		user32.SetCursorPos(pt)
 
+def mouseDoubleClickTime():
+	return user32.GetDoubleClickTime()
+print mouseDoubleClickTime()
 
 class MouseHook(QtCore.QObject):
 	"""win32 keyboard manager implementation
