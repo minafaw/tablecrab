@@ -427,6 +427,35 @@ class EventHandler(QtCore.QObject):
 			return False
 		return True
 
+	def tableClickButton(self, hwnd, point, template, hotkey):
+		#NOTES:
+		# 1) buttons and checkboxes are not always reacting to dingle clicks (try clicking a checkbox
+		#     a few times in row. it will drop one or the other click).
+		# 2) PostMessage(WM_LBUTTONDOWN,...) works for buttons but is not working for checkboxes
+		#3) SendInput() throws messages anonymously into the eent queue so we can not
+		#    be shure the current foreground window is receiving the messages (race condition)
+		# 4) there is no way we can check if our input triggered the desired effect
+		#     ...
+		# 5) we dont know when PS schows us buttons or checkboxes. bet box being
+		#    visible gives us an indicator at times, but is useless for example if s.o. is all-in
+		#
+		TableCrabWin32.mouseInputLeftClick(
+				point,
+				hwnd=hwnd,
+				restoreCursor=False,
+				)
+		# abitrary timeout for a check if PS has thrown another table to the foreground.
+		# n way to get this fail save, we have a race condition anyways
+		time.sleep( min(0.05, TableCrabWin32.mouseDoubleClickTime()) )
+		hwnd2 = TableCrabWin32.windowForeground()
+		if hwnd == hwnd2:
+			TableCrabWin32.mouseInputLeftClick(
+					point,
+					hwnd=hwnd,
+					restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool(),
+					)
+		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+
 	def tableHandleCheck(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
@@ -442,13 +471,7 @@ class EventHandler(QtCore.QObject):
 			if point == TableCrabConfig.PointNone:
 				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point CheckboxCheckFold Not Set -' % template.name)
 				return
-		#NOTE: we always double click. seems to work more reliably
-		TableCrabWin32.mouseInputLeftClickDouble(
-				point,
-				hwnd=hwnd,
-				restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool(),
-				)
-		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+		self.tableClickButton(hwnd, point, template, hotkey)
 
 	def tableHandleFold(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
@@ -465,13 +488,7 @@ class EventHandler(QtCore.QObject):
 			if point == TableCrabConfig.PointNone:
 				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point CheckboxFold Not Set -' % template.name)
 				return
-		#NOTE: we always double click. seems to work more reliably
-		TableCrabWin32.mouseInputLeftClickDouble(
-				point,
-				hwnd=hwnd,
-				restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool(),
-				)
-		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+		self.tableClickButton(hwnd, point, template, hotkey)
 
 	def tableHandleRaise(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
@@ -479,16 +496,11 @@ class EventHandler(QtCore.QObject):
 		if not data['hwndBetBox']: return
 		#NOTE: BetBox may not be visible when a player is all-in
 		##if not data['betBoxIsVisible']: return
-		if  template.points['ButtonRaise'] == TableCrabConfig.PointNone:
+		point = template.points['ButtonRaise']
+		if  point == TableCrabConfig.PointNone:
 			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point ButtonRaise Not Set -' % template.name)
 			return
-		#NOTE: we always double click. seems to work more reliably
-		TableCrabWin32.mouseInputLeftClickDouble(
-				template.points['ButtonRaise'],
-				hwnd=hwnd,
-				restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool(),
-				)
-		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+		self.tableClickButton(hwnd, point, template, hotkey)
 
 	#NOTE: there is another way to handle all-in. no reliable one but could be a fallback. looks like bet amount box accepts
 	# values up to some hard coded PS wide maximum. if this maximum is exceeded the bet box resets to 0.
