@@ -128,7 +128,8 @@ def potGetAmount(pixmap):
 
 # for quick and dirty testing
 def testPotAmount():
-	buff = ''		# paste image here
+	buff = ''
+
 	app = QtGui.QApplication([])
 	gocrImage = gocr.ImagePGM(buff)
 	header = gocrImage.header()
