@@ -240,7 +240,7 @@ class EventHandler(QtCore.QObject):
 					if template is not None:
 						#NOTE: on wine tables do not get redrawn on resize [ http://bugs.winehq.org/show_bug.cgi?id=5941 ].
 						# 	for some reson sending F5 via KeyboardInput has no effect whatsoever, so we tell TableCrabWin32
-						# to wrap resizing into enter- exitsizemove messages. tested on winXP aswell - works nicely
+						# to wrap resizing into enter- exitsizemove messages. tested on winXP as well - works nicely
 						TableCrabWin32.windowSetClientSize(hwnd, template.size, sendSizeMove=True)
 						TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (hotkey.menuName(), template.name) )
 				inputEvent.accept = True
