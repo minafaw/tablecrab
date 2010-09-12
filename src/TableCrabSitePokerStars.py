@@ -325,7 +325,7 @@ class EventHandler(QtCore.QObject):
 	TitleLobby = 'PokerStars Lobby'
 	ClassLobby = '#32770'	# duh, stars. main windows should never be dialogs
 	def isLobby(self, hwnd):
-		if not TableCrabWin32.windowGetClassName(hwnd) == self.ClassLobby: return False
+		if TableCrabWin32.windowGetClassName(hwnd) != self.ClassLobby: return False
 		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleLobby)).startswith(self.TitleLobby): return False
 		if not self.isPokerStarsWindow(hwnd): return False
 		return True
@@ -338,15 +338,15 @@ class EventHandler(QtCore.QObject):
 	ClassInstantHandHistory = '#32770'
 	TitleInstantHandHistory = 'Instant Hand History'
 	def isInstantHandHistory(self, hwnd):
-		if not TableCrabWin32.windowGetClassName(hwnd) == self.ClassInstantHandHistory: return False
-		if not TableCrabWin32.windowGetText(hwnd) == self.TitleInstantHandHistory: return False
+		if TableCrabWin32.windowGetClassName(hwnd) != self.ClassInstantHandHistory: return False
+		if TableCrabWin32.windowGetText(hwnd) != self.TitleInstantHandHistory: return False
 		if not self.isPokerStarsWindow(hwnd): return False
 		return True
 
 	ClassNews = '#32770'
 	TitleNews = 'News'
 	def isPopupNews(self, hwnd):
-		if not TableCrabWin32.windowGetClassName(hwnd) == self.ClassNews: return False
+		if TableCrabWin32.windowGetClassName(hwnd) != self.ClassNews: return False
 		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleNews)) == self.TitleNews: return False
 		if not self.isPokerStarsWindow(hwnd): return False
 		return True
@@ -354,7 +354,7 @@ class EventHandler(QtCore.QObject):
 	TitleTourneyRegistrationMessageBox = 'Tournament Registration'
 	ClassTourneyRegistrationMessageBox = '#32770'
 	def isTourneyRegistrationMessageBox(self, hwnd):
-		if not TableCrabWin32.windowGetClassName(hwnd) == self.ClassTourneyRegistrationMessageBox: return False
+		if TableCrabWin32.windowGetClassName(hwnd) != self.ClassTourneyRegistrationMessageBox: return False
 		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleTourneyRegistrationMessageBox)) == self.TitleTourneyRegistrationMessageBox: return False
 		if not self.isPokerStarsWindow(hwnd): return False
 		return True
@@ -362,7 +362,7 @@ class EventHandler(QtCore.QObject):
 	TitleTableMessageBox = 'PokerStars'
 	ClassTableMessageBox = '#32770'
 	def isTableMessageBox(self, hwnd):
-		if not TableCrabWin32.windowGetClassName(hwnd) == self.ClassTableMessageBox: return False
+		if TableCrabWin32.windowGetClassName(hwnd) != self.ClassTableMessageBox: return False
 		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleTableMessageBox)) == self.TitleTableMessageBox: return False
 		hwndParent = TableCrabWin32.windowGetParent(hwnd)
 		if not self.isTable(hwndParent): return False
@@ -371,7 +371,7 @@ class EventHandler(QtCore.QObject):
 	TitleLogIn = 'Log In'
 	ClassLogIn = '#32770'
 	def isLogIn(self, hwnd):
-		if not TableCrabWin32.windowGetClassName(hwnd) == self.ClassLogIn: return False
+		if TableCrabWin32.windowGetClassName(hwnd) != self.ClassLogIn: return False
 		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleLogIn)) == self.TitleLogIn: return False
 		hwndParent = TableCrabWin32.windowGetParent(hwnd)
 		if not self.isPokerStarsWindow(hwnd): return False
