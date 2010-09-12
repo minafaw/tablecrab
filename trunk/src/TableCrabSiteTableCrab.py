@@ -42,7 +42,7 @@ class EventHandler(QtCore.QObject):
 		if TableCrabWin32.windowIsSameProcess(hwnd, self._hwndMain):
 			return True
 		if hotkey.id() == TableCrabHotkeys.HotkeyScreenshot.id():
-			if inputEvent.keyIsDown or inputEvent.mouseSteps:
+			if inputEvent.keyIsDown or inputEvent.steps:
 				TableCrabConfig.widgetScreenshot(hwnd)
 				TableCrabConfig.globalObject.feedbackMessage.emit(hotkey.action() )
 				inputEvent.accept = True
