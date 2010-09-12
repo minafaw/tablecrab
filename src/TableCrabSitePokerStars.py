@@ -427,8 +427,15 @@ class EventHandler(QtCore.QObject):
 			return False
 		return True
 
+	def tableGetPoint(self,pointName, template):
+		point = template.points[pointName]
+		if point == TableCrabConfig.PointNone:
+			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point %s Not Set -' % (template.name,pointName) )
+			return None
+		return point
+
 	def tableClickButton(self, hwnd, point, template, hotkey):
-		#NOTES:
+		#NOTE:
 		# 1) buttons and checkboxes are not always reacting to dingle clicks (try clicking a checkbox
 		#     a few times in row. it will drop one or the other click).
 		# 2) PostMessage(WM_LBUTTONDOWN,...) works for buttons but is not working for checkboxes
@@ -460,33 +467,31 @@ class EventHandler(QtCore.QObject):
 		data = self.tableReadData(hwnd)
 		if not data: return
 		if data['hwndBetBox'] and data['betBoxIsVisible']:
-			point = template.points['ButtonCheck']
-			if point == TableCrabConfig.PointNone:
-				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point ButtonCheck Not Set -' % template.name)
+			point = self.tableGetPoint('ButtonCheck', template)
+			if point is None:
 				return
 		# we always allow checkboxcCheckFold ..stars may show this box when we are newly seated at a table without having the
 		# bet amount box created yet
 		else:
-			point = template.points['CheckboxCheckFold']
-			if point == TableCrabConfig.PointNone:
-				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point CheckboxCheckFold Not Set -' % template.name)
+			point = self.tableGetPoint('CheckboxCheckFold', template)
+			if point is None:
 				return
 		self.tableClickButton(hwnd, point, template, hotkey)
 
+	#NOTE: trouble here. we relyon checkbox fold being in the same spot as button fold
+	# because we can not tell when either one is shown.
 	def tableHandleFold(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
 		if data['hwndBetBox'] and data['betBoxIsVisible']:
-			point =  template.points['ButtonFold']
-			if point == TableCrabConfig.PointNone:
-				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point ButtonFold Not Set -' % template.name)
+			point = self.tableGetPoint('ButtonFold', template)
+			if point is None:
 				return
 		# we always allow checkboxFold ..stars may show this box when we are newly seated at a table without having the
 		# bet amount box created yet
 		else:
-			point = template.points['CheckboxFold']
-			if point == TableCrabConfig.PointNone:
-				TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point CheckboxFold Not Set -' % template.name)
+			point = self.tableGetPoint('CheckboxFold', template)
+			if point is None:
 				return
 		self.tableClickButton(hwnd, point, template, hotkey)
 
@@ -496,9 +501,8 @@ class EventHandler(QtCore.QObject):
 		if not data['hwndBetBox']: return
 		#NOTE: BetBox may not be visible when a player is all-in
 		##if not data['betBoxIsVisible']: return
-		point = template.points['ButtonRaise']
-		if  point == TableCrabConfig.PointNone:
-			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point ButtonRaise Not Set -' % template.name)
+		point = self.tableGetPoint('ButtonRaise', template)
+		if point is None:
 			return
 		self.tableClickButton(hwnd, point, template, hotkey)
 
@@ -515,13 +519,11 @@ class EventHandler(QtCore.QObject):
 		if not data: return
 		if not data['hwndBetBox']: return
 		if not data['betBoxIsVisible']: return
-		pointSliderStart = template.points['BetSliderStart']
-		pointSliderEnd = template.points['BetSliderEnd']
-		if pointSliderStart == TableCrabConfig.PointNone:
-			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point BetSliderStart Not Set -' % template.name)
+		pointSliderStart = self.tableGetPoint('BetSliderStart', template)
+		if pointSliderStart is None:
 			return
-		if pointSliderEnd == TableCrabConfig.PointNone:
-			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point BetSliderEnd Not Set -' % template.name)
+		pointSliderEnd = self.tableGetPoint('BetSliderEnd', template)
+		if pointSliderEnd is None:
 			return
 		TableCrabWin32.mouseInputMouseDrag(
 				pointSliderStart,
@@ -650,19 +652,17 @@ class EventHandler(QtCore.QObject):
 				)
 
 	def tableHandleReplayer(self, hotkey, template, hwnd, inputEvent):
-		point = template.points['Replayer']
-		if point == TableCrabConfig.PointNone:
-			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point Replayer Not Set -' % template.name)
-		else:
-			self._tableClickRestoreFocus(hwnd, point, template)
-			TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+		point = self.tableGetPoint('Replayer', template)
+		if point is None:
+			return
+		self._tableClickRestoreFocus(hwnd, point, template)
+		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def tableHandleInstantHandHistory(self, hotkey, template, hwnd, inputEvent):
-		point = template.points['InstantHandHistory']
-		if point == TableCrabConfig.PointNone:
-			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point InstantHandHistory Not Set -' % template.name)
-		else:
-			self._tableClickRestoreFocus(hwnd, point, template)
-			TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+		point = self.tableGetPoint('InstantHandHistory', template)
+		if point is None:
+			return
+		self._tableClickRestoreFocus(hwnd, point, template)
+		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 
