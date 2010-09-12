@@ -246,63 +246,38 @@ class EventHandler(QtCore.QObject):
 				inputEvent.accept = True
 				return True
 
+			#
 			template = self.tableTemplate(hwnd)
 			if template is None:
 				return False
 
+			handler = None
 			if hotkeyID == TableCrabHotkeys.HotkeyCheck.id():
-				if inputEvent.keyIsDown:
-					self.tableHandleCheck(hotkey, template, hwnd, inputEvent)
-				inputEvent.accept = True
-				return True
+				handler = self.tableHandleCheck
 			elif hotkeyID == TableCrabHotkeys.HotkeyFold.id():
-				if inputEvent.keyIsDown:
-					self.tableHandleFold(hotkey, template, hwnd, inputEvent)
-				inputEvent.accept = True
-				return True
+				handler = self.tableHandleFold
 			elif hotkeyID == TableCrabHotkeys.HotkeyRaise.id():
-				if inputEvent.keyIsDown:
-					self.tableHandleRaise(hotkey, template, hwnd, inputEvent)
-				inputEvent.accept = True
-				return True
+				handler = self.tableHandleRaise
 			elif hotkeyID == TableCrabHotkeys.HotkeyAll_In.id():
-				if inputEvent.keyIsDown:
-					self.tableHandleAll_In(hotkey, template, hwnd, inputEvent)
-				inputEvent.accept = True
-				return True
+				handler = self.tableHandleAll_In
 			elif hotkeyID == TableCrabHotkeys.HotkeyHilightBet.id():
-				if inputEvent.keyIsDown:
-					self.tableHandleHilightBet(hotkey, template, hwnd, inputEvent)
-				inputEvent.accept = True
-				return True
+				handler = self.tableHandleHilightBet
 			elif hotkeyID == TableCrabHotkeys.HotkeyAddToBet.id():
-				if inputEvent.keyIsDown:
-					self.tableHandleAddToBet(hotkey, template, hwnd, inputEvent)
-				inputEvent.accept = True
-				return True
+				handler = self.tableHandleAddToBet
 			elif hotkeyID == TableCrabHotkeys.HotkeySubtractFromBet.id():
-				if inputEvent.keyIsDown:
-					self.tableHandleSubtractFromBet(hotkey, template, hwnd, inputEvent)
-				inputEvent.accept = True
-				return True
+				handler = self.tableHandleSubtractFromBet
 			elif hotkeyID == TableCrabHotkeys.HotkeyMultiplyBet.id():
-				if inputEvent.keyIsDown:
-					self.tableHandleMultiplyBet(hotkey, template, hwnd, inputEvent)
-				inputEvent.accept = True
-				return True
+				handler = self.tableHandleMultiplyBet
 			elif hotkeyID == TableCrabHotkeys.HotkeyBetPot.id():
-				if inputEvent.keyIsDown:
-					self.tableHandleBetPot(hotkey, template, hwnd, inputEvent)
-				inputEvent.accept = True
-				return True
+				handler = self.tableHandleBetPot
 			elif hotkeyID == TableCrabHotkeys.HotkeyReplayer.id():
-				if inputEvent.keyIsDown:
-					self.tableHandleReplayer(hotkey, template, hwnd, inputEvent)
-				inputEvent.accept = True
-				return True
+				handler = self.tableHandleReplayer
 			elif hotkeyID == TableCrabHotkeys.HotkeyInstantHandHistory.id():
+				handler = self.tableHandleInstantHandHistory
+
+			if handler is not None:
 				if inputEvent.keyIsDown:
-					self.tableHandleInstantHandHistory(hotkey, template, hwnd, inputEvent)
+					handler(hotkey, template, hwnd, inputEvent)
 				inputEvent.accept = True
 				return True
 
