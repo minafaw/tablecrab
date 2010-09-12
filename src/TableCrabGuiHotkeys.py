@@ -131,24 +131,17 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			self.actionRemove.setEnabled(True)
 			self.actionEdit.setEnabled(True)
 
+	#TODO: there is a is a bug in Qt4.6.2. last items text(1) is never updated.
+	#			[http://bugreports.qt.nokia.com/browse/QTBUG-4849]
+	# looks like there is no way to workaround. tried removing / reinsterting items
+	# but this runs into more bugs, resulting in loosing templates on certain occasions
+	#
+	# test is: open screenshot, create new item. this items flag is never set to '//Edit//'
+	# move item up --> flag gets shown. guess its best to leave it as is and wait for Qt
+	# fixing bugs.
 	def adjustHotkeys(self):
-		self.setUpdatesEnabled(False)
-
-		#TODO: fix(1) there is a is a bug in Qt4.6.2. last items text(1) is never updated.
-		#			[http://bugreports.qt.nokia.com/browse/QTBUG-4849]. as a workaround we
-		#			remove / restore all items here to force an update
-		# fix(1)
-		hscroll = self.horizontalScrollBar().value()
-		vscroll = self.verticalScrollBar().value()
-		currentItem = self.currentItem()
-		items = []
-		for i in xrange(len(self)):
-			items.append(self.takeTopLevelItem(0))
-		# /fix(1)
-
 		tmp_hotkeys = {}
-		#for template in self:		# fix(1)
-		for hotkey in items:	# /fix(1)
+		for hotkey in self:
 			if hotkey.hotkey() not in tmp_hotkeys:
 				tmp_hotkeys[hotkey.hotkey()] = [hotkey]
 			else:
@@ -162,14 +155,6 @@ class HotkeyWidget(QtGui.QTreeWidget):
 					hotkey.setText(2, '')
 				else:
 					hotkey.setText(2, '//%s//' % flag)
-
-		# fix(1)
-		for item in  items:
-			self.addTopLevelItem(item)
-		if currentItem is not None: self.setCurrentItem(currentItem)
-		self.horizontalScrollBar().setValue(hscroll)
-		self.verticalScrollBar().setValue(vscroll)
-		# /fix(1)
 
 		self.setUpdatesEnabled(True)
 
