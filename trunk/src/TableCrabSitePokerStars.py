@@ -413,7 +413,9 @@ class EventHandler(QtCore.QObject):
 			except ValueError: pass
 		return data
 
-	#TODO: fo some reason hotkeys are stillenabled when mouse is over notes editor with editor not having focus
+	#TODO: for some reason hotkeys are still enabled when mouse is over notes editor with editor not having focus.
+	#    className we get in this case is "PokerStarsTableClass"
+	ClassChat = 'PokerStarsChatClass'
 	ClassChatEditor = 'PokerStarsChatEditorClass'
 	ClassNoteEditor = 'PokerStarsNoteEditorClass'
 	ClassInfoBox = 'PokerStarsInfoClass'
@@ -423,7 +425,7 @@ class EventHandler(QtCore.QObject):
 		point = TableCrabWin32.mouseGetPos()
 		hwndUnderMouse = TableCrabWin32.windowFromPoint(point)
 		className = TableCrabWin32.windowGetClassName(hwndUnderMouse)
-		if className in (self.ClassNoteEditor, self.ClassChatEditor, self.ClassNoteEditorBox, self.ClassInfoBox):
+		if className in (self.ClassChat, self.ClassNoteEditor, self.ClassChatEditor, self.ClassNoteEditorBox, self.ClassInfoBox):
 			return False
 		return True
 
