@@ -1102,7 +1102,6 @@ def mouseSetPos(point, step=4, hwnd=None):
 
 def mouseDoubleClickTime():
 	return user32.GetDoubleClickTime()
-print mouseDoubleClickTime()
 
 class MouseHook(QtCore.QObject):
 	"""win32 keyboard manager implementation
