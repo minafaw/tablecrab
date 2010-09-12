@@ -1197,12 +1197,17 @@ class KeyboardHook(QtCore.QObject):
 		if code == HC_ACTION:
 			keyInfo = KBDLLHOOKSTRUCT.from_address(lParam)
 			keyIsDown = wParam in (WM_KEYDOWN, WM_SYSKEYDOWN)
-			#HACK:(1)
-			_setKeyDown(keyInfo.vkCode, keyIsDown)
-			#<--HACK:(1)
+			if keyIsDown:
+				#HACK:(1)
+				_setKeyDown(keyInfo.vkCode, True)
+				#<--HACK:(1)
 			keyboardState = (c_ubyte*256)()
 			user32.GetKeyboardState(byref(keyboardState))
 			key = self._keyFromKeyboardState(keyboardState)
+			if not keyIsDown:
+				#HACK:(1)
+				_setKeyDown(keyInfo.vkCode, False)
+				#<--HACK:(1)
 			if key:
 				e = InputEvent(key=key, steps=1, keyIsDown=keyIsDown, accept=False, parent=self)
 				self.inputEvent.emit(e)
