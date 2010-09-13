@@ -30,7 +30,6 @@ Notes:
 class DialogException(QtGui.QDialog):
 	def __init__(self, info, parent=None):
 		QtGui.QDialog. __init__(self, parent)
-		self.clearError = False
 
 		self.setWindowTitle('%s - Error' % TableCrabConfig.ApplicationName)
 		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
