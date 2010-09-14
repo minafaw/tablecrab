@@ -124,7 +124,6 @@ def potGetAmount(pixmap):
 		num, scanTrace = potAmountFromGocrImage(gocrImage2, scanTrace=scanTrace)
 	if num is None:
 		scanTrace.data.insert(0, 'Could not scan pot\n')
-
 	scanTrace += '<image>%s</image>' % base64.b64encode(gocrImage.toString())
 	return num, scanTrace
 
