@@ -8,7 +8,7 @@ import TableCrabGuiHelp
 import TableCrabSiteManager
 
 from PyQt4 import QtCore, QtGui
-import sys, os
+import sys, os, re, base64
 
 #*******************************************************************************************
 #
@@ -28,7 +28,13 @@ Notes:
 %s
 '''
 class DialogException(QtGui.QDialog):
+
+	ImagePat = re.compile('.*(?<=$|\n)\<image\>(.+?)\<\/image\>', re.X|re.M|re.S)
+
 	def __init__(self, info, parent=None):
+		"""
+		@param info: (str) err to display. may contain one base64 encoded image wrapped in <image> tags
+		"""
 		QtGui.QDialog. __init__(self, parent)
 
 		self.setWindowTitle('%s - Error' % TableCrabConfig.ApplicationName)
@@ -46,14 +52,42 @@ class DialogException(QtGui.QDialog):
 				)
 		self.addAction(action)
 
+		info, pixmap = self.embeddedImage(info)
+		self.labelPixmap = None
+		self.labelPixmapName = None
+		if pixmap is not None:
+			self.labelPixmapName = QtGui.QLabel('Image:', self)
+			self.labelPixmap = QtGui.QLabel(self)
+			self.labelPixmap.setPixmap(pixmap)
+
 		self.edit = QtGui.QPlainTextEdit(self)
 		self.edit.setPlainText(ErrText % (TableCrabConfig.ApplicationName, TableCrabConfig.ErrorLogName, info) )
+
 		self.layout()
+
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
 		grid.addWidget(self.edit, 0, 0)
-		grid.addWidget(TableCrabConfig.HLine(self), 1, 0)
-		grid.addWidget(self.buttonBox, 2, 0)
+		n = 1
+		if self.labelPixmap is not None:
+			grid.addWidget(self.labelPixmapName, 1, 0)
+			grid.addWidget(self.labelPixmap, 2, 0)
+			n = 3
+		grid.addWidget(TableCrabConfig.HLine(self), n+1, 0)
+		grid.addWidget(self.buttonBox, n+2, 0)
+
+	def embeddedImage(self, info):
+		pixmap = None
+		match = self.ImagePat.match(info)
+		if match is not None:
+			tmp_pixmap = QtGui.QPixmap()
+			data = match.group(1)
+			data = base64.b64decode(data)
+			#info = info.replace(data, repr(data))
+			if tmp_pixmap.loadFromData(data):
+				pixmap = tmp_pixmap
+		return info, pixmap
+
 	def onClearError(self, *args):
 		TableCrabConfig.globalObject.clearException.emit()
 		self.buttonClearError.setEnabled(False)

@@ -8,7 +8,7 @@ import TableCrabHotkeys
 import TableCrabTemplates
 from TableCrabLib.gocr import gocr
 
-import re, time
+import re, time, base64
 
 from PyQt4 import QtCore, QtGui
 
@@ -35,7 +35,6 @@ class ScanTrace(object):
 def potAmountFromGocrImage(gocrImage, scanTrace=None):
 	if scanTrace is None:
 		scanTrace = ScanTrace()
-	scanTrace += repr(gocrImage.toString())
 
 	# determine gray level
 	#TODO: not shure if i am interpreting grayLevel param correcly. works nicely for
@@ -46,10 +45,10 @@ def potAmountFromGocrImage(gocrImage, scanTrace=None):
 	header = gocrImage.header()
 	minGray = gocrImage.minGray()
 	maxGray = gocrImage.maxGray()
-	scanTrace += '>>detemined grayLevel: %s-%s' % (minGray, maxGray)
+	scanTrace += 'detemined grayLevel: %s-%s' % (minGray, maxGray)
 	absGray =  float(grayLevel) / 100 * (maxGray - minGray)
 	absGray = int(round(minGray + absGray, 0))
-	scanTrace += '>>set grayLevel: %s' % absGray
+	scanTrace += 'set grayLevel: %s' % absGray
 
 	# scan image
 	#TODO: grayLevel threshold.
@@ -61,8 +60,8 @@ def potAmountFromGocrImage(gocrImage, scanTrace=None):
 			dustSize=dustSize,
 			grayLevel=absGray,
 			)
-	scanTrace += '>>gocr result: %r' % result
-	scanTrace += '>>gocr err: %s' % err
+	scanTrace += 'gocr result: %r' % result
+	scanTrace += 'gocr err: %s' % err
 	if not result:
 		return None, scanTrace
 	elif result and err:
@@ -70,7 +69,7 @@ def potAmountFromGocrImage(gocrImage, scanTrace=None):
 
 	# clean gocr output from garbage
 	num = result.replace('\x20', '').replace('\n', '').replace('\r', '')
-	scanTrace += '>>stripped string: %s' % num
+	scanTrace += 'stripped string: %s' % num
 
 	# right strip string up to last digit
 	#NOTE: obv gocr may interpret borders and background as chars. funny enough
@@ -79,19 +78,19 @@ def potAmountFromGocrImage(gocrImage, scanTrace=None):
 		char = num[-1]
 		if char.isdigit(): break
 		num = num[:-1]
-	scanTrace += '>>right stripped string: %s' % num
+	scanTrace += 'right stripped string: %s' % num
 
 	#NOTE:
 	# 1. assertion: pot rect contains at least the 'T' of 'POT' so we always get an unknown char preceeding number
 	# 2. assertion: gocr does not recognize any chars following our number
 	if '_' not in num:
-		scanTrace += '>>error - expected unknown char preceeding number'
+		scanTrace += 'error - expected unknown char preceeding number'
 		return None, scanTrace
 
 	# 'i' should be either '$' or some other currency symbol or the 'T' from 'POT'
 	i = num.rindex('_')
 	num = num[i +1:]
-	scanTrace += '>>left stripped string: %s' % num
+	scanTrace += 'left stripped string: %s' % num
 
 	# try to reconstruct number
 	num = num.replace(',', '.')
@@ -104,25 +103,29 @@ def potAmountFromGocrImage(gocrImage, scanTrace=None):
 			num = ''.join(num)
 	else:
 		num = num[0]
-	scanTrace += '>>formatted number: %s' % num
+	scanTrace += 'formatted number: %s' % num
 	try:
 		num = float(num)
 	except ValueError:
-		scanTrace += '>>invalid float'
+		scanTrace += 'invalid float'
 		return None, scanTrace
 	return num, scanTrace
 
 #TODO: how to handle worst case: we get an amount but amount is garbage? no way..
 def potGetAmount(pixmap):
 	scanTrace = ScanTrace()
-	scanTrace += '>>scan pot -- original image: (%sx%s)' % (pixmap.width(), pixmap.height() )
+	scanTrace += 'scan pot -- image: (%sx%s)' % (pixmap.width(), pixmap.height() )
 	gocrImage = gocr.ImagePGM.fromQPixmap(pixmap)
 	num, scanTrace = potAmountFromGocrImage(gocrImage, scanTrace=scanTrace)
 	if num is None:
-		# try again with inverted pixels.
+		# try again with inverted pixels
+		scanTrace += 'scan pot -- inverted image'
 		gocrImage2 = gocrImage.inverted()
-		scanTrace += '>>scan pot -- inverted image'
 		num, scanTrace = potAmountFromGocrImage(gocrImage2, scanTrace=scanTrace)
+	if num is None:
+		scanTrace.data.insert(0, 'Could not scan pot\n')
+
+	scanTrace += '<image>%s</image>' % base64.b64encode(gocrImage.toString())
 	return num, scanTrace
 
 
@@ -130,9 +133,9 @@ def potGetAmount(pixmap):
 def testPotAmount():
 	buff = ''
 
+	buff = base64.b64decode(buff)
 	app = QtGui.QApplication([])
 	gocrImage = gocr.ImagePGM(buff)
-	header = gocrImage.header()
 	pixmap = gocrImage.toQPixmap()
 	num, scanTrace = potGetAmount(pixmap)
 	print 'num:', num
@@ -586,7 +589,7 @@ class EventHandler(QtCore.QObject):
 					)
 		num, scanTrace = potGetAmount(pixmap)
 		#TODO: what to do with gocr warnings?
-		##num = None	# for testing, triggers exception
+		#num = None	# for testing, triggers exception
 		if num is None:
 			try:
 				raise ValueError(scanTrace)
@@ -594,7 +597,6 @@ class EventHandler(QtCore.QObject):
 				TableCrabConfig.handleException()
 				TableCrabConfig.globalObject.feedbackMessage.emit('%s: Error - Could not scan pot' % hotkey.action() )
 				return
-
 		newBet = round(num * hotkey.multiplier(), 2)
 		newBet = TableCrabConfig.formatedBet(newBet, blinds=(data['smallBlind'], data['bigBlind']) )
 		TableCrabWin32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
