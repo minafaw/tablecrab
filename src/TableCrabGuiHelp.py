@@ -186,8 +186,6 @@ class FrameHelp(QtGui.QFrame):
 		self.networkAccessManager = NetworkAccessManager(oldManager, parent=self)
 		page = self.webView.page()
 		page.setNetworkAccessManager(self.networkAccessManager)
-		page.setLinkDelegationPolicy(page.DelegateAllLinks)
-		page.linkClicked.connect(self.onLinkClicked)
 
 		# setup tool bar
 		self.toolBar = TableCrabConfig.WebViewToolBar(self.webView,
@@ -220,6 +218,7 @@ class FrameHelp(QtGui.QFrame):
 		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(self.onSettingAlternatingRowColorsChanged)
 		self.tree.itemSelectionChanged.connect(self.onItemSelectionChanged)
 		self.tree.itemActivated.connect(self.onItemSelectionChanged)
+		self.webView.urlChanged.connect(self.onUrlChanged)
 
 		self.layout()
 		self.toolBar.onInit()
@@ -289,7 +288,10 @@ class FrameHelp(QtGui.QFrame):
 		self.webView.setUrl(url)
 		TableCrabConfig.settingsSetValue('Gui/Help/Topic', topic)
 
-	def onLinkClicked(self, url):
+	def onSettingAlternatingRowColorsChanged(self, flag):
+		self.tree.setAlternatingRowColors(flag)
+
+	def onUrlChanged(self, url):
 		fileInfo = QtCore.QFileInfo(url.path())
 		topic = fileInfo.baseName()
 		for item in TableCrabConfig.TreeWidgetItemIterator(self.tree):
@@ -297,9 +299,6 @@ class FrameHelp(QtGui.QFrame):
 			if myTopic == topic:
 				self.tree.setCurrentItem(item)
 		#TODO: ??? on topic not found
-
-	def onSettingAlternatingRowColorsChanged(self, flag):
-		self.tree.setAlternatingRowColors(flag)
 
 #**********************************************************************************************
 #
