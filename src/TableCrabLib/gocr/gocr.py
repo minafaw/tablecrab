@@ -36,6 +36,12 @@ class ImagePGM(object):
 		self._maxGray = None
 
 	@classmethod
+	def new(klass, w, h, buff):
+		if w * h != len(buff):
+			raise ValueError('exepected buffer of length %s' % w * h)
+		return klass('P5\n%s\x20%s\n255\n%s' % (w, h, buff))
+
+	@classmethod
 	def fromQPixmap(klass, image):
 		'''
 		@param image: (QImage, QPixmap)
