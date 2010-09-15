@@ -36,12 +36,6 @@ class ImagePGM(object):
 		self._maxGray = None
 
 	@classmethod
-	def new(klass, w, h, buff):
-		if w * h != len(buff):
-			raise ValueError('expected buff of len %s' % w * h)
-		return klass('P5\n%s\x20%s\n255\n%s' % (w, h, buff))
-
-	@classmethod
 	def fromQPixmap(klass, image):
 		'''
 		@param image: (QImage, QPixmap)
@@ -86,11 +80,7 @@ class ImagePGM(object):
 		lastChar = ''
 		for i, char in enumerate(self._buff):
 			if char in '\n\r\t\x20':
-				if lastChar in '\n\r\t\x20':
-					lastChar = char
-					continue
-				else:
-					lastChar = char
+				if lastChar not in '\n\r\t\x20':
 					lineno += 1
 			if lineno >= 4:
 				offset = i +1
@@ -99,6 +89,7 @@ class ImagePGM(object):
 			elif lineno == 1: width += char
 			elif lineno == 2: height += char
 			elif lineno == 3: gray += char
+			lastChar = char
 		if magic != 'P5':
 			raise ValueError('invalid pgm')
 		if int(gray) > 255:
