@@ -80,8 +80,9 @@ class ImagePGM(object):
 		lastChar = ''
 		for i, char in enumerate(self._buff):
 			if char in '\n\r\t\x20':
-				if lastChar not in '\n\r\t\x20':
-					lineno += 1
+				if lastChar in '\n\r\t\x20':
+					continue
+				lineno += 1
 			if lineno >= 4:
 				offset = i +1
 				break
