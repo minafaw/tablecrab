@@ -418,29 +418,23 @@ class EventHandler(QtCore.QObject):
 		#NOTE:
 		# 1) buttons and checkboxes are not always reacting to dingle clicks (try clicking a checkbox
 		#     a few times in row. it will drop one or the other click).
-		# 2) PostMessage(WM_LBUTTONDOWN,...) works for buttons but is not working for checkboxes
-		#3) SendInput() throws messages anonymously into the eent queue so we can not
+		# 2) checkboxes behave like tri state boxes when we send input. not when clicking them (weird)
+		# 3) PostMessage(WM_LBUTTONDOWN,...) works for buttons but is not working for checkboxes
+		# 4) SendInput() throws messages anonymously into the eent queue so we can not
 		#    be shure the current foreground window is receiving the messages (race condition)
-		# 4) there is no way we can check if our input triggered the desired effect
+		# 5) there is no way we can check if our input triggered the desired effect
 		#     ...
-		# 5) we dont know when PS schows us buttons or checkboxes. bet box being
+		# 6) we dont know when PS schows us buttons or checkboxes. bet box being
 		#    visible gives us an indicator at times, but is useless for example if s.o. is all-in
 		#
-		TableCrabWin32.mouseInputLeftClick(
-				point,
-				hwnd=hwnd,
-				restoreCursor=False,
-				)
+		mi = TableCrabWin32.MouseInput()
+		mi.leftClick(point, hwnd=hwnd).send(restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool())
 		# abitrary timeout for a check if PS has thrown another table to the foreground.
 		# n way to get this fail save, we have a race condition anyways
-		time.sleep( min(0.05, TableCrabWin32.mouseDoubleClickTime()) )
+		#time.sleep( min(0.05, TableCrabWin32.mouseDoubleClickTime()) )
 		hwnd2 = TableCrabWin32.windowForeground()
 		if hwnd == hwnd2:
-			TableCrabWin32.mouseInputLeftClick(
-					point,
-					hwnd=hwnd,
-					restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool(),
-					)
+			mi.leftClick(point, hwnd=hwnd).send(restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool())
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def tableHandleCheck(self, hotkey, template, hwnd, inputEvent):
@@ -505,12 +499,9 @@ class EventHandler(QtCore.QObject):
 		pointSliderEnd = self.tableGetPoint('BetSliderEnd', template)
 		if pointSliderEnd is None:
 			return
-		TableCrabWin32.mouseInputMouseDrag(
-				pointSliderStart,
-				pointSliderEnd,
-				hwnd=hwnd,
-				restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool(),
-				)
+		mi = TableCrabWin32.MouseInput()
+		mi.leftDrag(pointSliderStart, pointSliderEnd, hwnd=hwnd)
+		mi.send(restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool())
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def tableHandleAddToBet(self, hotkey, template, hwnd, inputEvent):
@@ -608,27 +599,21 @@ class EventHandler(QtCore.QObject):
 		if not hwndBetBox: return
 		if not data['betBoxIsVisible']: return
 		point = QtCore.QPoint(2, 2)
-		TableCrabWin32.mouseInputLeftClickDouble(
-				point,
-				hwnd=hwndBetBox,
-				restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool(),
-				)
+		mi = TableCrabWin32.MouseInput()
+		mi.leftClickDouble(point, hwnd=hwndBetBox)
+		mi.send(restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool())
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def _tableClickRestoreFocus(self, hwnd, point, template):
 		#NOTE: we always double click. not realy necessary here
-		TableCrabWin32.mouseInputLeftClickDouble(
-				point,
-				hwnd=hwnd,
-				restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool(),
-				)
+		mi = TableCrabWin32.MouseInput()
+		mi.leftClickDouble(point, hwnd=hwnd)
+		mi.send(restoreCursor=False)
 		# replayer gains focus, so we have to wait a bit and send another click to reactivate the table.
 		#TODO: for some reason (linux/wine?) table regain focus but is not activated when the replayer is opend for the first time
-		TableCrabWin32.mouseInputLeftClickDouble(
-				template.points['EmptySpace'],
-				hwnd=hwnd,
-				restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool(),
-				)
+		mi = TableCrabWin32.MouseInput()
+		mi.leftClickDouble(template.points['EmptySpace'], hwnd=hwnd)
+		mi.send(restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool())
 
 	def tableHandleReplayer(self, hotkey, template, hwnd, inputEvent):
 		point = self.tableGetPoint('Replayer', template)

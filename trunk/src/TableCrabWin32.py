@@ -49,6 +49,14 @@ def HIWORD(dword):
 	return DWORD(dword).value >> 16
 def MAKELONG(word1, word2): return word1 | (word2 << 16)
 
+def pointToWorldCoords(point):
+	x = float(point.x() * 0xFFFF) / user32.GetSystemMetrics(SM_CXSCREEN)
+	y = float(point.y() * 0xFFFF) / user32.GetSystemMetrics(SM_CYSCREEN)
+	return QtCore.QPoint(
+			int( round(x, 0) ),
+			int( round(y, 0) ),
+			)
+
 def GET_WHEEL_DELTA_WPARAM(wParam):
 	return c_short(HIWORD(wParam)).value
 
@@ -859,15 +867,11 @@ class MouseInput(object):
 		self._input = []
 
 	def _addMousePoint(self, event, point, hwnd=None):
-		x, y = point.x(), point.y()
-		if hwnd:
-			pt = POINT( point.x(), point.y() )
-			user32.ClientToScreen(hwnd, byref(pt) )
-			x, y = pt.x, pt.y
-		x, y = self._worldCoords(x, y)
+		point = windowClientPointToScreenPoint(hwnd, point) if hwnd else point
+		point = pointToWorldCoords(point)
 		mi = MOUSEINPUT(
-				dx=x,
-				dy=y,
+				dx=point.x(),
+				dy=point.y(),
 				dwFlags= event | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE_NOCOALESCE,
 				)
 		input = INPUT()
@@ -875,20 +879,20 @@ class MouseInput(object):
 		input.mi = mi
 		self._input.append(input)
 
-	def _worldCoords(self, x, y):
-		x = float(x * 0xFFFF) / user32.GetSystemMetrics(SM_CXSCREEN)
-		y = float(y * 0xFFFF) / user32.GetSystemMetrics(SM_CYSCREEN)
-		return (
-				int( round(x, 0) ),
-				int( round(y, 0) ),
-				)
-
-	def send(self):
+	def send(self, restoreCursor=False):
 		if not self._input:
 			raise ValueError('No input to send')
+		if restoreCursor:
+			pointLast = mouseGetPos()
 		arr = (INPUT*len(self._input))(*self._input)
 		self._input = []
 		user32.SendInput(len(arr), byref(arr), sizeof(INPUT))
+		#NOTE:
+		# 1) wine: the mouse cursor is always moved around. SendInput() is very inaccurate
+		#     so we use mouseSetPos() to restore the cursor position.
+		# 2) winXP: the cursor is not moved around
+		if restoreCursor and pointLast != mouseGetPos():
+			mouseSetPos(pointLast, hwnd=None)
 		return self
 
 	def leftDown(self, point, hwnd=None):
@@ -898,12 +902,16 @@ class MouseInput(object):
 		self._addMousePoint(MOUSEEVENTF_LEFTUP, point, hwnd=hwnd)
 		return self
 	def leftClick(self, point, hwnd=None):
+		self.move(point, hwnd=hwnd)
 		self.leftDown(point, hwnd=hwnd)
 		self.leftUp(point, hwnd=hwnd)
 		return self
 	def leftClickDouble(self, point, hwnd=None):
-		self.leftClick(point, hwnd=hwnd)
-		self.leftClick(point, hwnd=hwnd)
+		self.move(point, hwnd=hwnd)
+		self.leftDown(point, hwnd=hwnd)
+		self.leftUp(point, hwnd=hwnd)
+		self.leftDown(point, hwnd=hwnd)
+		self.leftUp(point, hwnd=hwnd)
 		return self
 
 	def rightDown(self, point, hwnd=None):
@@ -913,6 +921,7 @@ class MouseInput(object):
 		self._addMousePoint(MOUSEEVENTF_RIGHTTUP, point, hwnd=hwnd)
 		return self
 	def rightClick(self, point, hwnd=None):
+		self.move(point, hwnd=hwnd)
 		self.rightDown(point, hwnd=hwnd)
 		self.rightUp(point, hwnd=hwnd)
 		return self
@@ -924,6 +933,7 @@ class MouseInput(object):
 		self._addMousePoint(MOUSEEVENTF_MIDDLETUP, point, hwnd=hwnd)
 		return self
 	def middleClick(self, point, hwnd=None):
+		self.move(point, hwnd=hwnd)
 		self.middleDown(point, hwnd=hwnd)
 		self.middleUp(point, hwnd=hwnd)
 		return self
@@ -942,39 +952,13 @@ class MouseInput(object):
 		self._input.append(input)
 		return self
 
-def mouseInputLeftClick(point, hwnd=None, restoreCursor=False):
-	pointLast = mouseGetPos()
-	MouseInput().move(point, hwnd=hwnd).leftClick(point, hwnd=hwnd).send()
-	#NOTE: on wine the mouse cursor is always moved around. SendInput() is very inaccurate
-	# so we use mouseSetPos() to restore the cursor position
-	if restoreCursor and pointLast != mouseGetPos():
-		mouseSetPos(pointLast, hwnd=None)
-	#NOTE: looks like on winXP we can not move the cursor around
-	#elif pointLast == mouseGetPos():
-	#	mouseSetPos(point, hwnd=hwnd)
+	def leftDrag(self, pointStart, pointEnd, hwnd=None):
+		self.move(pointStart, hwnd=hwnd)
+		self.leftDown(pointStart, hwnd=hwnd)
+		self.move(pointEnd, hwnd=hwnd)
+		self.leftUp(pointEnd, hwnd=hwnd)
+		return self
 
-def mouseInputLeftClickDouble(point, hwnd=None, restoreCursor=False):
-	pointLast = mouseGetPos()
-	MouseInput().move(point, hwnd=hwnd).leftClickDouble(point, hwnd=hwnd).send()
-	#NOTE: on wine the mouse cursor is always moved around. SendInput() is very inaccurate
-	# so we use mouseSetPos() to restore the cursor position
-	if restoreCursor and pointLast != mouseGetPos():
-		mouseSetPos(pointLast, hwnd=None)
-	#NOTE: looks like on winXP we can not move the cursor around
-	#elif pointLast == mouseGetPos():
-	#	mouseSetPos(point, hwnd=hwnd)
-
-def mouseInputMouseDrag(pointStart, pointEnd, hwnd=None, restoreCursor=False):
-	pointLast = mouseGetPos()
-	mi = MouseInput().move(pointStart, hwnd=hwnd).leftDown(pointStart, hwnd=hwnd)
-	mi.move(pointEnd, hwnd=hwnd).leftUp(pointEnd, hwnd=hwnd).send()
-	#NOTE: on wine the mouse cursor is always moved around. SendInput() is very inaccurate
-	# so we use mouseSetPos() to restore the cursor position
-	if restoreCursor and pointLast != mouseGetPos():
-			mouseSetPos(pointLast, hwnd=None)
-	#NOTE: looks like on winXP we can not move the cursor around
-	#elif pointLast == mouseGetPos():
-	#	mouseSetPos(pointEnd, hwnd=hwnd)
 
 def mouseButtonsDown():
 	"""checks if any mouse buttons are down
