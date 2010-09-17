@@ -416,25 +416,22 @@ class EventHandler(QtCore.QObject):
 
 	def tableClickButton(self, hwnd, point, template, hotkey):
 		#NOTE:
-		# 1) buttons and checkboxes are not always reacting to dingle clicks (try clicking a checkbox
-		#     a few times in row. it will drop one or the other click).
-		# 2) checkboxes behave like tri state boxes when we send input. not when clicking them (weird)
-		# 3) PostMessage(WM_LBUTTONDOWN,...) works for buttons but is not working for checkboxes
-		# 4) SendInput() throws messages anonymously into the eent queue so we can not
+		# 1) checkboxes behave like tri state boxes when we send input. not when clicking them (weird)
+		# 2) PostMessage(WM_LBUTTONDOWN,...) works for buttons but is not working for checkboxes
+		# 3) SendInput() throws messages anonymously into the eent queue so we can not
 		#    be shure the current foreground window is receiving the messages (race condition)
-		# 5) there is no way we can check if our input triggered the desired effect
-		#     ...
-		# 6) we dont know when PS schows us buttons or checkboxes. bet box being
+		# 4) there is no way we can check if our input triggered the desired effect
+		# 5) we dont know when PS schows us buttons or checkboxes. bet box being
 		#    visible gives us an indicator at times, but is useless for example if s.o. is all-in
-		#
 		mi = TableCrabWin32.MouseInput()
 		mi.leftClick(point, hwnd=hwnd).send(restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool())
-		# abitrary timeout for a check if PS has thrown another table to the foreground.
-		# n way to get this fail save, we have a race condition anyways
-		#time.sleep( min(0.05, TableCrabWin32.mouseDoubleClickTime()) )
-		hwnd2 = TableCrabWin32.windowForeground()
-		if hwnd == hwnd2:
-			mi.leftClick(point, hwnd=hwnd).send(restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool())
+		# workaround to send double clicks. this handles checkboxes as expected but may trigger
+		# accidental clicks on unrelated tables. we add an abitrary timeout to check if PS has thrown another
+		# table to the foreground. no way to get this fail save, we have a race condition
+		##time.sleep( min(0.05, TableCrabWin32.mouseDoubleClickTime()) )
+		##hwnd2 = TableCrabWin32.windowForeground()
+		##if hwnd == hwnd2:
+		##	mi.leftClick(point, hwnd=hwnd).send(restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool())
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def tableHandleCheck(self, hotkey, template, hwnd, inputEvent):
