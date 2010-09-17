@@ -878,7 +878,7 @@ class MouseInput(object):
 				dwFlags= event | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE_NOCOALESCE,
 				time=getCurrentTime(),		#NOTE: have to set this. wine does not set it in SendInput()
 														#          and looks like it has unwanted side effects in PS client
-														#          like clicks getting ignored. file a report [http://bugs.winehq.org/show_bug.cgi?id=24435]
+														#          like clicks getting ignored. filed a report [http://bugs.winehq.org/show_bug.cgi?id=24435]
 				)
 		input = INPUT()
 		input.type = INPUT_MOUSE
