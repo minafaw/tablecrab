@@ -57,6 +57,9 @@ def pointToWorldCoords(point):
 			int( round(y, 0) ),
 			)
 
+def getCurrentTime():
+	return kernel32.GetTickCount()
+
 def GET_WHEEL_DELTA_WPARAM(wParam):
 	return c_short(HIWORD(wParam)).value
 
@@ -873,6 +876,9 @@ class MouseInput(object):
 				dx=point.x(),
 				dy=point.y(),
 				dwFlags= event | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE_NOCOALESCE,
+				time=getCurrentTime(),		#NOTE: have to set this. wine does not set it in SendInput()
+														#          and looks like it has unwanted side effects in PS client
+														#          like clicks getting ignored. file a report [http://bugs.winehq.org/show_bug.cgi?id=24435]
 				)
 		input = INPUT()
 		input.type = INPUT_MOUSE
@@ -1243,4 +1249,6 @@ class KeyboardHook(QtCore.QObject):
 			hHook, self._hHook = self._hHook, None
 			if not user32.UnhookWindowsHookEx(hHook):
 				raise WindowsError(GetLastError())
+
+
 
