@@ -60,7 +60,7 @@ def pokerEval(game, board, cards, deadCards=None, nIterations=0):
 	for cards in cards:
 		if args:
 			args += ' - '
-		args += '  '.join(cards)
+		args += ' '.join(cards)
 	args += ' -- ' + ' '.join(board)
 	game = _GameMapping.get(game, None)
 	if game is None:
