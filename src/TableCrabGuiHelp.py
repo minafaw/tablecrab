@@ -56,7 +56,7 @@ Topics = [
 				('settingsHandStyleSheet', 'Hand Style Sheet'),
 				],
 			],
-		('versionHistory.html', 'Version History'),
+		('versionHistory', 'Version History'),
 		]
 
 def walkTopics():
