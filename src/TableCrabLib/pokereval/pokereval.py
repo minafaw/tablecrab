@@ -9,6 +9,9 @@ if DirData is None:
 	DirData = os.path.dirname(os.path.abspath(__file__))
 FileNamePokerEnum = os.path.join(DirData, 'pokenum133.exe')
 
+CardSuits = 'hdcs'
+CardRanks = '23456789TJQKA'
+
 GameHoldem = 'Holdem',
 GameHoldemHiLo8 = 'HoldemHiLo8',
 GameOmaha = 'Omaha',
@@ -36,6 +39,7 @@ _GameMapping = {
 		GameFiveCardDrawHiLo8: '-5dnsq',
 		GameFiveCardDraw27Lowball: '-l27',
 		}
+
 #************************************************************************************
 #
 #************************************************************************************
@@ -57,10 +61,10 @@ def pokerEval(game, board, cards, deadCards=None, nIterations=0):
 	    * ev: ev
 	"""
 	args = ''
-	for cards in cards:
+	for tmp_cards in cards:
 		if args:
 			args += ' - '
-		args += ' '.join(cards)
+		args += ' '.join(tmp_cards)
 	args += ' -- ' + ' '.join(board)
 	game = _GameMapping.get(game, None)
 	if game is None:
@@ -96,6 +100,22 @@ def pokerEval(game, board, cards, deadCards=None, nIterations=0):
 		result.append(d)
 	return result
 
+def cardsToBits(*cards):
+	bits = 0
+	for card in cards:
+		rank, suit = card[0].upper(), card[1].lower()
+		rank = CardRanks.index(rank)
+		suit = CardSuits.index(suit)
+		bits |= 1 << (rank + (suit * 13))
+	return bits
+
+def bitsToCards(bits):
+	cards = []
+	for n in xrange(52):
+		if bits & (1 << n):
+			suit, rank = divmod(n, 13)
+			cards.append(CardRanks[rank] + CardSuits[suit])
+	return cards
 #************************************************************************************
 #
 #************************************************************************************
@@ -106,7 +126,7 @@ def _test():
 			(
 				('Ah', '7d'),
 				('Ad', '6s'),
-				('Ks', 'Qs'),
+				('Ac', '9s'),
 			),
 			nIterations=1000,
 			)
