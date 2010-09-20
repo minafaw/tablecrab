@@ -26,6 +26,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 	def __init__(self, parent=None):
 		QtGui.QTreeWidget.__init__(self, parent)
 
+		#TODO: find a better way to set hotkey manager as global
 		TableCrabConfig.hotkeyManager = self
 
 		# setup treeWidget

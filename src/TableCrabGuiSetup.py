@@ -163,6 +163,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 	def __init__(self, parent=None):
 		QtGui.QTreeWidget.__init__(self, parent)
 
+		#TODO: find a better way to set template manager as global
 		TableCrabConfig.templateManager = self
 
 		# setup treeWidget
