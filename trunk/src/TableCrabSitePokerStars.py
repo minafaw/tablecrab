@@ -510,7 +510,7 @@ class EventHandler(QtCore.QObject):
 		if inputEvent.steps == 0: return
 		if hotkey.baseValue() == TableCrabConfig.BigBlind:
 			newBet = data['bet'] + (data['bigBlind'] * hotkey.multiplier() * inputEvent.steps)
-		elif hotkey.baseValue == TableCrabConfig.SmallBlind:
+		elif hotkey.baseValue() == TableCrabConfig.SmallBlind:
 			newBet = data['bet'] + (data['smallBlind'] * hotkey.multiplier() * inputEvent.steps)
 		else:
 			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
@@ -529,7 +529,7 @@ class EventHandler(QtCore.QObject):
 		if inputEvent.steps == 0: return
 		if hotkey.baseValue() == TableCrabConfig.BigBlind:
 			newBet = data['bet'] - (data['bigBlind'] * hotkey.multiplier() * inputEvent.steps)
-		elif hotkey.baseValue == TableCrabConfig.SmallBlind:
+		elif hotkey.baseValue() == TableCrabConfig.SmallBlind:
 			newBet = data['bet'] - (data['smallBlind'] * hotkey.multiplier() * inputEvent.steps)
 		else:
 			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
