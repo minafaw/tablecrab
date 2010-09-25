@@ -265,6 +265,8 @@ class EventHandler(QtCore.QObject):
 				handler = self.tableHandleAll_In
 			elif hotkeyID == TableCrabHotkeys.HotkeyHilightBet.id():
 				handler = self.tableHandleHilightBet
+			elif hotkeyID == TableCrabHotkeys.HotkeyMultiplyBlind.id():
+				handler = self.tableHandleMultiplyBlind
 			elif hotkeyID == TableCrabHotkeys.HotkeyAddToBet.id():
 				handler = self.tableHandleAddToBet
 			elif hotkeyID == TableCrabHotkeys.HotkeySubtractFromBet.id():
@@ -500,6 +502,25 @@ class EventHandler(QtCore.QObject):
 		mi.leftDrag(pointSliderStart, pointSliderEnd, hwnd=hwnd)
 		mi.send(restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool())
 		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+
+	def tableHandleMultiplyBlind(self, hotkey, template, hwnd, inputEvent):
+		data = self.tableReadData(hwnd)
+		if not data: return
+		if not data['hwndBetBox']: return
+		if not data['betBoxIsVisible']: return
+		if data['bet'] is None: return
+		if inputEvent.steps == 0: return
+		if hotkey.baseValue() == TableCrabConfig.BigBlind:
+			newBet = data['bigBlind'] * hotkey.multiplier() * inputEvent.steps
+		elif hotkey.baseValue() == TableCrabConfig.SmallBlind:
+			newBet = data['smallBlind'] * hotkey.multiplier() * inputEvent.steps
+		else:
+			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
+		#TODO: adjust bet to 'Settings/RoundBets' ? kind of contradictionary
+		newBet = TableCrabConfig.formatedBet(newBet, blinds=None)
+		#NOTE: the box gets mesed up when unicode is thrown at it
+		TableCrabWin32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
+		TableCrabConfig.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
 
 	def tableHandleAddToBet(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)

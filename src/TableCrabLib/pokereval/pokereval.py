@@ -116,6 +116,7 @@ def bitsToCards(bits):
 			suit, rank = divmod(n, 13)
 			cards.append(CardRanks[rank] + CardSuits[suit])
 	return cards
+
 #************************************************************************************
 #
 #************************************************************************************
@@ -133,6 +134,6 @@ def _test():
 	for i in result:
 		print i
 
-if __name__ == '__main__': _test()
+#if __name__ == '__main__': _test()
 
 

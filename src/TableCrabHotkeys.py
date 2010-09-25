@@ -293,6 +293,35 @@ class HotkeyHilightBet(HotkeyBase):
 	def shortcut(klass): return QtGui.QKeySequence('Shift+I')
 Hotkeys.append(HotkeyHilightBet)
 
+class HotkeyMultiplyBlind(HotkeyBase):
+	HasMultiplier = True
+	MultiplierMax = 99.0
+	MultiplierMin = 1.0
+	MultiplierDefault = 1.0
+	MultiplierPrecision = 1
+	HasBaseValue = True
+	BaseValues = (TableCrabConfig.BigBlind, TableCrabConfig.SmallBlind)
+	BaseValueDefault = TableCrabConfig.BigBlind
+	@classmethod
+	def id(klass): return 'MultiplyBlind'
+	@classmethod
+	def menuName(klass): return 'Multiply blind'
+	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+B')
+	def action(self):
+		if self.baseValue() == TableCrabConfig.BigBlind:
+			baseValue = 'big'
+		elif elf.baseValue() == TableCrabConfig.SmallBlind:
+			baseValue = 'small'
+		else:
+			raise ValueError('can not handle base value: %s' % self.baseValue())
+		if int(self.multiplier()) == self.multiplier():
+			text = 'Multiply %s blind by %s' % (baseValue, int(self.multiplier()))
+		else:
+			text = 'Multiply %s blind by %s' % (baseValue, self.multiplier())
+		return text
+Hotkeys.append(HotkeyMultiplyBlind)
+
 class HotkeyMultiplyBet(HotkeyBase):
 	HasMultiplier = True
 	MultiplierMax = 99.0
