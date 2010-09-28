@@ -6,7 +6,7 @@
 # consts
 #************************************************************************************
 ApplicationName = 'TableCrab2'
-Version = '0.3.3'
+Version = '0.4.0'
 ReleaseName = '%s-%s' % (ApplicationName, Version)
 Author = 'JuergenUrner'
 ErrorLogName = ApplicationName + '-Error.log'
