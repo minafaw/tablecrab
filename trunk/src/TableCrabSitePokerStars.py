@@ -451,8 +451,32 @@ class EventHandler(QtCore.QObject):
 				return
 		self.tableClickButton(hwnd, point, template, hotkey)
 
-	#NOTE: trouble here. we relyon checkbox fold being in the same spot as button fold
-	# because we can not tell when either one is shown.
+	#TODO: action fold relies on button fold being in the same spot as checkbox fold
+	#          ..so we are a bit in trouble here, cos we rely on determining "can or can not bet"
+	#          by checking if the bet box is visible or not for it being the only indicator
+	#          available at the tables.
+	#          background: "fold" is the only action that a) has a checkbox representation AND
+	#          b) has a button that may be shown with bet box being invisible - e.g. case
+	#          player goes all-in and we can only fold or call but not bet.
+	#          bottom line: we have no means to tell if checkbox or button is shown at
+	#          a given time without taking actual game state information into account.
+	#
+	#          braindump:
+	#
+	#              - determine visibility of checkbox or button by reading game state information.
+	#                pretty nasty. think "full bet rule" as an example
+	#
+	#              - always cklick both - checkbox AND button - (in this order cos clicking
+	#                checkbox never causes side effects like other table being put to the
+	#                foreground). this would work under the assumption that a) no other object
+	#                is present in location checkbox when checkbox is not visible AND no
+	#                other object is present in location button if button is not visible AND
+	#                location checkbox != location button (!!)
+	#                bottom line: this would require to implement a user adjustable flag
+	#                [x] My checkbox fold is not located at position button fold
+	#
+	#              - ..other ideas?
+	#
 	def tableHandleFold(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
