@@ -388,17 +388,50 @@ class InputEvent(QtCore.QObject):
 #************************************************************************************
 #
 #************************************************************************************
+UOI_NAME = 2
+
+#TODO: test single application scopes
 class SingleApplication(object):
+	ScopeNone = 'None'
+	ScopeGlobal = 'Global'
+	ScopeSession = 'Session'
+	ScopeDesktop = 'Desktop'
+	Scopes = (
+			ScopeNone,
+			ScopeSession,
+			ScopeDesktop,
+			ScopeGlobal,
+			)
 	class ErrorOtherInstanceRunning(Exception): pass
-	def __init__(self, magicString, parent=None):
+	def __init__(self, magicString, scope=ScopeSession, parent=None):
+		if scope not in self.Scopes: raise ValueError('invalid scope: %s' % scope)
 		self.hMutex = None
 		self.magicString = magicString
+		self.scope = scope
 		atexit.register(self.close)
 	def start(self):
-		self.hMutex = kernel32.CreateMutexA(None, 1, 'Local\\%s' % self.magicString)
-		if GetLastError() in (ERROR_INVALID_HANDLE, ERROR_ACCESS_DENIED):
-			self.close()
-			raise self.ErrorOtherInstanceRunning()
+		magic = 'Local\\%s' % self.magicString
+		if self.scope == self.ScopeNone:
+			magic = None
+		elif self.scope == self.ScopeGlobal:
+			magic = 'Global\\%s' % self.magicString
+		elif 	self.scope == self.ScopeSession:
+			pass
+		else:
+			#NOTE: if anything goes wrong here we default to session unique. good idea or not?
+			hDesktop = user32.GetThreadDesktop(kernel32.GetCurrentThreadId())
+			if hDesktop:
+				len = DWORD()
+				user32.GetUserObjectInformationW(hDesktop, UOI_NAME, None, 0, byref(len))
+				if len.value:
+					p = create_unicode_buffer(len.value +1)
+					if user32.GetUserObjectInformationW(hDesktop, UOI_NAME, p, sizeof(p), byref(len)):
+						magic = '%s\\%s' % (magic, p.value)
+		if magic is not None:
+			self.hMutex = kernel32.CreateMutexA(None, 1, 'Local\\%s' % self.magicString)
+			if GetLastError() in (ERROR_INVALID_HANDLE, ERROR_ACCESS_DENIED):
+				self.close()
+				raise self.ErrorOtherInstanceRunning()
 	def close(self, closeFunc=kernel32.CloseHandle):	# need to hold reference to CloseHandle here. we get garbage collected otherwise
 		if self.hMutex is not None:
 			closeFunc(self.hMutex)

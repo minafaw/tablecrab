@@ -108,7 +108,14 @@ class Gui(QtGui.QMainWindow):
 			self.doubleClicked.emit()
 
 	def __init__(self):
-		self.singleApplication = TableCrabWin32.SingleApplication(TableCrabConfig.SingleAppMagicString, parent=None)
+		scope = TableCrabConfig.settingsValue('Gui/SingleApplication/Scope', '').toString()
+		if scope not in TableCrabWin32.SingleApplication.Scopes:
+			scope = TableCrabWin32.SingleApplication.ScopeSession
+		self.singleApplication = TableCrabWin32.SingleApplication(
+				TableCrabConfig.SingleAppMagicString,
+				scope=scope,
+				parent=None
+				)
 		try:
 			self.singleApplication.start()
 		except self.singleApplication.ErrorOtherInstanceRunning:
