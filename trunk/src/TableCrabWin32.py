@@ -1,7 +1,7 @@
 
 #TODO: use MapWindowPoints() instead of ClientToScreen() and ScreenToClient(). rly?
 
-import time
+import time, atexit
 from ctypes import *
 from ctypes.wintypes import *
 
@@ -14,6 +14,7 @@ from PyQt4 import QtCore
 #
 #**************************************************************
 
+ERROR_ACCESS_DENIED = 5
 ERROR_INVALID_HANDLE = 183
 
 BM_GETSTATE = 242
@@ -383,6 +384,25 @@ class InputEvent(QtCore.QObject):
 		self.keyIsDown = keyIsDown
 		self.steps = steps
 		self.accept = accept
+
+#************************************************************************************
+#
+#************************************************************************************
+class SingleApplication(object):
+	class ErrorOtherInstanceRunning(Exception): pass
+	def __init__(self, magicString, parent=None):
+		self.hMutex = None
+		self.magicString = magicString
+		atexit.register(self.close)
+	def start(self):
+		self.hMutex = kernel32.CreateMutexA(None, 1, 'Local\\%s' % self.magicString)
+		if GetLastError() in (ERROR_INVALID_HANDLE, ERROR_ACCESS_DENIED):
+			self.close()
+			raise self.ErrorOtherInstanceRunning()
+	def close(self, closeFunc=kernel32.CloseHandle):	# need to hold reference to CloseHandle here. we get garbage collected otherwise
+		if self.hMutex is not None:
+			closeFunc(self.hMutex)
+			self.hMutex = None
 
 #****************************************************************************************************
 # message methods

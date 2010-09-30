@@ -11,6 +11,8 @@ ReleaseName = '%s-%s' % (ApplicationName, Version)
 Author = 'JuergenUrner'
 ErrorLogName = ApplicationName + '-Error.log'
 
+SingleAppMagicString = '73524668475460800279396959888864133024'
+
 
 MaxHotkeys = 64
 MaxTemplates = 64
@@ -119,7 +121,7 @@ def handleException(data=None):
 #************************************************************************************
 #
 #************************************************************************************
-import posixpath, thread, atexit, inspect
+import posixpath, thread, inspect
 from PyQt4 import QtCore, QtGui, QtWebKit
 
 import TableCrabWin32
@@ -128,31 +130,6 @@ from TableCrabRes import Pixmaps, HtmlPages, StyleSheets
 # explicitely set locale to US
 QtCore.QLocale.setDefault(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates) )
 locale = QtCore.QLocale()
-
-#***********************************************************************************
-# enshure we run a single application instance only
-#***********************************************************************************
-class SingleApplication(object):
-	def __init__(self):
-		self.hMutex = TableCrabWin32.kernel32.CreateMutexA(None, 1, 'Local\\73524668475460800279396959888864133024')
-		atexit.register(self.close)
-		if TableCrabWin32.GetLastError() == TableCrabWin32.ERROR_INVALID_HANDLE:
-			if not self.handleMutexLocked():
-				##sys.exit(1)
-				raise RuntimeError('%s is already running' % ApplicationName)
-	def close(self, closeFunc=TableCrabWin32.kernel32.CloseHandle):	# need to hold reference to CloseHandle here. we get garbage collected otherwise
-		if self.hMutex is not None:
-			closeFunc(self.hMutex)
-			self.hMutex = None
-	def handleMutexLocked(self):
-		#TODO: give feedback here, usual stuff like bring other to top, flash window, whatevs
-		#			x. FlashWindow() does not work in wine
-		# 			x. FlashWindowEx() is not implemented in wine
-		#			x. in wine there is no way to put a window to the foreground
-		# none of the above is save anyways. only way to make this a bit more secure would
-		# be to start a conversation via WM_COPYDATA, trying to find out who is holding the mutex.
-		# i'd say ..not worth the efford.
-		return False
 
 #***********************************************************************************
 # global QSettings
