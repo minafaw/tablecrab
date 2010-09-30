@@ -5,6 +5,7 @@
 #TODO: would be nice to have line numbers in HandCss editor
 
 import TableCrabConfig
+import TableCrabWin32
 import PokerStarsHandGrabber
 import TableCrabGuiHelp
 
@@ -43,6 +44,16 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		self.buttonFixedFont.clicked.connect(self.onButtonFixedFontClicked)
 		self.labelFixedFont = QtGui.QLabel('Fi&xed Font:', self)
 		self.labelFixedFont.setBuddy(self.buttonFixedFont)
+
+		self.comboSingleApplication = TableCrabConfig.ComboBox(
+				TableCrabWin32.SingleApplication.Scopes,
+				settingsKey='Gui/SingleApplication/Scope',
+				default=TableCrabWin32.SingleApplication.ScopeSession,
+				failsave=True,
+				parent=self,
+				)
+		self.labelSingleApplication = QtGui.QLabel('Single a&pplication scope:', self)
+		self.labelSingleApplication.setBuddy(self.comboSingleApplication)
 
 		self.spinZoomSteps = TableCrabConfig.SpinBox(
 			settingsKey='Gui/WebView/ZoomSteps',
@@ -110,24 +121,28 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		grid.addWidget(self.buttonFixedFont, 4, 1)
 		grid.addLayout(TableCrabConfig.HStretch(), 4, 2)
 
-		grid.addWidget(self.labelZoomSteps, 5, 0)
-		grid.addWidget(self.spinZoomSteps, 5, 1)
+		grid.addWidget(self.labelSingleApplication, 5, 0)
+		grid.addWidget(self.comboSingleApplication, 5, 1)
 		grid.addLayout(TableCrabConfig.HStretch(), 5, 2)
 
-		grid.addWidget(self.checkAlternatingRowColors, 6, 0)
-		grid.addWidget(self.checkChildItemIndicators, 7, 0)
-		grid.addWidget(self.checkRestoreMousePosition, 8, 0)
+		grid.addWidget(self.labelZoomSteps, 6, 0)
+		grid.addWidget(self.spinZoomSteps, 6, 1)
+		grid.addLayout(TableCrabConfig.HStretch(), 6, 2)
 
-		grid.addWidget(self.labelRoundBets, 9, 0)
-		grid.addWidget(self.comboRoundBets, 9, 1)
-		grid.addLayout(TableCrabConfig.HStretch(), 9, 2)
+		grid.addWidget(self.checkAlternatingRowColors, 7, 0)
+		grid.addWidget(self.checkChildItemIndicators, 8, 0)
+		grid.addWidget(self.checkRestoreMousePosition, 9, 0)
+
+		grid.addWidget(self.labelRoundBets, 10, 0)
+		grid.addWidget(self.comboRoundBets, 10, 1)
+		grid.addLayout(TableCrabConfig.HStretch(), 10, 2)
 
 
-		grid.addLayout(TableCrabConfig.VStretch(), 10, 0)
-		grid.addWidget(TableCrabConfig.HLine(self), 11, 0, 1, 3)
+		grid.addLayout(TableCrabConfig.VStretch(), 11, 0)
+		grid.addWidget(TableCrabConfig.HLine(self), 12, 0, 1, 3)
 
 		grid2 = TableCrabConfig.GridBox()
-		grid.addLayout(grid2, 12, 0, 1, 3)
+		grid.addLayout(grid2, 13, 0, 1, 3)
 		grid2.addWidget(self.buttonBox, 0, 0)
 
 	def setFont(self):
