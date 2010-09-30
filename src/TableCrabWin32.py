@@ -428,7 +428,7 @@ class SingleApplication(object):
 					if user32.GetUserObjectInformationW(hDesktop, UOI_NAME, p, sizeof(p), byref(len)):
 						magic = '%s\\%s' % (magic, p.value)
 		if magic is not None:
-			self.hMutex = kernel32.CreateMutexA(None, 1, 'Local\\%s' % self.magicString)
+			self.hMutex = kernel32.CreateMutexA(None, 1, magic)
 			if GetLastError() in (ERROR_INVALID_HANDLE, ERROR_ACCESS_DENIED):
 				self.close()
 				raise self.ErrorOtherInstanceRunning()
