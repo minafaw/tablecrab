@@ -390,6 +390,7 @@ class InputEvent(QtCore.QObject):
 #************************************************************************************
 UOI_NAME = 2
 
+#NOTE: for a read on the theme see [ http://www.flounder.com/nomultiples.htm ]
 #TODO: test single application scopes
 class SingleApplication(object):
 	ScopeNone = 'None'
@@ -415,7 +416,7 @@ class SingleApplication(object):
 			magic = None
 		elif self.scope == self.ScopeGlobal:
 			magic = 'Global\\%s' % self.magicString
-		elif 	self.scope == self.ScopeSession:
+		elif self.scope == self.ScopeSession:
 			pass
 		else:
 			#NOTE: if anything goes wrong here we default to session unique. good idea or not?
@@ -432,7 +433,7 @@ class SingleApplication(object):
 			if GetLastError() in (ERROR_INVALID_HANDLE, ERROR_ACCESS_DENIED):
 				self.close()
 				raise self.ErrorOtherInstanceRunning()
-	def close(self, closeFunc=kernel32.CloseHandle):	# need to hold reference to CloseHandle here. we get garbage collected otherwise
+	def close(self, closeFunc=kernel32.CloseHandle):	# need to hold reference to CloseHandle here. it may get garbage collected otherwise
 		if self.hMutex is not None:
 			closeFunc(self.hMutex)
 			self.hMutex = None
