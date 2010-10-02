@@ -108,10 +108,9 @@ class Gui(QtGui.QMainWindow):
 			self.doubleClicked.emit()
 
 	def __init__(self):
-		#NOTE: Setings/Global sets default aswell. we can not move this to config because of cross imports with TableCrabWin32
 		scope = TableCrabConfig.settingsValue('Gui/SingleApplication/Scope', '').toString()
 		if scope not in TableCrabWin32.SingleApplication.Scopes:
-			scope = TableCrabWin32.SingleApplication.ScopeSession
+			scope = TableCrabConfig.SingleAppScopeDefault
 		self.singleApplication = TableCrabWin32.SingleApplication(
 				TableCrabConfig.SingleAppMagicString,
 				scope=scope,
