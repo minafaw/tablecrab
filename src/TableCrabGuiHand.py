@@ -1,5 +1,4 @@
 
-#TODO: implement copy action
 #TODO: when opening a hand - enable navigate back?
 
 import TableCrabConfig
