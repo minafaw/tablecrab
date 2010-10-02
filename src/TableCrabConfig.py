@@ -222,18 +222,18 @@ hotkeyManager = None
 templateManager = None
 
 #***********************************************************************************
-# persistent items
+# methods
 #***********************************************************************************
 #NOTE: on every change in templates and hotkeys we dum the whole TreeWidget to settings.
 # easy but brutal. no idea if it is worth the trouble to implement a more sensible mechanism.
 #NOTE: if something goes wrong after settingsRemoveKey() we are doomed
 def dumpPersistentItems(settigsKey, items):
-		settingsRemoveKey(settigsKey)
-		slot = 0
-		for item in items:
-			key = settingsKeyJoin(settigsKey, str(slot) )
-			if item.toConfig(key):
-				slot += 1
+	settingsRemoveKey(settigsKey)
+	slot = 0
+	for item in items:
+		key = settingsKeyJoin(settigsKey, str(slot) )
+		if item.toConfig(key):
+			slot += 1
 
 def readPersistentItems(settingsKey, maxItems=0, itemProtos=None):
 	itemProtos = () if itemProtos is None else itemProtos
@@ -257,8 +257,110 @@ def readPersistentItems(settingsKey, maxItems=0, itemProtos=None):
 		dumpPersistentItems(settingsKey, items)
 	return items
 
+def pointToString(qPoint):
+	if qPoint.x() < 0 or qPoint.y() < 0:
+		return 'None'
+	return '%s,%s' % (qPoint.x(), qPoint.y())
+
+def sizeToString(qSize):
+	if qSize.isEmpty():
+		return 'None'
+	return '%sx%s' % (qSize.width(), qSize.height())
+
+def pointInSize(size, point):
+	if not size.isValid():
+		return False
+	if point.y() >= 0 and point.y() >= 0:
+		if point.x() <= size.width() and point.y() <= size.height():
+			return True
+	return False
+
+def widgetScreenshot(hwnd):
+	pixmap = QtGui.QPixmap.grabWindow(hwnd, 0, 0, -1,-1)
+	globalObject.widgetScreenshot.emit(hwnd, pixmap)
+
+def uniqueName(name, names):
+	i = 0
+	newName = name
+	while newName in names:
+		i += 1
+		newName = name + ' (%s)' % i
+	return newName
+
+def cleanException(exception):
+	p = QtCore.QString()
+	for line in exception.split('\n'):
+		if line.startsWith('  File "'):
+			start = line.indexOf('"') +1
+			if start < 0:	continue
+			stop = line.lastIndexOf('"')
+			if stop < 0: continue
+			fileName = line[start:stop]
+			fileInfo = QtCore.QFileInfo(fileName)
+			line = QtCore.QString('%1%2%3').arg(line[:start]).arg(fileInfo.fileName()).arg(line[stop:])
+		p += line
+		p += '\n'
+	return p
+
+def truncateString(string, maxChars):
+	isQString = isinstance(string, QtCore.QString)
+	if maxChars > -1 and len(string) > maxChars:
+		if maxChars <= len(Ellipsis):
+			return QtCore.QString(Ellipsis[:maxChars])
+		else:
+			return string[:maxChars - len(Ellipsis)] + Ellipsis
+	return string
+
+def dialogTitle(title):
+	return '%s - %s' % (ApplicationName, title)
+
+def printStack():
+	for frame, filename, line_num, func, source_code, source_index in inspect.stack()[1:]:
+		print '%s, line %d\n  -> %s' % (filename, line_num, source_code[source_index].strip())
+
+def readWriteImageFormats():
+	'''returns a list of image formats we can read AND write'''
+	fmts = []
+	write = [str(i) for i in QtGui.QImageWriter.supportedImageFormats()]
+	read = [str(i) for i in QtGui.QImageReader.supportedImageFormats()]
+	for fmt in write:
+		if fmt == 'ico': continue
+		if fmt in read:
+			fmts.append(fmt.lower())
+	return fmts
+
+def formatedBet(bet, blinds=None):
+	'''fromats and adjusts bet size to user settings
+	@param bet: (int, float) bet size to format
+	@param blinds: (tuple) smallBlind, bigBlind
+	@return: (str) new bet size
+	'''
+	if bet < 0:
+		return '0'
+	bet = round(bet, 2)
+	if blinds is not None:
+		roundTo = settingsValue('Settings/RoundBets', '')
+		if roundTo in (RoundBetsBigBlind, RoundBetsSmallBlind):
+			blind = blinds[1] if roundTo == RoundBetsBigBlind else blinds[0]
+			bet = bet * 100
+			blind = blind * 100
+			d, r = divmod(bet, blind)
+			bet = d * blind
+			if float(r)/blind >= 0.5:
+				bet += blind
+			bet = round(bet / 100, 2)
+	print bet == int(bet)
+	if int(bet) == bet:
+		bet = int(bet)
+	return str(bet)
+
+def setTabOrder(parent, *widgets):
+	for i, widget in enumerate(widgets):
+		if i +1 < len(widgets):
+			parent.setTabOrder(widget, widgets[i+1])
+
 #***********************************************************************************
-# Qt widgets
+# some Qt wrappers to make live easier
 #***********************************************************************************
 class Action(QtGui.QAction):
 	def __init__(self,
@@ -643,8 +745,6 @@ def dlgOpenSaveFile(
 			fileFilters=None,
 			settingsKey=None,
 			):
-	pass
-
 	dlg = QtGui.QFileDialog(parent)
 	dlg.setAcceptMode(dlg.AcceptOpen if openFile else dlg.AcceptSave)
 	dlg.setWindowTitle(title)
@@ -657,8 +757,6 @@ def dlgOpenSaveFile(
 		dlg.setConfirmOverwrite(True)
 	if settingsKey is not None:
 		dlg.restoreState( settingsValue(settingsKey, QtCore.QByteArray()).toByteArray() )
-
-
 	result = dlg.exec_()
 	if settingsKey is not None:
 		settingsSetValue(settingsKey, dlg.saveState() )
@@ -666,110 +764,7 @@ def dlgOpenSaveFile(
 		return dlg.selectedFiles()[0]
 	return None
 
-#***********************************************************************************
-# type converters
-#***********************************************************************************
-def pointToString(qPoint):
-	if qPoint.x() < 0 or qPoint.y() < 0:
-		return 'None'
-	return '%s,%s' % (qPoint.x(), qPoint.y())
 
-def sizeToString(qSize):
-	if qSize.isEmpty():
-		return 'None'
-	return '%sx%s' % (qSize.width(), qSize.height())
-
-def pointInSize(size, point):
-	if not size.isValid():
-		return False
-	if point.y() >= 0 and point.y() >= 0:
-		if point.x() <= size.width() and point.y() <= size.height():
-			return True
-	return False
-
-def widgetScreenshot(hwnd):
-	pixmap = QtGui.QPixmap.grabWindow(hwnd, 0, 0, -1,-1)
-	globalObject.widgetScreenshot.emit(hwnd, pixmap)
-
-def uniqueName(name, names):
-	i = 0
-	newName = name
-	while newName in names:
-		i += 1
-		newName = name + ' (%s)' % i
-	return newName
-
-def cleanException(exception):
-	p = QtCore.QString()
-	for line in exception.split('\n'):
-		if line.startsWith('  File "'):
-			start = line.indexOf('"') +1
-			if start < 0:	continue
-			stop = line.lastIndexOf('"')
-			if stop < 0: continue
-			fileName = line[start:stop]
-			fileInfo = QtCore.QFileInfo(fileName)
-			line = QtCore.QString('%1%2%3').arg(line[:start]).arg(fileInfo.fileName()).arg(line[stop:])
-		p += line
-		p += '\n'
-	return p
-
-def truncateString(string, maxChars):
-	isQString = isinstance(string, QtCore.QString)
-	if maxChars > -1 and len(string) > maxChars:
-		if maxChars <= len(Ellipsis):
-			return QtCore.QString(Ellipsis[:maxChars])
-		else:
-			return string[:maxChars - len(Ellipsis)] + Ellipsis
-	return string
-
-def dialogTitle(title):
-	return '%s - %s' % (ApplicationName, title)
-
-def printStack():
-	for frame, filename, line_num, func, source_code, source_index in inspect.stack()[1:]:
-		print '%s, line %d\n  -> %s' % (filename, line_num, source_code[source_index].strip())
-
-def readWriteImageFormats():
-	'''returns a list of image formats we can read AND write'''
-	fmts = []
-	write = [str(i) for i in QtGui.QImageWriter.supportedImageFormats()]
-	read = [str(i) for i in QtGui.QImageReader.supportedImageFormats()]
-	for fmt in write:
-		if fmt == 'ico': continue
-		if fmt in read:
-			fmts.append(fmt.lower())
-	return fmts
-
-def formatedBet(bet, blinds=None):
-	'''fromats and adjusts bet size to user settings
-	@param bet: (int, float) bet size to format
-	@param blinds: (tuple) smallBlind, bigBlind
-	@return: (str) new bet size
-	'''
-	if bet < 0:
-		return '0'
-	bet = round(bet, 2)
-	if blinds is not None:
-		roundTo = settingsValue('Settings/RoundBets', '')
-		if roundTo in (RoundBetsBigBlind, RoundBetsSmallBlind):
-			blind = blinds[1] if roundTo == RoundBetsBigBlind else blinds[0]
-			bet = bet * 100
-			blind = blind * 100
-			d, r = divmod(bet, blind)
-			bet = d * blind
-			if float(r)/blind >= 0.5:
-				bet += blind
-			bet = round(bet / 100, 2)
-	print bet == int(bet)
-	if int(bet) == bet:
-		bet = int(bet)
-	return str(bet)
-
-def setTabOrder(parent, *widgets):
-	for i, widget in enumerate(widgets):
-		if i +1 < len(widgets):
-			parent.setTabOrder(widget, widgets[i+1])
 
 
 
