@@ -933,6 +933,7 @@ class MouseInput(object):
 				time=getCurrentTime(),		#NOTE: have to set this. wine does not set it in SendInput()
 														#          and looks like it has unwanted side effects in PS client
 														#          like clicks getting ignored. filed a report [http://bugs.winehq.org/show_bug.cgi?id=24435]
+														#          fixed in wine 1.3.4
 				)
 		input = INPUT()
 		input.type = INPUT_MOUSE
