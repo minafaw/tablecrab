@@ -136,6 +136,18 @@ RoundBetsBigBlind = BigBlind
 RoundBetsSmallBlind = SmallBlind
 
 #***********************************************************************************
+# types
+#***********************************************************************************
+PointNone = QtCore.QPoint(-1, -1)
+def newPointNone():
+	return QtCore.QPoint(PointNone.x(), PointNone.y() )
+SizeNone = QtCore.QSize(-1, -1)
+def newSizeNone():
+	return QtCore.QSize(SizeNone.width(), SizeNone.height() )
+
+HotkeyNone = 'None'
+
+#***********************************************************************************
 # global QSettings
 #***********************************************************************************
 #TODO: what to do with deprecated settings keys?
@@ -200,16 +212,14 @@ class _GlobalObject(QtCore.QObject):
 globalObject = _GlobalObject()
 
 #***********************************************************************************
-# types
+# other global objects
 #***********************************************************************************
-PointNone = QtCore.QPoint(-1, -1)
-def newPointNone():
-	return QtCore.QPoint(PointNone.x(), PointNone.y() )
-SizeNone = QtCore.QSize(-1, -1)
-def newSizeNone():
-	return QtCore.QSize(SizeNone.width(), SizeNone.height() )
-
-HotkeyNone = 'None'
+windowHook = TableCrabWin32.WindowHook(parent=None, timeout=WindowHookTimeout)
+mouseHook = TableCrabWin32.MouseHook(parent=None)
+keyboardHook = TableCrabWin32.KeyboardHook(parent=None)
+#TODO: how to make hotkeyManager and templateManager globally available?
+hotkeyManager = None
+templateManager = None
 
 #***********************************************************************************
 # persistent items
@@ -246,16 +256,6 @@ def readPersistentItems(settingsKey, maxItems=0, itemProtos=None):
 	if forceDump:
 		dumpPersistentItems(settingsKey, items)
 	return items
-
-#***********************************************************************************
-# global objects
-#***********************************************************************************
-windowHook = TableCrabWin32.WindowHook(parent=None, timeout=WindowHookTimeout)
-mouseHook = TableCrabWin32.MouseHook(parent=None)
-keyboardHook = TableCrabWin32.KeyboardHook(parent=None)
-#TODO: how to make hotkeyManager and templateManager globally available?
-hotkeyManager = None
-templateManager = None
 
 #***********************************************************************************
 # Qt widgets
