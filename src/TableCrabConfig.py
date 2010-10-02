@@ -3,49 +3,13 @@
 
 
 #************************************************************************************
-# consts
+# project consts
 #************************************************************************************
 ApplicationName = 'TableCrab2'
 Version = '0.4.0'
 ReleaseName = '%s-%s' % (ApplicationName, Version)
 Author = 'JuergenUrner'
 ErrorLogName = ApplicationName + '-Error.log'
-
-SingleAppMagicString = '73524668475460800279396959888864133024'
-
-
-MaxHotkeys = 64
-MaxTemplates = 64
-MaxName = 32		# arbitrary, maximum number of chars allowed in user supplied names
-								# for now we hard code it here. would require some efford for status bar
-								#to get it dynamically truncated
-								# ++ we need to set some limit to template name editing
-
-WindowHookTimeout = 0.2
-HandGrabberTimeout = 0.4
-MouseMonitorTimeout = 0.5
-StatusBarMessageTimeout = 3
-MaxHandGrabberPrefix = 16	# + postfix
-MaxHandStyleSheet = 9000
-
-#TODO: implement consts
-# let QWebKit deal with it
-##MaxHandHtml = 0
-# no idea about this one
-##MaxScreenshotSize = 0
-
-Ellipsis = '..'
-MaxWindowText = 512		# maximum number of chars we retrieve as text / title from other windows
-MaxHandHistoryText = 16384
-MaxPokerStarsBetBoxText = 16	# maximum number of chars to retrieve from PS bet amount box
-
-
-SmallBlind = 'SmallBlind'
-BigBlind = 'BigBlind'
-
-RoundBetsNoRounding = 'NoRounding'
-RoundBetsBigBlind = BigBlind
-RoundBetsSmallBlind = SmallBlind
 
 #****************************************************************************************
 # setup minimal stuff to get at least some information in case something goes wrong
@@ -127,9 +91,49 @@ from PyQt4 import QtCore, QtGui, QtWebKit
 import TableCrabWin32
 from TableCrabRes import Pixmaps, HtmlPages, StyleSheets
 
+#************************************************************************************
+# consts
+#************************************************************************************
 # explicitely set locale to US
 QtCore.QLocale.setDefault(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates) )
 locale = QtCore.QLocale()
+
+
+SingleAppMagicString = '73524668475460800279396959888864133024'
+SingleAppScopeDefault = TableCrabWin32.SingleApplication.ScopeSession
+
+MaxHotkeys = 64
+MaxTemplates = 64
+MaxName = 32		# arbitrary, maximum number of chars allowed in user supplied names
+								# for now we hard code it here. would require some efford for status bar
+								#to get it dynamically truncated
+								# ++ we need to set some limit to template name editing
+
+WindowHookTimeout = 0.2
+HandGrabberTimeout = 0.4
+MouseMonitorTimeout = 0.5
+StatusBarMessageTimeout = 3
+MaxHandGrabberPrefix = 16	# + postfix
+MaxHandStyleSheet = 9000
+
+#TODO: implement consts
+# let QWebKit deal with it
+##MaxHandHtml = 0
+# no idea about this one
+##MaxScreenshotSize = 0
+
+Ellipsis = '..'
+MaxWindowText = 512		# maximum number of chars we retrieve as text / title from other windows
+MaxHandHistoryText = 16384
+MaxPokerStarsBetBoxText = 16	# maximum number of chars to retrieve from PS bet amount box
+
+
+SmallBlind = 'SmallBlind'
+BigBlind = 'BigBlind'
+
+RoundBetsNoRounding = 'NoRounding'
+RoundBetsBigBlind = BigBlind
+RoundBetsSmallBlind = SmallBlind
 
 #***********************************************************************************
 # global QSettings

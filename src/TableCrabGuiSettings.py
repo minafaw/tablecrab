@@ -48,7 +48,7 @@ class FrameSettingsGlobal(QtGui.QFrame):
 		self.comboSingleApplication = TableCrabConfig.ComboBox(
 				TableCrabWin32.SingleApplication.Scopes,
 				settingsKey='Gui/SingleApplication/Scope',
-				default=TableCrabWin32.SingleApplication.ScopeSession,
+				default=TableCrabConfig.SingleAppScopeDefault,
 				failsave=True,
 				parent=self,
 				)
