@@ -99,8 +99,8 @@ QtCore.QLocale.setDefault(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.
 locale = QtCore.QLocale()
 
 
-SingleAppMagicString = '73524668475460800279396959888864133024'
-SingleAppScopeDefault = TableCrabWin32.SingleApplication.ScopeSession
+SingleApplicationMagicString = '73524668475460800279396959888864133024'
+SingleApplicationScopeDefault = TableCrabWin32.SingleApplication.ScopeSession
 
 MaxHotkeys = 64
 MaxTemplates = 64
