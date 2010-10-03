@@ -167,18 +167,6 @@ HelpTopics = [
 		]
 
 #***********************************************************************************
-# types
-#***********************************************************************************
-PointNone = QtCore.QPoint(-1, -1)
-def newPointNone():
-	return QtCore.QPoint(PointNone.x(), PointNone.y() )
-SizeNone = QtCore.QSize(-1, -1)
-def newSizeNone():
-	return QtCore.QSize(SizeNone.width(), SizeNone.height() )
-
-HotkeyNone = 'None'
-
-#***********************************************************************************
 # global QSettings
 #***********************************************************************************
 #TODO: what to do with deprecated settings keys?
@@ -251,6 +239,18 @@ keyboardHook = TableCrabWin32.KeyboardHook(parent=None)
 #TODO: how to make hotkeyManager and templateManager globally available?
 hotkeyManager = None
 templateManager = None
+
+#***********************************************************************************
+# types
+#***********************************************************************************
+PointNone = QtCore.QPoint(-1, -1)
+def newPointNone():
+	return QtCore.QPoint(PointNone.x(), PointNone.y() )
+SizeNone = QtCore.QSize(-1, -1)
+def newSizeNone():
+	return QtCore.QSize(SizeNone.width(), SizeNone.height() )
+
+HotkeyNone = 'None'
 
 #***********************************************************************************
 # methods
