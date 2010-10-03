@@ -111,7 +111,6 @@ MaxName = 32		# arbitrary, maximum number of chars allowed in user supplied name
 
 WindowHookTimeout = 0.2
 HandGrabberTimeout = 0.4
-MouseMonitorTimeout = 0.5
 StatusBarMessageTimeout = 3
 MaxHandGrabberPrefix = 16	# + postfix
 MaxHandStyleSheet = 9000
