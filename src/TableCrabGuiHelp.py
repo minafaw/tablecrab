@@ -2,10 +2,11 @@
 import TableCrabConfig
 from PyQt4 import QtCore, QtGui, QtWebKit, QtNetwork
 
-#**********************************************************************************************
-# customize network access of QWebView so we can serve pages (and pixmap) from our resource modules
+#************************************************************************************
+# customized network access of QWebView so we can serve pages (and pixmap)
+# from our resource modules
 #
-#**********************************************************************************************
+#************************************************************************************
 class ByteArrayBuffer(object):
 	def __init__(self, byteArray=None):
 		self._byteArray = byteArray
@@ -33,7 +34,6 @@ class TableCrabReply(QtNetwork.QNetworkReply):
 	def __init__(self, buffer, parent=None):
 		QtNetwork.QNetworkReply.__init__(self, parent)
 		self._buffer = buffer
-		##self.setHeader(QtNetwork.QNetworkRequest.ContentLengthHeader, QtCore.QVariant(len(self.content)))
 		QtCore.QTimer.singleShot(0, self, QtCore.SIGNAL("readyRead()"))
 		self.open(self.ReadOnly | self.Unbuffered)
 	def abort(self):	pass
@@ -49,7 +49,7 @@ class NetworkAccessManager(QtNetwork.QNetworkAccessManager):
 
 	def __init__(self, oldManager, parent=None):
 		QtNetwork.QNetworkAccessManager.__init__(self, parent)
-		##self.oldManager = oldManager
+		self.oldManager = oldManager
 		self.setCache(oldManager.cache())
 		self.setCookieJar(oldManager.cookieJar())
 		self.setProxy(oldManager.proxy())
@@ -62,7 +62,7 @@ class NetworkAccessManager(QtNetwork.QNetworkAccessManager):
 		# serve local files from our resource modules
 		if url.scheme() == "file" and operation == self.GetOperation:
 			fileInfo = QtCore.QFileInfo(url.path())
-			name = str(fileInfo.baseName() )		#NOTE: we need to string it ..getattr() crasches otherwise
+			name = str(fileInfo.baseName() )	#NOTE: we need to string it ..getattr() crasches otherwise
 			ext = fileInfo.suffix()
 
 			buffer = ByteArrayBuffer()
@@ -103,9 +103,9 @@ class NetworkAccessManager(QtNetwork.QNetworkAccessManager):
 
 		return QtNetwork.QNetworkAccessManager.createRequest(self, operation, request, data)
 
-#**********************************************************************************************
+#************************************************************************************
 #
-#**********************************************************************************************
+#************************************************************************************
 class FrameHelp(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -154,17 +154,17 @@ class FrameHelp(QtGui.QFrame):
 		self.layout()
 		self.toolBar.onInit()
 
-	#--------------------------------------------------------------------------------------------------------------
+	#------------------------------------------------------------------------------------------------------------------
 	# methods
-	#--------------------------------------------------------------------------------------------------------------
+	#------------------------------------------------------------------------------------------------------------------
 	def layout(self):
 		box = TableCrabConfig.GridBox(self)
 		box.addWidget(self.toolBar, 0, 0)
 		box.addWidget(self.splitter, 1, 0)
 
-	#--------------------------------------------------------------------------------------------------------------
+	#------------------------------------------------------------------------------------------------------------------
 	# event handlers
-	#--------------------------------------------------------------------------------------------------------------
+	#------------------------------------------------------------------------------------------------------------------
 	def onCloseEvent(self, event):
 		TableCrabConfig.settingsSetValue('Gui/Help/SplitterState', self.splitter.saveState() )
 
@@ -233,9 +233,9 @@ class FrameHelp(QtGui.QFrame):
 		else:
 			raise ValueError('no topic found for url: %s' % url.path())
 
-#**********************************************************************************************
+#************************************************************************************
 #
-#**********************************************************************************************
+#************************************************************************************
 class _DialogHelp(QtGui.QDialog):
 	def __init__(self, topic, parent=None):
 		QtGui.QDialog.__init__(self, parent)
@@ -252,9 +252,9 @@ class _DialogHelp(QtGui.QDialog):
 		self.frameHelp.splitter.restoreState( TableCrabConfig.settingsValue('Gui/DialogHelp/SplitterState', QtCore.QByteArray()).toByteArray() )
 		self.frameHelp.onInit()
 
-	#--------------------------------------------------------------------------------------------------------------
+	#------------------------------------------------------------------------------------------------------------------
 	# overwritten methods
-	#--------------------------------------------------------------------------------------------------------------
+	#------------------------------------------------------------------------------------------------------------------
 	def hideEvent(self, event):
 		TableCrabConfig.settingsSetValue('Gui/DialogHelp/Geometry', self.saveGeometry() )
 		TableCrabConfig.settingsSetValue('Gui/Help/SplitterState', self.frameHelp.splitter.saveState() )
@@ -269,9 +269,9 @@ class _DialogHelp(QtGui.QDialog):
 		box.addWidget(TableCrabConfig.HLine(self), 1, 0)
 		box.addWidget(self.buttonBox, 2, 0)
 
-#**********************************************************************************************
+#************************************************************************************
 #
-#**********************************************************************************************
+#************************************************************************************
 def dialogHelp(topic, parent=None):
 	dlg = _DialogHelp(topic, parent=parent)
 	dlg.show()
