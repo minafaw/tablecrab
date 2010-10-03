@@ -1,27 +1,4 @@
 
-#TODO: would be nice to auto-generate topics from disk. for now we have to keep track by hand.
-# auto-generating woul drequire some naming scheme to get the hirarchy - we only support flat
-# directories in our NetworkAccessmanager()  ++ some Html parsing to retrieve the desired title
-# of the topic. problem is we may not get topis in a dedicated order.
-#
-# some sleketon code::
-#
-#DirHtmlPages = wherever
-#TitlePat = re.compile('.*?<title>(.*?)</title>', re.I | re.M | re.S)
-#topics = {}
-#for name in os.listdir(DirHtmlPages):
-#	fileName = os.path.join(DirHtmlPages, name)
-#	if not os.path.isfile(fileName): continue
-#	if not os.path.splitext(name)[1].lower() == '.html': continue
-#	with open(fileName, 'r') as fp:
-#		data = fp.read()
-#		result = TitlePat.match(data)
-#		if result is not None:
-#			print result.group(1)
-#		else:
-#			print 'Warning: no title found in : %s' % name
-#		#TODO: break fileName into pieces. something like: topic-subtopic-MyPage.html
-
 import TableCrabConfig
 from PyQt4 import QtCore, QtGui, QtWebKit, QtNetwork
 
@@ -252,7 +229,9 @@ class FrameHelp(QtGui.QFrame):
 			myTopic = item.data(0, QtCore.Qt.UserRole).toString()
 			if myTopic == topic:
 				self.tree.setCurrentItem(item)
-		#TODO: ??? on topic not found
+				break
+		else:
+			raise ValueError('no topic found for url: %s' % url.path())
 
 #**********************************************************************************************
 #
