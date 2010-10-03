@@ -1,4 +1,6 @@
 
+#TODO: restore collasped / expanded in topic tree. overkill?
+
 import TableCrabConfig
 from PyQt4 import QtCore, QtGui, QtWebKit, QtNetwork
 
