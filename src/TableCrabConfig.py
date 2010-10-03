@@ -658,7 +658,6 @@ class Timer(QtCore.QTimer):
 			self.timeout.connect(slot)
 		self.userData = userData
 
-#TODO: factor out KeyboardHook. keyEvent should do the job with a little help from TableCrabWin32
 class HotkeyBox(QtGui.QComboBox):
 	#NOTE: bit of a hack this combo
 	# x) pretty much disbled all standart keybindings for the combo. except ESCAPE and SPACE (ESCAPE
