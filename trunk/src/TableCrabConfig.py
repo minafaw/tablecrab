@@ -765,12 +765,12 @@ class TreeWidgetItemIterator(QtGui.QTreeWidgetItemIterator):
 		QtGui.QTreeWidgetItemIterator.__init__(self, *args)
 	def __iter__(self):
 		while True:
-			self.__iadd__(1)
 			value = self.value()
 			if value:
 				yield value
 			else:
 				break
+			self.__iadd__(1)
 		raise StopIteration
 
 def msgWarning(parent, msg):
