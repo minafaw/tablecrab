@@ -110,9 +110,9 @@ class Gui(QtGui.QMainWindow):
 	def __init__(self):
 		scope = TableCrabConfig.settingsValue('Gui/SingleApplication/Scope', '').toString()
 		if scope not in TableCrabWin32.SingleApplication.Scopes:
-			scope = TableCrabConfig.SingleAppScopeDefault
+			scope = TableCrabConfig.SingleApplicationScopeDefault
 		self.singleApplication = TableCrabWin32.SingleApplication(
-				TableCrabConfig.SingleAppMagicString,
+				TableCrabConfig.SingleApplicationMagicString,
 				scope=scope,
 				parent=None
 				)
