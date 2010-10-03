@@ -26,51 +26,6 @@ import TableCrabConfig
 from PyQt4 import QtCore, QtGui, QtWebKit, QtNetwork
 
 #**********************************************************************************************
-#
-#**********************************************************************************************
-Topics = [
-		('index', 'TableCrab'), [
-			('setup', 'Setup'), [
-				('screenshotInfo', 'Screenshot Info Dialog'),
-				],
-			('hotkeys', 'Hotkeys'), [
-				('hotkeyCheck', 'Check'),
-				('hotkeyFold', 'Fold'),
-				('hotkeyRaise', 'Raise'),
-				('hotkeyAll_In', 'All-in'),
-				('hotkeyHilightBet', 'Hilight Bet'),
-				('hotkeyBetPot', 'Bet Pot'),
-				('hotkeyMultiplyBlind', 'Multiply Blind'),
-				('hotkeyMultiplyBet', 'Multiply Bet'),
-				('hotkeyAddToBet', 'Add To Bet'),
-				('hotkeySubtractFromBet', 'Subtract From Bet'),
-				('hotkeyReplayer', 'Replayer'),
-				('hotkeyInstantHandHistory', 'Instant Hand History'),
-				('hotkeyScreenshot', 'Screenshot'),
-				('hotkeyTableSizeNext', 'Table Size Next'),
-				],
-			('hand', 'Hand'),
-			('settings', 'Settings'), [
-				('settingsGlobal', 'Global'),
-				('settingsPokerStars', 'PokerStars'),
-				('settingsHand', 'Hand'),
-				('settingsHandStyleSheet', 'Hand Style Sheet'),
-				],
-			],
-		('versionHistory', 'Version History'),
-		]
-
-def walkTopics():
-	def walker(item, level=0):
-		if not isinstance(item, list):
-			yield level -1, item
-		else:
-			for child in item:
-				for x in walker(child, level=level +1):
-					yield x
-	return walker(Topics)
-
-#**********************************************************************************************
 # customize network access of QWebView so we can serve pages (and pixmap) from our resource modules
 #
 #**********************************************************************************************
@@ -254,7 +209,7 @@ class FrameHelp(QtGui.QFrame):
 		lastTopicItem = None
 		firstTopicItem = None
 		stack = []
-		for level, (topic, topicName) in walkTopics():
+		for level, (topic, topicName) in TableCrabConfig.walkHelpTopics():
 			while len(stack) > level:
 				stack.pop(-1)
 			if stack:

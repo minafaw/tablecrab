@@ -135,6 +135,38 @@ RoundBetsNoRounding = 'NoRounding'
 RoundBetsBigBlind = BigBlind
 RoundBetsSmallBlind = SmallBlind
 
+HelpTopics = [
+		('index', 'TableCrab'), [
+			('setup', 'Setup'), [
+				('screenshotInfo', 'Screenshot Info Dialog'),
+				],
+			('hotkeys', 'Hotkeys'), [
+				('hotkeyCheck', 'Check'),
+				('hotkeyFold', 'Fold'),
+				('hotkeyRaise', 'Raise'),
+				('hotkeyAll_In', 'All-in'),
+				('hotkeyHilightBet', 'Hilight Bet'),
+				('hotkeyBetPot', 'Bet Pot'),
+				('hotkeyMultiplyBlind', 'Multiply Blind'),
+				('hotkeyMultiplyBet', 'Multiply Bet'),
+				('hotkeyAddToBet', 'Add To Bet'),
+				('hotkeySubtractFromBet', 'Subtract From Bet'),
+				('hotkeyReplayer', 'Replayer'),
+				('hotkeyInstantHandHistory', 'Instant Hand History'),
+				('hotkeyScreenshot', 'Screenshot'),
+				('hotkeyTableSizeNext', 'Table Size Next'),
+				],
+			('hand', 'Hand'),
+			('settings', 'Settings'), [
+				('settingsGlobal', 'Global'),
+				('settingsPokerStars', 'PokerStars'),
+				('settingsHand', 'Hand'),
+				('settingsHandStyleSheet', 'Hand Style Sheet'),
+				],
+			],
+		('versionHistory', 'Version History'),
+		]
+
 #***********************************************************************************
 # types
 #***********************************************************************************
@@ -358,6 +390,16 @@ def setTabOrder(parent, *widgets):
 	for i, widget in enumerate(widgets):
 		if i +1 < len(widgets):
 			parent.setTabOrder(widget, widgets[i+1])
+
+def walkHelpTopics():
+	def walker(item, level=0):
+		if not isinstance(item, list):
+			yield level -1, item
+		else:
+			for child in item:
+				for x in walker(child, level=level +1):
+					yield x
+	return walker(HelpTopics)
 
 #***********************************************************************************
 # some Qt wrappers to make live easier
