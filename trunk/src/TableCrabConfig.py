@@ -39,7 +39,7 @@ def _excepthook(type, value, tb,
 			):
 	# as failsave as possible
 	p = ''
-	p += 'TableCrab: %s\n' % releaseName
+	p += 'Application: %s\n' % releaseName
 	p += 'Platform: %s %s\n' % (platform.system(), platform.release() )
 	p += 'PythonVersion: %s\n' % sys.version.split()[0]
 	try:
@@ -47,33 +47,37 @@ def _excepthook(type, value, tb,
 		p += 'QtVersion: %s\n' % qVersion()
 		p += 'PyQtVersion: %s\n' % PYQT_VERSION_STR
 	except Exception,d:
-		print '%s: %s' % (releaseName, d)
+		print '>>%s: %s' % (releaseName, d)
 		p += 'QtVersion: Unknown\n'
 		p += 'PyQtVersion: Unknown\n'
 	try:
 		import sipconfig
 		p += 'SipVersion: %s\n' % sipconfig.Configuration().sip_version_str
 	except  Exception,d:
-		print '%s: %s' % (releaseName, d)
+		print '>>%s: %s' % (releaseName, d)
 		p += 'SipVersion: Unknown\n'
+	try:
+		from PyQt4 import QtWebKit
+		p += 'WebKitVersion: %s\n' % QtWebKit.qWebKitVersion()
+	except:
+		p += 'WebKitVersion: Unknown\n'
 	p += ''.join(traceback.format_exception(type, value, tb))
 	if data is not None:
 		try:
 			p += data
 		except Exception, d:
-			print '%s: %s' % (releaseName, d)
+			print '>>%s: %s' % (releaseName, d)
 	try:
 		globalObject.feedbackException.emit(p)
 	except Exception, d:
-		print '%s: %s' % (releaseName, d)
+		print '>>%s: %s' % (releaseName, d)
 	try:	# try to log
 		logger.critical(p)
 	except Exception, d:
-		print '%s: %s' % (releaseName, d)
+		print '>>%s: %s' % (releaseName, d)
 	if not suppressException:
 		raise type(value)
 sys.excepthook = _excepthook
-
 
 def handleException(data=None):
 	'''handles an exception without raising it
