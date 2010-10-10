@@ -667,28 +667,65 @@ class HBox(QtGui.QHBoxLayout):
 		self.setContentsMargins(contentsMargins)
 
 class GridBox(QtGui.QGridLayout):
+
+	class Grid(object):
+		def __init__(self):
+			self._items = [[]]
+			self._currentRow = 0
+		def pprint(self):
+			for row in self._items:
+				print ''.join(['x' if item else 'o' for item in row])
+		def newRow(self):
+			self._currentRow += 1
+			if self._currentRow +1 > len(self._items):
+				self._items.append([False]*len(self._items[self._currentRow -1]))
+		def newColumn(self, w, h):
+			row = self._items[self._currentRow]
+			row = [(item, i) for (i, item) in enumerate(row)]
+			row.sort()
+			slot = len(row)
+			if row and not row[0][0]:
+				slot = row[0][1]
+			# pad rows if nrcessary
+			if len(self._items) <= self._currentRow + h:
+				pad = self._currentRow + h - len(self._items)
+				for i in range(pad):
+					self._items.append([False]*len(row))
+			# pad columns if necessary
+			for row in self._items:
+				if len(row) < slot + w:
+					pad = slot + w - len(row)
+					row.extend([False]*pad)
+			# expand item
+			currentRow = self._currentRow
+			for y in xrange(0, h):
+				row = self._items[currentRow]
+				slot + w
+				for x in xrange(slot, slot + w):
+					row[x] = True
+				currentRow += 1
+			return [slot, self._currentRow, w, h]
+
 	def __init__(self, *args):
 		QtGui.QGridLayout.__init__(self, *args)
 		self.setContentsMargins(contentsMargins)
-		self._items = []	# widget, row, col, rowspan, colspan
-		self._currentRow = 0
+		self._grid = self.Grid()
 	def row(self):
-		self._currentRow += 1
+		self._grid.newRow()
 	#TODO: GridBox.col() can not handle right to left rowspaning columns
-	def col(self, widget, rowspan=1, colspan=1):
+	def col(self, widget, colspan=1, rowspan=1, debug=False):
 		if rowspan < 1: raise ValueError('rowspan must be > 0')
 		if colspan < 1: raise ValueError('colspan must be > 0')
-		col = 0
-		for item in self._items:
-			if item['row'] + item['rowspan'] -1< self._currentRow: continue
-			col += item['colspan']
-		self._items.append({'row':self._currentRow, 'col':col, 'rowspan': rowspan, 'colspan':colspan})
+		x, y, w, h = self._grid.newColumn(colspan, rowspan)
+		if debug:
+			print x, y, w, h
 		if isinstance(widget, QtGui.QWidget):
-			self.addWidget(widget, self._currentRow, col, rowspan, colspan)
+			method = self.addWidget
 		elif isinstance(widget, QtGui.QLayout):
-			self.addLayout(widget, self._currentRow, col, rowspan, colspan)
+			method = self.addLayout
 		else:
 			raise ValueError('widget must be QWidget or QLayout')
+		method(widget, y, x, h, w)
 		return self
 
 class HLine(QtGui.QFrame):
