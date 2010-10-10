@@ -103,47 +103,33 @@ class FrameSettingsGlobal(QtGui.QFrame):
 
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
-		grid.addWidget(TableCrabConfig.HLine(self), 0, 0, 1, 3)
-
-		grid.addWidget(self.labelBackup, 1, 0)
-		grid.addWidget(self.buttonBackup, 1, 1)
-		grid.addLayout(TableCrabConfig.HStretch(), 1, 2)
-
-		grid.addWidget(self.labelGuiStyle, 2, 0)
-		grid.addWidget(self.comboGuiStyle, 2, 1)
-		grid.addLayout(TableCrabConfig.HStretch(), 2, 2)
-
-		grid.addWidget(self.labelFont, 3, 0)
-		grid.addWidget(self.buttonFont, 3, 1)
-		grid.addLayout(TableCrabConfig.HStretch(), 3, 2)
-
-		grid.addWidget(self.labelFixedFont, 4, 0)
-		grid.addWidget(self.buttonFixedFont, 4, 1)
-		grid.addLayout(TableCrabConfig.HStretch(), 4, 2)
-
-		grid.addWidget(self.labelSingleApplication, 5, 0)
-		grid.addWidget(self.comboSingleApplication, 5, 1)
-		grid.addLayout(TableCrabConfig.HStretch(), 5, 2)
-
-		grid.addWidget(self.labelZoomSteps, 6, 0)
-		grid.addWidget(self.spinZoomSteps, 6, 1)
-		grid.addLayout(TableCrabConfig.HStretch(), 6, 2)
-
-		grid.addWidget(self.checkAlternatingRowColors, 7, 0)
-		grid.addWidget(self.checkChildItemIndicators, 8, 0)
-		grid.addWidget(self.checkRestoreMousePosition, 9, 0)
-
-		grid.addWidget(self.labelRoundBets, 10, 0)
-		grid.addWidget(self.comboRoundBets, 10, 1)
-		grid.addLayout(TableCrabConfig.HStretch(), 10, 2)
-
-
-		grid.addLayout(TableCrabConfig.VStretch(), 11, 0)
-		grid.addWidget(TableCrabConfig.HLine(self), 12, 0, 1, 3)
-
-		grid2 = TableCrabConfig.GridBox()
-		grid.addLayout(grid2, 13, 0, 1, 3)
-		grid2.addWidget(self.buttonBox, 0, 0)
+		grid.col(TableCrabConfig.HLine(self), colspan=3)
+		grid.row()
+		grid.col(self.labelBackup).col(self.buttonBackup).col(TableCrabConfig.HStretch())
+		grid.row()
+		grid.col(self.labelGuiStyle).col(self.comboGuiStyle).col(TableCrabConfig.HStretch())
+		grid.row()
+		grid.col(self.labelFont).col(self.buttonFont).col(TableCrabConfig.HStretch())
+		grid.row()
+		grid.col(self.labelFixedFont).col(self.buttonFixedFont).col(TableCrabConfig.HStretch())
+		grid.row()
+		grid.col(self.labelSingleApplication).col(self.comboSingleApplication).col(TableCrabConfig.HStretch())
+		grid.row()
+		grid.col(self.labelZoomSteps).col(self.spinZoomSteps).col(TableCrabConfig.HStretch())
+		grid.row()
+		grid.col(self.checkAlternatingRowColors)
+		grid.row()
+		grid.col(self.checkChildItemIndicators)
+		grid.row()
+		grid.col(self.checkRestoreMousePosition)
+		grid.row()
+		grid.col(self.labelRoundBets).col(self.comboRoundBets).col(TableCrabConfig.HStretch())
+		grid.row()
+		grid.col(TableCrabConfig.VStretch())
+		grid.row()
+		grid.col(TableCrabConfig.HLine(self), colspan=3)
+		grid.row()
+		grid.col(self.buttonBox, colspan=3)
 
 	def setFont(self):
 		font = QtGui.QFont()
@@ -288,25 +274,27 @@ class FrameSettingsPokerStars(QtGui.QFrame):
 				slot=self.onHelp,
 				)
 		self.addAction(action)
-
-
 		self.layout()
+
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
-		grid.addWidget(TableCrabConfig.HLine(self), 0, 0, 1, 3)
-
-		grid.addWidget(self.checkAutoClosePopupNews, 1, 0)
-		grid.addWidget(self.checkAutoCloseTourneyRegistrationBoxes, 2, 0)
-		grid.addWidget(self.checkAutoCloseTableMessageBoxes, 3, 0)
-		grid.addWidget(self.checkAutoLogIn, 4, 0)
-		grid.addWidget(self.checkMoveMouseToActiveTable, 5, 0)
-
-		grid.addLayout(TableCrabConfig.VStretch(), 6, 0)
-		grid.addWidget(TableCrabConfig.HLine(self), 7, 0, 1, 3)
-
-		grid2 = TableCrabConfig.GridBox()
-		grid.addLayout(grid2, 8, 0, 1, 3)
-		grid2.addWidget(self.buttonBox, 0, 0)
+		grid.col(TableCrabConfig.HLine(self), colspan=3)
+		grid.row()
+		grid.col(self.checkAutoClosePopupNews)
+		grid.row()
+		grid.col(self.checkAutoCloseTourneyRegistrationBoxes)
+		grid.row()
+		grid.col(self.checkAutoCloseTableMessageBoxes)
+		grid.row()
+		grid.col(self.checkAutoLogIn)
+		grid.row()
+		grid.col(self.checkMoveMouseToActiveTable)
+		grid.row()
+		grid.col(TableCrabConfig.VStretch())
+		grid.row()
+		grid.col(TableCrabConfig.HLine(self), colspan=3)
+		grid.row()
+		grid.col(self.buttonBox, colspan=3)
 
 	def onHelp(self, *args):
 		TableCrabGuiHelp.dialogHelp('settingsPokerStars', parent=self)
@@ -395,30 +383,26 @@ class FrameSettingsHand(QtGui.QFrame):
 		self.layout()
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
-
-		grid.addWidget(TableCrabConfig.HLine(self),0, 0, 1, 3)
-
-		grid.addWidget(self.labelMaxPlayerName, 1, 0)
-		grid.addWidget(self.spinMaxPlayerName, 1, 1)
-		grid.addWidget(self.checkNoFloatingPoint, 2, 0, 1, 3)
-
-		grid.addWidget(TableCrabConfig.HLine(self), 3, 0, 1, 3)
-
-		grid.addWidget(self.labelPrefix, 4, 0)
-		grid.addWidget(self.labelAction, 4, 1)
-		grid.addWidget(self.labelPostfix, 4, 2)
+		grid.col(TableCrabConfig.HLine(self), colspan=3)
+		grid.row()
+		grid.col(self.labelMaxPlayerName).col(self.spinMaxPlayerName)
+		grid.row()
+		grid.col(self.checkNoFloatingPoint, colspan=3)
+		grid.row()
+		grid.col(TableCrabConfig.HLine(self), colspan=3)
+		grid.row()
+		grid.col(self.labelPrefix).col(self.labelAction).col(self.labelPostfix)
 		for i, (editPrefix, labelAction, editPostfix, _, _) in enumerate(self.actionWidgets):
-			grid.addWidget(editPrefix, i+5, 0)
-			grid.addWidget(labelAction, i+5, 1)
+			grid.row()
+			grid.col(editPrefix).col(labelAction)
 			if editPostfix is not None:
-				grid.addWidget(editPostfix, i+5, 2)
-
-		grid.addLayout(TableCrabConfig.VStretch(), i+6, 0)
-
-		grid.addWidget(TableCrabConfig.HLine(self), i+7, 0, 1, 3)
-		grid2 = TableCrabConfig.GridBox()
-		grid.addLayout(grid2, i+8, 0, 1, 3)
-		grid2.addWidget(self.buttonBox, 0, 0)
+				grid.col(editPostfix)
+		grid.row()
+		grid.col(TableCrabConfig.VStretch())
+		grid.row()
+		grid.col(TableCrabConfig.HLine(self), colspan=3)
+		grid.row()
+		grid.col(self.buttonBox, colspan=3)
 
 	def onRestoreDefault(self, *args):
 		for editPrefix, _, editPostfix, actionPrefix, actionPostfix in self.actionWidgets:
@@ -495,13 +479,13 @@ class FrameSettingsHandSyleSheet(QtGui.QFrame):
 
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
-		grid.addWidget(TableCrabConfig.HLine(self), 0, 0)
-
-		grid.addWidget(self.edit, 1, 0)
-		grid.addWidget(TableCrabConfig.HLine(self), 2, 0)
-		grid2 = TableCrabConfig.GridBox()
-		grid.addLayout(grid2, 3, 0)
-		grid2.addWidget(self.buttonBox, 0, 0)
+		grid.col(TableCrabConfig.HLine(self))
+		grid.row()
+		grid.col(self.edit)
+		grid.row()
+		grid.col(TableCrabConfig.HLine(self))
+		grid.row()
+		grid.col(self.buttonBox)
 
 	def onOpen(self, checked):
 		fileName = TableCrabConfig.dlgOpenSaveFile(
@@ -585,7 +569,7 @@ class FrameSettings(QtGui.QFrame):
 
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
-		grid.addWidget(self.splitter, 0, 0)
+		grid.col(self.splitter)
 
 	def addSetting(self, name, widget, shortcut, toolTip):
 		item = QtGui.QListWidgetItem(name, self.listWidget)

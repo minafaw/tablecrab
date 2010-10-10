@@ -78,9 +78,11 @@ class DialgScreenshotInfo(QtGui.QDialog):
 	#---------------------------------------------------------------------------------------------------------------
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
-		grid.addWidget(self.edit, 0, 0)
-		grid.addWidget(TableCrabConfig.HLine(self), 1, 0)
-		grid.addWidget(self.buttonBox, 2, 0)
+		grid.col(self.edit)
+		grid.row()
+		grid.col(TableCrabConfig.HLine(self))
+		grid.row()
+		grid.col(self.buttonBox)
 
 	#--------------------------------------------------------------------------------------------------------------
 	# event handlers
@@ -766,9 +768,10 @@ class FrameSetup(QtGui.QFrame):
 	# methods
 	#--------------------------------------------------------------------------------------------------------------
 	def layout(self):
-		box = TableCrabConfig.GridBox(self)
-		box.addWidget(self.toolBar, 0, 0)
-		box.addWidget(self.splitter, 1, 0)
+		grid = TableCrabConfig.GridBox(self)
+		grid.col(self.toolBar)
+		grid.row()
+		grid.col(self.splitter)
 
 	#--------------------------------------------------------------------------------------------------------------
 	# event handlers
