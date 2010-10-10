@@ -153,7 +153,6 @@ class FrameHand(QtGui.QFrame):
 		menu.exec_(point)
 
 	def onInit(self):
-		self.toolBar.onInit()
 		self.webView.setUrl(QtCore.QUrl(''))
 
 	def onPShandGrabberHandGrabbed(self, data):
