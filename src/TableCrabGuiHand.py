@@ -83,9 +83,10 @@ class FrameHand(QtGui.QFrame):
 		self.actionSave.setEnabled(bool(self._hasHand))
 
 	def layout(self):
-		box = TableCrabConfig.GridBox(self)
-		box.addWidget(self.toolBar, 0,0)
-		box.addWidget(self.webView, 1, 0)
+		grid = TableCrabConfig.GridBox(self)
+		grid.col(self.toolBar)
+		grid.row()
+		grid.col(self.webView)
 
 	#--------------------------------------------------------------------------------------------------------------
 	# event handlers
@@ -152,6 +153,7 @@ class FrameHand(QtGui.QFrame):
 		menu.exec_(point)
 
 	def onInit(self):
+		self.toolBar.onInit()
 		self.webView.setUrl(QtCore.QUrl(''))
 
 	def onPShandGrabberHandGrabbed(self, data):

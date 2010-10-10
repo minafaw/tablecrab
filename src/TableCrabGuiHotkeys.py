@@ -295,8 +295,9 @@ class FrameHotkeys(QtGui.QFrame):
 	#---------------------------------------------------------------------------------------------------------------
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
-		grid.addWidget(self.toolBar, 0, 0)
-		grid.addWidget(self.HotkeyWidget, 1, 0)
+		grid.col(self.toolBar)
+		grid.row()
+		grid.col(self.HotkeyWidget)
 
 	#--------------------------------------------------------------------------------------------------------------
 	# event handlers

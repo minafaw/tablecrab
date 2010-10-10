@@ -670,15 +670,26 @@ class GridBox(QtGui.QGridLayout):
 	def __init__(self, *args):
 		QtGui.QGridLayout.__init__(self, *args)
 		self.setContentsMargins(contentsMargins)
-	def addFields(self, *fields):
-		row = self.rowCount()
-		for items in fields:
-			for col, item in enumerate(items):
-				if isinstance(item, QtGui.QWidget):
-					self.addWidget(item, row, col)
-				else:
-					self.addLayout(item, row, col)
-			row += 1
+		self._items = []	# widget, row, col, rowspan, colspan
+		self._currentRow = 0
+	def row(self):
+		self._currentRow += 1
+	#TODO: GridBox.col() can not handle right to left rowspaning columns
+	def col(self, widget, rowspan=1, colspan=1):
+		if rowspan < 1: raise ValueError('rowspan must be > 0')
+		if colspan < 1: raise ValueError('colspan must be > 0')
+		col = 0
+		for item in self._items:
+			if item['row'] + item['rowspan'] -1< self._currentRow: continue
+			col += item['colspan']
+		self._items.append({'row':self._currentRow, 'col':col, 'rowspan': rowspan, 'colspan':colspan})
+		if isinstance(widget, QtGui.QWidget):
+			self.addWidget(widget, self._currentRow, col, rowspan, colspan)
+		elif isinstance(widget, QtGui.QLayout):
+			self.addLayout(widget, self._currentRow, col, rowspan, colspan)
+		else:
+			raise ValueError('widget must be QWidget or QLayout')
+		return self
 
 class HLine(QtGui.QFrame):
 	def __init__(self, *args):

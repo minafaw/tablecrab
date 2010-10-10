@@ -82,27 +82,22 @@ class HotkeyEditor(QtGui.QDialog):
 			self.restoreGeometry( TableCrabConfig.settingsValue(self.settingsKey, QtCore.QByteArray()).toByteArray() )
 
 	def layout(self):
-
 		grid = TableCrabConfig.GridBox(self)
-
-		grid.addWidget(self.labelAction, 0, 0)
-		grid.addWidget(self.editAction, 0, 1)
-
-		grid.addWidget(self.labelHotkey, 1, 0)
-		grid.addWidget(self.hotkeyBox, 1, 1)
-
-		grid.addWidget(self.labelHotkeyName, 2, 0)
-		grid.addWidget(self.editHotkeyName, 2, 1)
-
-		grid.addWidget(self.labelBaseValue, 3, 0)
-		grid.addWidget(self.comboBaseValue, 3, 1)
-
-		grid.addWidget(self.labelMultiplier, 4, 0)
-		grid.addWidget(self.spinMultiplier, 4, 1)
-
-		grid.setRowStretch(97, 99)
-		grid.addWidget(TableCrabConfig.HLine(self),98, 0, 1, 3)
-		grid.addWidget(self.buttonBox, 99, 0, 1, 3)
+		grid.col(self.labelAction).col(self.editAction)
+		grid.row()
+		grid.col(self.labelHotkey).col(self.hotkeyBox)
+		grid.row()
+		grid.col(self.labelHotkeyName).col(self.editHotkeyName)
+		grid.row()
+		grid.col(self.labelBaseValue).col(self.comboBaseValue)
+		grid.row()
+		grid.col(self.labelMultiplier).col(self.spinMultiplier)
+		grid.row()
+		grid.col(TableCrabConfig.VStretch())
+		grid.row()
+		grid.col(TableCrabConfig.HLine(self), colspan=2)
+		grid.row()
+		grid.col(self.buttonBox, colspan=2)
 
 		# adjust tab order
 		TableCrabConfig.setTabOrder(

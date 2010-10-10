@@ -154,15 +154,15 @@ class FrameHelp(QtGui.QFrame):
 		self.webView.urlChanged.connect(self.onUrlChanged)
 
 		self.layout()
-		self.toolBar.onInit()
 
 	#------------------------------------------------------------------------------------------------------------------
 	# methods
 	#------------------------------------------------------------------------------------------------------------------
 	def layout(self):
-		box = TableCrabConfig.GridBox(self)
-		box.addWidget(self.toolBar, 0, 0)
-		box.addWidget(self.splitter, 1, 0)
+		grid = TableCrabConfig.GridBox(self)
+		grid.col(self.toolBar)
+		grid.row()
+		grid.col(self.splitter)
 
 	#------------------------------------------------------------------------------------------------------------------
 	# event handlers
@@ -178,6 +178,7 @@ class FrameHelp(QtGui.QFrame):
 		menu.exec_(point)
 
 	def onInit(self):
+		self.toolBar.onInit()
 		self.tree.setUpdatesEnabled(False)
 
 		self.webView.setUrl(QtCore.QUrl(''))
@@ -266,10 +267,12 @@ class _DialogHelp(QtGui.QDialog):
 	# methods
 	#--------------------------------------------------------------------------------------------------------------
 	def layout(self):
-		box = TableCrabConfig.GridBox(self)
-		box.addWidget(self.frameHelp, 0, 0)
-		box.addWidget(TableCrabConfig.HLine(self), 1, 0)
-		box.addWidget(self.buttonBox, 2, 0)
+		grid = TableCrabConfig.GridBox(self)
+		grid.col(self.frameHelp)
+		grid.row()
+		grid.col(TableCrabConfig.HLine(self))
+		grid.row()
+		grid.col(self.buttonBox)
 
 #************************************************************************************
 #
