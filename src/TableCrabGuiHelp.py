@@ -178,7 +178,6 @@ class FrameHelp(QtGui.QFrame):
 		menu.exec_(point)
 
 	def onInit(self):
-		self.toolBar.onInit()
 		self.tree.setUpdatesEnabled(False)
 
 		self.webView.setUrl(QtCore.QUrl(''))
