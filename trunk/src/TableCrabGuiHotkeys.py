@@ -44,44 +44,39 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		menu = QtGui.QMenu(self)
 		for hotkeyProto in TableCrabHotkeys.Hotkeys:
 			menu.addAction(self.ActionNewHotkey(hotkeyProto, parent=self) )
-		self.actionNew = TableCrabConfig.Action(
-				parent=self,
-				text='New',
-				toolTip='Create a new hotkey',
-				menu=menu,
-				)
+
+		self.actionNew = QtGui.QAction(self)
+		self.actionNew.setText('New')
+		self.actionNew.setToolTip('Create a new hotkey')
+		self.actionNew.setMenu(menu)
 		self._actions.append(self.actionNew)
-		self.actionEdit = TableCrabConfig.Action(
-				parent=self,
-				text='Edit..',
-				toolTip='Edit hotkey (Alt+E)',
-				slot=self.editHotkey,
-				shortcut='Alt+E'
-				)
+
+		self.actionEdit = QtGui.QAction(self)
+		self.actionEdit.setText('Edit..')
+		self.actionEdit.setToolTip('Edit hotkey (Alt+E)')
+		self.actionEdit.setShortcut(QtGui.QKeySequence('Alt+E') )
+		self.actionEdit.triggered.connect(self.editHotkey)
 		self._actions.append(self.actionEdit)
-		self.actionUp = TableCrabConfig.Action(
-				parent=self,
-				text='Up',
-				toolTip='Move hotkey up (Alt+Up)',
-				slot=self.moveHotkeyUp,
-				shortcut='Alt+Up',
-				)
+
+		self.actionUp = QtGui.QAction(self)
+		self.actionUp.setText('Up')
+		self.actionUp.setToolTip('Move hotkey up (Alt+Up)')
+		self.actionUp.setShortcut(QtGui.QKeySequence('Alt+Up') )
+		self.actionUp.triggered.connect(self.moveHotkeyUp)
 		self._actions.append(self.actionUp)
-		self.actionDown = TableCrabConfig.Action(
-				parent=self,
-				text='Down',
-				toolTip='Move hotkey down (Alt+Down)',
-				slot=self.moveHotkeyDown,
-				shortcut='Alt+Down',
-				)
+
+		self.actionDown = QtGui.QAction(self)
+		self.actionDown.setText('Down')
+		self.actionDown.setToolTip('Move hotkey down (Alt+Down)')
+		self.actionDown.setShortcut(QtGui.QKeySequence('Alt+Down') )
+		self.actionDown.triggered.connect(self.moveHotkeyDown)
 		self._actions.append(self.actionDown)
-		self.actionRemove = TableCrabConfig.Action(
-				parent=self,
-				text='Remove',
-				toolTip='Remove hotkey (Alt+Del)',
-				slot=self.removeHotkey,
-				shortcut='Alt+Del',
-				)
+
+		self.actionRemove = QtGui.QAction(self)
+		self.actionRemove.setText('Remove')
+		self.actionRemove.setToolTip('Remove hotkey (Alt+Del)')
+		self.actionRemove.setShortcut(QtGui.QKeySequence('Alt+Del') )
+		self.actionRemove.triggered.connect(self.removeHotkey)
 		self._actions.append(self.actionRemove)
 
 		# connect signals
@@ -280,13 +275,11 @@ class FrameHotkeys(QtGui.QFrame):
 		self.toolBar = QtGui.QToolBar(self)
 		for action in self.HotkeyWidget.actions():
 			self.toolBar.addAction(action)
-		self.actionHelp = TableCrabConfig.Action(
-				parent=self,
-				text='Help',
-				toolTip='Help (F1)',
-				slot=self.onActionHelpTriggered,
-				shortcut='F1',
-				)
+
+		self.actionHelp = QtGui.QAction(self)
+		self.actionHelp.setText('Help')
+		self.actionHelp.setShortcut(QtGui.QKeySequence('F1') )
+		self.actionHelp.triggered.connect(self.onActionHelpTriggered)
 		self.toolBar.addAction(self.actionHelp)
 		self.layout()
 

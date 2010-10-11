@@ -49,31 +49,28 @@ class HotkeyEditor(QtGui.QDialog):
 		self.labelHotkeyName.setBuddy(self.editHotkeyName)
 		self.editHotkeyName.setText(self.hotkey.hotkeyName()  )
 
-		self.comboBaseValue = TableCrabConfig.ComboBox(choices=self.hotkey.BaseValues, default=self.hotkey.baseValue(), parent=self)
-		self.comboBaseValue.setToolTip('Base value (Atl+B)')
+		self.comboBaseValue = QtGui.QComboBox(self)
 		self.labelBaseValue = QtGui.QLabel('&BaseValue:', self)
-		self.labelBaseValue.setBuddy(self.comboBaseValue)
 		if self.hotkey.HasBaseValue:
+			self.comboBaseValue.addItems(self.hotkey.BaseValues)
+			self.comboBaseValue.setCurrentIndex( self.comboBaseValue.findText(self.hotkey.baseValue(), QtCore.Qt.MatchExactly) )
+			self.comboBaseValue.setToolTip('Base value (Atl+B)')
+			self.labelBaseValue.setBuddy(self.comboBaseValue)
 			self.comboBaseValue.currentIndexChanged.connect(self.setNewActionName)
-			self.comboBaseValue.onInit()
 		else:
 			self.comboBaseValue.setVisible(False)
 			self.labelBaseValue.setVisible(False)
 
-		self.spinMultiplier = TableCrabConfig.DoubleSpinBox(
-				default=self.hotkey.multiplier(),
-				minimum=self.hotkey.MultiplierMin,
-				maximum=self.hotkey.MultiplierMax,
-				step=10**-self.hotkey.MultiplierPrecision,
-				precision=self.hotkey.MultiplierPrecision,
-				parent=self,
-				)
-		self.spinMultiplier.setToolTip('Multiplier (Alt+M)')
+		self.spinMultiplier = QtGui.QDoubleSpinBox(self)
 		self.labelMultiplier = QtGui.QLabel('&Multiplier:', self)
-		self.labelMultiplier.setBuddy(self.spinMultiplier)
 		if self.hotkey.HasMultiplier:
+			self.spinMultiplier.setRange(self.hotkey.MultiplierMin, self.hotkey.MultiplierMax)
+			self.spinMultiplier.setSingleStep(10**-self.hotkey.MultiplierPrecision)
+			self.spinMultiplier.setDecimals(self.hotkey.MultiplierPrecision)
+			self.spinMultiplier.setValue(self.hotkey.multiplier() )
+			self.spinMultiplier.setToolTip('Multiplier (Alt+M)')
+			self.labelMultiplier.setBuddy(self.spinMultiplier)
 			self.spinMultiplier.valueChanged.connect(self.setNewActionName)
-			self.spinMultiplier.onInit()
 		else:
 			self.spinMultiplier.setVisible(False)
 			self.labelMultiplier.setVisible(False)

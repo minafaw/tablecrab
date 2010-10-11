@@ -50,18 +50,16 @@ class FrameSettings(QtGui.QFrame):
 		item.setToolTip(toolTip)
 		self.listWidget.addItem(item)
 		self.stack.addWidget(widget)
-		action = TableCrabConfig.Action(
-				parent=self,
-				shortcut=shortcut,
-				slot=self.onSettingsShortcut,
-				userData=item,
-				)
+		action = QtGui.QAction(self)
+		action.setData(QtCore.QVariant(self.listWidget.count() -1) )
+		action.setShortcut(shortcut)
+		action.triggered.connect(self.onSettingsShortcut)
 		self.addAction(action)
 		return widget
 
 	def onSettingsShortcut(self):
-		item = self.sender().userData
-		self.listWidget.setCurrentItem(item)
+		index = self.sender().data().toInt()[0]
+		self.listWidget.setCurrentRow(index)
 		self.onSettingSelected()
 
 	def onSettingSelected(self):

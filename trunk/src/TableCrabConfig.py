@@ -137,6 +137,8 @@ BigBlind = 'BigBlind'
 RoundBetsNoRounding = 'NoRounding'
 RoundBetsBigBlind = BigBlind
 RoundBetsSmallBlind = SmallBlind
+RoundBetsDefault = RoundBetsNoRounding
+RoundBets = (RoundBetsNoRounding, RoundBetsBigBlind, RoundBetsSmallBlind)
 
 HelpTopics = [
 		('index', 'TableCrab'), [
@@ -407,39 +409,10 @@ def walkHelpTopics():
 #***********************************************************************************
 # some Qt wrappers to make live easier
 #***********************************************************************************
-class Action(QtGui.QAction):
-	def __init__(self,
-				parent=None,
-				text='',
-				menu=None,
-				icon=None,
-				slot=None,
-				isEnabled=True,
-				toolTip=None,
-				autoRepeat=True,
-				shortcut=None,
-				userData=None,
-				):
-		self.userData = userData
-		if icon is not None:
-			QtGui.QAction.__init__(self, icon, text, parent)
-		else:
-			QtGui.QAction.__init__(self, parent)
-		self.setText(text)
-		self.setMenu(menu)
-		if slot is not None and parent is not None: self.triggered.connect(slot)
-		self.setEnabled(isEnabled)
-		if toolTip is not None: self.setToolTip(toolTip)
-		self.setAutoRepeat(autoRepeat)
-		if shortcut is not None:
-			if isinstance(shortcut, QtGui.QKeySequence.StandardKey):
-				self.setShortcut(shortcut)
-			else:
-				self.setShortcut(QtGui.QKeySequence(shortcut) )
-
 class WebViewToolBar(QtGui.QToolBar):
-	ZoomSteps = 10
+	ZoomStepsDefault = 10
 	ZoomStepsMax = 40
+	ZoomStepsMin = 1
 	ZoomMin = 0.5
 	ZoomMax = 7
 	def __init__(self, webView, settingsKeyZoomFactor=None, settingsKeyZoomSteps=None):
@@ -459,24 +432,20 @@ class WebViewToolBar(QtGui.QToolBar):
 		self.actionForward.setShortcut(QtGui.QKeySequence.Forward)
 		self.addAction(self.actionForward)
 
-		self.actionZoomIn = Action(
-				parent=self,
-				text='ZoomIn (Ctrl++)',
-				icon=QtGui.QIcon(Pixmaps.magnifierPlus() ),
-				autoRepeat=True,
-				shortcut=QtGui.QKeySequence.ZoomIn,
-				slot=self.zoomIn,
-				)
+		self.actionZoomIn = QtGui.QAction(self)
+		self.actionZoomIn.setText('ZoomIn (Ctrl++)')
+		self.actionZoomIn.setIcon(QtGui.QIcon(Pixmaps.magnifierPlus() ) )
+		self.actionZoomIn.setShortcut(QtGui.QKeySequence.ZoomIn)
+		self.actionZoomIn.setAutoRepeat(True)
+		self.actionZoomIn.triggered.connect(self.zoomIn)
 		self.addAction(self.actionZoomIn)
 
-		self.actionZoomOut = Action(
-				parent=self,
-				text='ZoomOut (Ctrl+-)',
-				icon=QtGui.QIcon(Pixmaps.magnifierMinus() ),
-				autoRepeat=True,
-				shortcut=QtGui.QKeySequence.ZoomOut,
-				slot=self.zoomOut,
-				)
+		self.actionZoomOut = QtGui.QAction(self)
+		self.actionZoomOut.setText('ZoomIn (Ctrl+-)')
+		self.actionZoomOut.setIcon(QtGui.QIcon(Pixmaps.magnifierPlus() ) )
+		self.actionZoomOut.setShortcut(QtGui.QKeySequence.ZoomOut)
+		self.actionZoomOut.setAutoRepeat(True)
+		self.actionZoomOut.triggered.connect(self.zoomOut)
 		self.addAction(self.actionZoomOut)
 
 	def onInit(self):
@@ -487,9 +456,9 @@ class WebViewToolBar(QtGui.QToolBar):
 
 	def _zoomSteps(self):
 		if self.settingsKeyZoomSteps is not None:
-			steps = settingsValue(self.settingsKeyZoomSteps, self.ZoomSteps).toInt()[0]
+			steps = settingsValue(self.settingsKeyZoomSteps, self.ZoomStepsDefault).toInt()[0]
 			if steps > self.ZoomStepsMax:
-				steps = self.ZoomSteps
+				steps = self.ZoomStepsDefault
 			elif steps < 1:
 				stape = 1
 		else:
@@ -520,140 +489,6 @@ class WebViewToolBar(QtGui.QToolBar):
 		self.actionZoomIn.setEnabled(self.webView.zoomFactor() < self.ZoomMax)
 		self.actionZoomOut.setEnabled( self.webView.zoomFactor() > self.ZoomMin)
 
-
-class LineEdit(QtGui.QLineEdit):
-	def __init__(self, default='', settingsKey=None, maxLength=-1, parent=None):
-		QtGui.QLineEdit.__init__(self, parent)
-		self._settingsKey = settingsKey
-		self._default = default
-		if maxLength > -1:
-			self.setMaxLength(maxLength)
-		self.editingFinished.connect(self.onValueChanged)
-		globalObject.init.connect(self.onInit)
-
-	def onInit(self):
-		if self._settingsKey is not None:
-			self.setText( settingsValue(self._settingsKey, self._default).toString() )
-		else:
-			self.setText(self._default)
-
-	def onValueChanged(self):
-		if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.text())
-
-
-class PlainTextEdit(QtGui.QPlainTextEdit):
-
-	maxCharsExceeded = QtCore.pyqtSignal(bool)
-
-	def __init__(self, default='', settingsKey=None, parent=None, maxChars=-1):
-		QtGui.QPlainTextEdit.__init__(self, parent)
-		self._settingsKey = settingsKey
-		self._maxChars = maxChars
-		self._lastText = default
-		self._default = default
-		if self._maxChars >= 0 and len(default) > self._maxChars:
-			raise ValueError('maxChars exceeded')
-		self.textChanged.connect(self.onValueChanged)
-		globalObject.init.connect(self.onInit)
-
-	def onInit(self):
-		if self._settingsKey is not None:
-			self.setPlainText( settingsValue(self._settingsKey, self._default).toString() )
-		else:
-			self.setPlainText(self._default)
-
-	#TODO: cheap implementation of maxText for QPalinTextEdit. have to find a better way to do so
-	def onValueChanged(self):
-		if self._maxChars >= 0:
-			if self.toPlainText().length() > self._maxChars:
-				self.maxCharsExceeded.emit(True)
-				return
-			else:
-				self.maxCharsExceeded.emit(False)
-		if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.toPlainText())
-
-
-class DoubleSpinBox(QtGui.QDoubleSpinBox):
-	def __init__(self, default=1.0, minimum=0.0, maximum=99.99, step=1.0, precision=2, settingsKey=None, parent=None):
-		QtGui.QDoubleSpinBox.__init__(self, parent)
-		self._settingsKey = settingsKey
-		self._default = default
-		self.setRange(minimum, maximum)
-		self.setSingleStep(step)
-		self.setDecimals(precision)
-		self.valueChanged.connect(self.onValueChanged)
-		globalObject.init.connect(self.onInit)
-
-	def onInit(self):
-		if self._settingsKey is not None:
-			self.setValue(  settingsValue(self._settingsKey, self._default).toDouble()[0] )
-		else:
-			self.setValue(self._default)
-
-	def onValueChanged(self):
-		if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.value())
-
-class SpinBox(QtGui.QSpinBox):
-	def __init__(self, default=1, minimum=0, maximum=99, settingsKey=None, parent=None):
-		QtGui.QSpinBox.__init__(self, parent)
-		self._settingsKey = settingsKey
-		self._default = default
-		self.setRange(minimum, maximum)
-		self.valueChanged.connect(self.onValueChanged)
-		globalObject.init.connect(self.onInit)
-
-	def onInit(self):
-		if self._settingsKey is not None:
-			self.setValue(  settingsValue(self._settingsKey, self._default).toInt()[0] )
-		else:
-			self.setValue(self._default)
-
-	def onValueChanged(self):
-		if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.value())
-
-class CheckBox(QtGui.QCheckBox):
-	def __init__(self, text, default=False, settingsKey=None, parent=None):
-		QtGui.QCheckBox.__init__(self, text, parent)
-		self._settingsKey = settingsKey
-		self._default = default
-		self.stateChanged.connect(self.onStateChanged)
-		globalObject.init.connect(self.onInit)
-
-	def onInit(self):
-		if self._settingsKey is not None:
-			self.setCheckState(  QtCore.Qt.Checked if settingsValue(self._settingsKey, self._default).toBool() else QtCore.Qt.Unchecked )
-		else:
-			self.setCheckState(  QtCore.Qt.Checked if self._default else QtCore.Qt.Unchecked )
-
-	def onStateChanged(self):
-		if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.checkState() == QtCore.Qt.Checked)
-
-#TODO: have to rewrite this to untangle user visibe strings from internal strings
-class ComboBox(QtGui.QComboBox):
-	def __init__(self, choices, default='', failsave=False, settingsKey=None, parent=None):
-		QtGui.QComboBox.__init__(self, parent)
-		self.addItems(choices)
-		self._settingsKey = settingsKey
-		self._default = default
-		self.failsave = failsave
-		self.choices = choices
-		self.currentIndexChanged.connect(self.onCurrentIndexChanged)
-		globalObject.init.connect(self.onInit)
-
-	def onInit(self):
-		if self._settingsKey is not None:
-			value = settingsValue(self._settingsKey, self._default).toString()
-		else:
-			value = self._default
-		if value in self.choices:
-			self.setCurrentIndex(self.choices.index(value))
-		elif self.failsave:
-				pass
-		else:
-			self.setCurrentIndex(self.choices.index(value))
-
-	def onCurrentIndexChanged(self, index):
-		if self._settingsKey is not None: settingsSetValue(self._settingsKey, self.itemText(index))
 
 contentsMargins = QtCore.QMargins(2, 2, 2, 2)
 class VBox(QtGui.QVBoxLayout):

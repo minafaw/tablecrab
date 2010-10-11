@@ -28,31 +28,26 @@ class DialgScreenshotInfo(QtGui.QDialog):
 		self.buttonRefresh = QtGui.QPushButton('Refresh', self)
 		self.buttonRefresh.clicked.connect(self.onRefresh)
 		self.buttonRefresh.setToolTip('Save info (Ctrl+R)')
-		action = TableCrabConfig.Action(
-				parent=self,
-				shortcut='Ctrl+R',
-				slot=self.onRefresh,
-				)
+
+		action = QtGui.QAction(self)
+		action.setShortcut(QtGui.QKeySequence('Ctrl+R') )
+		action.triggered.connect(self.onRefresh)
 		self.addAction(action)
 
 		self.buttonSave = QtGui.QPushButton('Save..', self)
 		self.buttonSave.setToolTip('Save info (Ctrl+S)')
 		self.buttonSave.clicked.connect(self.onSave)
-		action = TableCrabConfig.Action(
-				parent=self,
-				shortcut='Ctrl+S',
-				slot=self.onSave,
-				)
+		action = QtGui.QAction(self)
+		action.setShortcut(QtGui.QKeySequence('Ctrl+S') )
+		action.triggered.connect(self.onSave)
 		self.addAction(action)
 
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		self.buttonHelp.setToolTip('Help (F1)')
 		self.buttonHelp.clicked.connect(self.onHelp)
-		action = TableCrabConfig.Action(
-				parent=self,
-				shortcut='F1',
-				slot=self.onHelp,
-				)
+		action = QtGui.QAction(self)
+		action.setShortcut(QtGui.QKeySequence('F1') )
+		action.triggered.connect(self.onHelp)
 		self.addAction(action)
 
 		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
@@ -189,36 +184,32 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		menu = QtGui.QMenu(self)
 		for templateProto in TableCrabTemplates.Templates:
 			menu.addAction(self.ActionNewTemplate(templateProto, parent=self) )
-		self.actionNew = TableCrabConfig.Action(
-				parent=self,
-				text='New',
-				menu=menu,
-				toolTip='Create a new template',
-				)
+
+		self.actionNew = QtGui.QAction(self)
+		self.actionNew.setText('New')
+		self.actionNew.setToolTip('Create a new template')
+		self.actionNew.setMenu(menu)
 		self._actions.append(self.actionNew)
-		self.actionDown = TableCrabConfig.Action(
-				parent=self,
-				text='Down',
-				toolTip='Move template down (Alt+Down)',
-				slot=self.moveTemplateDown,
-				shortcut='Alt+Down',
-				)
-		self._actions.append(self.actionDown)
-		self.actionUp = TableCrabConfig.Action(
-				parent=self,
-				text='Up',
-				toolTip='Move template up (Alt+Up)',
-				slot=self.moveTemplateUp,
-				shortcut='Alt+Up',
-				)
+
+		self.actionUp = QtGui.QAction(self)
+		self.actionUp.setText('Up')
+		self.actionUp.setToolTip('Move template up (Alt+Up)')
+		self.actionUp.setShortcut(QtGui.QKeySequence('Alt+Up') )
+		self.actionUp.triggered.connect(self.moveTemplateUp)
 		self._actions.append(self.actionUp)
-		self.actionRemove = TableCrabConfig.Action(
-				parent=self,
-				text='Remove',
-				toolTip='Remove template (Alt+Del)',
-				slot=self.removeTemplate,
-				shortcut='Alt+Del',
-				)
+
+		self.actionDown = QtGui.QAction(self)
+		self.actionDown.setText('Down')
+		self.actionDown.setToolTip('Move template down (Alt+Down)')
+		self.actionDown.setShortcut(QtGui.QKeySequence('Alt+Down') )
+		self.actionDown.triggered.connect(self.moveTemplateDown)
+		self._actions.append(self.actionDown)
+
+		self.actionRemove = QtGui.QAction(self)
+		self.actionRemove.setText('Remove')
+		self.actionRemove.setToolTip('Remove template (Alt+Del)')
+		self.actionRemove.setShortcut(QtGui.QKeySequence('Alt+Del') )
+		self.actionRemove.triggered.connect(self.removeTemplate)
 		self._actions.append(self.actionRemove)
 
 		# connect signals
@@ -553,31 +544,25 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		# setup actions
 		self._actions = []
 
-		self.actionOpen = TableCrabConfig.Action(
-				parent=self,
-				text='Open screenshot..',
-				toolTip='Open a screenshot from file (Alt+O)',
-				slot=self.onActionOpenTriggered,
-				shortcut='Alt+O',
-				)
+		self.actionOpen = QtGui.QAction(self)
+		self.actionOpen.setText('Open screenshot..')
+		self.actionOpen.setToolTip('Open a screenshot from file (Alt+O)')
+		self.actionOpen.setShortcut(QtGui.QKeySequence('Alt+O') )
+		self.actionOpen.triggered.connect(self.onActionOpenTriggered)
 		self._actions.append(self.actionOpen)
 
-		self.actionSave = TableCrabConfig.Action(
-				parent=self,
-				text='Save screenshot..',
-				toolTip='Save screenshot to file (Alt+S)',
-				slot=self.onActionSaveTriggered,
-				shortcut='Alt+O',
-				)
+		self.actionSave = QtGui.QAction(self)
+		self.actionSave.setText('Save screenshot..')
+		self.actionSave.setToolTip('Save screenshot to file (Alt+S)')
+		self.actionSave.setShortcut(QtGui.QKeySequence('Alt+S') )
+		self.actionSave.triggered.connect(self.onActionSaveTriggered)
 		self._actions.append(self.actionSave)
 
-		self.actionInfo = TableCrabConfig.Action(
-				parent=self,
-				text='Info..',
-				toolTip='Display detailed screenshot info (Alt+N)',
-				slot=self.onActionInfoTriggered,
-				shortcut='Alt+N',
-				)
+		self.actionInfo = QtGui.QAction(self)
+		self.actionInfo.setText('Info..')
+		self.actionInfo.setToolTip('Save screenshot to file (Alt+N)')
+		self.actionInfo.setShortcut(QtGui.QKeySequence('Alt+N') )
+		self.actionInfo.triggered.connect(self.onActionInfoTriggered)
 		self._actions.append(self.actionInfo)
 
 		# connect global signals
@@ -750,13 +735,11 @@ class FrameSetup(QtGui.QFrame):
 		self.toolBar.addSeparator()
 		for action in self.screenshotWidget.actions():
 			self.toolBar.addAction(action)
-		self.actionHelp = TableCrabConfig.Action(
-				parent=self,
-				text='Help',
-				slot=self.onActionHelpTriggered,
-				shortcut='F1',
-				toolTip='Help (F1)',
-				)
+
+		self.actionHelp = QtGui.QAction(self)
+		self.actionHelp.setText('Help')
+		self.actionHelp.setShortcut(QtGui.QKeySequence('F1') )
+		self.actionHelp.triggered.connect(self.onActionHelpTriggered)
 		self.toolBar.addAction(self.actionHelp)
 
 		TableCrabConfig.globalObject.init.connect(self.onInit)
