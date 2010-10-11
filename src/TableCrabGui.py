@@ -46,11 +46,9 @@ class DialogException(QtGui.QDialog):
 		self.buttonClearError.setToolTip('Clear error message in main window (Ctrl+L)')
 		self.buttonClearError.clicked.connect(self.onClearError)
 		self.buttonBox.addButton(self.buttonClearError, self.buttonBox.ActionRole)
-		action = TableCrabConfig.Action(
-				parent=self,
-				shortcut='Ctrl+L',
-				slot=self.onClearError,
-				)
+		action = QtGui.QAction(self)
+		action.setShortcut(QtGui.QKeySequence('Ctrl+L'))
+		action.triggered.connect(self.onClearError)
 		self.addAction(action)
 
 		info, pixmap = self.embeddedImage(info)
