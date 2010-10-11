@@ -253,6 +253,7 @@ class _DialogHelp(QtGui.QDialog):
 		self.restoreGeometry( TableCrabConfig.settingsValue('Gui/DialogHelp/Geometry', QtCore.QByteArray()).toByteArray() )
 		self.frameHelp.splitter.restoreState( TableCrabConfig.settingsValue('Gui/DialogHelp/SplitterState', QtCore.QByteArray()).toByteArray() )
 		self.frameHelp.onInit()
+		self.frameHelp.toolBar.onInit()
 
 	#------------------------------------------------------------------------------------------------------------------
 	# overwritten methods
