@@ -1,5 +1,6 @@
 
-#TODO: when opening a hand - enable navigate back?
+#TODO: QWebPage.setHtml() never adds page to history. have to implement a
+#           custom network manager to get this to work?
 
 import TableCrabConfig
 import PokerStarsHandGrabber
@@ -143,7 +144,7 @@ class FrameHand(QtGui.QFrame):
 
 	def onPShandGrabberHandGrabbed(self, data):
 		self._hasHand = bool(data)
-		self.webView.setHtml( QtCore.QString.fromUtf8(data) )
+		self.webView.setHtml(QtCore.QString.fromUtf8(data) )
 		self.adjustActions()
 
 
