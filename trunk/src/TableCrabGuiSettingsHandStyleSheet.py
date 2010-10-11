@@ -110,14 +110,10 @@ class FrameSettings(QtGui.QFrame):
 				title='Save Style Sheet..',
 				fileFilters=('Stylesheets (*.css)', 'All Files (*)'),
 				settingsKey='Gui/Settings/HandStyleSheet/DialogSave/State',
+				defaultSuffix='css',
 				)
 		if fileName is None:
 			return
-		# default to '.css'
-		fileInfo = QtCore.QFileInfo(fileName)
-		format = fileInfo.suffix().toLower()
-		if not format:
-			fileName = fileName + '.css'
 		fp = None
 		try:
 			fp = open(fileName, 'w')

@@ -671,6 +671,7 @@ def dlgOpenSaveFile(
 			title='',
 			fileFilters=None,
 			settingsKey=None,
+			defaultSuffix=None,
 			):
 	dlg = QtGui.QFileDialog(parent)
 	dlg.setAcceptMode(dlg.AcceptOpen if openFile else dlg.AcceptSave)
@@ -682,6 +683,8 @@ def dlgOpenSaveFile(
 		dlg.setNameFilters(p)
 	if not openFile:
 		dlg.setConfirmOverwrite(True)
+	if defaultSuffix is not None:
+		dlg.setDefaultSuffix(defaultSuffix)
 	if settingsKey is not None:
 		dlg.restoreState( settingsValue(settingsKey, QtCore.QByteArray()).toByteArray() )
 	result = dlg.exec_()

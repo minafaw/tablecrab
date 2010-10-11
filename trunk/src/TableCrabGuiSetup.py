@@ -686,19 +686,13 @@ class ScreenshotWidget(QtGui.QScrollArea):
 				openFile=False,
 				title='Save Screenshot..',
 				fileFilters=('Images (%s)' % ' '.join(['*.%s' % i for i in imageFormats]), 'All Files (*)'),
+				defaultSuffix='png',
 				settingsKey='Gui/Screenshot/DialogSave/State',
 				)
 		if fileName is None:
 			return
 		fileInfo = QtCore.QFileInfo(fileName)
 		format = fileInfo.suffix().toLower()
-		# default save format to to "png"
-		for tmp_format in imageFormats:
-			if tmp_format == format:
-				break
-		else:
-			fileName = fileName + '.png'
-			format = 'png'
 		if not self.label.pixmap().save(fileName, format):
 			TableCrabConfig.msgWarning(self, 'Could Not Save Screenshot')
 

@@ -88,21 +88,15 @@ class FrameHand(QtGui.QFrame):
 		TableCrabGuiHelp.dialogHelp('hand', parent=self)
 
 	def onActionOpenTriggered(self):
-		dlg = QtGui.QFileDialog(self)
-		imageFormats = [QtCore.QString(i).toLower() for i in  QtGui.QImageReader.supportedImageFormats()]
-		dlg.setFileMode(dlg.AnyFile)
-		dlg.setWindowTitle('Open Hand..')
-		dlg.setAcceptMode(dlg.AcceptOpen)
-		filters = QtCore.QStringList()
-		filters << 'Html Files (*.html *.htm)'
-		filters << 'All Files (*)'
-		dlg.setNameFilters(filters)
-		dlg.restoreState( TableCrabConfig.settingsValue('Gui/Hand/DialogOpen/State', QtCore.QByteArray()).toByteArray() )
-		result = dlg.exec_()
-		TableCrabConfig.settingsSetValue('Gui/Hand/DialogOpen/State', dlg.saveState() )
-		if result != dlg.Accepted:
+		fileName = TableCrabConfig.dlgOpenSaveFile(
+				parent=self,
+				openFile=True,
+				title='Open Hand..',
+				fileFilters=('HtmlFiles (*.html *.htm)', 'All Files (*)'),
+				settingsKey='Gui/Hand/DialogOpen/State',
+				)
+		if fileName is None:
 			return
-		fileName = dlg.selectedFiles()[0]
 		fp = open(fileName, 'r')
 		try:	self.webView.setHtml( QtCore.QString.fromUtf8(fp.read()) )
 		finally: fp.close()
@@ -116,24 +110,24 @@ class FrameHand(QtGui.QFrame):
 			TableCrabConfig.globalObject.feedback.emit(self, handName)
 
 	def onActionSaveTriggered(self):
-		dlg = QtGui.QFileDialog(self)
-		dlg.setWindowTitle('Save Hand..')
-		dlg.setFileMode(dlg.AnyFile)
-		dlg.setAcceptMode(dlg.AcceptSave)
-		dlg.setConfirmOverwrite(True)
-		filters = QtCore.QStringList()
-		filters << 'Html Files (*.html *.htm)'
-		filters << 'All Files (*)'
-		dlg.setNameFilters(filters)
-		dlg.restoreState( TableCrabConfig.settingsValue('Gui/Hand/DialogSave/State', QtCore.QByteArray()).toByteArray() )
-		result = dlg.exec_()
-		TableCrabConfig.settingsSetValue('Gui/Hand/DialogSave/State', dlg.saveState() )
-		if result != dlg.Accepted:
+		fileName = TableCrabConfig.dlgOpenSaveFile(
+				parent=self,
+				openFile=False,
+				title='Save Save Hand..',
+				fileFilters=('HtmlFiles (*.html *.htm)', 'All Files (*)'),
+				settingsKey='Gui/Hand/DialogSave/State',
+				defaultSuffix='html',
+				)
+		if fileName is None:
 			return
-		fileName = dlg.selectedFiles()[0]
-		fp = open(fileName, 'w')
-		try: fp.write(self.webView.page().mainFrame().toHtml().toUtf8() )
-		finally: fp.close()
+		fp = None
+		try:
+			fp = open(fileName, 'w')
+			fp.write(self.webView.page().mainFrame().toHtml().toUtf8()  )
+		except Exception, d:
+			TableCrabConfig.msgWarning(self, 'Could Not Save Hand\n\n%s' % d)
+		finally:
+			if fp is not None: fp.close()
 
 	def onCloseEvent(self, event):
 		self.pokerStarsHandGrabber.stop()
