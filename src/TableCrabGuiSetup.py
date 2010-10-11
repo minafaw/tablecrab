@@ -213,13 +213,13 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self._actions.append(self.actionRemove)
 
 		# connect signals
+		TableCrabConfig.globalObject.init.connect(self.onInit)
 		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(self.onSetAlternatingRowColors)
 		TableCrabConfig.globalObject.settingChildItemIndicatorsChanged.connect(self.onSetRootIsDecorated)
 		TableCrabConfig.globalObject.widgetScreenshotSet.connect(self.onWidgetScreenshotSet)
 		TableCrabConfig.globalObject.widgetScreenshotDoubleClicked.connect(self.onWidgetScreenshotDoubleClicked)
 
 		# connect to TreeWidget signals
-		TableCrabConfig.globalObject.init.connect(self.onInit)
 		self.itemDoubleClicked.connect(self.onEditItem)
 		self.itemExpanded.connect(self.onItemExpanded)
 		self.itemCollapsed.connect(self.onItemCollapsed)
@@ -227,8 +227,6 @@ class TemplatesWidget(QtGui.QTreeWidget):
 
 		# connect to ietm delegate signals
 		self.myDelegate.editingFinished.connect(self.onTemplateEditingFinished)
-
-		self.adjustActions()
 
 	#----------------------------------------------------------------------------------------------------------------
 	# overwritten methods
@@ -402,7 +400,9 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self._templatesRead = True
 		self.setCurrentItem( self.topLevelItem(0) )
 		self.setUpdatesEnabled(True)
+		self.adjustActions()
 		TableCrabConfig.globalObject.widgetScreenshotQuery.emit()
+
 
 	def onItemCollapsed(self, item):
 		if not self._templatesRead:
@@ -566,10 +566,9 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		self._actions.append(self.actionInfo)
 
 		# connect global signals
+		TableCrabConfig.globalObject.init.connect(self.onInit)
 		TableCrabConfig.globalObject.widgetScreenshotQuery.connect(self.onWidgetScreenshotQuery)
 		TableCrabConfig.globalObject.widgetScreenshot.connect(self.onWidgetScreenshot)
-
-		self.adjustActions()
 
 	#--------------------------------------------------------------------------------------------------------------
 	# methods
@@ -695,6 +694,9 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		format = fileInfo.suffix().toLower()
 		if not self.label.pixmap().save(fileName, format):
 			TableCrabConfig.msgWarning(self, 'Could Not Save Screenshot')
+
+	def onInit(self):
+		self.adjustActions()
 
 	def onWidgetScreenshot(self, hwnd, pixmap):
 		self.gatherWindowInfo(hwnd)

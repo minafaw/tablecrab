@@ -87,8 +87,6 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self.itemDoubleClicked.connect(self.onHotkeyDoubleClicked)
 		self.itemSelectionChanged.connect(self.adjustActions)
 
-		self.adjustActions()
-
 	#----------------------------------------------------------------------------------------------------------------
 	# overwritten methods
 	#---------------------------------------------------------------------------------------------------------------
@@ -259,6 +257,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 
 		self.setUpdatesEnabled(True)
 		self.adjustHotkeys()
+		self.adjustActions()
 
 	def onSetAlternatingRowColors(self, flag):
 		self.setAlternatingRowColors(flag)
