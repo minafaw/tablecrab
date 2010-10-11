@@ -153,8 +153,6 @@ class FrameHelp(QtGui.QFrame):
 		self.tree.itemActivated.connect(self.onItemSelectionChanged)
 		self.webView.urlChanged.connect(self.onUrlChanged)
 
-		self.layout()
-
 	#------------------------------------------------------------------------------------------------------------------
 	# methods
 	#------------------------------------------------------------------------------------------------------------------
@@ -178,6 +176,7 @@ class FrameHelp(QtGui.QFrame):
 		menu.exec_(point)
 
 	def onInit(self):
+		self.layout()
 		self.tree.setUpdatesEnabled(False)
 
 		self.webView.setUrl(QtCore.QUrl(''))
