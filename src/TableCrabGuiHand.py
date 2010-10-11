@@ -63,10 +63,6 @@ class FrameHand(QtGui.QFrame):
 		self.actionHelp.triggered.connect(self.onActionHelpTriggered)
 		self.toolBar.addAction(self.actionHelp)
 
-		self.adjustActions()
-		self.layout()
-		self.pokerStarsHandGrabber.start()
-
 	#----------------------------------------------------------------------------------------------------------------
 	# methods
 	#---------------------------------------------------------------------------------------------------------------
@@ -141,6 +137,9 @@ class FrameHand(QtGui.QFrame):
 
 	def onInit(self):
 		self.webView.setUrl(QtCore.QUrl(''))
+		self.adjustActions()
+		self.layout()
+		self.pokerStarsHandGrabber.start()
 
 	def onPShandGrabberHandGrabbed(self, data):
 		self._hasHand = bool(data)
