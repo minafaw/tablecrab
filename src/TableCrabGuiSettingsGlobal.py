@@ -18,8 +18,7 @@ class FrameSettings(QtGui.QFrame):
 
 		self.comboGuiStyle = TableCrabConfig.ComboBox(
 				[style for style in QtGui.QStyleFactory().keys()] ,
-				settingsKey='Gui/Style',
-				default=QtGui.qApp.style().objectName(),	#HACK:  not documented for getting style name but the lights are on. so i assume it works
+				default='',
 				failsave=True,
 				parent=self,
 				)
@@ -131,8 +130,14 @@ class FrameSettings(QtGui.QFrame):
 		else:
 			font = QtGui.qApp.font()
 		# we have to reload style on font changes anyways, so global style setting is dome here
-		QtGui.qApp.setStyle(QtGui.QStyleFactory.create( TableCrabConfig.settingsValue('Gui/Style', '').toString() ))
-		self.comboGuiStyle.onInit()
+		style = TableCrabConfig.settingsValue('Gui/Style', '').toString()
+		if style in self.comboGuiStyle.choices:
+			pass
+		else:
+			style =QtGui.qApp.style().objectName()	#HACK:  not documented for getting style name but the lights are on. so i assume it works
+		indexStyle = self.comboGuiStyle.choices.index(style)
+		QtGui.qApp.setStyle(QtGui.QStyleFactory.create(style))
+		self.comboGuiStyle.setCurrentIndex(indexStyle)
 		self.buttonFont.setText( QtCore.QString('%1 %2').arg(font.family()).arg(font.pointSize()) )
 		# take QWebKit StandardFont from application font
 		settings = QtWebKit.QWebSettings.globalSettings()
@@ -212,7 +217,9 @@ class FrameSettings(QtGui.QFrame):
 			self.setFixedFont()
 
 	def onComboGuiStyleCurrentIndexChanged(self, index):
-		QtGui.qApp.setStyle(QtGui.QStyleFactory.create(self.comboGuiStyle.itemText(index)) )
+		style = self.comboGuiStyle.itemText(index)
+		TableCrabConfig.settingsSetValue('Gui/Style', style)
+		self.setFont()
 
 	def onAlternatingRowColorsChanged(self, state):
 		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.emit(state == QtCore.Qt.Checked)
