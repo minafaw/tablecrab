@@ -1,7 +1,7 @@
 
 import TableCrabConfig
 import TableCrabGuiHelp
-from PyQt4 import QtGui
+from PyQt4 import QtCore, QtGui
 
 #************************************************************************************
 #
@@ -9,31 +9,12 @@ from PyQt4 import QtGui
 class FrameSettings(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
-		self.checkAutoClosePopupNews = TableCrabConfig.CheckBox(
-				'Close Popup &News',
-				settingsKey='PokerStars/AutoClosePopupNews',
-				default=False
-				)
-		self.checkAutoCloseTourneyRegistrationBoxes = TableCrabConfig.CheckBox(
-				'Close T&ourney Registration Boxes',
-				settingsKey='PokerStars/AutoCloseTourneyRegistrationBoxes',
-				default=False
-				)
-		self.checkAutoCloseTableMessageBoxes = TableCrabConfig.CheckBox(
-				'Close Ta&ble Message Boxes',
-				settingsKey='PokerStars/AutoCloseTableMessageBoxes',
-				default=False
-				)
-		self.checkAutoLogIn = TableCrabConfig.CheckBox(
-				'Close &Log In Box',
-				settingsKey='PokerStars/AutoCloseLogin',
-				default=False
-				)
-		self.checkMoveMouseToActiveTable = TableCrabConfig.CheckBox(
-				'Move &Mouse To Active table',
-				settingsKey='PokerStars/MoveMouseToActiveTable',
-				default=False
-				)
+
+		self.checkAutoClosePopupNews = QtGui.QCheckBox('Close Popup &News', self)
+		self.checkAutoCloseTourneyRegistrationBoxes = QtGui.QCheckBox('Close T&ourney Registration Boxes', self)
+		self.checkAutoCloseTableMessageBoxes = QtGui.QCheckBox('PokerStars/AutoCloseTableMessageBoxes', self)
+		self.checkAutoLogIn = QtGui.QCheckBox('Close &Log In Box', self)
+		self.checkMoveMouseToActiveTable = QtGui.QCheckBox('Move &Mouse To Active table', self)
 
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 
@@ -41,13 +22,13 @@ class FrameSettings(QtGui.QFrame):
 		self.buttonHelp.setToolTip('Help (F1)')
 		self.buttonHelp.clicked.connect(self.onHelp)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
-		action = TableCrabConfig.Action(
-				parent=self,
-				shortcut='F1',
-				slot=self.onHelp,
-				)
+
+		action = QtGui.QAction(self)
+		action.setShortcut(QtGui.QKeySequence('F1') )
+		action.triggered.connect(self.onHelp)
 		self.addAction(action)
-		self.layout()
+
+		TableCrabConfig.globalObject.init.connect(self.onInit)
 
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
@@ -71,3 +52,47 @@ class FrameSettings(QtGui.QFrame):
 
 	def onHelp(self, *args):
 		TableCrabGuiHelp.dialogHelp('settingsPokerStars', parent=self)
+
+	def onAutoClosePopupNewsChanged(self, state):
+		flag = state == QtCore.Qt.Checked
+		TableCrabConfig.settingsSetValue('PokerStars/AutoClosePopupNews', flag)
+
+	def onAutoCloseTourneyRegistrationBoxesChanged(self, state):
+		flag = state == QtCore.Qt.Checked
+		TableCrabConfig.settingsSetValue('PokerStars/AutoCloseTourneyRegistrationBoxes', flag)
+
+	def onAutoCloseTableMessageBoxesChanged(self, state):
+		flag = state == QtCore.Qt.Checked
+		TableCrabConfig.settingsSetValue('PokerStars/AutoCloseTableMessageBoxes', flag)
+
+	def onAutoLogInChanged(self, state):
+		flag = state == QtCore.Qt.Checked
+		TableCrabConfig.settingsSetValue('PokerStars/AutoCloseLogin', flag)
+
+	def onMoveMouseToActiveTable(self, state):
+		flag = state == QtCore.Qt.Checked
+		TableCrabConfig.settingsSetValue('PokerStars/MoveMouseToActiveTable', flag)
+
+	def onInit(self):
+		self.layout()
+
+		state = QtCore.Qt.Checked if TableCrabConfig.settingsValue('PokerStars/AutoClosePopupNews', False).toBool() else QtCore.Qt.Unchecked
+		self.checkAutoClosePopupNews.setCheckState(state)
+		self.checkAutoClosePopupNews.stateChanged.connect(self.onAutoClosePopupNewsChanged)
+
+		state = QtCore.Qt.Checked if TableCrabConfig.settingsValue('PokerStars/AutoCloseTourneyRegistrationBoxes', False).toBool() else QtCore.Qt.Unchecked
+		self.checkAutoCloseTourneyRegistrationBoxes.setCheckState(state)
+		self.checkAutoCloseTourneyRegistrationBoxes.stateChanged.connect(self.onAutoCloseTourneyRegistrationBoxesChanged)
+
+		state = QtCore.Qt.Checked if TableCrabConfig.settingsValue('PokerStars/AutoCloseTableMessageBoxes', False).toBool() else QtCore.Qt.Unchecked
+		self.checkAutoCloseTableMessageBoxes.setCheckState(state)
+		self.checkAutoCloseTableMessageBoxes.stateChanged.connect(self.onAutoCloseTableMessageBoxesChanged)
+
+		state = QtCore.Qt.Checked if TableCrabConfig.settingsValue('PokerStars/AutoCloseLogin', False).toBool() else QtCore.Qt.Unchecked
+		self.checkAutoLogIn.setCheckState(state)
+		self.checkAutoLogIn.stateChanged.connect(self.onAutoLogInChanged)
+
+		state = QtCore.Qt.Checked if TableCrabConfig.settingsValue('PokerStars/MoveMouseToActiveTable', False).toBool() else QtCore.Qt.Unchecked
+		self.checkMoveMouseToActiveTable.setCheckState(state)
+		self.checkMoveMouseToActiveTable.stateChanged.connect(self.onMoveMouseToActiveTable)
+

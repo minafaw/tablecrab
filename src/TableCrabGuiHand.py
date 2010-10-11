@@ -43,31 +43,24 @@ class FrameHand(QtGui.QFrame):
 		self.actionSelectAll.setShortcut(QtGui.QKeySequence(QtGui.QKeySequence.SelectAll))
 		self.addAction(self.actionSelectAll)
 
-		self.actionOpen = TableCrabConfig.Action(
-				parent=self.toolBar,
-				text='Open..',
-				toolTip='Open a hand (Alt+O)',
-				slot=self.onActionOpenTriggered,
-				shortcut='Alt+O',
-				)
+		self.actionOpen = QtGui.QAction(self)
+		self.actionOpen.setText('Open..')
+		self.actionOpen.setToolTip('Open a hand (Alt+O)')
+		self.actionOpen.setShortcut(QtGui.QKeySequence('Alt+O') )
+		self.actionOpen.triggered.connect(self.onActionOpenTriggered)
 		self.toolBar.addAction(self.actionOpen)
 
-		self.actionSave = TableCrabConfig.Action(
-				parent=self.toolBar,
-				text='Save..',
-				toolTip='Save hand (Alt+S)',
-				slot=self.onActionSaveTriggered,
-				shortcut='Alt+S',
-				)
+		self.actionSave = QtGui.QAction(self)
+		self.actionSave.setText('Save..')
+		self.actionSave.setToolTip('Save hand (Alt+S)')
+		self.actionSave.setShortcut(QtGui.QKeySequence('Alt+S') )
+		self.actionSave.triggered.connect(self.onActionSaveTriggered)
 		self.toolBar.addAction(self.actionSave)
 
-		self.actionHelp = TableCrabConfig.Action(
-				parent=self.toolBar,
-				text='Help',
-				toolTip='Help (F1)',
-				slot=self.onActionHelpTriggered,
-				shortcut='F1',
-				)
+		self.actionHelp = QtGui.QAction(self)
+		self.actionHelp.setText('Help')
+		self.actionHelp.setShortcut(QtGui.QKeySequence('F1') )
+		self.actionHelp.triggered.connect(self.onActionHelpTriggered)
 		self.toolBar.addAction(self.actionHelp)
 
 		self.adjustActions()

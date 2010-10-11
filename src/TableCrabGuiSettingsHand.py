@@ -2,7 +2,7 @@
 import TableCrabConfig
 import TableCrabGuiHelp
 import PokerStarsHandGrabber
-from PyQt4 import QtGui
+from PyQt4 import QtCore, QtGui
 
 #************************************************************************************
 #
@@ -27,41 +27,26 @@ class FrameSettings(QtGui.QFrame):
 			)
 		self.actionWidgets = []
 		for actionPrefix, actionName, actionPostfix in actionSettings:
-			editPrefix = TableCrabConfig.LineEdit(
-					settingsKey='PokerStarsHandGrabber/handFornmatterHtmlTabular/%s' % actionPrefix,
-					default=getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, actionPrefix),
-					maxLength=TableCrabConfig.MaxHandGrabberPrefix,
-					parent=self,
-					)
+			editPrefix = QtGui.QLineEdit(self)
+			editPrefix.setObjectName(actionPrefix)
+			editPrefix.setMaxLength(TableCrabConfig.MaxHandGrabberPrefix)
 			labelAction = QtGui.QLabel('<i>' + actionName + '</i>', self)
 			labelAction.setBuddy(editPrefix)
+
 			if actionPostfix is not None:
-				editPostfix = TableCrabConfig.LineEdit(
-						settingsKey='PokerStarsHandGrabber/handFornmatterHtmlTabular/%s' % actionPostfix,
-						default=getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, actionPostfix),
-						maxLength=TableCrabConfig.MaxHandGrabberPrefix,
-						parent=self,
-						)
+				editPostfix = QtGui.QLineEdit(self)
+				editPostfix.setObjectName(actionPostfix)
+				editPostfix.setMaxLength(TableCrabConfig.MaxHandGrabberPrefix)
 			else:
 				editPostfix = None
-			self.actionWidgets.append( (editPrefix, labelAction, editPostfix, actionPrefix, actionPostfix) )
+			self.actionWidgets.append( (editPrefix, labelAction, editPostfix) )
 
-		self.spinMaxPlayerName = TableCrabConfig.SpinBox(
-				settingsKey='PokerStarsHandGrabber/HandFornmatterHtmlTabular/MaxPlayerName',
-				default=PokerStarsHandGrabber.HandFormatterHtmlTabular.MaxPlayerName,
-				minimum=-1,
-				maximum=999,
-				parent=self
-				)
+		self.spinMaxPlayerName = QtGui.QSpinBox(self)
+		self.spinMaxPlayerName.setRange(-1, 999)
 		self.labelMaxPlayerName = QtGui.QLabel('Ma&x Player Name:', self)
 		self.labelMaxPlayerName.setBuddy(self.spinMaxPlayerName)
 
-		self.checkNoFloatingPoint = TableCrabConfig.CheckBox(
-				'Floating &Point To Integer',
-				settingsKey='PokerStarsHandGrabber/HandFornmatterHtmlTabular/NoFloatingPoint',
-					default=False,
-				parent=self
-				)
+		self.checkNoFloatingPoint = QtGui.QCheckBox('Floating &Point To Integer', self)
 
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 
@@ -69,25 +54,24 @@ class FrameSettings(QtGui.QFrame):
 		self.buttonRestoreDefault.setToolTip('Restore Default (Ctrl+R)')
 		self.buttonRestoreDefault.clicked.connect(self.onRestoreDefault)
 		self.buttonBox.addButton(self.buttonRestoreDefault, self.buttonBox.ResetRole)
-		action = TableCrabConfig.Action(
-				parent=self,
-				shortcut='Ctrl+R',
-				slot=self.onRestoreDefault,
-				)
+
+		action = QtGui.QAction(self)
+		action.setShortcut(QtGui.QKeySequence('Ctrl+R') )
+		action.triggered.connect(self.onRestoreDefault)
 		self.addAction(action)
 
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		self.buttonHelp.setToolTip('Help (F1)')
 		self.buttonHelp.clicked.connect(self.onHelp)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
-		action = TableCrabConfig.Action(
-				parent=self,
-				shortcut='F1',
-				slot=self.onHelp,
-				)
+
+		action = QtGui.QAction(self)
+		action.setShortcut(QtGui.QKeySequence('F1') )
+		action.triggered.connect(self.onHelp)
 		self.addAction(action)
 
-		self.layout()
+		TableCrabConfig.globalObject.init.connect(self.onInit)
+
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
 		grid.col(TableCrabConfig.HLine(self), colspan=3)
@@ -99,7 +83,7 @@ class FrameSettings(QtGui.QFrame):
 		grid.col(TableCrabConfig.HLine(self), colspan=3)
 		grid.row()
 		grid.col(self.labelPrefix).col(self.labelAction).col(self.labelPostfix)
-		for i, (editPrefix, labelAction, editPostfix, _, _) in enumerate(self.actionWidgets):
+		for i, (editPrefix, labelAction, editPostfix) in enumerate(self.actionWidgets):
 			grid.row()
 			grid.col(editPrefix).col(labelAction)
 			if editPostfix is not None:
@@ -112,14 +96,51 @@ class FrameSettings(QtGui.QFrame):
 		grid.col(self.buttonBox, colspan=3)
 
 	def onRestoreDefault(self, *args):
-		for editPrefix, _, editPostfix, actionPrefix, actionPostfix in self.actionWidgets:
-			default = getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, actionPrefix)
+		for editPrefix, _, editPostfix in self.actionWidgets:
+			default = getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, str(editPrefix.objectName()) )
 			editPrefix.setText(default)
 			editPrefix.editingFinished.emit()
-			if actionPostfix is not None:
-				default = getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, actionPostfix)
+			if editPostfix is not None:
+				default = getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, str(editPostfix.objectName()) )
 				editPostfix.setText(default)
 				editPostfix.editingFinished.emit()
 
 	def onHelp(self, *args):
 		TableCrabGuiHelp.dialogHelp('settingsHand', parent=self)
+
+	def onSpinMaxPlayerNameValueChanged(self, value):
+		TableCrabConfig.settingsSetValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/MaxPlayerName', value)
+
+	def onNoFloatingPointChanged(self, state):
+		flag = state == QtCore.Qt.Checked
+		TableCrabConfig.settingsSetValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/NoFloatingPoint', flag)
+
+	def onActionWidgetValueChanged(self):
+		edit = self.sender()
+		TableCrabConfig.settingsSetValue('PokerStarsHandGrabber/handFornmatterHtmlTabular/%s' % str(edit.objectName()), edit.text() )
+
+	def onInit(self):
+		self.layout()
+
+		maxPlayerName = TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/MaxPlayerName', -1).toInt()[0]
+		self.spinMaxPlayerName.setValue(maxPlayerName)
+		self.spinMaxPlayerName.valueChanged.connect(self.onSpinMaxPlayerNameValueChanged)
+
+		state = QtCore.Qt.Checked if TableCrabConfig.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/NoFloatingPoint', False).toBool() else QtCore.Qt.Unchecked
+		self.checkNoFloatingPoint.setCheckState(state)
+		self.checkNoFloatingPoint.stateChanged.connect(self.onNoFloatingPointChanged)
+
+		for editPrefix, _, editPostfix in self.actionWidgets:
+			prefix = str(editPrefix.objectName())
+			default = getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, prefix)
+			text = TableCrabConfig.settingsValue('PokerStarsHandGrabber/handFornmatterHtmlTabular/%s' % prefix, default).toString()
+			editPrefix.setText(text)
+			editPrefix.editingFinished.connect(self.onActionWidgetValueChanged)
+			if editPostfix is not None:
+				postfix = str(editPostfix.objectName())
+				default = getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, postfix)
+				text = TableCrabConfig.settingsValue('PokerStarsHandGrabber/handFornmatterHtmlTabular/%s' % postfix, default).toString()
+				editPostfix.setText(text)
+				editPostfix.editingFinished.connect(self.onActionWidgetValueChanged)
+
+

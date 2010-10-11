@@ -11,12 +11,8 @@ class FrameSettings(QtGui.QFrame):
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
-		self.edit = TableCrabConfig.PlainTextEdit(
-				settingsKey='PokerStarsHandGrabber/handFornmatterHtmlTabular/StyleSheet',
-				default=PokerStarsHandGrabber.HandFormatterHtmlTabular.StyleSheet,
-				maxChars=TableCrabConfig.MaxHandStyleSheet,
-				)
-		self.edit.maxCharsExceeded.connect(self.onMaxCharsExceeded)
+
+		self.edit = QtGui.QPlainTextEdit(self)
 
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 
@@ -24,47 +20,39 @@ class FrameSettings(QtGui.QFrame):
 		self.buttonRestoreDefault.setToolTip('Restore Default (Ctrl+R)')
 		self.buttonRestoreDefault.clicked.connect(self.onRestoreDefault)
 		self.buttonBox.addButton(self.buttonRestoreDefault, self.buttonBox.ResetRole)
-		action = TableCrabConfig.Action(
-				parent=self,
-				shortcut='Ctrl+R',
-				slot=self.onRestoreDefault,
-				)
+		action = QtGui.QAction(self)
+		action.setShortcut(QtGui.QKeySequence('Ctrl+R') )
+		action.triggered.connect(self.onRestoreDefault)
 		self.addAction(action)
 
 		self.buttonOpen = QtGui.QPushButton('Open..', self)
 		self.buttonOpen.setToolTip('Open style sheet (Ctrl+O)')
 		self.buttonOpen.clicked.connect(self.onOpen)
 		self.buttonBox.addButton(self.buttonOpen, self.buttonBox.ActionRole)
-		action = TableCrabConfig.Action(
-				parent=self,
-				shortcut='Ctrl+O',
-				slot=self.onOpen,
-				)
+		action = QtGui.QAction(self)
+		action.setShortcut(QtGui.QKeySequence('Ctrl+O') )
+		action.triggered.connect(self.onOpen)
 		self.addAction(action)
 
 		self.buttonSave = QtGui.QPushButton('Save..', self)
 		self.buttonSave.setToolTip('Save style sheet (Ctrl+S)')
 		self.buttonSave.clicked.connect(self.onSave)
 		self.buttonBox.addButton(self.buttonSave, self.buttonBox.ActionRole)
-		action = TableCrabConfig.Action(
-				parent=self,
-				shortcut='Ctrl+S',
-				slot=self.onSave,
-				)
+		action = QtGui.QAction(self)
+		action.setShortcut(QtGui.QKeySequence('Ctrl+S') )
+		action.triggered.connect(self.onSave)
 		self.addAction(action)
 
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		self.buttonHelp.setToolTip('Help (F1)')
 		self.buttonHelp.clicked.connect(self.onHelp)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
-		action = TableCrabConfig.Action(
-				parent=self,
-				shortcut='F1',
-				slot=self.onHelp,
-				)
+		action = QtGui.QAction(self)
+		action.setShortcut(QtGui.QKeySequence('F1') )
+		action.triggered.connect(self.onHelp)
 		self.addAction(action)
 
-		self.layout()
+		TableCrabConfig.globalObject.init.connect(self.onInit)
 
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
@@ -75,6 +63,26 @@ class FrameSettings(QtGui.QFrame):
 		grid.col(TableCrabConfig.HLine(self))
 		grid.row()
 		grid.col(self.buttonBox)
+
+	def onEditTextChanged(self):
+		text = self.edit.toPlainText()
+		if TableCrabConfig.MaxHandStyleSheet >= 0:
+			if text.length() > TableCrabConfig.MaxHandStyleSheet:
+				TableCrabConfig.globalObject.feedback.emit(self, 'Style sheet too big -- maximum Is %s chars' % TableCrabConfig.MaxHandStyleSheet)
+				return
+		TableCrabConfig.globalObject.feedback.emit(self, '')
+		TableCrabConfig.settingsSetValue('PokerStarsHandGrabber/handFornmatterHtmlTabular/StyleSheet', text)
+
+	def onInit(self):
+		self.layout()
+
+		#NOTE: style sheet can not be ''
+		text = TableCrabConfig.settingsValue('PokerStarsHandGrabber/handFornmatterHtmlTabular/StyleSheet', '').toString()
+		if not text:
+			text = PokerStarsHandGrabber.HandFormatterHtmlTabular.StyleSheet
+		#NOTE: have to connect before setText so we can catch MaxCharsExceeded
+		self.edit.textChanged.connect(self.onEditTextChanged)
+		self.edit.setPlainText(text)
 
 	def onOpen(self, checked):
 		fileName = TableCrabConfig.dlgOpenSaveFile(
@@ -126,5 +134,3 @@ class FrameSettings(QtGui.QFrame):
 	def onRestoreDefault(self):
 		self.edit.setPlainText(PokerStarsHandGrabber.HandFormatterHtmlTabular.StyleSheet)
 
-	def onMaxCharsExceeded(self, flag):
-		TableCrabConfig.globalObject.feedback.emit(self, ('Style sheet too big -- maximum Is %s chars' % TableCrabConfig.MaxHandStyleSheet) if flag else '')
