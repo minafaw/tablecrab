@@ -134,15 +134,15 @@ class HotkeyWidget(QtGui.QTreeWidget):
 	# move item up --> flag gets shown. guess its best to leave it as is and wait for Qt
 	# fixing bugs.
 	def adjustHotkeys(self):
-		tmp_hotkeys = {}
+		tmp_keys = {}
 		for hotkey in self:
-			if hotkey.hotkey() not in tmp_hotkeys:
-				tmp_hotkeys[hotkey.hotkey()] = [hotkey]
+			if hotkey.key() not in tmp_keys:
+				tmp_keys[hotkey.key()] = [hotkey]
 			else:
-				tmp_hotkeys[hotkey.hotkey()].append(hotkey)
+				tmp_keys[hotkey.key()].append(hotkey)
 
-		for _, hotkeys in tmp_hotkeys.items():
-			conflicts = [i for i in hotkeys if i.hotkey()]
+		for _, hotkeys in tmp_keys.items():
+			conflicts = [i for i in hotkeys if i.key()]
 			for hotkey in hotkeys:
 				flag = 'Conflict' if len(conflicts) > 1 else None
 				if flag is None:
@@ -251,7 +251,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			self.addTopLevelItem(hotkey)
 		# set at least one hotkey as default
 		if hotkey is None:
-			hotkey = TableCrabHotkeys.HotkeyScreenshot(hotkey='<F1+LeftControl>')
+			hotkey = TableCrabHotkeys.HotkeyScreenshot(key='<F1+LeftControl>')
 			self.addTopLevelItem(hotkey)
 		self.setCurrentItem( self.topLevelItem(0) )
 

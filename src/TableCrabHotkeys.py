@@ -39,7 +39,7 @@ class HotkeyEditor(QtGui.QDialog):
 		self.editAction.setEnabled(False)
 
 		self.labelHotkey = QtGui.QLabel('Hot&key:', self)
-		self.hotkeyBox = TableCrabConfig.HotkeyBox(hotkey=self.hotkey.hotkey(), parent=self)
+		self.hotkeyBox = TableCrabConfig.HotkeyBox(key=self.hotkey.key(), parent=self)
 		self.hotkeyBox.setToolTip('Hotkey (Alt+K)')
 		self.labelHotkey.setBuddy(self.hotkeyBox)
 
@@ -118,7 +118,7 @@ class HotkeyEditor(QtGui.QDialog):
 		return QtGui.QDialog.exec_(self)
 
 	def accept(self):
-		self.hotkey.setHotkey(self.hotkeyBox.hotkey() )
+		self.hotkey.setKey(self.hotkeyBox.key() )
 		self.hotkey.setHotkeyName(self.editHotkeyName.text() )
 		if self.hotkey.HasBaseValue:
 			self.hotkey.setBaseValue(self.comboBaseValue.currentText() )
@@ -149,14 +149,14 @@ class HotkeyBase(QtGui.QTreeWidgetItem):
 	BaseValues = []
 	BaseValueDefault = None
 
-	def __init__(self, parent=None, hotkey='', hotkeyName='', multiplier=None, baseValue=None):
+	def __init__(self, parent=None, key='', hotkeyName='', multiplier=None, baseValue=None):
 		QtGui.QTreeWidgetItem.__init__(self, parent)
-		self._hotkey = hotkey
+		self._key = key
 		self._hotkeyName = hotkeyName
 		self._multiplier = self.MultiplierDefault if multiplier is None else multiplier
 		self._baseValue = self.BaseValueDefault if baseValue is None else baseValue
 		self.setText(0, self.action() )
-		self.setText(1, self.hotkeyName() if self.hotkeyName() else self.hotkey())
+		self.setText(1, self.hotkeyName() if self.hotkeyName() else self.key())
 
 	@classmethod
 	def id(klass):
@@ -168,10 +168,10 @@ class HotkeyBase(QtGui.QTreeWidgetItem):
 		raise NotImplementedError()
 	def action(self):
 		return self.menuName()
-	def hotkey(self):
-		return self._hotkey
-	def setHotkey(self, hotkey):
-		self._hotkey = hotkey
+	def key(self):
+		return self._key
+	def setKey(self, key):
+		self._key = key
 	def hotkeyName(self):
 		return self._hotkeyName
 	def setHotkeyName(self, hotkeyName):
@@ -188,53 +188,55 @@ class HotkeyBase(QtGui.QTreeWidgetItem):
 			self._baseValue = baseValue
 
 	@classmethod
-	def fromConfig(klass, key):
+	def fromConfig(klass, settingsKey):
 		id = None
-		hotkey = ''
+		key = ''
 		hotkeyName = ''
 		baseValue = None
 		multiplier = None
 
-		id = TableCrabConfig.settingsValue( (key, 'ID'), '').toString()
+		id = TableCrabConfig.settingsValue( (settingsKey, 'ID'), '').toString()
 		if id != klass.id():
 			return None
-		hotkey = TableCrabConfig.settingsValue( (key, 'Hotkey'), TableCrabConfig.HotkeyNone).toString()
-		if hotkey == TableCrabConfig.HotkeyNone:
+		#TODO: rename to "Key"
+		key = TableCrabConfig.settingsValue( (settingsKey, 'Hotkey'), TableCrabConfig.KeyNone).toString()
+		if key == TableCrabConfig.KeyNone:
 			return None
-		hotkeyName = TableCrabConfig.settingsValue( (key, 'HotkeyName'), '').toString()
+		hotkeyName = TableCrabConfig.settingsValue( (settingsKey, 'HotkeyName'), '').toString()
 		if klass.HasMultiplier:
-			multiplier, ok = TableCrabConfig.settingsValue( (key, 'Multiplier'), -1.0).toDouble()
+			multiplier, ok = TableCrabConfig.settingsValue( (settingsKey, 'Multiplier'), -1.0).toDouble()
 			if not ok:
 				return None
 			if multiplier > klass.MultiplierMax or multiplier < klass.MultiplierMin:
 				return None
 		if klass.HasBaseValue:
-			baseValue = TableCrabConfig.settingsValue( (key, 'BaseValue'), '').toString()
+			baseValue = TableCrabConfig.settingsValue( (settingsKey, 'BaseValue'), '').toString()
 			if baseValue not in klass.BaseValues:
 				return None
-		return klass(hotkey=hotkey, hotkeyName=hotkeyName, baseValue=baseValue, multiplier=multiplier)
+		return klass(key=key, hotkeyName=hotkeyName, baseValue=baseValue, multiplier=multiplier)
 
-	def toConfig(self, key):
-		TableCrabConfig.settingsSetValue( (key, 'ID'), self.id() )
-		TableCrabConfig.settingsSetValue((key, 'Hotkey'), self.hotkey() )
-		TableCrabConfig.settingsSetValue( (key, 'HotkeyName'), self.hotkeyName() )
+	def toConfig(self, settingsKey):
+		TableCrabConfig.settingsSetValue( (settingsKey, 'ID'), self.id() )
+		#TODO: rename to "Key"
+		TableCrabConfig.settingsSetValue((settingsKey, 'Hotkey'), self.key() )
+		TableCrabConfig.settingsSetValue( (settingsKey, 'HotkeyName'), self.hotkeyName() )
 		if self.HasMultiplier:
-			TableCrabConfig.settingsSetValue( (key, 'Multiplier'), self.multiplier())
+			TableCrabConfig.settingsSetValue( (settingsKey, 'Multiplier'), self.multiplier())
 		if self.HasBaseValue:
-			TableCrabConfig.settingsSetValue( (key, 'BaseValue'), self.baseValue())
+			TableCrabConfig.settingsSetValue( (settingsKey, 'BaseValue'), self.baseValue())
 		return True
 
 	def createEditor(self, parent=None, settingsKey=None, isEdit=True):
-		other = self.__class__(hotkey=self.hotkey(), hotkeyName=self.hotkeyName(), baseValue=self.baseValue(), multiplier=self.multiplier())
+		other = self.__class__(key=self.key(), hotkeyName=self.hotkeyName(), baseValue=self.baseValue(), multiplier=self.multiplier())
 		dlg = HotkeyEditor(other, parent=parent, settingsKey=settingsKey, isEdit=isEdit)
 		result = None
 		if dlg.exec_() == dlg.Accepted:
-			self.setHotkey(other.hotkey())
+			self.setKey(other.key())
 			self.setHotkeyName(other.hotkeyName())
 			self.setBaseValue(other.baseValue())
 			self.setMultiplier(other.multiplier())
 			self.setText(0, self.action() )
-			self.setText(1, self.hotkeyName() if self.hotkeyName() else self.hotkey())
+			self.setText(1, self.hotkeyName() if self.hotkeyName() else self.key())
 			return self
 
 #************************************************************************************
