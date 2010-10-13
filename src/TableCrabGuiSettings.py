@@ -7,8 +7,8 @@
 import TableCrabConfig
 import TableCrabGuiSettingsGlobal
 import TableCrabGuiSettingsPokerStars
-import TableCrabGuiSettingsHand
-import TableCrabGuiSettingsHandStyleSheet
+import TableCrabGuiSettingsHandViewer
+import TableCrabGuiSettingsHandViewerStyleSheet
 
 from PyQt4 import QtCore, QtGui
 
@@ -32,8 +32,8 @@ class FrameSettings(QtGui.QFrame):
 		#
 		self.settingsGlobal = self.addSetting('Global', TableCrabGuiSettingsGlobal.FrameSettings(parent=self.stack), 'Shift+G', 'Global (Shift+G)')
 		self.settingsPokerStars = self.addSetting('PokerStars', TableCrabGuiSettingsPokerStars.FrameSettings(parent=self.stack), 'Shift+P', 'PokerStars (Shift+P)')
-		self.settingsHand = self.addSetting('Hand', TableCrabGuiSettingsHand.FrameSettings(parent=self.stack), 'Shift+H', 'Hand (Shift+H)')
-		self.settingsHandStyleSheet = self.addSetting('Hand Style Sheet', TableCrabGuiSettingsHandStyleSheet.FrameSettings(parent=self.stack), 'Shift+S', 'Hand Style Sheet (Shift+S)')
+		self.settingsHand = self.addSetting('Hand Viewer', TableCrabGuiSettingsHandViewer.FrameSettings(parent=self.stack), 'Shift+H', 'Hand Viewer (Shift+H)')
+		self.settingsHandStyleSheet = self.addSetting('Hand Viewer Style Sheet', TableCrabGuiSettingsHandViewerStyleSheet.FrameSettings(parent=self.stack), 'Shift+S', 'Hand Viewer Style Sheet (Shift+S)')
 
 		TableCrabConfig.globalObject.init.connect(self.onInit)
 		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)

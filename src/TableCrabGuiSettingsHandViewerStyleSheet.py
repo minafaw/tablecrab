@@ -90,6 +90,7 @@ class FrameSettings(QtGui.QFrame):
 				openFile=True,
 				title='Open Style Sheet..',
 				fileFilters=('Style sheets (*.css)', 'All Files (*)'),
+				#TODO: rename to HandViewerStyleSheet
 				settingsKey='Gui/Settings/HandStyleSheet/DialogOpen/State',
 				)
 		if fileName is None:
@@ -109,6 +110,7 @@ class FrameSettings(QtGui.QFrame):
 				openFile=False,
 				title='Save Style Sheet..',
 				fileFilters=('Stylesheets (*.css)', 'All Files (*)'),
+				#TODO: rename to HandViewerStyleSheet
 				settingsKey='Gui/Settings/HandStyleSheet/DialogSave/State',
 				defaultSuffix='css',
 				)
@@ -124,7 +126,7 @@ class FrameSettings(QtGui.QFrame):
 			if fp is not None: fp.close()
 
 	def onHelp(self, *args):
-		TableCrabGuiHelp.dialogHelp('settingsHandStyleSheet', parent=self)
+		TableCrabGuiHelp.dialogHelp('settingsHandViewerStyleSheet', parent=self)
 
 	#TODO: resetting document jumps to top of widget. store/restore position would be nice
 	def onRestoreDefault(self):

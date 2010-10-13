@@ -106,7 +106,7 @@ class FrameSettings(QtGui.QFrame):
 				editPostfix.editingFinished.emit()
 
 	def onHelp(self, *args):
-		TableCrabGuiHelp.dialogHelp('settingsHand', parent=self)
+		TableCrabGuiHelp.dialogHelp('settingsHandViewer', parent=self)
 
 	def onSpinMaxPlayerNameValueChanged(self, value):
 		TableCrabConfig.settingsSetValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/MaxPlayerName', value)

@@ -9,7 +9,7 @@ import hashlib
 #*******************************************************************************************
 #
 #*******************************************************************************************
-class FrameHand(QtGui.QFrame):
+class FrameHandViewer(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
@@ -115,7 +115,7 @@ class FrameHand(QtGui.QFrame):
 	# event handlers
 	#--------------------------------------------------------------------------------------------------------------
 	def onActionHelpTriggered(self, checked):
-		TableCrabGuiHelp.dialogHelp('hand', parent=self)
+		TableCrabGuiHelp.dialogHelp('handViewer', parent=self)
 
 	def onActionOpenTriggered(self):
 		fileName = TableCrabConfig.dlgOpenSaveFile(
