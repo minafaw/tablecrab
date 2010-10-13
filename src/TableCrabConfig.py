@@ -90,7 +90,7 @@ def handleException(data=None):
 #
 #************************************************************************************
 import posixpath, thread, inspect
-from PyQt4 import QtCore, QtGui, QtWebKit
+from PyQt4 import QtCore, QtGui, QtWebKit, QtNetwork
 
 import TableCrabWin32
 from TableCrabRes import Pixmaps, HtmlPages, StyleSheets
@@ -695,8 +695,74 @@ def dlgOpenSaveFile(
 	return None
 
 
+#************************************************************************************
+# customized network access manager so we can serve raw data from anywhere
+#
+#************************************************************************************
+class RawNetworkReply(QtNetwork.QNetworkReply):
+	# this thingy will hand out everything you throw at it via setData()
+	def __init__(self, parent=None):
+		QtNetwork.QNetworkReply.__init__(self, parent)
+		self._data = None
+		self._dataPos = 0
+		QtCore.QTimer.singleShot(0, self, QtCore.SIGNAL("readyRead()"))
+		self.open(self.ReadOnly | self.Unbuffered)
+	def abort(self):	pass
+	def bytesAvailable(self):
+		if self._data is None:
+			return 0
+		return len(self._data)
+	def isSequential(self): return True
+	def readData(self, maxSize):
+		if self._data is None or self._dataPos >= len(self._data) -1:
+			self.finished.emit()
+			arr = QtCore.QByteArray()
+			arr += ''
+			return arr.data()
+		stop = self._dataPos + maxSize
+		if stop > len(self._data):
+			stop = len(self._data) -1
+		data = self._data[self._dataPos:stop]
+		self._dataPos = stop
+		if self._dataPos >= len(self._data) -1:
+			self.finished.emit()
+		arr = QtCore.QByteArray()
+		arr += data
+		return arr.data()
+	def setData(self, data, mimeType):
+		self.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader, QtCore.QVariant(mimeType))
+		self._data = data
+	def hasData(self):
+		return self._data is not None
 
+# usage:
+# 1) connect to signal getData()
+# 2) this thing will throw a networkReply at your slot
+# 3) dump data to the reply via networkReply.setData(data, mimeType)
+#     not setting data or setting data to None will serve whatever QWebKit serves as default
+#NOTE: QNetworkAccessManager is quite a bitch. slightest err will segfault
+class RawNetworkAccessManager(QtNetwork.QNetworkAccessManager):
 
+	getData =  QtCore.pyqtSignal(RawNetworkReply)
+
+	def __init__(self, oldManager, parent=None):
+		QtNetwork.QNetworkAccessManager.__init__(self, parent)
+		self.oldManager = oldManager
+		self.setCache(oldManager.cache())
+		self.setCookieJar(oldManager.cookieJar())
+		self.setProxy(oldManager.proxy())
+		self.setProxyFactory(oldManager.proxyFactory())
+
+	def createRequest(self, operation, request, data):
+		#NOTE: from previous versions of Qt i found we can not keep the url bcause Qt nulls it on return
+		url = QtCore.QUrl(request.url())
+		if operation == self.GetOperation:
+			networkReply = RawNetworkReply(parent=self)
+			networkReply.setUrl(url)
+			self.getData.emit(networkReply)
+			if networkReply.hasData():
+				return networkReply
+		return QtNetwork.QNetworkAccessManager.createRequest(self, operation, request, data)
 
 
 
