@@ -39,8 +39,8 @@ class TableCrabReply(QtNetwork.QNetworkReply):
 		QtCore.QTimer.singleShot(0, self, QtCore.SIGNAL("readyRead()"))
 		self.open(self.ReadOnly | self.Unbuffered)
 	def abort(self):	pass
-	def bytesAvailable(self):	return len(self._buffer)
-	def isSequential(self):	return True
+	def bytesAvailable(self): return len(self._buffer)
+	def isSequential(self): return True
 	def readData(self, maxSize):
 		data = self._buffer.read(maxSize)
 		if not self._buffer.hasMore():
