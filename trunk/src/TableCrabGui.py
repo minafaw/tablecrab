@@ -4,7 +4,7 @@ import TableCrabWin32
 import TableCrabGuiSettings
 import TableCrabGuiSetup
 import TableCrabGuiHotkeys
-import TableCrabGuiHand
+import TableCrabGuiHandViewer
 import TableCrabGuiHelp
 import TableCrabSiteManager
 
@@ -158,7 +158,7 @@ class Gui(QtGui.QMainWindow):
 		self.setCentralWidget(self.tabWidget)
 		self.tabSetup = self._addTab(TableCrabGuiSetup.FrameSetup, 'Se&tup')
 		self.tabHotkeys = self._addTab(TableCrabGuiHotkeys.FrameHotkeys, 'Hot&keys')
-		self.tabHand = self._addTab(TableCrabGuiHand.FrameHand, 'H&and')
+		self.tabHand = self._addTab(TableCrabGuiHandViewer.FrameHandViewer, 'H&and')
 		self.tabSettings = self._addTab(TableCrabGuiSettings.FrameSettings, 'Settin&gs')
 		self.tabHelp = self._addTab(TableCrabGuiHelp.FrameHelp, '&Help')
 		self.tabWidget.currentChanged.connect(self.onTabCurrentChanged)
