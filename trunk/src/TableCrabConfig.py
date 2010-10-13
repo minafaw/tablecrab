@@ -256,7 +256,7 @@ SizeNone = QtCore.QSize(-1, -1)
 def newSizeNone():
 	return QtCore.QSize(SizeNone.width(), SizeNone.height() )
 
-HotkeyNone = 'None'
+KeyNone = 'None'
 
 #***********************************************************************************
 # methods
@@ -268,17 +268,17 @@ def dumpPersistentItems(settigsKey, items):
 	settingsRemoveKey(settigsKey)
 	slot = 0
 	for item in items:
-		key = settingsKeyJoin(settigsKey, str(slot) )
-		if item.toConfig(key):
+		mySettingsKey = settingsKeyJoin(settigsKey, str(slot) )
+		if item.toConfig(mySettingsKey):
 			slot += 1
 
 def readPersistentItems(settingsKey, maxItems=0, itemProtos=None):
 	itemProtos = () if itemProtos is None else itemProtos
 	newItems = []
 	for slot in xrange(maxItems):
-		key = settingsKeyJoin(settingsKey, str(slot) )
+		mySettingsKey = settingsKeyJoin(settingsKey, str(slot) )
 		for itemProto in itemProtos:
-			newItem = itemProto.fromConfig(key)
+			newItem = itemProto.fromConfig(mySettingsKey)
 			if newItem is not None:
 				newItems.append( (slot, newItem) )
 				break
@@ -591,7 +591,7 @@ class HotkeyBox(QtGui.QComboBox):
 	# x) pretty much disbled all standart keybindings for the combo. except ESCAPE and SPACE (ESCAPE
 	#     mut be handled internally cos it is working without our help)
 	# x) we added a space to each displayName to trrick the combo popup search feature
-	Hotkeys = (		# hotkey --> displayName
+	Keys = (		# hotkey --> displayName
 				('', '<Type Keys Your Keyboard>'),
 				('<Escape>', ' Escape'),
 				('<Space>', ' Space'),
@@ -599,17 +599,17 @@ class HotkeyBox(QtGui.QComboBox):
 				(TableCrabWin32.MouseWheelUp, ' MouseWheelUp'),
 				(TableCrabWin32.MouseWheelDown, ' MouseWheelDown'),
 			)
-	def __init__(self, hotkey=None, parent=None):
+	def __init__(self, key=None, parent=None):
 		QtGui.QComboBox.__init__(self, parent=None)
 		self._counter = 0
-		self.addItems( [i[1] for i in self.Hotkeys] )
-		for i, (tmpHotkey, _) in enumerate(self.Hotkeys):
-			if hotkey == tmpHotkey:
+		self.addItems( [i[1] for i in self.Keys] )
+		for i, (tmpKey, _) in enumerate(self.Keys):
+			if key == tmpKey:
 				self.setCurrentIndex(i)
 				break
 		else:
-			if hotkey is not None:
-				self.setItemText(0, hotkey)
+			if key is not None:
+				self.setItemText(0, key)
 		keyboardHook.inputEvent.connect(self.onInputEvent)
 
 	#TODO: open HotkeyBox popup when the user clicks the combo twice. good or not?
@@ -633,14 +633,14 @@ class HotkeyBox(QtGui.QComboBox):
 		if not inputEvent.keyIsDown: return
 		if self.hasFocus():
 			if self.currentIndex() == 0:
-				for (myKey, _) in self.Hotkeys:
+				for (myKey, _) in self.Keys:
 					if inputEvent.key == myKey:
 						break
 				else:
 					self.setItemText(0, inputEvent.key)
-	def hotkey(self):
+	def key(self):
 		text = self.currentText()
-		for key, displayName in self.Hotkeys:
+		for key, displayName in self.Keys:
 			if text == displayName:
 				#NOTE: we have to make shure to return QString here. QString hashes differenty than str
 				return QtCore.QString(key)
