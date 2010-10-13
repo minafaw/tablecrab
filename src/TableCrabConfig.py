@@ -176,7 +176,10 @@ HelpTopics = [
 # global QSettings
 #***********************************************************************************
 #TODO: what to do with deprecated settings keys?
-#'Gui/WebView/ZoomIncrement'
+# deprecated: Gui/WebView/ZoomIncrement
+# needs rename: Hotkeys/$Slot$/Hotkey --> Hotkeys/$Slot$/Key
+# needs rename: Gui/Settings/HandStyleSheet/DialogOpen/State --> Gui/Settings/HandViewerStyleSheet/DialogOpen/State
+# needs rename: Gui/Settings/HandStyleSheet/DialogSave/State --> Gui/Settings/HandViewerStyleSheet/DialogSave/State
 
 class Settings:
 	qSettings = QtCore.QSettings(Author, ApplicationName)
