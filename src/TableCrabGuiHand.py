@@ -1,12 +1,10 @@
 
-#TODO: QWebPage.setHtml() never adds page to history. have to implement a
-#           custom network manager to get this to work?
-
 import TableCrabConfig
 import PokerStarsHandGrabber
 import TableCrabGuiHelp
 
 from PyQt4 import QtCore, QtGui, QtWebKit
+import hashlib
 
 #*******************************************************************************************
 #
@@ -15,20 +13,27 @@ class FrameHand(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
-		self._hasHand = False
+		self._handCache = []
 
 		self.webView = QtWebKit.QWebView(self)
 		self.webView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		self.webView.customContextMenuRequested.connect(self.onContextMenuWebView)
+
+		#NOTE: we use a custom network manager to handle hands grabbed AND loaded from disk
+		# default cache size of WebKit is 100 (self.webView.page().history().maximumItemCount() )
+		# ok or not?
+		oldManager = self.webView.page().networkAccessManager()
+		self.networkAccessManager = TableCrabConfig.RawNetworkAccessManager(oldManager, parent=self)
+		page = self.webView.page()
+		page.setNetworkAccessManager(self.networkAccessManager)
+		self.networkAccessManager.getData.connect(self.onNetworkGetData)
 
 		self.pokerStarsHandGrabber = PokerStarsHandGrabber.HandGrabber(
 				PokerStarsHandGrabber.HandParser(),
 				PokerStarsHandGrabber.HandFormatterHtmlTabular(),
 				parent=self,
 				)
-		self.pokerStarsHandGrabber.handGrabbed.connect(self.onPShandGrabberHandGrabbed)
-		TableCrabConfig.globalObject.init.connect(self.onInit)
-		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
+		self.pokerStarsHandGrabber.handGrabbed.connect(self.onHandGrabberGrabbedHand)
 
 		self.toolBar = TableCrabConfig.WebViewToolBar(self.webView,
 				settingsKeyZoomFactor='Gui/Hand/ZoomFactor',
@@ -64,19 +69,47 @@ class FrameHand(QtGui.QFrame):
 		self.actionHelp.triggered.connect(self.onActionHelpTriggered)
 		self.toolBar.addAction(self.actionHelp)
 
+		# connect global signals
+		TableCrabConfig.globalObject.init.connect(self.onInit)
+		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
+
 	#----------------------------------------------------------------------------------------------------------------
 	# methods
 	#---------------------------------------------------------------------------------------------------------------
 	def adjustActions(self):
-		self.toolBar.actionZoomIn.setEnabled(bool(self._hasHand))
-		self.toolBar.actionZoomOut.setEnabled(bool(self._hasHand))
-		self.actionSave.setEnabled(bool(self._hasHand))
+		self.toolBar.actionZoomIn.setEnabled(bool(self._handCache))
+		self.toolBar.actionZoomOut.setEnabled(bool(self._handCache))
+		self.actionSave.setEnabled(bool(self._handCache))
 
 	def layout(self):
 		grid = TableCrabConfig.GridBox(self)
 		grid.col(self.toolBar)
 		grid.row()
 		grid.col(self.webView)
+
+	def setHand(self, data, fileName=None):
+		if data and fileName is None:
+			m = hashlib.sha256()
+			m.update(data)
+			myUrl  = QtCore.QUrl('cache:///' + m.hexdigest() )
+		elif data and fileName is not None:
+			myUrl = QtCore.QUrl('file:///' + fileName)
+		else:
+			myUrl = QtCore.QUrl('')
+		# update our hand cache
+		#TODO: check how WebKit caches urls and/or data. we have to make shure
+		# our cache is <= WebKits cache
+		if data:
+			for i, (tmp_url, tmp_data) in enumerate(self._handCache):
+				if tmp_url == myUrl:
+					self._handCache[i] = (myUrl, data)
+					break
+			else:
+				self._handCache.append( (myUrl, data) )
+			if len(self._handCache) > self.webView.page().history().maximumItemCount():
+				self._handCache.pop(0)
+		self.webView.setUrl(myUrl)
+		self.adjustActions()
 
 	#--------------------------------------------------------------------------------------------------------------
 	# event handlers
@@ -95,16 +128,11 @@ class FrameHand(QtGui.QFrame):
 		if fileName is None:
 			return
 		fp = open(fileName, 'r')
-		try:	self.webView.setHtml( QtCore.QString.fromUtf8(fp.read()) )
-		finally: fp.close()
-		self._hasHand = True
-		self.adjustActions()
-		# give feedback
-		if self.isVisible():
-			fileInfo = QtCore.QFileInfo(fileName)
-			handName = fileInfo.baseName()
-			handName = TableCrabConfig.truncateString(handName, TableCrabConfig.MaxName)
-			TableCrabConfig.globalObject.feedback.emit(self, handName)
+		try:
+			data = QtCore.QString.fromUtf8(fp.read())
+		finally:
+			fp.close()
+		self.setHand(data, fileName=fileName)
 
 	def onActionSaveTriggered(self):
 		fileName = TableCrabConfig.dlgOpenSaveFile(
@@ -125,6 +153,7 @@ class FrameHand(QtGui.QFrame):
 			TableCrabConfig.msgWarning(self, 'Could Not Save Hand\n\n%s' % d)
 		finally:
 			if fp is not None: fp.close()
+		#TODO: can we rename hand in cache? i font think so. no way to inform WebKit
 
 	def onCloseEvent(self, event):
 		self.pokerStarsHandGrabber.stop()
@@ -136,17 +165,34 @@ class FrameHand(QtGui.QFrame):
 		point = self.webView.mapToGlobal(point)
 		menu.exec_(point)
 
+	def onHandGrabberGrabbedHand(self, data):
+		if data:
+			self.setHand(data)
+		else:
+			TableCrabConfig.globalObject.feedbackMessage.emit('Could not grab hand')
+
 	def onInit(self):
 		self.webView.setUrl(QtCore.QUrl(''))
 		self.adjustActions()
 		self.layout()
 		self.pokerStarsHandGrabber.start()
 
-	def onPShandGrabberHandGrabbed(self, data):
-		self._hasHand = bool(data)
-		self.webView.setHtml(QtCore.QString.fromUtf8(data) )
-		self.adjustActions()
-
-
-
+	def onNetworkGetData(self, networkReply):
+		url = networkReply.url()
+		for myUrl, data in self._handCache:
+			if myUrl == url:
+				networkReply.setData(data,  'text/html; charset=UTF-8')
+				# give feedback
+				if url.scheme() == 'file':
+					fileName = url.path()[1:]
+					fileInfo = QtCore.QFileInfo(fileName)
+					handName = fileInfo.baseName()
+					handName = TableCrabConfig.truncateString(handName, TableCrabConfig.MaxName)
+					TableCrabConfig.globalObject.feedback.emit(self, handName)
+				else:
+					TableCrabConfig.globalObject.feedback.emit(self, 'Grabbed hand')
+				break
+		else:
+			#NOTE: we assert only an invalid or no-hand gets here
+			pass
 
