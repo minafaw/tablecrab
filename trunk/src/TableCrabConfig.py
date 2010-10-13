@@ -246,6 +246,7 @@ windowHook = TableCrabWin32.WindowHook(parent=None, timeout=WindowHookTimeout)
 mouseHook = TableCrabWin32.MouseHook(parent=None)
 keyboardHook = TableCrabWin32.KeyboardHook(parent=None)
 #TODO: how to make hotkeyManager and templateManager globally available?
+# currenly each of them assigns itsself here on init()
 hotkeyManager = None
 templateManager = None
 
