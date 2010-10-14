@@ -180,6 +180,9 @@ HelpTopics = [
 # needs rename: Hotkeys/$Slot$/Hotkey --> Hotkeys/$Slot$/Key
 # needs rename: Gui/Settings/HandStyleSheet/DialogOpen/State --> Gui/Settings/HandViewerStyleSheet/DialogOpen/State
 # needs rename: Gui/Settings/HandStyleSheet/DialogSave/State --> Gui/Settings/HandViewerStyleSheet/DialogSave/State
+# needs rename: Gui/Hand/DialogOpen/State --> Gui/HandViewer/DialogOpen/State
+# needs rename: Gui/Hand/DialogSave/State --> Gui/HandViewer/DialogSave/State
+# needs rename: Gui/Hand/ZoomFactor --> Gui/HandViewer/ZoomFactor
 
 class Settings:
 	qSettings = QtCore.QSettings(Author, ApplicationName)

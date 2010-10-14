@@ -36,6 +36,7 @@ class FrameHandViewer(QtGui.QFrame):
 		self.pokerStarsHandGrabber.handGrabbed.connect(self.onHandGrabberGrabbedHand)
 
 		self.toolBar = TableCrabConfig.WebViewToolBar(self.webView,
+				#TODO: rename to Gui/HandViewer/ZoomFactor
 				settingsKeyZoomFactor='Gui/Hand/ZoomFactor',
 				settingsKeyZoomSteps='Gui/WebView/ZoomSteps',
 				)
@@ -123,6 +124,7 @@ class FrameHandViewer(QtGui.QFrame):
 				openFile=True,
 				title='Open Hand..',
 				fileFilters=('HtmlFiles (*.html *.htm)', 'All Files (*)'),
+				#TODO: rename to Gui/HandViewer/DialogOpen/State
 				settingsKey='Gui/Hand/DialogOpen/State',
 				)
 		if fileName is None:
@@ -140,6 +142,7 @@ class FrameHandViewer(QtGui.QFrame):
 				openFile=False,
 				title='Save Save Hand..',
 				fileFilters=('HtmlFiles (*.html *.htm)', 'All Files (*)'),
+				#TODO: rename to Gui/HandViewer/DialogSave/State
 				settingsKey='Gui/Hand/DialogSave/State',
 				defaultSuffix='html',
 				)
