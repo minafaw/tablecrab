@@ -99,15 +99,23 @@ class FrameSettings(QtGui.QFrame):
 			QtGui.qApp.setFont(font)
 		else:
 			font = QtGui.qApp.font()
+
 		# we have to reload style on font changes anyways, so global style setting is dome here
-		style = TableCrabConfig.settingsValue('Gui/Style', '').toString()
-		styles = QtGui.QStyleFactory().keys()
-		if style in styles:
+		styleName = TableCrabConfig.settingsValue('Gui/Style', '').toString()
+		styleNames = QtGui.QStyleFactory().keys()
+		if styleName in styleNames:
 			pass
 		else:
-			style =QtGui.qApp.style().objectName()	#HACK:  not documented for getting style name but the lights are on. so i assume it works
-		QtGui.qApp.setStyle(QtGui.QStyleFactory.create(style))
-		self.comboGuiStyle.setCurrentIndex( self.comboGuiStyle.findText(style, QtCore.Qt.MatchExactly) )
+			#HACK:  not documented for getting style name but the lights are on. so i assume it works
+			styleName =QtGui.qApp.style().objectName()
+		style = QtGui.QStyleFactory.create(styleName)
+		#TODO: we currently set no palette. QStyle docs say palette should not be set
+		# for styles that use system defaults, but there seems to be no way to find out
+		# so ..and where to find some kind of default palette.
+		##QtGui.qApp.setPalette(style.standardPalette())
+		QtGui.qApp.setStyle(style)
+
+		self.comboGuiStyle.setCurrentIndex( self.comboGuiStyle.findText(styleName, QtCore.Qt.MatchExactly) )
 		self.buttonFont.setText( QtCore.QString('%1 %2').arg(font.family()).arg(font.pointSize()) )
 		# take QWebKit StandardFont from application font
 		settings = QtWebKit.QWebSettings.globalSettings()
