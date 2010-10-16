@@ -11,9 +11,9 @@ import TableCrabGuiScreenshots
 
 from PyQt4 import QtCore, QtGui
 
-#**********************************************************************************************
+#************************************************************************************
 #
-#**********************************************************************************************
+#************************************************************************************
 class FrameSetup(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -42,8 +42,6 @@ class FrameSetup(QtGui.QFrame):
 		TableCrabConfig.globalObject.init.connect(self.onInit)
 		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
 
-		self.layout()
-
 	#--------------------------------------------------------------------------------------------------------------
 	# methods
 	#--------------------------------------------------------------------------------------------------------------
@@ -63,5 +61,6 @@ class FrameSetup(QtGui.QFrame):
 		TableCrabConfig.settingsSetValue('Gui/Setup/SplitterState', self.splitter.saveState())
 
 	def onInit(self):
+		self.layout()
 		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Setup/SplitterState', QtCore.QByteArray()).toByteArray() )
 
