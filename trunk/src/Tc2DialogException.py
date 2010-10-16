@@ -1,5 +1,5 @@
 
-import TableCrabConfig
+import Tc2Config
 from PyQt4 import QtCore, QtGui
 
 import base64, re
@@ -30,7 +30,7 @@ class DialogException(QtGui.QDialog):
 		"""
 		QtGui.QDialog. __init__(self, parent)
 
-		self.setWindowTitle('%s - Error' % TableCrabConfig.ApplicationName)
+		self.setWindowTitle('%s - Error' % Tc2Config.ApplicationName)
 		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
 		self.buttonBox.accepted.connect(self.accept)
 
@@ -52,19 +52,19 @@ class DialogException(QtGui.QDialog):
 			self.labelPixmap.setPixmap(pixmap)
 
 		self.edit = QtGui.QPlainTextEdit(self)
-		self.edit.setPlainText(ErrText % (TableCrabConfig.ApplicationName, TableCrabConfig.ErrorLogName, info) )
+		self.edit.setPlainText(ErrText % (Tc2Config.ApplicationName, Tc2Config.ErrorLogName, info) )
 
 		self.layout()
 
 	def layout(self):
-		grid = TableCrabConfig.GridBox(self)
+		grid = Tc2Config.GridBox(self)
 		grid.addWidget(self.edit, 0, 0)
 		n = 1
 		if self.labelPixmap is not None:
 			grid.addWidget(self.labelPixmapName, 1, 0)
 			grid.addWidget(self.labelPixmap, 2, 0)
 			n = 3
-		grid.addWidget(TableCrabConfig.HLine(self), n+1, 0)
+		grid.addWidget(Tc2Config.HLine(self), n+1, 0)
 		grid.addWidget(self.buttonBox, n+2, 0)
 
 	def embeddedImage(self, info):
@@ -80,5 +80,5 @@ class DialogException(QtGui.QDialog):
 		return info, pixmap
 
 	def onClearError(self, *args):
-		TableCrabConfig.globalObject.clearException.emit()
+		Tc2Config.globalObject.clearException.emit()
 		self.buttonClearError.setEnabled(False)

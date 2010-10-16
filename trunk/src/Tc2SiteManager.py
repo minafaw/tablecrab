@@ -1,10 +1,10 @@
 
-#NOTE: we can not import TableCrabConfig here (cross import)
+#NOTE: we can not import Tc2Config here (cross import)
 
-import TableCrabConfig
-import TableCrabWin32
-import TableCrabSiteTableCrab
-import TableCrabSitePokerStars
+import Tc2Config
+import Tc2Win32
+import Tc2SiteTableCrab
+import Tc2SitePokerStars
 
 from PyQt4 import QtCore
 import thread
@@ -18,17 +18,17 @@ class SiteManager(QtCore.QObject):
 		QtCore.QObject.__init__(self, parent)
 		self._lock = thread.allocate_lock()
 
-		TableCrabConfig.windowHook.windowCreated.connect(self.onWindowCreated)
-		TableCrabConfig.windowHook.windowDestroyed.connect(self.onWindowDestroyed)
-		TableCrabConfig.windowHook.windowGainedForeground.connect(self.onWindowGainedForeground)
-		TableCrabConfig.windowHook.windowLostForeground.connect(self.onWindowLostForeground)
-		TableCrabConfig.keyboardHook.inputEvent.connect(self.onInputEvent)
-		TableCrabConfig.mouseHook.inputEvent.connect(self.onInputEvent)
+		Tc2Config.windowHook.windowCreated.connect(self.onWindowCreated)
+		Tc2Config.windowHook.windowDestroyed.connect(self.onWindowDestroyed)
+		Tc2Config.windowHook.windowGainedForeground.connect(self.onWindowGainedForeground)
+		Tc2Config.windowHook.windowLostForeground.connect(self.onWindowLostForeground)
+		Tc2Config.keyboardHook.inputEvent.connect(self.onInputEvent)
+		Tc2Config.mouseHook.inputEvent.connect(self.onInputEvent)
 
-		self._tableCrabActionHandler = TableCrabSiteTableCrab.EventHandler(parent=self)
+		self._tableCrabActionHandler = Tc2SiteTableCrab.EventHandler(parent=self)
 		self._handlers = (
 				self._tableCrabActionHandler,	# should always be first item
-				TableCrabSitePokerStars.EventHandler(parent=self),
+				Tc2SitePokerStars.EventHandler(parent=self),
 				)
 
 	def tableCrabActionHandler(self):
@@ -55,11 +55,11 @@ class SiteManager(QtCore.QObject):
 				return
 
 	def onInputEvent(self, inputEvent):
-		if TableCrabConfig.hotkeyManager is None or TableCrabConfig.templateManager is None:
+		if Tc2Config.hotkeyManager is None or Tc2Config.templateManager is None:
 			return
-		hwnd = TableCrabWin32.windowForeground()
+		hwnd = Tc2Win32.windowForeground()
 		if hwnd:
-			for hotkey in TableCrabConfig.hotkeyManager:
+			for hotkey in Tc2Config.hotkeyManager:
 				if not hotkey.key() or hotkey.key() != inputEvent.key:
 					continue
 				for handler in self._handlers:

@@ -1,8 +1,8 @@
 """handler for global actions"""
 
-import TableCrabConfig
-import TableCrabHotkeys
-import TableCrabWin32
+import Tc2Config
+import Tc2Hotkeys
+import Tc2Win32
 
 from PyQt4 import QtCore
 
@@ -19,32 +19,32 @@ class EventHandler(QtCore.QObject):
 		self._hwndMain = hwnd
 
 	def handleWindowCreated(self, hwnd):
-		if TableCrabWin32.windowIsSameProcess(hwnd, self._hwndMain):
+		if Tc2Win32.windowIsSameProcess(hwnd, self._hwndMain):
 			return True
 		return False
 
 	def handleWindowDestroyed(self, hwnd):
-		if TableCrabWin32.windowIsSameProcess(hwnd, self._hwndMain):
+		if Tc2Win32.windowIsSameProcess(hwnd, self._hwndMain):
 			return True
 		return False
 
 	def handleWindowGainedForeground(self, hwnd):
-		if TableCrabWin32.windowIsSameProcess(hwnd, self._hwndMain):
+		if Tc2Win32.windowIsSameProcess(hwnd, self._hwndMain):
 			return True
 		return False
 
 	def handleWindowLostForeground(self, hwnd):
-		if TableCrabWin32.windowIsSameProcess(hwnd, self._hwndMain):
+		if Tc2Win32.windowIsSameProcess(hwnd, self._hwndMain):
 			return True
 		return False
 
 	def handleInputEvent(self, hwnd, hotkey, inputEvent):
-		if TableCrabWin32.windowIsSameProcess(hwnd, self._hwndMain):
+		if Tc2Win32.windowIsSameProcess(hwnd, self._hwndMain):
 			return True
-		if hotkey.id() == TableCrabHotkeys.HotkeyScreenshot.id():
+		if hotkey.id() == Tc2Hotkeys.HotkeyScreenshot.id():
 			if inputEvent.keyIsDown or inputEvent.steps:
-				TableCrabConfig.widgetScreenshot(hwnd)
-				TableCrabConfig.globalObject.feedbackMessage.emit(hotkey.action() )
+				Tc2Config.widgetScreenshot(hwnd)
+				Tc2Config.globalObject.feedbackMessage.emit(hotkey.action() )
 				inputEvent.accept = True
 			return True
 		return False

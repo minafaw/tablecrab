@@ -1,7 +1,7 @@
 
-import TableCrabConfig
+import Tc2Config
 import PokerStarsHandGrabber
-import TableCrabGuiHelp
+import Tc2GuiHelp
 
 from PyQt4 import QtCore, QtGui, QtWebKit
 import hashlib
@@ -23,7 +23,7 @@ class FrameHandViewer(QtGui.QFrame):
 		# default cache size of WebKit is 100 (self.webView.page().history().maximumItemCount() )
 		# ok or not?
 		oldManager = self.webView.page().networkAccessManager()
-		self.networkAccessManager = TableCrabConfig.RawNetworkAccessManager(oldManager, parent=self)
+		self.networkAccessManager = Tc2Config.RawNetworkAccessManager(oldManager, parent=self)
 		page = self.webView.page()
 		page.setNetworkAccessManager(self.networkAccessManager)
 		self.networkAccessManager.getData.connect(self.onNetworkGetData)
@@ -35,7 +35,7 @@ class FrameHandViewer(QtGui.QFrame):
 				)
 		self.pokerStarsHandGrabber.handGrabbed.connect(self.onHandGrabberGrabbedHand)
 
-		self.toolBar = TableCrabConfig.WebViewToolBar(self.webView,
+		self.toolBar = Tc2Config.WebViewToolBar(self.webView,
 				#TODO: rename to Gui/HandViewer/ZoomFactor
 				settingsKeyZoomFactor='Gui/Hand/ZoomFactor',
 				settingsKeyZoomSteps='Gui/WebView/ZoomSteps',
@@ -71,8 +71,8 @@ class FrameHandViewer(QtGui.QFrame):
 		self.toolBar.addAction(self.actionHelp)
 
 		# connect global signals
-		TableCrabConfig.globalObject.init.connect(self.onInit)
-		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
+		Tc2Config.globalObject.init.connect(self.onInit)
+		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 
 	#----------------------------------------------------------------------------------------------------------------
 	# methods
@@ -83,7 +83,7 @@ class FrameHandViewer(QtGui.QFrame):
 		self.actionSave.setEnabled(bool(self._handCache))
 
 	def layout(self):
-		grid = TableCrabConfig.GridBox(self)
+		grid = Tc2Config.GridBox(self)
 		grid.col(self.toolBar)
 		grid.row()
 		grid.col(self.webView)
@@ -116,10 +116,10 @@ class FrameHandViewer(QtGui.QFrame):
 	# event handlers
 	#--------------------------------------------------------------------------------------------------------------
 	def onActionHelpTriggered(self, checked):
-		TableCrabGuiHelp.dialogHelp('handViewer', parent=self)
+		Tc2GuiHelp.dialogHelp('handViewer', parent=self)
 
 	def onActionOpenTriggered(self):
-		fileName = TableCrabConfig.dlgOpenSaveFile(
+		fileName = Tc2Config.dlgOpenSaveFile(
 				parent=self,
 				openFile=True,
 				title='Open Hand..',
@@ -137,7 +137,7 @@ class FrameHandViewer(QtGui.QFrame):
 		self.setHand(data, fileName=fileName)
 
 	def onActionSaveTriggered(self):
-		fileName = TableCrabConfig.dlgOpenSaveFile(
+		fileName = Tc2Config.dlgOpenSaveFile(
 				parent=self,
 				openFile=False,
 				title='Save Save Hand..',
@@ -153,7 +153,7 @@ class FrameHandViewer(QtGui.QFrame):
 			fp = open(fileName, 'w')
 			fp.write(self.webView.page().mainFrame().toHtml().toUtf8()  )
 		except Exception, d:
-			TableCrabConfig.msgWarning(self, 'Could Not Save Hand\n\n%s' % d)
+			Tc2Config.msgWarning(self, 'Could Not Save Hand\n\n%s' % d)
 		finally:
 			if fp is not None: fp.close()
 		#TODO: can we rename hand in cache? i font think so. no way to inform WebKit
@@ -172,7 +172,7 @@ class FrameHandViewer(QtGui.QFrame):
 		if data:
 			self.setHand(data)
 		else:
-			TableCrabConfig.globalObject.feedbackMessage.emit('Could not grab hand')
+			Tc2Config.globalObject.feedbackMessage.emit('Could not grab hand')
 
 	def onInit(self):
 		self.webView.setUrl(QtCore.QUrl(''))
@@ -190,10 +190,10 @@ class FrameHandViewer(QtGui.QFrame):
 					fileName = url.path()[1:]
 					fileInfo = QtCore.QFileInfo(fileName)
 					handName = fileInfo.baseName()
-					handName = TableCrabConfig.truncateString(handName, TableCrabConfig.MaxName)
-					TableCrabConfig.globalObject.feedback.emit(self, handName)
+					handName = Tc2Config.truncateString(handName, Tc2Config.MaxName)
+					Tc2Config.globalObject.feedback.emit(self, handName)
 				else:
-					TableCrabConfig.globalObject.feedback.emit(self, 'Grabbed hand')
+					Tc2Config.globalObject.feedback.emit(self, 'Grabbed hand')
 				break
 		else:
 			#NOTE: we assert only an invalid or no-hand gets here

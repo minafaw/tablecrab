@@ -5,8 +5,8 @@
 import re, time, sys, cStringIO, thread
 from PyQt4 import QtCore
 
-import TableCrabConfig
-import TableCrabWin32
+import Tc2Config
+import Tc2Win32
 
 from ctypes import windll, sizeof, byref, WinError, GetLastError, WINFUNCTYPE, create_unicode_buffer
 from ctypes.wintypes import INT, HANDLE, LPARAM, DWORD
@@ -537,7 +537,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		''''''
 
 	def settingsValue(self, key, default):
-		return TableCrabConfig.settingsValue(TableCrabConfig.settingsKeyJoin('PokerStarsHandGrabber/HandFornmatterHtmlTabular', key), default)
+		return Tc2Config.settingsValue(Tc2Config.settingsKeyJoin('PokerStarsHandGrabber/HandFornmatterHtmlTabular', key), default)
 
 
 	def formatNum(self, hand, num):
@@ -545,11 +545,11 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			result = ''
 		elif hand.hasCents:
 			if self.settingsValue('NoFloatingPoint', QtCore.QVariant(False)).toBool():
-				result = TableCrabConfig.locale.toString( int(num*100) )
+				result = Tc2Config.locale.toString( int(num*100) )
 			else:
-				result = TableCrabConfig.locale.toString(num, 'f', 2)
+				result = Tc2Config.locale.toString(num, 'f', 2)
 		else:
-			result = TableCrabConfig.locale.toString( int(num))
+			result = Tc2Config.locale.toString( int(num))
 		return result
 
 	def htmlEscapeString(self, string, spaces=True):
@@ -583,7 +583,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		p << '</tr>'
 		p << '</table>'
 
-	#TODO: use TableCrabConfig.truncateString()
+	#TODO: use Tc2Config.truncateString()
 	def formatPlayerName(self, playerName):
 		maxPlayerName = self.settingsValue('MaxPlayerName', self.MaxPlayerName).toInt()[0]
 		if maxPlayerName > -1 and len(playerName) > maxPlayerName:
@@ -733,13 +733,13 @@ if sys.platform == 'win32':
 			self.handFormatter = handFormatter
 			self._data = None
 			self._timer = QtCore.QTimer(self)
-			self._timer.setInterval(TableCrabConfig.HandGrabberTimeout * 1000)
+			self._timer.setInterval(Tc2Config.HandGrabberTimeout * 1000)
 			self._timer.timeout.connect(self.grabHand)
 			self._hwndDialog = None
 			self._hwndEdit = None
 
-			TableCrabConfig.windowHook.windowCreated.connect(self.onWindowCreated)
-			TableCrabConfig.windowHook.windowDestroyed.connect(self.onWindowDestroyed)
+			Tc2Config.windowHook.windowCreated.connect(self.onWindowCreated)
+			Tc2Config.windowHook.windowDestroyed.connect(self.onWindowDestroyed)
 
 		def stop(self):
 			self._timer.stop()
@@ -748,14 +748,14 @@ if sys.platform == 'win32':
 			pass
 
 		def onWindowCreated(self, hwnd):
-			if TableCrabWin32.windowGetClassName(hwnd) != self.WindowClassName:
+			if Tc2Win32.windowGetClassName(hwnd) != self.WindowClassName:
 				return
-			if TableCrabWin32.windowGetText(hwnd, maxSize=len(self.WindowTitle)) != self.WindowTitle:
+			if Tc2Win32.windowGetText(hwnd, maxSize=len(self.WindowTitle)) != self.WindowTitle:
 				return
 			self._hwndDialog = hwnd
 			self._hwndEdit = None
-			for hwnd in TableCrabWin32.windowChildren(hwnd):
-				if TableCrabWin32.windowGetClassName(hwnd) == self.WidgetClassName:
+			for hwnd in Tc2Win32.windowChildren(hwnd):
+				if Tc2Win32.windowGetClassName(hwnd) == self.WidgetClassName:
 					self._hwndEdit = hwnd
 					break
 			if self._hwndEdit is None:
@@ -773,11 +773,11 @@ if sys.platform == 'win32':
 			if self._hwndEdit is None: return
 
 			#NOTE: we could be faced with an arbitrary windowat this point or an inavlid handle
-			if TableCrabWin32.windowGetTextLength(self._hwndEdit) > TableCrabConfig.MaxHandHistoryText:
+			if Tc2Win32.windowGetTextLength(self._hwndEdit) > Tc2Config.MaxHandHistoryText:
 				#TODO: have to find a better way to give feedback on what hapens on hand grabbing
-				TableCrabConfig.globalObject.feedbackMessage.emit(self.parent(), 'Hand text too long')
+				Tc2Config.globalObject.feedbackMessage.emit(self.parent(), 'Hand text too long')
 				return
-			data = TableCrabWin32.windowGetText(self._hwndEdit, maxSize=TableCrabConfig.MaxHandHistoryText)
+			data = Tc2Win32.windowGetText(self._hwndEdit, maxSize=Tc2Config.MaxHandHistoryText)
 			if data and data != self._data:
 				self._data = data
 				handData = ''
@@ -785,12 +785,12 @@ if sys.platform == 'win32':
 				if not '*** HOLE CARDS ***' in data:
 					pass
 				else:
-					#NOTE: we are let TableCrabConfig handle errors because we are maybe working with arbitrary data
+					#NOTE: we are let Tc2Config handle errors because we are maybe working with arbitrary data
 					# from an unknown window
 					try:
 						hand = self.handParser.parse(data)
 					except:
-						TableCrabConfig.handleException('\n' + data)
+						Tc2Config.handleException('\n' + data)
 					else:
 						handData = self.handFormatter.dump(hand)
 				self.handGrabbed.emit(handData)

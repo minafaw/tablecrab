@@ -1,6 +1,6 @@
 
-import TableCrabConfig
-import TableCrabTemplates
+import Tc2Config
+import Tc2Templates
 
 from PyQt4 import QtCore, QtGui
 
@@ -25,7 +25,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 
 		def createEditor(self, parent, option, index):
 			ed = QtGui.QLineEdit(parent)
-			ed.setMaxLength(TableCrabConfig.MaxName)
+			ed.setMaxLength(Tc2Config.MaxName)
 			ed.editingFinished.connect(self.onEditingFinished)
 			ed.returnPressed.connect(self.onEdReturnPressed)
 			return ed
@@ -49,7 +49,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		QtGui.QTreeWidget.__init__(self, parent)
 
 		#TODO: find a better way to set template manager as global
-		TableCrabConfig.templateManager = self
+		Tc2Config.templateManager = self
 
 		# setup treeWidget
 		self.setUniformRowHeights(True)
@@ -70,7 +70,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self._actions = []
 
 		menu = QtGui.QMenu(self)
-		for templateProto in TableCrabTemplates.Templates:
+		for templateProto in Tc2Templates.Templates:
 			menu.addAction(self.ActionNewTemplate(templateProto, parent=self) )
 
 		self.actionNew = QtGui.QAction(self)
@@ -101,11 +101,11 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self._actions.append(self.actionRemove)
 
 		# connect signals
-		TableCrabConfig.globalObject.init.connect(self.onInit)
-		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(self.onSetAlternatingRowColors)
-		TableCrabConfig.globalObject.settingChildItemIndicatorsChanged.connect(self.onSetRootIsDecorated)
-		TableCrabConfig.globalObject.widgetScreenshotSet.connect(self.onWidgetScreenshotSet)
-		TableCrabConfig.globalObject.widgetScreenshotDoubleClicked.connect(self.onWidgetScreenshotDoubleClicked)
+		Tc2Config.globalObject.init.connect(self.onInit)
+		Tc2Config.globalObject.settingAlternatingRowColorsChanged.connect(self.onSetAlternatingRowColors)
+		Tc2Config.globalObject.settingChildItemIndicatorsChanged.connect(self.onSetRootIsDecorated)
+		Tc2Config.globalObject.widgetScreenshotSet.connect(self.onWidgetScreenshotSet)
+		Tc2Config.globalObject.widgetScreenshotDoubleClicked.connect(self.onWidgetScreenshotDoubleClicked)
 
 		# connect to TreeWidget signals
 		self.itemDoubleClicked.connect(self.onEditItem)
@@ -147,7 +147,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		return self._actions
 
 	def adjustActions(self):
-		self.actionNew.setEnabled(len(self) < TableCrabConfig.MaxTemplates)
+		self.actionNew.setEnabled(len(self) < Tc2Config.MaxTemplates)
 		item = self.currentItem()
 		if item is None:
 			self.actionUp.setEnabled(False)
@@ -180,13 +180,13 @@ class TemplatesWidget(QtGui.QTreeWidget):
 				tmp_templates[templateType].append(template)
 
 		for templateType, templates in tmp_templates.items():
-			conflicts = [i for i in templates if i.size != TableCrabConfig.SizeNone]
+			conflicts = [i for i in templates if i.size != Tc2Config.SizeNone]
 			for template in templates:
 				flag = 'Conflict' if len(conflicts) > 1 else None
 				if flag is None:
-					if self._screenshotSize == TableCrabConfig.SizeNone:
+					if self._screenshotSize == Tc2Config.SizeNone:
 						pass
-					elif template.size == TableCrabConfig.SizeNone:
+					elif template.size == Tc2Config.SizeNone:
 						flag = 'Edit'
 					elif template.size == self._screenshotSize:
 						flag = 'Edit'
@@ -218,16 +218,16 @@ class TemplatesWidget(QtGui.QTreeWidget):
 	def createTemplate(self, templateProto):
 		names = [i.name for i in self]
 		name = templateProto.menuName()
-		name = TableCrabConfig.uniqueName(name, names)
+		name = Tc2Config.uniqueName(name, names)
 		template = templateProto(parent=self, name=name)
 		self.addTopLevelItem(template)
 		self.setCurrentItem(template)
 		template.setExpanded(True)
 		self.dump()
-		TableCrabConfig.globalObject.widgetScreenshotQuery.emit()
+		Tc2Config.globalObject.widgetScreenshotQuery.emit()
 
 	def dump(self):
-		TableCrabConfig.dumpPersistentItems('Templates', self)
+		Tc2Config.dumpPersistentItems('Templates', self)
 
 	def moveTemplateDown(self):
 		item = self.currentItem()
@@ -273,23 +273,23 @@ class TemplatesWidget(QtGui.QTreeWidget):
 
 	def onInit(self):
 		self.setUpdatesEnabled(False)
-		self.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
-		self.setRootIsDecorated( TableCrabConfig.settingsValue('Gui/ChildItemIndicators', True).toBool() )
+		self.setAlternatingRowColors( Tc2Config.settingsValue('Gui/AlternatingRowColors', False).toBool() )
+		self.setRootIsDecorated( Tc2Config.settingsValue('Gui/ChildItemIndicators', True).toBool() )
 		self.clear()
 		template = None
-		for template in TableCrabConfig.readPersistentItems('Templates', maxItems=TableCrabConfig.MaxTemplates, itemProtos=TableCrabTemplates.Templates):
+		for template in Tc2Config.readPersistentItems('Templates', maxItems=Tc2Config.MaxTemplates, itemProtos=Tc2Templates.Templates):
 			self.addTopLevelItem(template)
 			template.setExpanded(template.itemIsExpanded)
 		# set at least one template as default
 		if template is None:
-			template = TableCrabTemplates.TemplatePokerStarsTable()
+			template = Tc2Templates.TemplatePokerStarsTable()
 			self.addTopLevelItem(template)
 			template.setExpanded(True)
 		self._templatesRead = True
 		self.setCurrentItem( self.topLevelItem(0) )
 		self.setUpdatesEnabled(True)
 		self.adjustActions()
-		TableCrabConfig.globalObject.widgetScreenshotQuery.emit()
+		Tc2Config.globalObject.widgetScreenshotQuery.emit()
 
 
 	def onItemCollapsed(self, item):
@@ -327,5 +327,5 @@ class TemplatesWidget(QtGui.QTreeWidget):
 	def onWidgetScreenshotSet(self, pixmap):
 		for template in self:
 			template.handleScreenshotSet(pixmap)
-		self._screenshotSize = TableCrabConfig.newSizeNone() if pixmap.isNull() else QtCore.QSize(pixmap.size())
+		self._screenshotSize = Tc2Config.newSizeNone() if pixmap.isNull() else QtCore.QSize(pixmap.size())
 		self.adjustTemplates()

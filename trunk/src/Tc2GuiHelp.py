@@ -1,7 +1,7 @@
 
 #TODO: restore collasped / expanded in topic tree. overkill?
 
-import TableCrabConfig
+import Tc2Config
 from PyQt4 import QtCore, QtGui, QtWebKit
 
 #************************************************************************************
@@ -16,12 +16,12 @@ class FrameHelp(QtGui.QFrame):
 		self.webView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)		#
 		self.webView.customContextMenuRequested.connect(self.onContextMenuWebView)
 		oldManager = self.webView.page().networkAccessManager()
-		self.networkAccessManager = TableCrabConfig.RawNetworkAccessManager(oldManager, parent=self)
+		self.networkAccessManager = Tc2Config.RawNetworkAccessManager(oldManager, parent=self)
 		page = self.webView.page()
 		page.setNetworkAccessManager(self.networkAccessManager)
 
 		# setup tool bar
-		self.toolBar = TableCrabConfig.WebViewToolBar(self.webView,
+		self.toolBar = Tc2Config.WebViewToolBar(self.webView,
 				settingsKeyZoomFactor='Gui/Help/ZoomFactor',
 				settingsKeyZoomSteps='Gui/WebView/ZoomSteps',
 				)
@@ -46,9 +46,9 @@ class FrameHelp(QtGui.QFrame):
 		self.addAction(self.actionSelectAll)
 
 		# connect signals
-		TableCrabConfig.globalObject.init.connect(self.onInit)
-		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
-		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(self.onSettingAlternatingRowColorsChanged)
+		Tc2Config.globalObject.init.connect(self.onInit)
+		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
+		Tc2Config.globalObject.settingAlternatingRowColorsChanged.connect(self.onSettingAlternatingRowColorsChanged)
 		self.tree.itemSelectionChanged.connect(self.onItemSelectionChanged)
 		self.tree.itemActivated.connect(self.onItemSelectionChanged)
 		self.webView.urlChanged.connect(self.onUrlChanged)
@@ -59,7 +59,7 @@ class FrameHelp(QtGui.QFrame):
 	# methods
 	#------------------------------------------------------------------------------------------------------------------
 	def layout(self):
-		grid = TableCrabConfig.GridBox(self)
+		grid = Tc2Config.GridBox(self)
 		grid.col(self.toolBar)
 		grid.row()
 		grid.col(self.splitter)
@@ -68,7 +68,7 @@ class FrameHelp(QtGui.QFrame):
 	# event handlers
 	#------------------------------------------------------------------------------------------------------------------
 	def onCloseEvent(self, event):
-		TableCrabConfig.settingsSetValue('Gui/Help/SplitterState', self.splitter.saveState() )
+		Tc2Config.settingsSetValue('Gui/Help/SplitterState', self.splitter.saveState() )
 
 	def onContextMenuWebView(self, point):
 		menu = QtGui.QMenu(self)
@@ -82,14 +82,14 @@ class FrameHelp(QtGui.QFrame):
 		self.tree.setUpdatesEnabled(False)
 
 		self.webView.setUrl(QtCore.QUrl(''))
-		self.tree.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
-		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Help/SplitterState', QtCore.QByteArray()).toByteArray() )
+		self.tree.setAlternatingRowColors( Tc2Config.settingsValue('Gui/AlternatingRowColors', False).toBool() )
+		self.splitter.restoreState( Tc2Config.settingsValue('Gui/Help/SplitterState', QtCore.QByteArray()).toByteArray() )
 		#
-		lastTopic = TableCrabConfig.settingsValue('Gui/Help/Topic', '').toString()
+		lastTopic = Tc2Config.settingsValue('Gui/Help/Topic', '').toString()
 		lastTopicItem = None
 		firstTopicItem = None
 		stack = []
-		for level, (topic, topicName) in TableCrabConfig.walkHelpTopics():
+		for level, (topic, topicName) in Tc2Config.walkHelpTopics():
 			while len(stack) > level:
 				stack.pop(-1)
 			if stack:
@@ -120,7 +120,7 @@ class FrameHelp(QtGui.QFrame):
 		topic = item.data(0, QtCore.Qt.UserRole).toString()
 		url = QtCore.QUrl('%s.html' % topic)
 		self.webView.setUrl(url)
-		TableCrabConfig.settingsSetValue('Gui/Help/Topic', topic)
+		Tc2Config.settingsSetValue('Gui/Help/Topic', topic)
 
 	def onNetworkGetData(self, networkReply):
 		# serve pages from our resource modules
@@ -130,7 +130,7 @@ class FrameHelp(QtGui.QFrame):
 			name = str(fileInfo.baseName() )	#NOTE: we need to string it ..getattr() crasches otherwise
 			ext = fileInfo.suffix()
 			if ext == 'html':
-				func = getattr(TableCrabConfig.HtmlPages, name, None)
+				func = getattr(Tc2Config.HtmlPages, name, None)
 				mimeType = 'text/html; charset=UTF-8'
 				if func is None:
 					data = '<h2>404: File Not Found</h2>'
@@ -138,7 +138,7 @@ class FrameHelp(QtGui.QFrame):
 					data = func()
 				networkReply.setData(data, mimeType)
 			elif ext == 'png':
-				func = getattr(TableCrabConfig.Pixmaps, name, None)
+				func = getattr(Tc2Config.Pixmaps, name, None)
 				mimeType = 'image/png'
 				if func is not None:
 					arr = QtCore.QByteArray()
@@ -148,7 +148,7 @@ class FrameHelp(QtGui.QFrame):
 					px.save(p, 'png')
 					networkReply.setData(p.data(), mimeType)
 			elif ext == 'css':
-				func = getattr(TableCrabConfig.StyleSheets, name, None)
+				func = getattr(Tc2Config.StyleSheets, name, None)
 				mimeType = 'text/css'
 				if func is not None:
 					networkReply.setData(func(), mimeType)
@@ -159,7 +159,7 @@ class FrameHelp(QtGui.QFrame):
 	def onUrlChanged(self, url):
 		fileInfo = QtCore.QFileInfo(url.path())
 		topic = fileInfo.baseName()
-		for item in TableCrabConfig.TreeWidgetItemIterator(self.tree):
+		for item in Tc2Config.TreeWidgetItemIterator(self.tree):
 			myTopic = item.data(0, QtCore.Qt.UserRole).toString()
 			if myTopic == topic:
 				self.tree.setCurrentItem(item)
@@ -174,16 +174,16 @@ class _DialogHelp(QtGui.QDialog):
 	def __init__(self, topic, parent=None):
 		QtGui.QDialog.__init__(self, parent)
 
-		self.setWindowTitle(TableCrabConfig.dialogTitle('Help') )
-		self.setWindowIcon( QtGui.QIcon(TableCrabConfig.Pixmaps.tableCrab()) )
+		self.setWindowTitle(Tc2Config.dialogTitle('Help') )
+		self.setWindowIcon( QtGui.QIcon(Tc2Config.Pixmaps.tableCrab()) )
 		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
 		self.buttonBox.accepted.connect(self.accept)
 
-		TableCrabConfig.settingsSetValue('Gui/Help/Topic', topic)
+		Tc2Config.settingsSetValue('Gui/Help/Topic', topic)
 		self.frameHelp = FrameHelp(parent=self)
 		self.layout()
-		self.restoreGeometry( TableCrabConfig.settingsValue('Gui/DialogHelp/Geometry', QtCore.QByteArray()).toByteArray() )
-		self.frameHelp.splitter.restoreState( TableCrabConfig.settingsValue('Gui/DialogHelp/SplitterState', QtCore.QByteArray()).toByteArray() )
+		self.restoreGeometry( Tc2Config.settingsValue('Gui/DialogHelp/Geometry', QtCore.QByteArray()).toByteArray() )
+		self.frameHelp.splitter.restoreState( Tc2Config.settingsValue('Gui/DialogHelp/SplitterState', QtCore.QByteArray()).toByteArray() )
 		self.frameHelp.onInit()
 		self.frameHelp.toolBar.onInit()
 
@@ -191,18 +191,18 @@ class _DialogHelp(QtGui.QDialog):
 	# overwritten methods
 	#------------------------------------------------------------------------------------------------------------------
 	def hideEvent(self, event):
-		TableCrabConfig.settingsSetValue('Gui/DialogHelp/Geometry', self.saveGeometry() )
-		TableCrabConfig.settingsSetValue('Gui/Help/SplitterState', self.frameHelp.splitter.saveState() )
+		Tc2Config.settingsSetValue('Gui/DialogHelp/Geometry', self.saveGeometry() )
+		Tc2Config.settingsSetValue('Gui/Help/SplitterState', self.frameHelp.splitter.saveState() )
 		QtGui.QDialog.hideEvent(self, event)
 
 	#--------------------------------------------------------------------------------------------------------------
 	# methods
 	#--------------------------------------------------------------------------------------------------------------
 	def layout(self):
-		grid = TableCrabConfig.GridBox(self)
+		grid = Tc2Config.GridBox(self)
 		grid.col(self.frameHelp)
 		grid.row()
-		grid.col(TableCrabConfig.HLine(self))
+		grid.col(Tc2Config.HLine(self))
 		grid.row()
 		grid.col(self.buttonBox)
 

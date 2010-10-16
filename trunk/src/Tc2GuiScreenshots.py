@@ -1,7 +1,7 @@
 
-import TableCrabConfig
-import TableCrabWin32
-import TableCrabDialogScreenshotInfo
+import Tc2Config
+import Tc2Win32
+import Tc2DialogScreenshotInfo
 
 from PyQt4 import QtCore,QtGui
 
@@ -35,10 +35,10 @@ class ScreenshotLabel(QtGui.QLabel):
 			if pixmap is not None and not pixmap.isNull():
 				# holding sown Ctrl while double clicking rests the point
 				if event.modifiers() & QtCore.Qt.ControlModifier:
-					point = TableCrabConfig.newPointNone()
+					point = Tc2Config.newPointNone()
 				else:
 					point = QtCore.QPoint(event.pos())
-				TableCrabConfig.globalObject.widgetScreenshotDoubleClicked.emit(pixmap, point)
+				Tc2Config.globalObject.widgetScreenshotDoubleClicked.emit(pixmap, point)
 
 	def mouseMoveEvent(self, event):
 		pixmap = self.pixmap()
@@ -49,9 +49,9 @@ class ScreenshotLabel(QtGui.QLabel):
 	# methods
 	#--------------------------------------------------------------------------------------------------------------
 	def _giveFeedback(self, pixmap, point):
-		name = TableCrabConfig.truncateString(self._screenshotName, TableCrabConfig.MaxName)
-		p = '%s -- Size: %s Mouse: %s' % (name, TableCrabConfig.sizeToString(pixmap.size()), TableCrabConfig.pointToString(point) )
-		TableCrabConfig.globalObject.feedback.emit(self, p)
+		name = Tc2Config.truncateString(self._screenshotName, Tc2Config.MaxName)
+		p = '%s -- Size: %s Mouse: %s' % (name, Tc2Config.sizeToString(pixmap.size()), Tc2Config.pointToString(point) )
+		Tc2Config.globalObject.feedback.emit(self, p)
 
 	def setScreenshot(self, pixmap=None, screenshotName=None):
 		self._screenshotName = self.ScreenshotName if screenshotName is None else screenshotName
@@ -62,8 +62,8 @@ class ScreenshotLabel(QtGui.QLabel):
 			self.resize(self.parent().size())		#TODO: no idea why but we need to resize here
 			self.setFrameShape(QtGui.QFrame.NoFrame)
 			pixmap = QtGui.QPixmap()
-			TableCrabConfig.globalObject.widgetScreenshotSet.emit(pixmap)
-			TableCrabConfig.globalObject.feedback.emit(self, '')
+			Tc2Config.globalObject.widgetScreenshotSet.emit(pixmap)
+			Tc2Config.globalObject.feedback.emit(self, '')
 		else:
 			# manually set size of the label so we get the correct coordiantes of the mouse cursor
 			self.setPixmap(pixmap)
@@ -74,7 +74,7 @@ class ScreenshotLabel(QtGui.QLabel):
 			point = self.mapFromGlobal(point)
 			if point.x() < 0 or point.y() < 0:
 				point = QtCore.QPoint()
-			TableCrabConfig.globalObject.widgetScreenshotSet.emit(pixmap)
+			Tc2Config.globalObject.widgetScreenshotSet.emit(pixmap)
 			self._giveFeedback(pixmap,  point)
 			result = True
 		return result
@@ -85,7 +85,7 @@ class ScreenshotLabel(QtGui.QLabel):
 	def onMouseLeave(self):
 		pixmap = self.pixmap()
 		if pixmap is not None and not pixmap.isNull():
-			point = TableCrabConfig.newPointNone()
+			point = Tc2Config.newPointNone()
 			self._giveFeedback(pixmap, point)
 
 
@@ -129,32 +129,32 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		self._actions.append(self.actionInfo)
 
 		# connect global signals
-		TableCrabConfig.globalObject.init.connect(self.onInit)
-		TableCrabConfig.globalObject.widgetScreenshotQuery.connect(self.onWidgetScreenshotQuery)
-		TableCrabConfig.globalObject.widgetScreenshot.connect(self.onWidgetScreenshot)
+		Tc2Config.globalObject.init.connect(self.onInit)
+		Tc2Config.globalObject.widgetScreenshotQuery.connect(self.onWidgetScreenshotQuery)
+		Tc2Config.globalObject.widgetScreenshot.connect(self.onWidgetScreenshot)
 
 	#--------------------------------------------------------------------------------------------------------------
 	# methods
 	#--------------------------------------------------------------------------------------------------------------
 	def _windowInfo(self, hwnd, level=0):
-		if TableCrabWin32.windowGetTextLength(hwnd) > TableCrabConfig.MaxWindowText:
+		if Tc2Win32.windowGetTextLength(hwnd) > Tc2Config.MaxWindowText:
 			title = 'Window title too long'
 		else:
-			title = TableCrabWin32.windowGetText(hwnd, maxSize=TableCrabConfig.MaxWindowText).replace('\r', '')
+			title = Tc2Win32.windowGetText(hwnd, maxSize=Tc2Config.MaxWindowText).replace('\r', '')
 		if '\n' in title: title = title.split('\n', 1)[0]
-		className = TableCrabWin32.windowGetClassName(hwnd)
-		buttons = sorted( TableCrabWin32.windowGetButtons(hwnd).keys() )
-		size = TableCrabWin32.windowGetRect(hwnd).size()
-		pos = TableCrabWin32.windowGetPos(hwnd)
-		clientSize = TableCrabWin32.windowGetClientRect(hwnd).size()
+		className = Tc2Win32.windowGetClassName(hwnd)
+		buttons = sorted( Tc2Win32.windowGetButtons(hwnd).keys() )
+		size = Tc2Win32.windowGetRect(hwnd).size()
+		pos = Tc2Win32.windowGetPos(hwnd)
+		clientSize = Tc2Win32.windowGetClientRect(hwnd).size()
 		if not buttons:
 			buttons = ''
 		elif len(buttons) == 1:
 			buttons = "'%s'" % buttons[0]
 		else:
 			buttons = "'%s'" % ', '.join(["'%s'" % i for i in buttons] )
-		isVisible = TableCrabWin32.windowIsVisible(hwnd)
-		isEnabled = TableCrabWin32.windowIsEnabled(hwnd)
+		isVisible = Tc2Win32.windowIsVisible(hwnd)
+		isEnabled = Tc2Win32.windowIsEnabled(hwnd)
 
 		indent = '\x20\x20\x20\x20' *level
 		p = '%s%s\n' % (indent, '/'*level)
@@ -190,13 +190,13 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		hwndParent = hwnd
 		while hwndParent:
 			self._lastScreenshotInfo += self._windowInfo(hwndParent, level=level)
-			hwndParent = TableCrabWin32.windowGetParent(hwndParent)
+			hwndParent = Tc2Win32.windowGetParent(hwndParent)
 			level += 1
 
 		self._lastScreenshotInfo += '-----------------------------------------------------------------\n'
 		self._lastScreenshotInfo += 'Window Details\n'
 		self._lastScreenshotInfo += '-----------------------------------------------------------------\n'
-		for level, hwnd in TableCrabWin32.windowWalkChildren(hwnd, report=True):
+		for level, hwnd in Tc2Win32.windowWalkChildren(hwnd, report=True):
 			 self._lastScreenshotInfo += self._windowInfo(hwnd, level=level)
 
 	def setScreenshot(self, pixmap=None, screenshotName=None):
@@ -210,8 +210,8 @@ class ScreenshotWidget(QtGui.QScrollArea):
 	# event handlers
 	#--------------------------------------------------------------------------------------------------------------
 	def onActionOpenTriggered(self):
-		imageFormats = TableCrabConfig.readWriteImageFormats()
-		fileName = TableCrabConfig.dlgOpenSaveFile(
+		imageFormats = Tc2Config.readWriteImageFormats()
+		fileName = Tc2Config.dlgOpenSaveFile(
 				parent=self,
 				openFile=True,
 				title='Open Screenshot..',
@@ -222,7 +222,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 			return
 		pixmap = QtGui.QPixmap()
 		if not pixmap.load(fileName):
-			TableCrabConfig.msgWarning(self, 'Could not open screenshot')
+			Tc2Config.msgWarning(self, 'Could not open screenshot')
 			return
 		fileInfo = QtCore.QFileInfo(fileName)
 		screenshotName = fileInfo.baseName()
@@ -235,15 +235,15 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		if self._lastScreenshotInfo is None:
 			self.actionInfo.setEnabled(False)
 			return
-		dlg = TableCrabDialogScreenshotInfo.DialgScreenshotInfo(self._lastScreenshotInfo, parent=self)
+		dlg = Tc2DialogScreenshotInfo.DialgScreenshotInfo(self._lastScreenshotInfo, parent=self)
 		dlg.show()
 
 	def onActionSaveTriggered(self):
 		if self.label.pixmap() is None:
 			self.actionSave.setEnabled(False)
 			return
-		imageFormats = imageFormats = TableCrabConfig.readWriteImageFormats()
-		fileName = TableCrabConfig.dlgOpenSaveFile(
+		imageFormats = imageFormats = Tc2Config.readWriteImageFormats()
+		fileName = Tc2Config.dlgOpenSaveFile(
 				parent=self,
 				openFile=False,
 				title='Save Screenshot..',
@@ -256,7 +256,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		fileInfo = QtCore.QFileInfo(fileName)
 		format = fileInfo.suffix().toLower()
 		if not self.label.pixmap().save(fileName, format):
-			TableCrabConfig.msgWarning(self, 'Could Not Save Screenshot')
+			Tc2Config.msgWarning(self, 'Could Not Save Screenshot')
 
 	def onInit(self):
 		self.adjustActions()
@@ -271,4 +271,4 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		pixmap = self.label.pixmap()
 		if pixmap is None:
 			pixmap = QtGui.QPixmap()
-		TableCrabConfig.globalObject.widgetScreenshotSet.emit(pixmap)
+		Tc2Config.globalObject.widgetScreenshotSet.emit(pixmap)

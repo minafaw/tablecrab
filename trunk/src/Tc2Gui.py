@@ -1,13 +1,13 @@
 
-import TableCrabConfig
-import TableCrabWin32
-import TableCrabGuiSettings
-import TableCrabGuiSetup
-import TableCrabGuiHotkeys
-import TableCrabGuiHandViewer
-import TableCrabGuiHelp
-import TableCrabSiteManager
-import TableCrabDialogException
+import Tc2Config
+import Tc2Win32
+import Tc2GuiSettings
+import Tc2GuiSetup
+import Tc2GuiHotkeys
+import Tc2GuiHandViewer
+import Tc2GuiHelp
+import Tc2SiteManager
+import Tc2DialogException
 
 from PyQt4 import QtCore, QtGui
 import sys, os
@@ -32,11 +32,11 @@ class Gui(QtGui.QMainWindow):
 			self.doubleClicked.emit()
 
 	def __init__(self):
-		scope = TableCrabConfig.settingsValue('Gui/SingleApplication/Scope', '').toString()
-		if scope not in TableCrabWin32.SingleApplication.Scopes:
-			scope = TableCrabConfig.SingleApplicationScopeDefault
-		self.singleApplication = TableCrabWin32.SingleApplication(
-				TableCrabConfig.SingleApplicationMagicString,
+		scope = Tc2Config.settingsValue('Gui/SingleApplication/Scope', '').toString()
+		if scope not in Tc2Win32.SingleApplication.Scopes:
+			scope = Tc2Config.SingleApplicationScopeDefault
+		self.singleApplication = Tc2Win32.SingleApplication(
+				Tc2Config.SingleApplicationMagicString,
 				scope=scope,
 				parent=None
 				)
@@ -50,15 +50,15 @@ class Gui(QtGui.QMainWindow):
 			# none of the above is save anyways. only way to make this a bit more secure would
 			# be to start a conversation via WM_COPYDATA, trying to find out who is holding the mutex.
 			# i'd say ..not worth the efford.
-			raise RuntimeError('%s is already running' % TableCrabConfig.ApplicationName)
+			raise RuntimeError('%s is already running' % Tc2Config.ApplicationName)
 
 		QtGui.QMainWindow.__init__(self)
 
-		self.setWindowTitle(TableCrabConfig.ReleaseName)
-		self.setWindowIcon( QtGui.QIcon(TableCrabConfig.Pixmaps.tableCrab()) )
-		self.restoreGeometry( TableCrabConfig.settingsValue('Gui/Geometry', QtCore.QByteArray()).toByteArray() )
+		self.setWindowTitle(Tc2Config.ReleaseName)
+		self.setWindowIcon( QtGui.QIcon(Tc2Config.Pixmaps.tableCrab()) )
+		self.restoreGeometry( Tc2Config.settingsValue('Gui/Geometry', QtCore.QByteArray()).toByteArray() )
 
-		self.siteManager = TableCrabSiteManager.SiteManager(parent=self)
+		self.siteManager = Tc2SiteManager.SiteManager(parent=self)
 
 		# need to store some state data for the statusBar so we can restore on tab changes
 		# error messages are displayed as longs as there is no new feedback from the current tab
@@ -82,15 +82,15 @@ class Gui(QtGui.QMainWindow):
 		# setup tabs
 		self.tabWidget = QtGui.QTabWidget(self)
 		self.setCentralWidget(self.tabWidget)
-		self.tabSetup = self._addTab(TableCrabGuiSetup.FrameSetup, 'Se&tup')
-		self.tabHotkeys = self._addTab(TableCrabGuiHotkeys.FrameHotkeys, 'Hot&keys')
-		self.tabHand = self._addTab(TableCrabGuiHandViewer.FrameHandViewer, 'H&and')
-		self.tabSettings = self._addTab(TableCrabGuiSettings.FrameSettings, 'Settin&gs')
-		self.tabHelp = self._addTab(TableCrabGuiHelp.FrameHelp, '&Help')
+		self.tabSetup = self._addTab(Tc2GuiSetup.FrameSetup, 'Se&tup')
+		self.tabHotkeys = self._addTab(Tc2GuiHotkeys.FrameHotkeys, 'Hot&keys')
+		self.tabHand = self._addTab(Tc2GuiHandViewer.FrameHandViewer, 'H&and')
+		self.tabSettings = self._addTab(Tc2GuiSettings.FrameSettings, 'Settin&gs')
+		self.tabHelp = self._addTab(Tc2GuiHelp.FrameHelp, '&Help')
 		self.tabWidget.currentChanged.connect(self.onTabCurrentChanged)
 
 		# connect global signals
-		g = TableCrabConfig.globalObject
+		g = Tc2Config.globalObject
 		g.init.connect(self.onInit)
 		g.feedback.connect(self.onFeedback)
 		g.feedbackException.connect(self.onFeedbackException)
@@ -102,24 +102,24 @@ class Gui(QtGui.QMainWindow):
 	#--------------------------------------------------------------------------------------------------------------
 	def closeEvent(self, event):
 		self.singleApplication.close()
-		TableCrabConfig.globalObject.closeEvent.emit(event)
-		TableCrabConfig.mouseHook.stop()
-		TableCrabConfig.keyboardHook.stop()
-		TableCrabConfig.windowHook.stop()
-		TableCrabConfig.settingsSetValue('Gui/TabCurrent', self.tabWidget.currentIndex())
-		TableCrabConfig.settingsSetValue('Gui/Geometry', self.saveGeometry() )
+		Tc2Config.globalObject.closeEvent.emit(event)
+		Tc2Config.mouseHook.stop()
+		Tc2Config.keyboardHook.stop()
+		Tc2Config.windowHook.stop()
+		Tc2Config.settingsSetValue('Gui/TabCurrent', self.tabWidget.currentIndex())
+		Tc2Config.settingsSetValue('Gui/Geometry', self.saveGeometry() )
 		return QtGui.QMainWindow.closeEvent(self, event)
 
 	def show(self):
 		QtGui.QMainWindow.show(self)
-		TableCrabConfig.mouseHook.start()
-		TableCrabConfig.keyboardHook.start()
-		TableCrabConfig.windowHook.start()
+		Tc2Config.mouseHook.start()
+		Tc2Config.keyboardHook.start()
+		Tc2Config.windowHook.start()
 		hwnd = self.effectiveWinId()
 		if hwnd is None:
 			raise RuntimeError('main window has no valid hwnd')
 		self.siteManager.tableCrabActionHandler().setHwndMain( int(hwnd) )
-		TableCrabConfig.globalObject.init.emit()
+		Tc2Config.globalObject.init.emit()
 
 	#--------------------------------------------------------------------------------------------------------------
 	# methods
@@ -156,22 +156,22 @@ class Gui(QtGui.QMainWindow):
 
 	def onFeedbackException(self, exception):
 		#NOTE: we assume "exception" is never empty string
-		self._feedbackMessages[None] = TableCrabConfig.cleanException(exception)
+		self._feedbackMessages[None] = Tc2Config.cleanException(exception)
 		self.labelStatus.setText(ErrMessage)
 
 	def onFeedbackMessage(self, qString):
-		self.statusBar().showMessage('>>' + qString, TableCrabConfig.StatusBarMessageTimeout * 1000)
+		self.statusBar().showMessage('>>' + qString, Tc2Config.StatusBarMessageTimeout * 1000)
 
 	def onInit(self):
-		self.tabWidget.setCurrentIndex( TableCrabConfig.settingsValue('Gui/TabCurrent', QtCore.QVariant()).toInt()[0] )
+		self.tabWidget.setCurrentIndex( Tc2Config.settingsValue('Gui/TabCurrent', QtCore.QVariant()).toInt()[0] )
 
 	def onLabelFeedbackDoubleClicked(self):
 		lastError = self._feedbackMessages[None]
 		if lastError:
-			dlg = TableCrabDialogException.DialogException(lastError, parent=self)
-			dlg.restoreGeometry( TableCrabConfig.settingsValue('Gui/DialogException/Geometry', QtCore.QByteArray()).toByteArray())
+			dlg = Tc2DialogException.DialogException(lastError, parent=self)
+			dlg.restoreGeometry( Tc2Config.settingsValue('Gui/DialogException/Geometry', QtCore.QByteArray()).toByteArray())
 			dlg.exec_()
-			TableCrabConfig.settingsSetValue('Gui/DialogException/Geometry', dlg.saveGeometry() )
+			Tc2Config.settingsSetValue('Gui/DialogException/Geometry', dlg.saveGeometry() )
 
 	def onTabCurrentChanged(self, index):
 		if index < 0:
@@ -195,7 +195,7 @@ def main(argv=None, run=True):
 		else:
 			del argv[i]
 			if os.path.isfile(fileName) or os.path.islink(fileName):
-				TableCrabConfig.setSettings(QtCore.QSettings(fileName, QtCore.QSettings.IniFormat))
+				Tc2Config.setSettings(QtCore.QSettings(fileName, QtCore.QSettings.IniFormat))
 			else:
 				raise ValueError('No such config file: %s' % fileName)
 

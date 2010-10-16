@@ -4,11 +4,11 @@
 #			so we may have to reimplement tool tips
 #TODO: would be nice to have line numbers in HandCss editor
 
-import TableCrabConfig
-import TableCrabGuiSettingsGlobal
-import TableCrabGuiSettingsPokerStars
-import TableCrabGuiSettingsHandViewer
-import TableCrabGuiSettingsHandViewerStyleSheet
+import Tc2Config
+import Tc2GuiSettingsGlobal
+import Tc2GuiSettingsPokerStars
+import Tc2GuiSettingsHandViewer
+import Tc2GuiSettingsHandViewerStyleSheet
 
 from PyQt4 import QtCore, QtGui
 
@@ -30,19 +30,19 @@ class FrameSettings(QtGui.QFrame):
 		self.splitter.addWidget(self.stack)
 
 		#
-		self.settingsGlobal = self.addSetting('Global', TableCrabGuiSettingsGlobal.FrameSettings(parent=self.stack), 'Shift+G', 'Global (Shift+G)')
-		self.settingsPokerStars = self.addSetting('PokerStars', TableCrabGuiSettingsPokerStars.FrameSettings(parent=self.stack), 'Shift+P', 'PokerStars (Shift+P)')
-		self.settingsHand = self.addSetting('Hand viewer', TableCrabGuiSettingsHandViewer.FrameSettings(parent=self.stack), 'Shift+H', 'Hand viewer (Shift+H)')
-		self.settingsHandStyleSheet = self.addSetting('Hand viewer style sheet', TableCrabGuiSettingsHandViewerStyleSheet.FrameSettings(parent=self.stack), 'Shift+S', 'Hand viewer style sheet (Shift+S)')
+		self.settingsGlobal = self.addSetting('Global', Tc2GuiSettingsGlobal.FrameSettings(parent=self.stack), 'Shift+G', 'Global (Shift+G)')
+		self.settingsPokerStars = self.addSetting('PokerStars', Tc2GuiSettingsPokerStars.FrameSettings(parent=self.stack), 'Shift+P', 'PokerStars (Shift+P)')
+		self.settingsHand = self.addSetting('Hand viewer', Tc2GuiSettingsHandViewer.FrameSettings(parent=self.stack), 'Shift+H', 'Hand viewer (Shift+H)')
+		self.settingsHandStyleSheet = self.addSetting('Hand viewer style sheet', Tc2GuiSettingsHandViewerStyleSheet.FrameSettings(parent=self.stack), 'Shift+S', 'Hand viewer style sheet (Shift+S)')
 
-		TableCrabConfig.globalObject.init.connect(self.onInit)
-		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
-		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(self.onSettingAlternatingRowColorsChanged)
+		Tc2Config.globalObject.init.connect(self.onInit)
+		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
+		Tc2Config.globalObject.settingAlternatingRowColorsChanged.connect(self.onSettingAlternatingRowColorsChanged)
 
 		self.layout()
 
 	def layout(self):
-		grid = TableCrabConfig.GridBox(self)
+		grid = Tc2Config.GridBox(self)
 		grid.col(self.splitter)
 
 	def addSetting(self, name, widget, shortcut, toolTip):
@@ -69,13 +69,13 @@ class FrameSettings(QtGui.QFrame):
 		self.stack.setCurrentIndex(row)
 
 	def onCloseEvent(self, event):
-		TableCrabConfig.settingsSetValue('Gui/Settings/SplitterState', self.splitter.saveState())
-		TableCrabConfig.settingsSetValue('Gui/Settings/CurrentIndex', self.stack.currentIndex())
+		Tc2Config.settingsSetValue('Gui/Settings/SplitterState', self.splitter.saveState())
+		Tc2Config.settingsSetValue('Gui/Settings/CurrentIndex', self.stack.currentIndex())
 
 	def onInit(self):
-		self.listWidget.setAlternatingRowColors( TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() )
-		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Settings/SplitterState', QtCore.QByteArray()).toByteArray() )
-		self.listWidget.setCurrentRow( TableCrabConfig.settingsValue('Gui/Settings/CurrentIndex', 0).toInt()[0] )
+		self.listWidget.setAlternatingRowColors( Tc2Config.settingsValue('Gui/AlternatingRowColors', False).toBool() )
+		self.splitter.restoreState( Tc2Config.settingsValue('Gui/Settings/SplitterState', QtCore.QByteArray()).toByteArray() )
+		self.listWidget.setCurrentRow( Tc2Config.settingsValue('Gui/Settings/CurrentIndex', 0).toInt()[0] )
 
 	def onSettingAlternatingRowColorsChanged(self, flag):
 		self.listWidget.setAlternatingRowColors(flag)

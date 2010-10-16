@@ -2,11 +2,11 @@
 #TODO: for some reason ButtonCheck and ButtonRaise are not working as expected postflop (preflop is ok). we have to trigger
 #				hotkey two times (always, sometimes?) to get the desired effect. double clicking right now ..have to experiment.
 
-import TableCrabConfig
-import TableCrabWin32
-import TableCrabHotkeys
-import TableCrabTemplates
-from TableCrabLib.gocr import gocr
+import Tc2Config
+import Tc2Win32
+import Tc2Hotkeys
+import Tc2Templates
+from Tc2Lib.gocr import gocr
 
 import re, time, base64
 
@@ -158,40 +158,40 @@ class EventHandler(QtCore.QObject):
 	def handleWindowCreated(self, hwnd):
 
 		if self.isPopupNews(hwnd):
-			if TableCrabConfig.settingsValue('PokerStars/AutoClosePopupNews', False).toBool():
-				TableCrabWin32.windowClose(hwnd)
-				TableCrabConfig.globalObject.feedbackMessage.emit('Closed Popup News')
+			if Tc2Config.settingsValue('PokerStars/AutoClosePopupNews', False).toBool():
+				Tc2Win32.windowClose(hwnd)
+				Tc2Config.globalObject.feedbackMessage.emit('Closed Popup News')
 			return True
 
 		elif self.isTourneyRegistrationMessageBox(hwnd):
-			if TableCrabConfig.settingsValue('PokerStars/AutoCloseTourneyRegistrationBoxes', False).toBool():
-				buttons = TableCrabWin32.windowGetButtons(hwnd)
+			if Tc2Config.settingsValue('PokerStars/AutoCloseTourneyRegistrationBoxes', False).toBool():
+				buttons = Tc2Win32.windowGetButtons(hwnd)
 				if len(buttons) != 1: return
 				if not 'OK' in buttons: return
 				##windowClose(hwnd)
-				TableCrabWin32.windowClickButton(buttons['OK'])
-				TableCrabConfig.globalObject.feedbackMessage.emit('Closed Tourney Registration Message Box')
+				Tc2Win32.windowClickButton(buttons['OK'])
+				Tc2Config.globalObject.feedbackMessage.emit('Closed Tourney Registration Message Box')
 			return True
 
 		elif self.isTableMessageBox(hwnd):
-			if TableCrabConfig.settingsValue('PokerStars/AutoCloseTableMessageBoxes', False).toBool():
-				buttons = TableCrabWin32.windowGetButtons(hwnd)
+			if Tc2Config.settingsValue('PokerStars/AutoCloseTableMessageBoxes', False).toBool():
+				buttons = Tc2Win32.windowGetButtons(hwnd)
 				if len(buttons) != 1: return
 				if not 'OK' in buttons: return
-				TableCrabWin32.windowClickButton(buttons['OK'])
-				TableCrabConfig.globalObject.feedbackMessage.emit('Closed Table Message Box')
+				Tc2Win32.windowClickButton(buttons['OK'])
+				Tc2Config.globalObject.feedbackMessage.emit('Closed Table Message Box')
 			return True
 
 		elif self.isLogIn(hwnd):
 			if self._pokerStarsLoginBox is None:
 				self._pokerStarsLoginBox = hwnd
-				if TableCrabConfig.settingsValue('PokerStars/AutoCloseLogin', False).toBool():
-					buttons = TableCrabWin32.windowGetButtons(hwnd)
+				if Tc2Config.settingsValue('PokerStars/AutoCloseLogin', False).toBool():
+					buttons = Tc2Win32.windowGetButtons(hwnd)
 					if sorted(buttons) == ['', 'Cancel', 'Create New Account...', 'Forgot User ID / Password...', 'OK']:
-						if TableCrabWin32.windowCheckboxIsChecked(buttons['']):
-							if TableCrabWin32.windowIsEnabled(buttons['OK']):
-								TableCrabWin32.windowClickButton(buttons['OK'])
-								TableCrabConfig.globalObject.feedbackMessage.emit('Closed Log In Box')
+						if Tc2Win32.windowCheckboxIsChecked(buttons['']):
+							if Tc2Win32.windowIsEnabled(buttons['OK']):
+								Tc2Win32.windowClickButton(buttons['OK'])
+								Tc2Config.globalObject.feedbackMessage.emit('Closed Log In Box')
 				return True
 
 		return False
@@ -202,12 +202,12 @@ class EventHandler(QtCore.QObject):
 	def handleWindowGainedForeground(self, hwnd):
 		template = self.tableTemplate(hwnd)
 		if template is not None:
-			TableCrabConfig.globalObject.feedbackMessage.emit(template.name)
-			if TableCrabConfig.settingsValue('PokerStars/MoveMouseToActiveTable', False).toBool():
-				if not TableCrabWin32.mouseButtonsDown():
+			Tc2Config.globalObject.feedbackMessage.emit(template.name)
+			if Tc2Config.settingsValue('PokerStars/MoveMouseToActiveTable', False).toBool():
+				if not Tc2Win32.mouseButtonsDown():
 					point = template.emptySpace
-					point = TableCrabWin32.windowClientPointToScreenPoint(hwnd, point)
-					TableCrabWin32.mouseSetPos(point)
+					point = Tc2Win32.windowClientPointToScreenPoint(hwnd, point)
+					Tc2Win32.mouseSetPos(point)
 			return True
 		return False
 
@@ -222,15 +222,15 @@ class EventHandler(QtCore.QObject):
 
 			hotkeyID = hotkey.id()
 
-			if hotkeyID == TableCrabHotkeys.HotkeyTableSizeNext.id():
+			if hotkeyID == Tc2Hotkeys.HotkeyTableSizeNext.id():
 				if inputEvent.keyIsDown:
 					#  find next table template that is not of current tables size
-					size = TableCrabWin32.windowGetClientRect(hwnd).size()
+					size = Tc2Win32.windowGetClientRect(hwnd).size()
 					template = None
 					pickNext = False
-					for i, tmp_template in enumerate(TableCrabConfig.templateManager):
-						if tmp_template.id() == TableCrabTemplates.TemplatePokerStarsTable.id():
-							if tmp_template.size	== TableCrabConfig.SizeNone:
+					for i, tmp_template in enumerate(Tc2Config.templateManager):
+						if tmp_template.id() == Tc2Templates.TemplatePokerStarsTable.id():
+							if tmp_template.size	== Tc2Config.SizeNone:
 								continue
 							if pickNext:
 								template = tmp_template
@@ -242,10 +242,10 @@ class EventHandler(QtCore.QObject):
 					# resize table to next templates size
 					if template is not None:
 						#NOTE: on wine tables do not get redrawn on resize [ http://bugs.winehq.org/show_bug.cgi?id=5941 ].
-						# 	for some reson sending F5 via KeyboardInput has no effect whatsoever, so we tell TableCrabWin32
+						# 	for some reson sending F5 via KeyboardInput has no effect whatsoever, so we tell Tc2Win32
 						# to wrap resizing into enter- exitsizemove messages. tested on winXP as well - works nicely
-						TableCrabWin32.windowSetClientSize(hwnd, template.size, sendSizeMove=True)
-						TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (hotkey.menuName(), template.name) )
+						Tc2Win32.windowSetClientSize(hwnd, template.size, sendSizeMove=True)
+						Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (hotkey.menuName(), template.name) )
 				inputEvent.accept = True
 				return True
 
@@ -255,29 +255,29 @@ class EventHandler(QtCore.QObject):
 				return False
 
 			handler = None
-			if hotkeyID == TableCrabHotkeys.HotkeyCheck.id():
+			if hotkeyID == Tc2Hotkeys.HotkeyCheck.id():
 				handler = self.tableHandleCheck
-			elif hotkeyID == TableCrabHotkeys.HotkeyFold.id():
+			elif hotkeyID == Tc2Hotkeys.HotkeyFold.id():
 				handler = self.tableHandleFold
-			elif hotkeyID == TableCrabHotkeys.HotkeyRaise.id():
+			elif hotkeyID == Tc2Hotkeys.HotkeyRaise.id():
 				handler = self.tableHandleRaise
-			elif hotkeyID == TableCrabHotkeys.HotkeyAll_In.id():
+			elif hotkeyID == Tc2Hotkeys.HotkeyAll_In.id():
 				handler = self.tableHandleAll_In
-			elif hotkeyID == TableCrabHotkeys.HotkeyHilightBet.id():
+			elif hotkeyID == Tc2Hotkeys.HotkeyHilightBet.id():
 				handler = self.tableHandleHilightBet
-			elif hotkeyID == TableCrabHotkeys.HotkeyMultiplyBlind.id():
+			elif hotkeyID == Tc2Hotkeys.HotkeyMultiplyBlind.id():
 				handler = self.tableHandleMultiplyBlind
-			elif hotkeyID == TableCrabHotkeys.HotkeyAddToBet.id():
+			elif hotkeyID == Tc2Hotkeys.HotkeyAddToBet.id():
 				handler = self.tableHandleAddToBet
-			elif hotkeyID == TableCrabHotkeys.HotkeySubtractFromBet.id():
+			elif hotkeyID == Tc2Hotkeys.HotkeySubtractFromBet.id():
 				handler = self.tableHandleSubtractFromBet
-			elif hotkeyID == TableCrabHotkeys.HotkeyMultiplyBet.id():
+			elif hotkeyID == Tc2Hotkeys.HotkeyMultiplyBet.id():
 				handler = self.tableHandleMultiplyBet
-			elif hotkeyID == TableCrabHotkeys.HotkeyBetPot.id():
+			elif hotkeyID == Tc2Hotkeys.HotkeyBetPot.id():
 				handler = self.tableHandleBetPot
-			elif hotkeyID == TableCrabHotkeys.HotkeyReplayer.id():
+			elif hotkeyID == Tc2Hotkeys.HotkeyReplayer.id():
 				handler = self.tableHandleReplayer
-			elif hotkeyID == TableCrabHotkeys.HotkeyInstantHandHistory.id():
+			elif hotkeyID == Tc2Hotkeys.HotkeyInstantHandHistory.id():
 				handler = self.tableHandleInstantHandHistory
 
 			if handler is not None:
@@ -292,76 +292,76 @@ class EventHandler(QtCore.QObject):
 	# so ..i use a hack. we identify a window as being a stars window if it (or one of its parents) contains a widget classname.startswith('PokerStars')
 	# nasty and errorprone, but the most reasonalbe i could come up with now
 	def hasPokerStarsWidgets(self, hwnd):
-		for hwnd in TableCrabWin32.windowChildren(hwnd):
-			if TableCrabWin32.windowGetClassName(hwnd).startswith('PokerStars'):	return True
+		for hwnd in Tc2Win32.windowChildren(hwnd):
+			if Tc2Win32.windowGetClassName(hwnd).startswith('PokerStars'):	return True
 		return False
 
 	def isPokerStarsWindow(self, hwnd):
 		while hwnd:
 			if self.hasPokerStarsWidgets(hwnd): return True
-			hwnd = TableCrabWin32.windowGetParent(hwnd)
+			hwnd = Tc2Win32.windowGetParent(hwnd)
 		return False
 
 	TitleLobby = 'PokerStars Lobby'
 	ClassLobby = '#32770'	# duh, stars. main windows should never be dialogs
 	def isLobby(self, hwnd):
-		if TableCrabWin32.windowGetClassName(hwnd) != self.ClassLobby: return False
-		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleLobby)).startswith(self.TitleLobby): return False
+		if Tc2Win32.windowGetClassName(hwnd) != self.ClassLobby: return False
+		if not Tc2Win32.windowGetText(hwnd, maxSize=len(self.TitleLobby)).startswith(self.TitleLobby): return False
 		if not self.isPokerStarsWindow(hwnd): return False
 		return True
 
 	ClassTable = 'PokerStarsTableFrameClass'
 	def isTable(self, hwnd):
-		if not TableCrabWin32.windowGetClassName(hwnd) == self.ClassTable: return False
+		if not Tc2Win32.windowGetClassName(hwnd) == self.ClassTable: return False
 		return True
 
 	ClassInstantHandHistory = '#32770'
 	TitleInstantHandHistory = 'Instant Hand History'
 	def isInstantHandHistory(self, hwnd):
-		if TableCrabWin32.windowGetClassName(hwnd) != self.ClassInstantHandHistory: return False
-		if TableCrabWin32.windowGetText(hwnd) != self.TitleInstantHandHistory: return False
+		if Tc2Win32.windowGetClassName(hwnd) != self.ClassInstantHandHistory: return False
+		if Tc2Win32.windowGetText(hwnd) != self.TitleInstantHandHistory: return False
 		if not self.isPokerStarsWindow(hwnd): return False
 		return True
 
 	ClassNews = '#32770'
 	TitleNews = 'News'
 	def isPopupNews(self, hwnd):
-		if TableCrabWin32.windowGetClassName(hwnd) != self.ClassNews: return False
-		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleNews)) == self.TitleNews: return False
+		if Tc2Win32.windowGetClassName(hwnd) != self.ClassNews: return False
+		if not Tc2Win32.windowGetText(hwnd, maxSize=len(self.TitleNews)) == self.TitleNews: return False
 		if not self.isPokerStarsWindow(hwnd): return False
 		return True
 
 	TitleTourneyRegistrationMessageBox = 'Tournament Registration'
 	ClassTourneyRegistrationMessageBox = '#32770'
 	def isTourneyRegistrationMessageBox(self, hwnd):
-		if TableCrabWin32.windowGetClassName(hwnd) != self.ClassTourneyRegistrationMessageBox: return False
-		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleTourneyRegistrationMessageBox)) == self.TitleTourneyRegistrationMessageBox: return False
+		if Tc2Win32.windowGetClassName(hwnd) != self.ClassTourneyRegistrationMessageBox: return False
+		if not Tc2Win32.windowGetText(hwnd, maxSize=len(self.TitleTourneyRegistrationMessageBox)) == self.TitleTourneyRegistrationMessageBox: return False
 		if not self.isPokerStarsWindow(hwnd): return False
 		return True
 
 	TitleTableMessageBox = 'PokerStars'
 	ClassTableMessageBox = '#32770'
 	def isTableMessageBox(self, hwnd):
-		if TableCrabWin32.windowGetClassName(hwnd) != self.ClassTableMessageBox: return False
-		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleTableMessageBox)) == self.TitleTableMessageBox: return False
-		hwndParent = TableCrabWin32.windowGetParent(hwnd)
+		if Tc2Win32.windowGetClassName(hwnd) != self.ClassTableMessageBox: return False
+		if not Tc2Win32.windowGetText(hwnd, maxSize=len(self.TitleTableMessageBox)) == self.TitleTableMessageBox: return False
+		hwndParent = Tc2Win32.windowGetParent(hwnd)
 		if not self.isTable(hwndParent): return False
 		return True
 
 	TitleLogIn = 'Log In'
 	ClassLogIn = '#32770'
 	def isLogIn(self, hwnd):
-		if TableCrabWin32.windowGetClassName(hwnd) != self.ClassLogIn: return False
-		if not TableCrabWin32.windowGetText(hwnd, maxSize=len(self.TitleLogIn)) == self.TitleLogIn: return False
-		hwndParent = TableCrabWin32.windowGetParent(hwnd)
+		if Tc2Win32.windowGetClassName(hwnd) != self.ClassLogIn: return False
+		if not Tc2Win32.windowGetText(hwnd, maxSize=len(self.TitleLogIn)) == self.TitleLogIn: return False
+		hwndParent = Tc2Win32.windowGetParent(hwnd)
 		if not self.isPokerStarsWindow(hwnd): return False
 		return True
 
 	def tableTemplate(self, hwnd):
 		if self.isTable(hwnd):
-			rect = TableCrabWin32.windowGetClientRect(hwnd)
-			for template in TableCrabConfig.templateManager:
-				if template.id() == TableCrabTemplates.TemplatePokerStarsTable.id():
+			rect = Tc2Win32.windowGetClientRect(hwnd)
+			for template in Tc2Config.templateManager:
+				if template.id() == Tc2Templates.TemplatePokerStarsTable.id():
 					if template.size == rect.size():
 						return template
 		return None
@@ -372,7 +372,7 @@ class EventHandler(QtCore.QObject):
 	ClassTableBetBox = 'PokerStarsSliderEditorClass'
 	def tableReadData(self, hwnd):
 		data = {}
-		text = TableCrabWin32.windowGetText(hwnd, maxSize=TableCrabConfig.MaxWindowText )
+		text = Tc2Win32.windowGetText(hwnd, maxSize=Tc2Config.MaxWindowText )
 		if not text: return data
 		match = self.PatAmountSB.match(text)
 		if match is None:
@@ -382,12 +382,12 @@ class EventHandler(QtCore.QObject):
 		if match is None:
 			raise ValueError('could not determine smallBlind: %r' % text)
 		data['bigBlind'] = float(match.group(1))
-		hwndBetBox = TableCrabWin32.windowFindChild(hwnd, self.ClassTableBetBox)
+		hwndBetBox = Tc2Win32.windowFindChild(hwnd, self.ClassTableBetBox)
 		data['hwndBetBox'] =  hwndBetBox
-		data['betBoxIsVisible'] = TableCrabWin32.windowIsVisible(hwndBetBox) if hwndBetBox else False
+		data['betBoxIsVisible'] = Tc2Win32.windowIsVisible(hwndBetBox) if hwndBetBox else False
 		data['bet'] = None
 		if data['hwndBetBox']:
-			p = TableCrabWin32.windowGetText(hwndBetBox, maxSize=TableCrabConfig.MaxPokerStarsBetBoxText)
+			p = Tc2Win32.windowGetText(hwndBetBox, maxSize=Tc2Config.MaxPokerStarsBetBoxText)
 			try:
 				data['bet'] = float(p)
 			except ValueError: pass
@@ -402,17 +402,17 @@ class EventHandler(QtCore.QObject):
 	#NOTE: "Edit" is actually a child widget of 'PokerStarsNoteSelectorClass', so we could add more tests in code below if required
 	ClassNoteEditorBox = 'Edit'
 	def tableHotkeysEnabled(self, hwnd):
-		point = TableCrabWin32.mouseGetPos()
-		hwndUnderMouse = TableCrabWin32.windowFromPoint(point)
-		className = TableCrabWin32.windowGetClassName(hwndUnderMouse)
+		point = Tc2Win32.mouseGetPos()
+		hwndUnderMouse = Tc2Win32.windowFromPoint(point)
+		className = Tc2Win32.windowGetClassName(hwndUnderMouse)
 		if className in (self.ClassChat, self.ClassNoteEditor, self.ClassChatEditor, self.ClassNoteEditorBox, self.ClassInfoBox):
 			return False
 		return True
 
 	def tableGetPoint(self,pointName, template):
 		point = template.points[pointName]
-		if point == TableCrabConfig.PointNone:
-			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point %s Not Set -' % (template.name,pointName) )
+		if point == Tc2Config.PointNone:
+			Tc2Config.globalObject.feedbackMessage.emit('%s: -- Point %s Not Set -' % (template.name,pointName) )
 			return None
 		return point
 
@@ -425,16 +425,16 @@ class EventHandler(QtCore.QObject):
 		# 4) there is no way we can check if our input triggered the desired effect
 		# 5) we dont know when PS schows us buttons or checkboxes. bet box being
 		#    visible gives us an indicator at times, but is useless for example if s.o. is all-in
-		mi = TableCrabWin32.MouseInput()
-		mi.leftClick(point, hwnd=hwnd).send(restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool())
+		mi = Tc2Win32.MouseInput()
+		mi.leftClick(point, hwnd=hwnd).send(restoreCursor=Tc2Config.settingsValue('RestoreMousePosition', False).toBool())
 		# workaround to send double clicks. this handles checkboxes as expected but may trigger
 		# accidental clicks on unrelated tables. we add an abitrary timeout to check if PS has thrown another
 		# table to the foreground. no way to get this fail save, we have a race condition
-		##time.sleep( min(0.05, TableCrabWin32.mouseDoubleClickTime()) )
-		##hwnd2 = TableCrabWin32.windowForeground()
+		##time.sleep( min(0.05, Tc2Win32.mouseDoubleClickTime()) )
+		##hwnd2 = Tc2Win32.windowForeground()
 		##if hwnd == hwnd2:
-		##	mi.leftClick(point, hwnd=hwnd).send(restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool())
-		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+		##	mi.leftClick(point, hwnd=hwnd).send(restoreCursor=Tc2Config.settingsValue('RestoreMousePosition', False).toBool())
+		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def tableHandleCheck(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
@@ -522,10 +522,10 @@ class EventHandler(QtCore.QObject):
 		pointSliderEnd = self.tableGetPoint('BetSliderEnd', template)
 		if pointSliderEnd is None:
 			return
-		mi = TableCrabWin32.MouseInput()
+		mi = Tc2Win32.MouseInput()
 		mi.leftDrag(pointSliderStart, pointSliderEnd, hwnd=hwnd)
-		mi.send(restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool())
-		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+		mi.send(restoreCursor=Tc2Config.settingsValue('RestoreMousePosition', False).toBool())
+		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def tableHandleMultiplyBlind(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
@@ -534,17 +534,17 @@ class EventHandler(QtCore.QObject):
 		if not data['betBoxIsVisible']: return
 		if data['bet'] is None: return
 		if inputEvent.steps == 0: return
-		if hotkey.baseValue() == TableCrabConfig.BigBlind:
+		if hotkey.baseValue() == Tc2Config.BigBlind:
 			newBet = data['bigBlind'] * hotkey.multiplier() * inputEvent.steps
-		elif hotkey.baseValue() == TableCrabConfig.SmallBlind:
+		elif hotkey.baseValue() == Tc2Config.SmallBlind:
 			newBet = data['smallBlind'] * hotkey.multiplier() * inputEvent.steps
 		else:
 			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
 		#TODO: adjust bet to 'Settings/RoundBets' ? kind of contradictionary
-		newBet = TableCrabConfig.formatedBet(newBet, blinds=None)
+		newBet = Tc2Config.formatedBet(newBet, blinds=None)
 		#NOTE: the box gets mesed up when unicode is thrown at it
-		TableCrabWin32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
-		TableCrabConfig.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
+		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
+		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
 
 	def tableHandleAddToBet(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
@@ -553,17 +553,17 @@ class EventHandler(QtCore.QObject):
 		if not data['betBoxIsVisible']: return
 		if data['bet'] is None: return
 		if inputEvent.steps == 0: return
-		if hotkey.baseValue() == TableCrabConfig.BigBlind:
+		if hotkey.baseValue() == Tc2Config.BigBlind:
 			newBet = data['bet'] + (data['bigBlind'] * hotkey.multiplier() * inputEvent.steps)
-		elif hotkey.baseValue() == TableCrabConfig.SmallBlind:
+		elif hotkey.baseValue() == Tc2Config.SmallBlind:
 			newBet = data['bet'] + (data['smallBlind'] * hotkey.multiplier() * inputEvent.steps)
 		else:
 			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
 		#TODO: adjust bet to 'Settings/RoundBets' ? kind of contradictionary
-		newBet = TableCrabConfig.formatedBet(newBet, blinds=None)
+		newBet = Tc2Config.formatedBet(newBet, blinds=None)
 		#NOTE: the box gets mesed up when unicode is thrown at it
-		TableCrabWin32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
-		TableCrabConfig.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
+		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
+		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
 
 	def tableHandleSubtractFromBet(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
@@ -572,17 +572,17 @@ class EventHandler(QtCore.QObject):
 		if not data['betBoxIsVisible']: return
 		if data['bet'] is None: return
 		if inputEvent.steps == 0: return
-		if hotkey.baseValue() == TableCrabConfig.BigBlind:
+		if hotkey.baseValue() == Tc2Config.BigBlind:
 			newBet = data['bet'] - (data['bigBlind'] * hotkey.multiplier() * inputEvent.steps)
-		elif hotkey.baseValue() == TableCrabConfig.SmallBlind:
+		elif hotkey.baseValue() == Tc2Config.SmallBlind:
 			newBet = data['bet'] - (data['smallBlind'] * hotkey.multiplier() * inputEvent.steps)
 		else:
 			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
 		#TODO: adjust bet to 'Settings/RoundBets' ? kind of contradictionary
-		newBet = TableCrabConfig.formatedBet(newBet, blinds=None)
+		newBet = Tc2Config.formatedBet(newBet, blinds=None)
 		#NOTE: the box gets mesed up when unicode is thrown at it
-		TableCrabWin32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
-		TableCrabConfig.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
+		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
+		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
 
 	def tableHandleMultiplyBet(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
@@ -592,10 +592,10 @@ class EventHandler(QtCore.QObject):
 		if data['bet'] is None: return
 		if inputEvent.steps == 0: return
 		newBet = data['bet'] * hotkey.multiplier() * inputEvent.steps
-		newBet = TableCrabConfig.formatedBet(newBet, blinds=(data['smallBlind'], data['bigBlind']) )
+		newBet = Tc2Config.formatedBet(newBet, blinds=(data['smallBlind'], data['bigBlind']) )
 		#NOTE: the box gets mesed up when unicode is thrown at it
-		TableCrabWin32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
-		TableCrabConfig.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
+		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
+		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
 
 	def tableHandleBetPot(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
@@ -605,11 +605,11 @@ class EventHandler(QtCore.QObject):
 
 		pointTopLeft = template.points['PotTopLeft']
 		pointBottomRight = template.points['PotBottomRight']
-		if pointTopLeft == TableCrabConfig.PointNone:
-			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point Pot Top Left Not Set -' % template.name)
+		if pointTopLeft == Tc2Config.PointNone:
+			Tc2Config.globalObject.feedbackMessage.emit('%s: -- Point Pot Top Left Not Set -' % template.name)
 			return
-		if pointBottomRight == TableCrabConfig.PointNone:
-			TableCrabConfig.globalObject.feedbackMessage.emit('%s: -- Point Pot Bottom Right Not Set -' % template.name)
+		if pointBottomRight == Tc2Config.PointNone:
+			Tc2Config.globalObject.feedbackMessage.emit('%s: -- Point Pot Bottom Right Not Set -' % template.name)
 			return
 
 		# grab pot rect
@@ -626,13 +626,13 @@ class EventHandler(QtCore.QObject):
 			try:
 				raise ValueError(scanTrace)
 			except:
-				TableCrabConfig.handleException()
-				TableCrabConfig.globalObject.feedbackMessage.emit('%s: Error - Could not scan pot' % hotkey.action() )
+				Tc2Config.handleException()
+				Tc2Config.globalObject.feedbackMessage.emit('%s: Error - Could not scan pot' % hotkey.action() )
 				return
 		newBet = round(num * hotkey.multiplier(), 2)
-		newBet = TableCrabConfig.formatedBet(newBet, blinds=(data['smallBlind'], data['bigBlind']) )
-		TableCrabWin32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
-		TableCrabConfig.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet) )
+		newBet = Tc2Config.formatedBet(newBet, blinds=(data['smallBlind'], data['bigBlind']) )
+		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
+		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet) )
 
 	def tableHandleHilightBet(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
@@ -641,34 +641,34 @@ class EventHandler(QtCore.QObject):
 		if not hwndBetBox: return
 		if not data['betBoxIsVisible']: return
 		point = QtCore.QPoint(2, 2)
-		mi = TableCrabWin32.MouseInput()
+		mi = Tc2Win32.MouseInput()
 		mi.leftClickDouble(point, hwnd=hwndBetBox)
-		mi.send(restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool())
-		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+		mi.send(restoreCursor=Tc2Config.settingsValue('RestoreMousePosition', False).toBool())
+		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def _tableClickRestoreFocus(self, hwnd, point, template):
 		#NOTE: we always double click. not realy necessary here
-		mi = TableCrabWin32.MouseInput()
+		mi = Tc2Win32.MouseInput()
 		mi.leftClickDouble(point, hwnd=hwnd)
 		mi.send(restoreCursor=False)
 		# replayer gains focus, so we have to wait a bit and send another click to reactivate the table.
 		#TODO: for some reason (linux/wine?) table regain focus but is not activated when the replayer is opend for the first time
-		mi = TableCrabWin32.MouseInput()
+		mi = Tc2Win32.MouseInput()
 		mi.leftClickDouble(template.points['EmptySpace'], hwnd=hwnd)
-		mi.send(restoreCursor=TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool())
+		mi.send(restoreCursor=Tc2Config.settingsValue('RestoreMousePosition', False).toBool())
 
 	def tableHandleReplayer(self, hotkey, template, hwnd, inputEvent):
 		point = self.tableGetPoint('Replayer', template)
 		if point is None:
 			return
 		self._tableClickRestoreFocus(hwnd, point, template)
-		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def tableHandleInstantHandHistory(self, hotkey, template, hwnd, inputEvent):
 		point = self.tableGetPoint('InstantHandHistory', template)
 		if point is None:
 			return
 		self._tableClickRestoreFocus(hwnd, point, template)
-		TableCrabConfig.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 

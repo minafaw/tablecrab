@@ -1,7 +1,7 @@
 
-import TableCrabConfig
-import TableCrabWin32
-import TableCrabGuiHelp
+import Tc2Config
+import Tc2Win32
+import Tc2GuiHelp
 from PyQt4 import QtCore, QtGui, QtWebKit
 
 #************************************************************************************
@@ -30,13 +30,13 @@ class FrameSettings(QtGui.QFrame):
 		self.labelFixedFont.setBuddy(self.buttonFixedFont)
 
 		self.comboSingleApplication = QtGui.QComboBox(self)
-		self.comboSingleApplication.addItems(TableCrabWin32.SingleApplication.Scopes)
+		self.comboSingleApplication.addItems(Tc2Win32.SingleApplication.Scopes)
 		self.labelSingleApplication = QtGui.QLabel('Single a&pplication scope:', self)
 		self.labelSingleApplication.setBuddy(self.comboSingleApplication)
 
 		self.spinZoomSteps = QtGui.QSpinBox(self)
-		self.spinZoomSteps.setRange(TableCrabConfig.WebViewToolBar.ZoomStepsMin, TableCrabConfig.WebViewToolBar.ZoomStepsMax)
-		self.labelZoomSteps = QtGui.QLabel('&Zoom Steps (%s max):' % TableCrabConfig.WebViewToolBar.ZoomStepsMax, self)
+		self.spinZoomSteps.setRange(Tc2Config.WebViewToolBar.ZoomStepsMin, Tc2Config.WebViewToolBar.ZoomStepsMax)
+		self.labelZoomSteps = QtGui.QLabel('&Zoom Steps (%s max):' % Tc2Config.WebViewToolBar.ZoomStepsMax, self)
 		self.labelZoomSteps.setBuddy(self.spinZoomSteps)
 
 		self.checkAlternatingRowColors = QtGui.QCheckBox('Alternating &Row Colors', self)
@@ -44,7 +44,7 @@ class FrameSettings(QtGui.QFrame):
 		self.checkRestoreMousePosition = QtGui.QCheckBox('Restore Mouse &Position', self)
 
 		self.comboRoundBets = QtGui.QComboBox(self)
-		self.comboRoundBets.addItems(TableCrabConfig.RoundBets)
+		self.comboRoundBets.addItems(Tc2Config.RoundBets)
 		self.labelRoundBets = QtGui.QLabel('Round &bets to:', self)
 		self.labelRoundBets.setBuddy(self.comboRoundBets)
 
@@ -60,23 +60,23 @@ class FrameSettings(QtGui.QFrame):
 		self.addAction(action)
 		self.addAction(action)
 
-		TableCrabConfig.globalObject.init.connect(self.onInit)
+		Tc2Config.globalObject.init.connect(self.onInit)
 
 	def layout(self):
-		grid = TableCrabConfig.GridBox(self)
-		grid.col(TableCrabConfig.HLine(self), colspan=3)
+		grid = Tc2Config.GridBox(self)
+		grid.col(Tc2Config.HLine(self), colspan=3)
 		grid.row()
-		grid.col(self.labelBackup).col(self.buttonBackup).col(TableCrabConfig.HStretch())
+		grid.col(self.labelBackup).col(self.buttonBackup).col(Tc2Config.HStretch())
 		grid.row()
-		grid.col(self.labelGuiStyle).col(self.comboGuiStyle).col(TableCrabConfig.HStretch())
+		grid.col(self.labelGuiStyle).col(self.comboGuiStyle).col(Tc2Config.HStretch())
 		grid.row()
-		grid.col(self.labelFont).col(self.buttonFont).col(TableCrabConfig.HStretch())
+		grid.col(self.labelFont).col(self.buttonFont).col(Tc2Config.HStretch())
 		grid.row()
-		grid.col(self.labelFixedFont).col(self.buttonFixedFont).col(TableCrabConfig.HStretch())
+		grid.col(self.labelFixedFont).col(self.buttonFixedFont).col(Tc2Config.HStretch())
 		grid.row()
-		grid.col(self.labelSingleApplication).col(self.comboSingleApplication).col(TableCrabConfig.HStretch())
+		grid.col(self.labelSingleApplication).col(self.comboSingleApplication).col(Tc2Config.HStretch())
 		grid.row()
-		grid.col(self.labelZoomSteps).col(self.spinZoomSteps).col(TableCrabConfig.HStretch())
+		grid.col(self.labelZoomSteps).col(self.spinZoomSteps).col(Tc2Config.HStretch())
 		grid.row()
 		grid.col(self.checkAlternatingRowColors)
 		grid.row()
@@ -84,24 +84,24 @@ class FrameSettings(QtGui.QFrame):
 		grid.row()
 		grid.col(self.checkRestoreMousePosition)
 		grid.row()
-		grid.col(self.labelRoundBets).col(self.comboRoundBets).col(TableCrabConfig.HStretch())
+		grid.col(self.labelRoundBets).col(self.comboRoundBets).col(Tc2Config.HStretch())
 		grid.row()
-		grid.col(TableCrabConfig.VStretch())
+		grid.col(Tc2Config.VStretch())
 		grid.row()
-		grid.col(TableCrabConfig.HLine(self), colspan=3)
+		grid.col(Tc2Config.HLine(self), colspan=3)
 		grid.row()
 		grid.col(self.buttonBox, colspan=3)
 
 	def setFont(self):
 		font = QtGui.QFont()
 		# try to read font from config, if not take application font
-		if font.fromString( TableCrabConfig.settingsValue('Gui/Font', '').toString() ):
+		if font.fromString( Tc2Config.settingsValue('Gui/Font', '').toString() ):
 			QtGui.qApp.setFont(font)
 		else:
 			font = QtGui.qApp.font()
 
 		# we have to reload style on font changes anyways, so global style setting is dome here
-		styleName = TableCrabConfig.settingsValue('Gui/Style', '').toString()
+		styleName = Tc2Config.settingsValue('Gui/Style', '').toString()
 		styleNames = QtGui.QStyleFactory().keys()
 		if styleName in styleNames:
 			pass
@@ -126,7 +126,7 @@ class FrameSettings(QtGui.QFrame):
 		font = QtGui.QFont()
 		settings = QtWebKit.QWebSettings.globalSettings()
 		# try to read QWebKit FixedFont from config, if not take it from QWebKit FixedFont
-		if font.fromString(TableCrabConfig.settingsValue('Gui/FontFixed', '').toString() ):
+		if font.fromString(Tc2Config.settingsValue('Gui/FontFixed', '').toString() ):
 			settings.setFontFamily(settings.FixedFont, font.family() )
 			settings.setFontSize(settings.DefaultFixedFontSize, font.pointSize() )
 		else:
@@ -144,9 +144,9 @@ class FrameSettings(QtGui.QFrame):
 		filters << 'Config Files (*.ini *.cfg)'
 		filters << 'All Files (*)'
 		dlg.setNameFilters(filters)
-		dlg.restoreState( TableCrabConfig.settingsValue('Gui/Settings/DialogBackup/State', QtCore.QByteArray()).toByteArray() )
+		dlg.restoreState( Tc2Config.settingsValue('Gui/Settings/DialogBackup/State', QtCore.QByteArray()).toByteArray() )
 		result = dlg.exec_()
-		TableCrabConfig.settingsSetValue('Gui/Settings/DialogBackup/State', dlg.saveState() )
+		Tc2Config.settingsSetValue('Gui/Settings/DialogBackup/State', dlg.saveState() )
 		if result != dlg.Accepted:
 			return
 
@@ -162,26 +162,26 @@ class FrameSettings(QtGui.QFrame):
 		fp = None
 		try: fp = open(fileName, 'w').close()
 		except Exception, d:
-			TableCrabConfig.msgWarning(self, 'Could Not Open Config File\n\n%s' % d)
+			Tc2Config.msgWarning(self, 'Could Not Open Config File\n\n%s' % d)
 			return
 		finally:
 			if fp is not None: fp.close()
 
 		newSettings = QtCore.QSettings(fileName, QtCore.QSettings.IniFormat)
 		if not newSettings.isWritable:
-			TableCrabConfig.msgWarning(self, 'Config File Is Not Writable')
+			Tc2Config.msgWarning(self, 'Config File Is Not Writable')
 			return
-		settings = TableCrabConfig.settings()
+		settings = Tc2Config.settings()
 		for key in settings.allKeys():
 			newSettings.setValue(key, settings.value(key) )
 
 	def onHelp(self, *args):
-		TableCrabGuiHelp.dialogHelp('settingsGlobal', parent=self)
+		Tc2GuiHelp.dialogHelp('settingsGlobal', parent=self)
 
 	def onButtonFontClicked(self, checked):
 		font, ok = QtGui.QFontDialog.getFont(QtGui.qApp.font(), self)
 		if ok:
-			TableCrabConfig.settingsSetValue('Gui/Font', font.toString())
+			Tc2Config.settingsSetValue('Gui/Font', font.toString())
 			self.setFont()
 
 	def onButtonFixedFontClicked(self, checked):
@@ -191,38 +191,38 @@ class FrameSettings(QtGui.QFrame):
 		font.setPointSize( settings.fontSize(settings.DefaultFixedFontSize) )
 		font, ok = QtGui.QFontDialog.getFont(font, self)
 		if ok:
-			TableCrabConfig.settingsSetValue('Gui/FontFixed', font.toString())
+			Tc2Config.settingsSetValue('Gui/FontFixed', font.toString())
 			self.setFixedFont()
 
 	def onComboGuiStyleCurrentIndexChanged(self, index):
 		style = self.comboGuiStyle.itemText(index)
-		TableCrabConfig.settingsSetValue('Gui/Style', style)
+		Tc2Config.settingsSetValue('Gui/Style', style)
 		self.setFont()
 
 	def onComboRoundBetsCurrentIndexChanged(self, index):
 		roundBets = self.comboRoundBets.itemText(index)
-		TableCrabConfig.settingsSetValue('Settings/RoundBets', roundBets)
+		Tc2Config.settingsSetValue('Settings/RoundBets', roundBets)
 
 	def onComboSingleApplicationCurrentIndexChanged(self, index):
 		scope = self.comboSingleApplication.itemText(index)
-		TableCrabConfig.settingsSetValue('Gui/SingleApplication/Scope', scope)
+		Tc2Config.settingsSetValue('Gui/SingleApplication/Scope', scope)
 
 	def onAlternatingRowColorsChanged(self, state):
 		flag = state == QtCore.Qt.Checked
-		TableCrabConfig.settingsSetValue('Gui/AlternatingRowColors', flag)
-		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.emit(flag)
+		Tc2Config.settingsSetValue('Gui/AlternatingRowColors', flag)
+		Tc2Config.globalObject.settingAlternatingRowColorsChanged.emit(flag)
 
 	def onChildItemIndicatorsChanged(self, state):
 		flag = state == QtCore.Qt.Checked
-		TableCrabConfig.settingsSetValue('Gui/ChildItemIndicators', flag)
-		TableCrabConfig.globalObject.settingChildItemIndicatorsChanged.emit(state == QtCore.Qt.Checked)
+		Tc2Config.settingsSetValue('Gui/ChildItemIndicators', flag)
+		Tc2Config.globalObject.settingChildItemIndicatorsChanged.emit(state == QtCore.Qt.Checked)
 
 	def onRestoreMousePositionChanged(self, state):
 		flag = state == QtCore.Qt.Checked
-		TableCrabConfig.settingsSetValue('RestoreMousePosition', flag)
+		Tc2Config.settingsSetValue('RestoreMousePosition', flag)
 
 	def onSpinZoomValueChanged(self, value):
-		TableCrabConfig.settingsSetValue('Gui/WebView/ZoomSteps', value)
+		Tc2Config.settingsSetValue('Gui/WebView/ZoomSteps', value)
 
 	def onInit(self):
 		self.layout()
@@ -233,30 +233,30 @@ class FrameSettings(QtGui.QFrame):
 		self.setFixedFont()
 		self.buttonFixedFont.clicked.connect(self.onButtonFixedFontClicked)
 
-		scope= TableCrabConfig.settingsValue('Gui/SingleApplication/Scope', '').toString()
-		if scope not in TableCrabWin32.SingleApplication.Scopes:
-			scope = TableCrabConfig.SingleApplicationScopeDefault
+		scope= Tc2Config.settingsValue('Gui/SingleApplication/Scope', '').toString()
+		if scope not in Tc2Win32.SingleApplication.Scopes:
+			scope = Tc2Config.SingleApplicationScopeDefault
 		self.comboSingleApplication.setCurrentIndex( self.comboSingleApplication.findText(scope, QtCore.Qt.MatchExactly) )
 		self.comboSingleApplication.currentIndexChanged.connect(self.onComboSingleApplicationCurrentIndexChanged)
 
-		zoomSteps = TableCrabConfig.settingsValue('Gui/WebView/ZoomSteps', TableCrabConfig.WebViewToolBar.ZoomStepsDefault).toInt()[0]
+		zoomSteps = Tc2Config.settingsValue('Gui/WebView/ZoomSteps', Tc2Config.WebViewToolBar.ZoomStepsDefault).toInt()[0]
 		self.spinZoomSteps.setValue(zoomSteps)
 		self.spinZoomSteps.valueChanged.connect(self.onSpinZoomValueChanged)
 
-		state = QtCore.Qt.Checked if TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool() else QtCore.Qt.Unchecked
+		state = QtCore.Qt.Checked if Tc2Config.settingsValue('Gui/AlternatingRowColors', False).toBool() else QtCore.Qt.Unchecked
 		self.checkAlternatingRowColors.setCheckState(state)
 		self.checkAlternatingRowColors.stateChanged.connect(self.onAlternatingRowColorsChanged)
 
-		state = QtCore.Qt.Checked if TableCrabConfig.settingsValue('Gui/ChildItemIndicators', False).toBool() else QtCore.Qt.Unchecked
+		state = QtCore.Qt.Checked if Tc2Config.settingsValue('Gui/ChildItemIndicators', False).toBool() else QtCore.Qt.Unchecked
 		self.checkChildItemIndicators.setCheckState(state)
 		self.checkChildItemIndicators.stateChanged.connect(self.onChildItemIndicatorsChanged)
 
-		state = QtCore.Qt.Checked if TableCrabConfig.settingsValue('RestoreMousePosition', False).toBool() else QtCore.Qt.Unchecked
+		state = QtCore.Qt.Checked if Tc2Config.settingsValue('RestoreMousePosition', False).toBool() else QtCore.Qt.Unchecked
 		self.checkRestoreMousePosition.setCheckState(state)
 		self.checkRestoreMousePosition.stateChanged.connect(self.onRestoreMousePositionChanged)
 
-		roundBets = TableCrabConfig.settingsValue('Settings/RoundBets', '').toString()
-		if roundBets not in TableCrabConfig.RoundBets:
-			roundBets = TableCrabConfig.RoundBetsDefault
+		roundBets = Tc2Config.settingsValue('Settings/RoundBets', '').toString()
+		if roundBets not in Tc2Config.RoundBets:
+			roundBets = Tc2Config.RoundBetsDefault
 		self.comboRoundBets.setCurrentIndex( self.comboRoundBets.findText(roundBets, QtCore.Qt.MatchExactly) )
 		self.comboRoundBets.currentIndexChanged.connect(self.onComboRoundBetsCurrentIndexChanged)
