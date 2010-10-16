@@ -1,6 +1,6 @@
 
-import TableCrabConfig
-import TableCrabGuiHelp
+import Tc2Config
+import Tc2GuiHelp
 
 from PyQt4 import QtCore, QtGui
 
@@ -10,7 +10,7 @@ from PyQt4 import QtCore, QtGui
 class DialgScreenshotInfo(QtGui.QDialog):
 	def __init__(self, info, parent=None):
 		QtGui.QDialog. __init__(self, parent)
-		self.setWindowTitle(TableCrabConfig.dialogTitle('Screenshot Info') )
+		self.setWindowTitle(Tc2Config.dialogTitle('Screenshot Info') )
 
 		self._lastScreenshotInfo = info
 
@@ -52,23 +52,23 @@ class DialgScreenshotInfo(QtGui.QDialog):
 		parent.widgetScreenshotInfo.connect(self.onWidgetScreenshotInfo)
 
 		self.layout()
-		self.restoreGeometry( TableCrabConfig.settingsValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', QtCore.QByteArray()).toByteArray() )
+		self.restoreGeometry( Tc2Config.settingsValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', QtCore.QByteArray()).toByteArray() )
 
 	#----------------------------------------------------------------------------------------------------------------
 	# overwritten methods
 	#---------------------------------------------------------------------------------------------------------------
 	def hideEvent(self, event):
-		TableCrabConfig.settingsSetValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', self.saveGeometry() )
+		Tc2Config.settingsSetValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', self.saveGeometry() )
 		QtGui.QDialog.hideEvent(self, event)
 
 	#----------------------------------------------------------------------------------------------------------------
 	# methods
 	#---------------------------------------------------------------------------------------------------------------
 	def layout(self):
-		grid = TableCrabConfig.GridBox(self)
+		grid = Tc2Config.GridBox(self)
 		grid.col(self.edit)
 		grid.row()
-		grid.col(TableCrabConfig.HLine(self))
+		grid.col(Tc2Config.HLine(self))
 		grid.row()
 		grid.col(self.buttonBox)
 
@@ -76,13 +76,13 @@ class DialgScreenshotInfo(QtGui.QDialog):
 	# event handlers
 	#--------------------------------------------------------------------------------------------------------------
 	def onHelp(self, *args):
-		TableCrabGuiHelp.dialogHelp('screenshotInfo', parent=self)
+		Tc2GuiHelp.dialogHelp('screenshotInfo', parent=self)
 
 	def onRefresh(self, *args):
 		self.edit.setPlainText(self._lastScreenshotInfo)
 
 	def onSave(self, *args):
-		fileName = TableCrabConfig.dlgOpenSaveFile(
+		fileName = Tc2Config.dlgOpenSaveFile(
 				parent=self,
 				openFile=False,
 				title='Save Screenshot Info..',
@@ -101,7 +101,7 @@ class DialgScreenshotInfo(QtGui.QDialog):
 			fp = open(fileName, 'w')
 			fp.write(self.edit.toPlainText() )
 		except Exception, d:
-			TableCrabConfig.msgWarning(self, 'Could Not Save Screenshot Info\n\n%s' % d)
+			Tc2Config.msgWarning(self, 'Could Not Save Screenshot Info\n\n%s' % d)
 		finally:
 			if fp is not None: fp.close()
 

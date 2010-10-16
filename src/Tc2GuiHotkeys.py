@@ -1,10 +1,10 @@
 
 #TODO: would be nice to have some information on how many hotkeys are left until hitting MaxHotkeys
 
-import TableCrabConfig
-import TableCrabWin32
-import TableCrabGuiHelp
-import TableCrabHotkeys
+import Tc2Config
+import Tc2Win32
+import Tc2GuiHelp
+import Tc2Hotkeys
 
 from PyQt4 import QtCore, QtGui
 
@@ -27,7 +27,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		QtGui.QTreeWidget.__init__(self, parent)
 
 		#TODO: find a better way to set hotkey manager as global
-		TableCrabConfig.hotkeyManager = self
+		Tc2Config.hotkeyManager = self
 
 		# setup treeWidget
 		self.setUniformRowHeights(True)
@@ -42,7 +42,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self._actions = []
 
 		menu = QtGui.QMenu(self)
-		for hotkeyProto in TableCrabHotkeys.Hotkeys:
+		for hotkeyProto in Tc2Hotkeys.Hotkeys:
 			menu.addAction(self.ActionNewHotkey(hotkeyProto, parent=self) )
 
 		self.actionNew = QtGui.QAction(self)
@@ -80,8 +80,8 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self._actions.append(self.actionRemove)
 
 		# connect signals
-		TableCrabConfig.globalObject.init.connect(self.onInit)
-		TableCrabConfig.globalObject.settingAlternatingRowColorsChanged.connect(
+		Tc2Config.globalObject.init.connect(self.onInit)
+		Tc2Config.globalObject.settingAlternatingRowColorsChanged.connect(
 				self.onSetAlternatingRowColors
 				)
 		self.itemDoubleClicked.connect(self.onHotkeyDoubleClicked)
@@ -113,7 +113,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 
 	def adjustActions(self):
 		hotkey = self.currentItem()
-		self.actionNew.setEnabled(len(self) < TableCrabConfig.MaxHotkeys)
+		self.actionNew.setEnabled(len(self) < Tc2Config.MaxHotkeys)
 		if hotkey is None:
 			self.actionUp.setEnabled(False)
 			self.actionDown.setEnabled(False)
@@ -182,7 +182,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			self.adjustHotkeys()
 
 	def dump(self):
-		TableCrabConfig.dumpPersistentItems('Hotkeys', self)
+		Tc2Config.dumpPersistentItems('Hotkeys', self)
 
 	def editHotkey(self):
 		hotkey = self.currentItem()
@@ -239,19 +239,19 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self.setUpdatesEnabled(False)
 
 		self.setAlternatingRowColors(
-				TableCrabConfig.settingsValue('Gui/AlternatingRowColors', False).toBool()
+				Tc2Config.settingsValue('Gui/AlternatingRowColors', False).toBool()
 				)
 		self.clear()
 		hotkey = None
-		for hotkey in TableCrabConfig.readPersistentItems(
+		for hotkey in Tc2Config.readPersistentItems(
 				'Hotkeys',
-				maxItems=TableCrabConfig.MaxHotkeys,
-				itemProtos=TableCrabHotkeys.Hotkeys
+				maxItems=Tc2Config.MaxHotkeys,
+				itemProtos=Tc2Hotkeys.Hotkeys
 				):
 			self.addTopLevelItem(hotkey)
 		# set at least one hotkey as default
 		if hotkey is None:
-			hotkey = TableCrabHotkeys.HotkeyScreenshot(key='<F1+LeftControl>')
+			hotkey = Tc2Hotkeys.HotkeyScreenshot(key='<F1+LeftControl>')
 			self.addTopLevelItem(hotkey)
 		self.setCurrentItem( self.topLevelItem(0) )
 
@@ -286,7 +286,7 @@ class FrameHotkeys(QtGui.QFrame):
 	# methods
 	#---------------------------------------------------------------------------------------------------------------
 	def layout(self):
-		grid = TableCrabConfig.GridBox(self)
+		grid = Tc2Config.GridBox(self)
 		grid.col(self.toolBar)
 		grid.row()
 		grid.col(self.HotkeyWidget)
@@ -295,7 +295,7 @@ class FrameHotkeys(QtGui.QFrame):
 	# event handlers
 	#--------------------------------------------------------------------------------------------------------------
 	def onActionHelpTriggered(self):
-		TableCrabGuiHelp.dialogHelp('hotkeys', parent=self)
+		Tc2GuiHelp.dialogHelp('hotkeys', parent=self)
 
 
 

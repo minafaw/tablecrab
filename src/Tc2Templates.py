@@ -1,5 +1,5 @@
 
-import TableCrabConfig
+import Tc2Config
 
 from PyQt4 import QtCore, QtGui
 #**********************************************************************************************
@@ -9,10 +9,10 @@ from PyQt4 import QtCore, QtGui
 Templates = []
 
 def newValidSize(size):
-	return TableCrabConfig.newSizeNone() if size is None else size
+	return Tc2Config.newSizeNone() if size is None else size
 
 def newPoint(point=None, x=None, y=None):
-	point = TableCrabConfig.newPointNone() if point is None else point
+	point = Tc2Config.newPointNone() if point is None else point
 	if x is not None:
 		point.setX(x)
 		point.setY(y)
@@ -27,11 +27,11 @@ class PointItem(QtGui.QTreeWidgetItem):
 		self.setPoint(point)
 		self.setDisabled(True)
 	def setPoint(self, point):
-		if self.pointName == 'EmptySpace' and point == TableCrabConfig.PointNone:
+		if self.pointName == 'EmptySpace' and point == Tc2Config.PointNone:
 			# make shure point is not empty, we need it
 			point = QtCore.QPoint(1, 1)
 		self.point = point
-		self.setText(1, TableCrabConfig.pointToString(self.point) )
+		self.setText(1, Tc2Config.pointToString(self.point) )
 	def toplevel(self):
 		return self.parent()
 
@@ -64,7 +64,7 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 
 		self.setFirstColumnSpanned(True)
 		self.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
-		self.setIcon(0, QtGui.QIcon(TableCrabConfig.Pixmaps.stars()) )
+		self.setIcon(0, QtGui.QIcon(Tc2Config.Pixmaps.stars()) )
 		font = self.font(0)
 		font.setBold(True)
 		self.setFont(0, font)
@@ -73,7 +73,7 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 
 		self.itemType = QtGui.QTreeWidgetItem(self, ['Type:',  self.menuName()])
 		self.itemType.setDisabled(True)
-		self.itemSize = QtGui.QTreeWidgetItem(self, ['Size:',  TableCrabConfig.sizeToString(self.size)])
+		self.itemSize = QtGui.QTreeWidgetItem(self, ['Size:',  Tc2Config.sizeToString(self.size)])
 		self.itemSize.setDisabled(True)
 
 		self.points = {}
@@ -112,7 +112,7 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 		elif pixmap.size() == self.size:
 			for item in self.pointItems:
 				item.setDisabled(False)
-		elif self.size == TableCrabConfig.SizeNone:
+		elif self.size == Tc2Config.SizeNone:
 			for item in self.pointItems:
 				item.setDisabled(False)
 		else:
@@ -126,8 +126,8 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 			return False
 		self.size.setWidth(pixmap.width())
 		self.size.setHeight(pixmap.height())
-		self.itemSize.setText(1, TableCrabConfig.sizeToString(self.size) )
-		if item.pointName == 'EmptySpace' and point == TableCrabConfig.PointNone:
+		self.itemSize.setText(1, Tc2Config.sizeToString(self.size) )
+		if item.pointName == 'EmptySpace' and point == Tc2Config.PointNone:
 			item.point.setX(1)
 			item.point.setY(1)
 		else:
@@ -147,29 +147,29 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 	@classmethod
 	def fromConfig(klass, key):
 		kws = {}
-		id = TableCrabConfig.settingsValue( (key, 'ID'), '').toString()
+		id = Tc2Config.settingsValue( (key, 'ID'), '').toString()
 		if id != klass.id():
 			return None
-		kws['name'] = TableCrabConfig.settingsValue( (key, 'Name'), 'None').toString()
-		size = TableCrabConfig.settingsValue( (key, 'Size'), TableCrabConfig.newSizeNone() ).toSize()
+		kws['name'] = Tc2Config.settingsValue( (key, 'Name'), 'None').toString()
+		size = Tc2Config.settingsValue( (key, 'Size'), Tc2Config.newSizeNone() ).toSize()
 		if not size.isValid():
-			size = TableCrabConfig.newSizeNone()
+			size = Tc2Config.newSizeNone()
 		kws['size'] = size
-		kws['itemIsExpanded'] = TableCrabConfig.settingsValue( (key, 'ItemIsExpanded'), False).toBool()
+		kws['itemIsExpanded'] = Tc2Config.settingsValue( (key, 'ItemIsExpanded'), False).toBool()
 		for pointName in klass.PointNames:
-			point = TableCrabConfig.settingsValue((key, pointName), TableCrabConfig.newPointNone()).toPoint()
-			if not TableCrabConfig.pointInSize(size, point):
-				point = TableCrabConfig.newPointNone()
+			point = Tc2Config.settingsValue((key, pointName), Tc2Config.newPointNone()).toPoint()
+			if not Tc2Config.pointInSize(size, point):
+				point = Tc2Config.newPointNone()
 			kws[pointName] = point
 		return klass(**kws)
 
 	def toConfig(self, key):
-		TableCrabConfig.settingsSetValue( (key, 'ID'), self.id() )
-		TableCrabConfig.settingsSetValue( (key, 'Name'), self.name)
-		TableCrabConfig.settingsSetValue( (key, 'Size'), self.size)
-		TableCrabConfig.settingsSetValue( (key, 'ItemIsExpanded'), self.itemIsExpanded)
+		Tc2Config.settingsSetValue( (key, 'ID'), self.id() )
+		Tc2Config.settingsSetValue( (key, 'Name'), self.name)
+		Tc2Config.settingsSetValue( (key, 'Size'), self.size)
+		Tc2Config.settingsSetValue( (key, 'ItemIsExpanded'), self.itemIsExpanded)
 		for pointName, point in self.points.items():
-			TableCrabConfig.settingsSetValue( (key, pointName), point)
+			Tc2Config.settingsSetValue( (key, pointName), point)
 		return True
 
 Templates.append(TemplatePokerStarsTable)

@@ -4,10 +4,10 @@
 # 			open / save is taking away screenspace already. would have to find shorter names for these actions.
 #TODO: restore last selected template on restart?
 
-import TableCrabConfig
-import TableCrabGuiHelp
-import TableCrabGuiTemplates
-import TableCrabGuiScreenshots
+import Tc2Config
+import Tc2GuiHelp
+import Tc2GuiTemplates
+import Tc2GuiScreenshots
 
 from PyQt4 import QtCore, QtGui
 
@@ -18,8 +18,8 @@ class FrameSetup(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
-		self.templatesWidget = TableCrabGuiTemplates.TemplatesWidget(parent=self)
-		self.screenshotWidget = TableCrabGuiScreenshots.ScreenshotWidget(parent=self)
+		self.templatesWidget = Tc2GuiTemplates.TemplatesWidget(parent=self)
+		self.screenshotWidget = Tc2GuiScreenshots.ScreenshotWidget(parent=self)
 
 		self.splitter = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
 		self.splitter.addWidget(self.templatesWidget)
@@ -39,14 +39,14 @@ class FrameSetup(QtGui.QFrame):
 		self.actionHelp.triggered.connect(self.onActionHelpTriggered)
 		self.toolBar.addAction(self.actionHelp)
 
-		TableCrabConfig.globalObject.init.connect(self.onInit)
-		TableCrabConfig.globalObject.closeEvent.connect(self.onCloseEvent)
+		Tc2Config.globalObject.init.connect(self.onInit)
+		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 
 	#--------------------------------------------------------------------------------------------------------------
 	# methods
 	#--------------------------------------------------------------------------------------------------------------
 	def layout(self):
-		grid = TableCrabConfig.GridBox(self)
+		grid = Tc2Config.GridBox(self)
 		grid.col(self.toolBar)
 		grid.row()
 		grid.col(self.splitter)
@@ -55,12 +55,12 @@ class FrameSetup(QtGui.QFrame):
 	# event handlers
 	#--------------------------------------------------------------------------------------------------------------
 	def onActionHelpTriggered(self):
-		TableCrabGuiHelp.dialogHelp('setup', parent=self)
+		Tc2GuiHelp.dialogHelp('setup', parent=self)
 
 	def onCloseEvent(self, event):
-		TableCrabConfig.settingsSetValue('Gui/Setup/SplitterState', self.splitter.saveState())
+		Tc2Config.settingsSetValue('Gui/Setup/SplitterState', self.splitter.saveState())
 
 	def onInit(self):
 		self.layout()
-		self.splitter.restoreState( TableCrabConfig.settingsValue('Gui/Setup/SplitterState', QtCore.QByteArray()).toByteArray() )
+		self.splitter.restoreState( Tc2Config.settingsValue('Gui/Setup/SplitterState', QtCore.QByteArray()).toByteArray() )
 

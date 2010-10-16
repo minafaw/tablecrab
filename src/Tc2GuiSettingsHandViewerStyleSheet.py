@@ -1,6 +1,6 @@
 
-import TableCrabConfig
-import TableCrabGuiHelp
+import Tc2Config
+import Tc2GuiHelp
 import PokerStarsHandGrabber
 from PyQt4 import QtCore, QtGui
 
@@ -52,32 +52,32 @@ class FrameSettings(QtGui.QFrame):
 		action.triggered.connect(self.onHelp)
 		self.addAction(action)
 
-		TableCrabConfig.globalObject.init.connect(self.onInit)
+		Tc2Config.globalObject.init.connect(self.onInit)
 
 	def layout(self):
-		grid = TableCrabConfig.GridBox(self)
-		grid.col(TableCrabConfig.HLine(self))
+		grid = Tc2Config.GridBox(self)
+		grid.col(Tc2Config.HLine(self))
 		grid.row()
 		grid.col(self.edit)
 		grid.row()
-		grid.col(TableCrabConfig.HLine(self))
+		grid.col(Tc2Config.HLine(self))
 		grid.row()
 		grid.col(self.buttonBox)
 
 	def onEditTextChanged(self):
 		text = self.edit.toPlainText()
-		if TableCrabConfig.MaxHandStyleSheet >= 0:
-			if text.length() > TableCrabConfig.MaxHandStyleSheet:
-				TableCrabConfig.globalObject.feedback.emit(self, 'Style sheet too big -- maximum Is %s chars' % TableCrabConfig.MaxHandStyleSheet)
+		if Tc2Config.MaxHandStyleSheet >= 0:
+			if text.length() > Tc2Config.MaxHandStyleSheet:
+				Tc2Config.globalObject.feedback.emit(self, 'Style sheet too big -- maximum Is %s chars' % Tc2Config.MaxHandStyleSheet)
 				return
-		TableCrabConfig.globalObject.feedback.emit(self, '')
-		TableCrabConfig.settingsSetValue('PokerStarsHandGrabber/handFornmatterHtmlTabular/StyleSheet', text)
+		Tc2Config.globalObject.feedback.emit(self, '')
+		Tc2Config.settingsSetValue('PokerStarsHandGrabber/handFornmatterHtmlTabular/StyleSheet', text)
 
 	def onInit(self):
 		self.layout()
 
 		#NOTE: style sheet can not be ''
-		text = TableCrabConfig.settingsValue('PokerStarsHandGrabber/handFornmatterHtmlTabular/StyleSheet', '').toString()
+		text = Tc2Config.settingsValue('PokerStarsHandGrabber/handFornmatterHtmlTabular/StyleSheet', '').toString()
 		if not text:
 			text = PokerStarsHandGrabber.HandFormatterHtmlTabular.StyleSheet
 		#NOTE: have to connect before setText so we can catch MaxCharsExceeded
@@ -85,7 +85,7 @@ class FrameSettings(QtGui.QFrame):
 		self.edit.setPlainText(text)
 
 	def onOpen(self, checked):
-		fileName = TableCrabConfig.dlgOpenSaveFile(
+		fileName = Tc2Config.dlgOpenSaveFile(
 				parent=self,
 				openFile=True,
 				title='Open Style Sheet..',
@@ -100,12 +100,12 @@ class FrameSettings(QtGui.QFrame):
 			fp = open(fileName, 'r')
 			self.edit.setPlainText(fp.read() )
 		except Exception, d:
-			TableCrabConfig.msgWarning(self, 'Could Not Open Style sheet\n\n%s' % d)
+			Tc2Config.msgWarning(self, 'Could Not Open Style sheet\n\n%s' % d)
 		finally:
 			if fp is not None: fp.close()
 
 	def onSave(self, checked):
-		fileName = TableCrabConfig.dlgOpenSaveFile(
+		fileName = Tc2Config.dlgOpenSaveFile(
 				parent=self,
 				openFile=False,
 				title='Save Style Sheet..',
@@ -121,12 +121,12 @@ class FrameSettings(QtGui.QFrame):
 			fp = open(fileName, 'w')
 			fp.write(self.edit.toPlainText() )
 		except Exception, d:
-			TableCrabConfig.msgWarning(self, 'Could Not Save Style sheet\n\n%s' % d)
+			Tc2Config.msgWarning(self, 'Could Not Save Style sheet\n\n%s' % d)
 		finally:
 			if fp is not None: fp.close()
 
 	def onHelp(self, *args):
-		TableCrabGuiHelp.dialogHelp('settingsHandViewerStyleSheet', parent=self)
+		Tc2GuiHelp.dialogHelp('settingsHandViewerStyleSheet', parent=self)
 
 	#TODO: resetting document jumps to top of widget. store/restore position would be nice
 	def onRestoreDefault(self):
