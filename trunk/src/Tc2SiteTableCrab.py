@@ -1,7 +1,7 @@
 """handler for global actions"""
 
 import Tc2Config
-import Tc2Hotkeys
+import Tc2ConfigHotkeys
 import Tc2Win32
 
 from PyQt4 import QtCore
@@ -41,7 +41,7 @@ class EventHandler(QtCore.QObject):
 	def handleInputEvent(self, hwnd, hotkey, inputEvent):
 		if Tc2Win32.windowIsSameProcess(hwnd, self._hwndMain):
 			return True
-		if hotkey.id() == Tc2Hotkeys.HotkeyScreenshot.id():
+		if hotkey.id() == Tc2ConfigHotkeys.HotkeyScreenshot.id():
 			if inputEvent.keyIsDown or inputEvent.steps:
 				Tc2Config.widgetScreenshot(hwnd)
 				Tc2Config.globalObject.feedbackMessage.emit(hotkey.action() )

@@ -4,8 +4,8 @@
 
 import Tc2Config
 import Tc2Win32
-import Tc2Hotkeys
-import Tc2Templates
+import Tc2ConfigHotkeys
+import Tc2ConfigTemplates
 from Tc2Lib.gocr import gocr
 
 import re, time, base64
@@ -222,14 +222,14 @@ class EventHandler(QtCore.QObject):
 
 			hotkeyID = hotkey.id()
 
-			if hotkeyID == Tc2Hotkeys.HotkeyTableSizeNext.id():
+			if hotkeyID == Tc2ConfigHotkeys.HotkeyTableSizeNext.id():
 				if inputEvent.keyIsDown:
 					#  find next table template that is not of current tables size
 					size = Tc2Win32.windowGetClientRect(hwnd).size()
 					template = None
 					pickNext = False
 					for i, tmp_template in enumerate(Tc2Config.templateManager):
-						if tmp_template.id() == Tc2Templates.TemplatePokerStarsTable.id():
+						if tmp_template.id() == Tc2ConfigTemplates.TemplatePokerStarsTable.id():
 							if tmp_template.size	== Tc2Config.SizeNone:
 								continue
 							if pickNext:
@@ -255,29 +255,29 @@ class EventHandler(QtCore.QObject):
 				return False
 
 			handler = None
-			if hotkeyID == Tc2Hotkeys.HotkeyCheck.id():
+			if hotkeyID == Tc2ConfigHotkeys.HotkeyCheck.id():
 				handler = self.tableHandleCheck
-			elif hotkeyID == Tc2Hotkeys.HotkeyFold.id():
+			elif hotkeyID == Tc2ConfigHotkeys.HotkeyFold.id():
 				handler = self.tableHandleFold
-			elif hotkeyID == Tc2Hotkeys.HotkeyRaise.id():
+			elif hotkeyID == Tc2ConfigHotkeys.HotkeyRaise.id():
 				handler = self.tableHandleRaise
-			elif hotkeyID == Tc2Hotkeys.HotkeyAll_In.id():
+			elif hotkeyID == Tc2ConfigHotkeys.HotkeyAll_In.id():
 				handler = self.tableHandleAll_In
-			elif hotkeyID == Tc2Hotkeys.HotkeyHilightBet.id():
+			elif hotkeyID == Tc2ConfigHotkeys.HotkeyHilightBet.id():
 				handler = self.tableHandleHilightBet
-			elif hotkeyID == Tc2Hotkeys.HotkeyMultiplyBlind.id():
+			elif hotkeyID == Tc2ConfigHotkeys.HotkeyMultiplyBlind.id():
 				handler = self.tableHandleMultiplyBlind
-			elif hotkeyID == Tc2Hotkeys.HotkeyAddToBet.id():
+			elif hotkeyID == Tc2ConfigHotkeys.HotkeyAddToBet.id():
 				handler = self.tableHandleAddToBet
-			elif hotkeyID == Tc2Hotkeys.HotkeySubtractFromBet.id():
+			elif hotkeyID == Tc2ConfigHotkeys.HotkeySubtractFromBet.id():
 				handler = self.tableHandleSubtractFromBet
-			elif hotkeyID == Tc2Hotkeys.HotkeyMultiplyBet.id():
+			elif hotkeyID == Tc2ConfigHotkeys.HotkeyMultiplyBet.id():
 				handler = self.tableHandleMultiplyBet
-			elif hotkeyID == Tc2Hotkeys.HotkeyBetPot.id():
+			elif hotkeyID == Tc2ConfigHotkeys.HotkeyBetPot.id():
 				handler = self.tableHandleBetPot
-			elif hotkeyID == Tc2Hotkeys.HotkeyReplayer.id():
+			elif hotkeyID == Tc2ConfigHotkeys.HotkeyReplayer.id():
 				handler = self.tableHandleReplayer
-			elif hotkeyID == Tc2Hotkeys.HotkeyInstantHandHistory.id():
+			elif hotkeyID == Tc2ConfigHotkeys.HotkeyInstantHandHistory.id():
 				handler = self.tableHandleInstantHandHistory
 
 			if handler is not None:
@@ -361,7 +361,7 @@ class EventHandler(QtCore.QObject):
 		if self.isTable(hwnd):
 			rect = Tc2Win32.windowGetClientRect(hwnd)
 			for template in Tc2Config.templateManager:
-				if template.id() == Tc2Templates.TemplatePokerStarsTable.id():
+				if template.id() == Tc2ConfigTemplates.TemplatePokerStarsTable.id():
 					if template.size == rect.size():
 						return template
 		return None
