@@ -4,7 +4,7 @@
 import Tc2Config
 import Tc2Win32
 import Tc2GuiHelp
-import Tc2Hotkeys
+import Tc2ConfigHotkeys
 
 from PyQt4 import QtCore, QtGui
 
@@ -42,7 +42,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self._actions = []
 
 		menu = QtGui.QMenu(self)
-		for hotkeyProto in Tc2Hotkeys.Hotkeys:
+		for hotkeyProto in Tc2ConfigHotkeys.Hotkeys:
 			menu.addAction(self.ActionNewHotkey(hotkeyProto, parent=self) )
 
 		self.actionNew = QtGui.QAction(self)
@@ -246,12 +246,12 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		for hotkey in Tc2Config.readPersistentItems(
 				'Hotkeys',
 				maxItems=Tc2Config.MaxHotkeys,
-				itemProtos=Tc2Hotkeys.Hotkeys
+				itemProtos=Tc2ConfigHotkeys.Hotkeys
 				):
 			self.addTopLevelItem(hotkey)
 		# set at least one hotkey as default
 		if hotkey is None:
-			hotkey = Tc2Hotkeys.HotkeyScreenshot(key='<F1+LeftControl>')
+			hotkey = Tc2ConfigHotkeys.HotkeyScreenshot(key='<F1+LeftControl>')
 			self.addTopLevelItem(hotkey)
 		self.setCurrentItem( self.topLevelItem(0) )
 

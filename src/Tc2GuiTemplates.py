@@ -1,6 +1,6 @@
 
 import Tc2Config
-import Tc2Templates
+import Tc2ConfigTemplates
 
 from PyQt4 import QtCore, QtGui
 
@@ -70,7 +70,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self._actions = []
 
 		menu = QtGui.QMenu(self)
-		for templateProto in Tc2Templates.Templates:
+		for templateProto in Tc2ConfigTemplates.Templates:
 			menu.addAction(self.ActionNewTemplate(templateProto, parent=self) )
 
 		self.actionNew = QtGui.QAction(self)
@@ -277,12 +277,12 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self.setRootIsDecorated( Tc2Config.settingsValue('Gui/ChildItemIndicators', True).toBool() )
 		self.clear()
 		template = None
-		for template in Tc2Config.readPersistentItems('Templates', maxItems=Tc2Config.MaxTemplates, itemProtos=Tc2Templates.Templates):
+		for template in Tc2Config.readPersistentItems('Templates', maxItems=Tc2Config.MaxTemplates, itemProtos=Tc2ConfigTemplates.Templates):
 			self.addTopLevelItem(template)
 			template.setExpanded(template.itemIsExpanded)
 		# set at least one template as default
 		if template is None:
-			template = Tc2Templates.TemplatePokerStarsTable()
+			template = Tc2ConfigTemplates.TemplatePokerStarsTable()
 			self.addTopLevelItem(template)
 			template.setExpanded(True)
 		self._templatesRead = True
