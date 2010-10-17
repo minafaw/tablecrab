@@ -58,6 +58,37 @@ issues
 - wine? i found that scrolling upwards via MouseWheel in QScrollArea is not working
 - since setting application style we get "Could not parse application stylesheet" messages. no idea why
 
+-----------------------------------------------------------------------------------------------------------------------------------
+FAQ
+-----------------------------------------------------------------------------------------------------------------------------------
+why has TableCrab to be run on windows (wine)?
+
+first late me state that TableCrab running on windows is a side effect, not a goal. it is developed
+on linux/wine and the focus is on making it run in this environment. so why wine then instead
+of say, X11? mainly because the more insecure windwos platform allows more tricks to be
+played with other peoples widgets. some fearures of TableCrab would be very hard to
+implement on native linux. add to this the fact that most poker clients run windows AND
+that the focus is on PokerStars wich is very easy to extend in functionality via win32 methods,
+i think this is a good decission, being lazy and all.
+
+
+why not support multiple platforms?
+
+..when python code could be easily extended to handle multiple platforms. i thought this
+over and came to the conclusion that it's not worth the efford. i may be wrong, but imo
+we'd either loose features and/or spend way too much time on thinking how to abstact
+subtle platform differences away that maybe even a rewrite from scratch could easily be
+done in less time and with less brain cell melting. imo a better way would be to simplify
+TableCrab in a way that makes a rewrite an easy task.
+
+
+why not support sites other than PokerStars?
+
+first of all, with the focus being on linux/wine, only sites that run on this platform are
+candidates. FullTilt is somewhat close to this .and maybe other sites i am not aware of.
+taking FullTilt as an example, the client is implemented in Qt with the effect that many
+win32 methods do not work on it. so this could be a candidate to implement a pure linux
+version of TableCrab.
 
 
 
