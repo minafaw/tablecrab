@@ -168,7 +168,7 @@ class FrameSettings(QtGui.QFrame):
 			if fp is not None: fp.close()
 
 		newSettings = QtCore.QSettings(fileName, QtCore.QSettings.IniFormat)
-		if not newSettings.isWritable:
+		if not newSettings.isWritable():
 			Tc2Config.msgWarning(self, 'Config File Is Not Writable')
 			return
 		settings = Tc2Config.settings()
