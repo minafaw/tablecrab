@@ -183,6 +183,7 @@ HelpTopics = [
 # needs rename: Gui/Hand/DialogOpen/State --> Gui/HandViewer/DialogOpen/State
 # needs rename: Gui/Hand/DialogSave/State --> Gui/HandViewer/DialogSave/State
 # needs rename: Gui/Hand/ZoomFactor --> Gui/HandViewer/ZoomFactor
+# needs rename: typo in: 'PokerStarsHandGrabber/HandFornmatterHtmlTabular' --> should read "For[n]matter"
 
 class Settings:
 	qSettings = QtCore.QSettings(Author, ApplicationName)
