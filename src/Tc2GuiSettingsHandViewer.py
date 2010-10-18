@@ -9,37 +9,30 @@ from PyQt4 import QtCore, QtGui
 #************************************************************************************
 class FrameSettings(QtGui.QFrame):
 
+	class ActionLineEdit(QtGui.QLineEdit):
+		def __init__(self, parent=None, text='', settingsKey=None, default=None):
+			QtGui.QLineEdit.__init__(self, text, parent)
+			self.settingsKey = settingsKey
+			self.default = default
+
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 		self.labelPrefix = QtGui.QLabel('<i>Prefix</i>', self)
 		self.labelAction = QtGui.QLabel('<i>Action</i>', self)
 		self.labelPostfix = QtGui.QLabel('<i>Postfix</i>', self)
 
-		actionSettings = (
-			('PrefixBet', '&Bet', 'PostfixBet'),
-			('PrefixCall', '&Call', 'PostfixCall'),
-			('PrefixCheck', 'Ch&eck', None),
-			('PrefixFold', '&Fold', None),
-			('PrefixRaise', '&Raise', 'PostfixRaise'),
-			('PrefixAnte', 'A&nte', 'PostfixAnte'),
-			('PrefixBigBlind', 'B&igBlind', 'PostfixBigBlind'),
-			('PrefixSmallBlind', '&SmallBlind', 'PostfixSmallBlind'),
-			)
 		self.actionWidgets = []
-		for actionPrefix, actionName, actionPostfix in actionSettings:
-			editPrefix = QtGui.QLineEdit(self)
-			editPrefix.setObjectName(actionPrefix)
+		for (actionName, settingsKeyPrefix, defaultPrefix, settingsKeyPostfix, defaultPostfix) in PokerStarsHandGrabber.HandFormatterHtmlTabular.ActionPrefixes:
+			editPrefix = self.ActionLineEdit(parent=self, settingsKey= settingsKeyPrefix, default=defaultPrefix)
 			editPrefix.setMaxLength(Tc2Config.MaxHandGrabberPrefix)
 			labelAction = QtGui.QLabel('<i>' + actionName + '</i>', self)
 			labelAction.setBuddy(editPrefix)
-
-			if actionPostfix is not None:
-				editPostfix = QtGui.QLineEdit(self)
-				editPostfix.setObjectName(actionPostfix)
+			if settingsKeyPostfix is not None:
+				editPostfix =  self.ActionLineEdit(parent=self, settingsKey= settingsKeyPostfix, default=defaultPostfix)
 				editPostfix.setMaxLength(Tc2Config.MaxHandGrabberPrefix)
 			else:
 				editPostfix = None
-			self.actionWidgets.append( (editPrefix, labelAction, editPostfix) )
+			self.actionWidgets.append({'EditPrefix': editPrefix, 'LabelAction': labelAction, 'EditPostfix': editPostfix})
 
 		self.spinMaxPlayerName = QtGui.QSpinBox(self)
 		self.spinMaxPlayerName.setRange(-1, 999)
@@ -83,11 +76,11 @@ class FrameSettings(QtGui.QFrame):
 		grid.col(Tc2Config.HLine(self), colspan=3)
 		grid.row()
 		grid.col(self.labelPrefix).col(self.labelAction).col(self.labelPostfix)
-		for i, (editPrefix, labelAction, editPostfix) in enumerate(self.actionWidgets):
+		for data in self.actionWidgets:
 			grid.row()
-			grid.col(editPrefix).col(labelAction)
-			if editPostfix is not None:
-				grid.col(editPostfix)
+			grid.col(data['EditPrefix']).col(data['LabelAction'])
+			if data['EditPostfix'] is not None:
+				grid.col(data['EditPostfix'])
 		grid.row()
 		grid.col(Tc2Config.VStretch())
 		grid.row()
@@ -96,51 +89,51 @@ class FrameSettings(QtGui.QFrame):
 		grid.col(self.buttonBox, colspan=3)
 
 	def onRestoreDefault(self, *args):
-		for editPrefix, _, editPostfix in self.actionWidgets:
-			default = getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, str(editPrefix.objectName()) )
-			editPrefix.setText(default)
+		for data in self.actionWidgets:
+			editPrefix = data['EditPrefix']
+			editPrefix.setText(editPrefix.default)
 			editPrefix.editingFinished.emit()
+			editPostfix = data['EditPostfix']
 			if editPostfix is not None:
-				default = getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, str(editPostfix.objectName()) )
-				editPostfix.setText(default)
+				editPostfix.setText(editPostfix.default)
 				editPostfix.editingFinished.emit()
 
 	def onHelp(self, *args):
 		Tc2GuiHelp.dialogHelp('settingsHandViewer', parent=self)
 
 	def onSpinMaxPlayerNameValueChanged(self, value):
-		Tc2Config.settingsSetValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/MaxPlayerName', value)
+		Tc2Config.settingsSetValue(PokerStarsHandGrabber.HandFormatterHtmlTabular.SettingsKeyMaxPlayerName, value)
 
 	def onNoFloatingPointChanged(self, state):
 		flag = state == QtCore.Qt.Checked
-		Tc2Config.settingsSetValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/NoFloatingPoint', flag)
+		Tc2Config.settingsSetValue(PokerStarsHandGrabber.HandFormatterHtmlTabular.SettingsKeyNoFloatingPoint, flag)
 
 	def onActionWidgetValueChanged(self):
 		edit = self.sender()
-		Tc2Config.settingsSetValue('PokerStarsHandGrabber/handFornmatterHtmlTabular/%s' % str(edit.objectName()), edit.text() )
+		Tc2Config.settingsSetValue(edit.settingsKey, edit.text())
 
 	def onInit(self):
 		self.layout()
 
-		maxPlayerName = Tc2Config.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/MaxPlayerName', -1).toInt()[0]
+		maxPlayerName = Tc2Config.settingsValue(PokerStarsHandGrabber.HandFormatterHtmlTabular.SettingsKeyMaxPlayerName, -1).toInt()[0]
 		self.spinMaxPlayerName.setValue(maxPlayerName)
 		self.spinMaxPlayerName.valueChanged.connect(self.onSpinMaxPlayerNameValueChanged)
 
-		state = QtCore.Qt.Checked if Tc2Config.settingsValue('PokerStarsHandGrabber/HandFornmatterHtmlTabular/NoFloatingPoint', False).toBool() else QtCore.Qt.Unchecked
+		state = QtCore.Qt.Checked if Tc2Config.settingsValue(PokerStarsHandGrabber.HandFormatterHtmlTabular.SettingsKeyNoFloatingPoint, False).toBool() else QtCore.Qt.Unchecked
 		self.checkNoFloatingPoint.setCheckState(state)
 		self.checkNoFloatingPoint.stateChanged.connect(self.onNoFloatingPointChanged)
 
-		for editPrefix, _, editPostfix in self.actionWidgets:
-			prefix = str(editPrefix.objectName())
-			default = getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, prefix)
-			text = Tc2Config.settingsValue('PokerStarsHandGrabber/handFornmatterHtmlTabular/%s' % prefix, default).toString()
+		for data in self.actionWidgets:
+			editPrefix = data['EditPrefix']
+			text = Tc2Config.settingsValue(editPrefix.settingsKey, editPrefix.default).toString()
 			editPrefix.setText(text)
 			editPrefix.editingFinished.connect(self.onActionWidgetValueChanged)
+			editPostfix = data['EditPostfix']
 			if editPostfix is not None:
-				postfix = str(editPostfix.objectName())
-				default = getattr(PokerStarsHandGrabber.HandFormatterHtmlTabular, postfix)
-				text = Tc2Config.settingsValue('PokerStarsHandGrabber/handFornmatterHtmlTabular/%s' % postfix, default).toString()
+				text = Tc2Config.settingsValue(editPostfix.settingsKey, editPostfix.default).toString()
 				editPostfix.setText(text)
 				editPostfix.editingFinished.connect(self.onActionWidgetValueChanged)
+
+
 
 

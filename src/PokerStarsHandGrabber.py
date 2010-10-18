@@ -402,7 +402,27 @@ class HandFormatterBase(object):
 class HandFormatterHtmlTabular(HandFormatterBase):
 	"""Hand formatter that formats a hand as a tabular html"""
 	Name = 'HtmlTabular'
-	# and this is the css for the html file
+
+	#TODO: typo in settings key. should be "Formatter" not "Fornmatter"
+	SettingsKeyBase = 'PokerStarsHandGrabber/HandFornmatterHtmlTabular'
+	SettingsKeyStyleSheet = SettingsKeyBase + '/StyleSheet'
+	SettingsKeyMaxPlayerName = SettingsKeyBase + '/MaxPlayerName'
+	SettingsKeyNoFloatingPoint = SettingsKeyBase + '/NoFloatingPoint'
+	SettingsKeyPrefixFold = SettingsKeyBase + '/PrefixFold'
+	SettingsKeyPrefixCheck = SettingsKeyBase + '/PrefixCheck'
+	SettingsKeyPrefixBet = SettingsKeyBase + '/PrefixBet'
+	SettingsKeyPostfixBet = SettingsKeyBase + '/PostfixBet'
+	SettingsKeyPrefixRaise = SettingsKeyBase + '/PrefixRaise'
+	SettingsKeyPostfixRaise = SettingsKeyBase + '/PostfixRaise'
+	SettingsKeyPrefixCall = SettingsKeyBase + '/PrefixCall'
+	SettingsKeyPostfixCall = SettingsKeyBase + '/PotfixCall'
+	SettingsKeyPrefixAnte = SettingsKeyBase + '/PrefixAnte'
+	SettingsKeyPostfixAnte = SettingsKeyBase + '/PostfixAnte'
+	SettingsKeyPrefixBigBlind = SettingsKeyBase + '/PrefixBigBlind'
+	SettingsKeyPostfixBigBlind = SettingsKeyBase + '/PostfixBigBlind'
+	SettingsKeyPrefixSmallBlind = SettingsKeyBase + '/PrefixSmallBlind'
+	SettingsKeyPostfixSmallBlind = SettingsKeyBase + '/PostfixSmallBlind'
+
 	PrefixBet = 'b'
 	PostfixBet = ''
 	PrefixRaise = 'r'
@@ -417,7 +437,20 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	PostfixBigBlind = ''
 	PrefixCheck = 'ck'
 	PrefixFold = 'f'
+
+	ActionPrefixes = (
+			('Bet', SettingsKeyPrefixBet, PrefixBet, SettingsKeyPostfixBet, PostfixBet),
+			('Call', SettingsKeyPrefixCall, PrefixCall, SettingsKeyPostfixCall, PostfixCall),
+			('Check', SettingsKeyPrefixCheck, PrefixCheck, None, None),
+			('Fold', SettingsKeyPrefixFold, PrefixFold, None, None),
+			('Raise', SettingsKeyPrefixRaise, PrefixRaise, SettingsKeyPostfixRaise, PostfixRaise),
+			('Ante', SettingsKeyPrefixAnte, PrefixAnte, SettingsKeyPostfixAnte, PostfixAnte),
+			('BigBlind', SettingsKeyPrefixBigBlind, PrefixBigBlind, SettingsKeyPostfixBigBlind, PostfixBigBlind),
+			('SmallBlind', SettingsKeyPrefixSmallBlind, PrefixSmallBlind, SettingsKeyPostfixSmallBlind, PostfixSmallBlind),
+			)
+
 	MaxPlayerName = -1
+	# and this is the css for the html file
 	StyleSheet = '''.handBody{}
 .handTable{
         border-spacing: 0px;
@@ -536,15 +569,11 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	def __init__(self):
 		''''''
 
-	def settingsValue(self, key, default):
-		return Tc2Config.settingsValue(Tc2Config.settingsKeyJoin('PokerStarsHandGrabber/HandFornmatterHtmlTabular', key), default)
-
-
 	def formatNum(self, hand, num):
 		if not num:
 			result = ''
 		elif hand.hasCents:
-			if self.settingsValue('NoFloatingPoint', QtCore.QVariant(False)).toBool():
+			if Tc2Config.settingsValue(self.SettingsKeyNoFloatingPoint, False).toBool():
 				result = Tc2Config.locale.toString( int(num*100) )
 			else:
 				result = Tc2Config.locale.toString(num, 'f', 2)
@@ -585,7 +614,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 
 	#TODO: use Tc2Config.truncateString()
 	def formatPlayerName(self, playerName):
-		maxPlayerName = self.settingsValue('MaxPlayerName', self.MaxPlayerName).toInt()[0]
+		maxPlayerName = Tc2Config.settingsValue(self.SettingsKeyMaxPlayerName, self.MaxPlayerName).toInt()[0]
 		if maxPlayerName > -1 and len(playerName) > maxPlayerName:
 			if maxPlayerName <= 0:
 				playerName = ''
@@ -604,7 +633,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		p >> '<head>'
 		p | '<meta name="author" content="TableCrab">'
 		p | '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
-		p | '<style type="text/css"><!-- %s --></style>' % self.settingsValue('StyleSheet', self.StyleSheet).toString()
+		p | '<style type="text/css"><!-- %s --></style>' % Tc2Config.settingsValue(self.SettingsKeyStyleSheet, self.StyleSheet).toString()
 		p << '</head>'
 
 		p >> '<body class="handBody">'
@@ -635,38 +664,38 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 				nActions = None
 				for nActions, action in enumerate(actions):
 					if action.type == action.TypeFold:
-						p | '<div class="playerActionFold">%s</div>' % self.settingsValue('PrefixFold', self.PrefixFold).toString()
+						p | '<div class="playerActionFold">%s</div>' % Tc2Config.settingsValue(self.SettingsKeyPrefixFold, self.PrefixFold).toString()
 					elif action.type == action.TypeCheck:
-						p |  '<div class="playerActionCheck">%s</div>' % self.settingsValue('PrefixCheck', self.PrefixCheck).toString()
+						p |  '<div class="playerActionCheck">%s</div>' % Tc2Config.settingsValue(self.SettingsKeyPrefixCheck, self.PrefixCheck).toString()
 					elif action.type == action.TypeBet:
 						p | '<div class="playerActionBet">%s%s%s</div>' % (
-								self.settingsValue('PrefixBet', self.PrefixBet).toString(),
+								Tc2Config.settingsValue(self.SettingsKeyPrefixBet, self.PrefixBet).toString(),
 								self.formatNum(hand, action.amount),
-								self.settingsValue('PostfixBet', self.PostfixBet).toString()
+								Tc2Config.settingsValue(self.SettingsKeyPostfixBet, self.PostfixBet).toString()
 								)
 					elif action.type == action.TypeRaise:
 						p | '<div class="playerActionRaise">%s%s%s</div>' % (
-								self.settingsValue('PrefixRaise', self.PrefixRaise).toString(),
+								Tc2Config.settingsValue(self.SettingsKeyPrefixRaise, self.PrefixRaise).toString(),
 								self.formatNum(hand, action.amount),
-								self.settingsValue('PostfixRaise', self.PostfixRaise).toString()
+								Tc2Config.settingsValue(self.SettingsKeyPostfixRaise, self.PostfixRaise).toString()
 								)
 					elif action.type == action.TypeCall:
 						p | '<div class="playerActionCall">%s%s%s</div>' % (
-								self.settingsValue('PrefixCall', self.PrefixCall).toString(),
+								Tc2Config.settingsValue(self.SettingsKeyPrefixCall, self.PrefixCall).toString(),
 								self.formatNum(hand, action.amount),
-								self.settingsValue('PotfixCall', self.PostfixCall).toString()
+								Tc2Config.settingsValue(self.SettingsKeyPostfixCall, self.PostfixCall).toString()
 								)
 					elif action.type == action.TypePostBlindBig:
 						p | '<div class="playerActionPostBlindBig">%s%s%s</div>' % (
-								self.settingsValue('PrefixBigBlind', self.PrefixBigBlind).toString(),
+								Tc2Config.settingsValue(self.SettingsKeyPrefixBigBlind, self.PrefixBigBlind).toString(),
 								self.formatNum(hand, action.amount),
-								self.settingsValue('PostfixBigBlind', self.PostfixBigBlind).toString()
+								Tc2Config.settingsValue(self.SettingsKeyPostfixBigBlind, self.PostfixBigBlind).toString()
 								)
 					elif action.type == action.TypePostBlindSmall:
 						p | '<div class="playerActionPostBlindSmall">%s%s%s</div>' % (
-								self.settingsValue('PrefixSmallBlind', self.PrefixSmallBlind).toString(),
+								Tc2Config.settingsValue(self.SettingsKeyPrefixSmallBlind, self.PrefixSmallBlind).toString(),
 								self.formatNum(hand, action.amount),
-								self.settingsValue('PostfixSmallBlind', self.PostfixSmallBlind).toString()
+								Tc2Config.settingsValue(self.SettingsKeyPostfixSmallBlind, self.PostfixSmallBlind).toString()
 								)
 
 				if nActions is None:
@@ -680,9 +709,9 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		pot = hand.calcPotSizes()
 		#TODO: to save some space we don't display ante for individual player. good idea or not?
 		potCellExtra = (
-				self.settingsValue('PrefixAnte', 'ante ').toString() +
+				Tc2Config.settingsValue(self.SettingsKeyPrefixAnte, 'ante ').toString() +
 				self.formatNum(hand, hand.blindAnte) +
-				self.settingsValue('PostfixAnte', '').toString()
+				Tc2Config.settingsValue(self.SettingsKeyPostfixAnte, '').toString()
 				) if hand.blindAnte else '&nbsp;'
 		p | '<td colspan="2" class="potCellExtra">%s</td>' % potCellExtra
 		p | '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetBlinds])
