@@ -13,6 +13,10 @@ from PyQt4 import QtCore, QtGui
 #**********************************************************************************************
 class HotkeyWidget(QtGui.QTreeWidget):
 
+	SettingsKeyBase = 'Gui'
+	SettingsKeyHotkeyEditorGeometry =SettingsKeyBase + '/DialogHotkeyEditor/Geometry'
+	SettingsKeyHotkeys = 'Hotkeys'
+
 	class ActionNewHotkey(QtGui.QAction):
 		def __init__(self, hotkeyProto, parent=None):
 			QtGui.QAction.__init__(self, parent)
@@ -172,7 +176,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		hotkey = hotkeyProto()
 		hotkey = hotkey.createEditor(
 				parent=self,
-				settingsKey='Gui/DialogHotkeyEditor/Geometry',
+				settingsKey=self.SettingsKeyHotkeyEditorGeometry,
 				isEdit=False
 				)
 		if hotkey is not None:
@@ -182,7 +186,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			self.adjustHotkeys()
 
 	def dump(self):
-		Tc2Config.dumpPersistentItems('Hotkeys', self)
+		Tc2Config.dumpPersistentItems(self.SettingsKeyHotkeys, self)
 
 	def editHotkey(self):
 		hotkey = self.currentItem()
@@ -191,7 +195,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			return
 		hotkey = hotkey.createEditor(
 				parent=self,
-				settingsKey='Gui/DialogHotkeyEditor/Geometry',
+				settingsKey=self.SettingsKeyHotkeyEditorGeometry,
 				isEdit=True
 				)
 		if hotkey is not None:
@@ -244,7 +248,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self.clear()
 		hotkey = None
 		for hotkey in Tc2Config.readPersistentItems(
-				'Hotkeys',
+				self.SettingsKeyHotkeys,
 				maxItems=Tc2Config.MaxHotkeys,
 				itemProtos=Tc2ConfigHotkeys.Hotkeys
 				):
