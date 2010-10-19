@@ -22,6 +22,11 @@ ErrMessage = '<div style="color: red;background-color: white;">&nbsp;Error: doub
 #************************************************************************************
 class Gui(QtGui.QMainWindow):
 
+	SettingsKeyBase = 'Gui'
+	SettingsKeyGeometry = SettingsKeyBase + '/Geometry'
+	SettingsKeyTabCurrent =  SettingsKeyBase + '/TabCurrent'
+	SettingsKeyDialogExceptionGeometry = SettingsKeyBase + '/DialogException/Geometry'
+
 	# double clickabe label. we use this to trigger ExceptionDialog
 	class ClickableLabel(QtGui.QLabel):
 		doubleClicked = QtCore.pyqtSignal()
@@ -32,7 +37,7 @@ class Gui(QtGui.QMainWindow):
 			self.doubleClicked.emit()
 
 	def __init__(self):
-		scope = Tc2Config.settingsValue('Gui/SingleApplication/Scope', '').toString()
+		scope = Tc2Config.settingsValue(Tc2Config.SettingsKeySingleApplicationScope, '').toString()
 		if scope not in Tc2Win32.SingleApplication.Scopes:
 			scope = Tc2Config.SingleApplicationScopeDefault
 		self.singleApplication = Tc2Win32.SingleApplication(
@@ -56,7 +61,7 @@ class Gui(QtGui.QMainWindow):
 
 		self.setWindowTitle(Tc2Config.ReleaseName)
 		self.setWindowIcon( QtGui.QIcon(Tc2Config.Pixmaps.tableCrab()) )
-		self.restoreGeometry( Tc2Config.settingsValue('Gui/Geometry', QtCore.QByteArray()).toByteArray() )
+		self.restoreGeometry( Tc2Config.settingsValue(self.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray() )
 
 		self.siteManager = Tc2SiteManager.SiteManager(parent=self)
 
@@ -106,8 +111,8 @@ class Gui(QtGui.QMainWindow):
 		Tc2Config.mouseHook.stop()
 		Tc2Config.keyboardHook.stop()
 		Tc2Config.windowHook.stop()
-		Tc2Config.settingsSetValue('Gui/TabCurrent', self.tabWidget.currentIndex())
-		Tc2Config.settingsSetValue('Gui/Geometry', self.saveGeometry() )
+		Tc2Config.settingsSetValue(self.SettingsKeyTabCurrent, self.tabWidget.currentIndex())
+		Tc2Config.settingsSetValue(self.SettingsKeyGeometry, self.saveGeometry() )
 		return QtGui.QMainWindow.closeEvent(self, event)
 
 	def show(self):
@@ -163,15 +168,15 @@ class Gui(QtGui.QMainWindow):
 		self.statusBar().showMessage('>>' + qString, Tc2Config.StatusBarMessageTimeout * 1000)
 
 	def onInit(self):
-		self.tabWidget.setCurrentIndex( Tc2Config.settingsValue('Gui/TabCurrent', QtCore.QVariant()).toInt()[0] )
+		self.tabWidget.setCurrentIndex( Tc2Config.settingsValue(self.SettingsKeyTabCurrent, QtCore.QVariant()).toInt()[0] )
 
 	def onLabelFeedbackDoubleClicked(self):
 		lastError = self._feedbackMessages[None]
 		if lastError:
 			dlg = Tc2DialogException.DialogException(lastError, parent=self)
-			dlg.restoreGeometry( Tc2Config.settingsValue('Gui/DialogException/Geometry', QtCore.QByteArray()).toByteArray())
+			dlg.restoreGeometry( Tc2Config.settingsValue(self.SettingsKeyDialogExceptionGeometry, QtCore.QByteArray()).toByteArray())
 			dlg.exec_()
-			Tc2Config.settingsSetValue('Gui/DialogException/Geometry', dlg.saveGeometry() )
+			Tc2Config.settingsSetValue(self.SettingsKeyDialogExceptionGeometry, dlg.saveGeometry() )
 
 	def onTabCurrentChanged(self, index):
 		if index < 0:

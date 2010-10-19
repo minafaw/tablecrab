@@ -185,6 +185,17 @@ HelpTopics = [
 # needs rename: Gui/Hand/ZoomFactor --> Gui/HandViewer/ZoomFactor
 # needs rename: typo in: 'PokerStarsHandGrabber/HandFornmatterHtmlTabular' --> should read "For[n]matter"
 
+#TODO: all below need rename
+SettingsKeySingleApplicationScope ='Gui/SingleApplication/Scope'
+SettingsKeyFont = 'Gui/Font'
+SettingsKeyFontFixed = 'Gui/FontFixed'
+SettingsKeyStyle = 'Gui/Style'
+SettingsKeyWebViewZoomSteps = 'Gui/WebView/ZoomSteps'
+SettingsKeyAlternatingRowColors = 'Gui/AlternatingRowColors'
+SettingsKeyChildItemIndicators = 'Gui/ChildItemIndicators'
+SettingsKeyRestoreMousePosition = 'RestoreMousePosition'
+SettingsKeyRoundBets = 'Settings/RoundBets'
+
 class Settings:
 	qSettings = QtCore.QSettings(Author, ApplicationName)
 
@@ -384,7 +395,7 @@ def formatedBet(bet, blinds=None):
 		return '0'
 	bet = round(bet, 2)
 	if blinds is not None:
-		roundTo = settingsValue('Settings/RoundBets', '')
+		roundTo = settingsValue(SettingsKeyRoundBets, '')
 		if roundTo in (RoundBetsBigBlind, RoundBetsSmallBlind):
 			blind = blinds[1] if roundTo == RoundBetsBigBlind else blinds[0]
 			bet = bet * 100
@@ -423,11 +434,11 @@ class WebViewToolBar(QtGui.QToolBar):
 	ZoomStepsMin = 1
 	ZoomMin = 0.5
 	ZoomMax = 7
-	def __init__(self, webView, settingsKeyZoomFactor=None, settingsKeyZoomSteps=None):
+	def __init__(self, webView, settingsKeyZoomFactor=None):
 		QtGui.QToolBar.__init__(self, webView)
 		self.webView = webView
 		self.settingsKeyZoomFactor = settingsKeyZoomFactor
-		self.settingsKeyZoomSteps = settingsKeyZoomSteps
+		self.settingsKeyZoomSteps = None if settingsKeyZoomFactor is None else SettingsKeyWebViewZoomSteps
 
 		globalObject.init.connect(self.onInit)
 

@@ -273,8 +273,8 @@ class TemplatesWidget(QtGui.QTreeWidget):
 
 	def onInit(self):
 		self.setUpdatesEnabled(False)
-		self.setAlternatingRowColors( Tc2Config.settingsValue('Gui/AlternatingRowColors', False).toBool() )
-		self.setRootIsDecorated( Tc2Config.settingsValue('Gui/ChildItemIndicators', True).toBool() )
+		self.setAlternatingRowColors( Tc2Config.settingsValue(Tc2Config.SettingsKeyAlternatingRowColors, False).toBool() )
+		self.setRootIsDecorated( Tc2Config.settingsValue(Tc2Config.SettingsKeyChildItemIndicators, True).toBool() )
 		self.clear()
 		template = None
 		for template in Tc2Config.readPersistentItems('Templates', maxItems=Tc2Config.MaxTemplates, itemProtos=Tc2ConfigTemplates.Templates):
