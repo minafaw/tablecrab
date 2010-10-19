@@ -10,6 +10,13 @@ import hashlib
 #
 #*******************************************************************************************
 class FrameHandViewer(QtGui.QFrame):
+	#TODO: rename to Gui/HandViewer/ZoomFactor
+	SettingsKeyBase = 'Gui/Hand'
+	SettingsKeyZoomFactor = SettingsKeyBase + '/ZoomFactor'
+	SettingsKeyDialogOpenState = SettingsKeyBase + '/DialogOpen/State'
+	SettingsKeyDialogSaveState = SettingsKeyBase + '/DialogSave/State'
+
+
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
@@ -36,8 +43,7 @@ class FrameHandViewer(QtGui.QFrame):
 		self.pokerStarsHandGrabber.handGrabbed.connect(self.onHandGrabberGrabbedHand)
 
 		self.toolBar = Tc2Config.WebViewToolBar(self.webView,
-				#TODO: rename to Gui/HandViewer/ZoomFactor
-				settingsKeyZoomFactor='Gui/Hand/ZoomFactor'
+				settingsKeyZoomFactor=self.SettingsKeyZoomFactor
 				)
 
 		# set up actions
@@ -124,7 +130,7 @@ class FrameHandViewer(QtGui.QFrame):
 				title='Open Hand..',
 				fileFilters=('HtmlFiles (*.html *.htm)', 'All Files (*)'),
 				#TODO: rename to Gui/HandViewer/DialogOpen/State
-				settingsKey='Gui/Hand/DialogOpen/State',
+				settingsKey=self.SettingsKeyDialogOpenState,
 				)
 		if fileName is None:
 			return
@@ -142,7 +148,7 @@ class FrameHandViewer(QtGui.QFrame):
 				title='Save Save Hand..',
 				fileFilters=('HtmlFiles (*.html *.htm)', 'All Files (*)'),
 				#TODO: rename to Gui/HandViewer/DialogSave/State
-				settingsKey='Gui/Hand/DialogSave/State',
+				settingsKey=self.SettingsKeyDialogSaveState,
 				defaultSuffix='html',
 				)
 		if fileName is None:
