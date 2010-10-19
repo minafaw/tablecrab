@@ -1,6 +1,7 @@
 
 import Tc2Config
-import Tc2GuiHelp
+import  Tc2GuiHelp
+import Tc2SitePokerStars
 from PyQt4 import QtCore, QtGui
 
 #************************************************************************************
@@ -55,44 +56,44 @@ class FrameSettings(QtGui.QFrame):
 
 	def onAutoClosePopupNewsChanged(self, state):
 		flag = state == QtCore.Qt.Checked
-		Tc2Config.settingsSetValue('PokerStars/AutoClosePopupNews', flag)
+		Tc2Config.settingsSetValue(Tc2SitePokerStars.EventHandler.SettingsKeyAutoClosePopupNews, flag)
 
 	def onAutoCloseTourneyRegistrationBoxesChanged(self, state):
 		flag = state == QtCore.Qt.Checked
-		Tc2Config.settingsSetValue('PokerStars/AutoCloseTourneyRegistrationBoxes', flag)
+		Tc2Config.settingsSetValue(Tc2SitePokerStars.EventHandler.SettingsKeyAutoCloseTourneyRegistrationBoxes, flag)
 
 	def onAutoCloseTableMessageBoxesChanged(self, state):
 		flag = state == QtCore.Qt.Checked
-		Tc2Config.settingsSetValue('PokerStars/AutoCloseTableMessageBoxes', flag)
+		Tc2Config.settingsSetValue(Tc2SitePokerStars.EventHandler.SettingsKeyAutoCloseTableMessageBoxes, flag)
 
 	def onAutoLogInChanged(self, state):
 		flag = state == QtCore.Qt.Checked
-		Tc2Config.settingsSetValue('PokerStars/AutoCloseLogin', flag)
+		Tc2Config.settingsSetValue(Tc2SitePokerStars.EventHandler.SettingsKeyAutoCloseLogin, flag)
 
 	def onMoveMouseToActiveTable(self, state):
 		flag = state == QtCore.Qt.Checked
-		Tc2Config.settingsSetValue('PokerStars/MoveMouseToActiveTable', flag)
+		Tc2Config.settingsSetValue(Tc2SitePokerStars.EventHandler.SettingsKeyMoveMouseToActiveTable, flag)
 
 	def onInit(self):
 		self.layout()
 
-		state = QtCore.Qt.Checked if Tc2Config.settingsValue('PokerStars/AutoClosePopupNews', False).toBool() else QtCore.Qt.Unchecked
+		state = QtCore.Qt.Checked if Tc2Config.settingsValue(Tc2SitePokerStars.EventHandler.SettingsKeyAutoClosePopupNews, False).toBool() else QtCore.Qt.Unchecked
 		self.checkAutoClosePopupNews.setCheckState(state)
 		self.checkAutoClosePopupNews.stateChanged.connect(self.onAutoClosePopupNewsChanged)
 
-		state = QtCore.Qt.Checked if Tc2Config.settingsValue('PokerStars/AutoCloseTourneyRegistrationBoxes', False).toBool() else QtCore.Qt.Unchecked
+		state = QtCore.Qt.Checked if Tc2Config.settingsValue(Tc2SitePokerStars.EventHandler.SettingsKeyAutoCloseTourneyRegistrationBoxes, False).toBool() else QtCore.Qt.Unchecked
 		self.checkAutoCloseTourneyRegistrationBoxes.setCheckState(state)
 		self.checkAutoCloseTourneyRegistrationBoxes.stateChanged.connect(self.onAutoCloseTourneyRegistrationBoxesChanged)
 
-		state = QtCore.Qt.Checked if Tc2Config.settingsValue('PokerStars/AutoCloseTableMessageBoxes', False).toBool() else QtCore.Qt.Unchecked
+		state = QtCore.Qt.Checked if Tc2Config.settingsValue(Tc2SitePokerStars.EventHandler.SettingsKeyAutoCloseTableMessageBoxes, False).toBool() else QtCore.Qt.Unchecked
 		self.checkAutoCloseTableMessageBoxes.setCheckState(state)
 		self.checkAutoCloseTableMessageBoxes.stateChanged.connect(self.onAutoCloseTableMessageBoxesChanged)
 
-		state = QtCore.Qt.Checked if Tc2Config.settingsValue('PokerStars/AutoCloseLogin', False).toBool() else QtCore.Qt.Unchecked
+		state = QtCore.Qt.Checked if Tc2Config.settingsValue(Tc2SitePokerStars.EventHandler.SettingsKeyAutoCloseLogin, False).toBool() else QtCore.Qt.Unchecked
 		self.checkAutoLogIn.setCheckState(state)
 		self.checkAutoLogIn.stateChanged.connect(self.onAutoLogInChanged)
 
-		state = QtCore.Qt.Checked if Tc2Config.settingsValue('PokerStars/MoveMouseToActiveTable', False).toBool() else QtCore.Qt.Unchecked
+		state = QtCore.Qt.Checked if Tc2Config.settingsValue(Tc2SitePokerStars.EventHandler.SettingsKeyMoveMouseToActiveTable, False).toBool() else QtCore.Qt.Unchecked
 		self.checkMoveMouseToActiveTable.setCheckState(state)
 		self.checkMoveMouseToActiveTable.stateChanged.connect(self.onMoveMouseToActiveTable)
 

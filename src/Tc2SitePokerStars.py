@@ -149,6 +149,13 @@ def testPotAmount():
 
 class EventHandler(QtCore.QObject):
 
+	SettingKeyBase = 'PokerStars'
+	SettingsKeyAutoClosePopupNews = SettingKeyBase + '/AutoClosePopupNews'
+	SettingsKeyAutoCloseTourneyRegistrationBoxes = SettingKeyBase + '/AutoCloseTourneyRegistrationBoxes'
+	SettingsKeyAutoCloseTableMessageBoxes = SettingKeyBase + '/AutoCloseTableMessageBoxes'
+	SettingsKeyAutoCloseLogin = SettingKeyBase + '/AutoCloseLogin'
+	SettingsKeyMoveMouseToActiveTable = SettingKeyBase + '/MoveMouseToActiveTable'
+
 	def __init__(self, parent=None):
 		QtCore.QObject.__init__(self, parent)
 
@@ -158,13 +165,13 @@ class EventHandler(QtCore.QObject):
 	def handleWindowCreated(self, hwnd):
 
 		if self.isPopupNews(hwnd):
-			if Tc2Config.settingsValue('PokerStars/AutoClosePopupNews', False).toBool():
+			if Tc2Config.settingsValue(self.SettingsKeyAutoClosePopupNews, False).toBool():
 				Tc2Win32.windowClose(hwnd)
 				Tc2Config.globalObject.feedbackMessage.emit('Closed Popup News')
 			return True
 
 		elif self.isTourneyRegistrationMessageBox(hwnd):
-			if Tc2Config.settingsValue('PokerStars/AutoCloseTourneyRegistrationBoxes', False).toBool():
+			if Tc2Config.settingsValue(self.SettingsKeyAutoCloseTourneyRegistrationBoxes, False).toBool():
 				buttons = Tc2Win32.windowGetButtons(hwnd)
 				if len(buttons) != 1: return
 				if not 'OK' in buttons: return
@@ -174,7 +181,7 @@ class EventHandler(QtCore.QObject):
 			return True
 
 		elif self.isTableMessageBox(hwnd):
-			if Tc2Config.settingsValue('PokerStars/AutoCloseTableMessageBoxes', False).toBool():
+			if Tc2Config.settingsValue(self.SettingsKeyAutoCloseTableMessageBoxes, False).toBool():
 				buttons = Tc2Win32.windowGetButtons(hwnd)
 				if len(buttons) != 1: return
 				if not 'OK' in buttons: return
@@ -185,7 +192,7 @@ class EventHandler(QtCore.QObject):
 		elif self.isLogIn(hwnd):
 			if self._pokerStarsLoginBox is None:
 				self._pokerStarsLoginBox = hwnd
-				if Tc2Config.settingsValue('PokerStars/AutoCloseLogin', False).toBool():
+				if Tc2Config.settingsValue(self.SettingsKeyAutoCloseLogin, False).toBool():
 					buttons = Tc2Win32.windowGetButtons(hwnd)
 					if sorted(buttons) == ['', 'Cancel', 'Create New Account...', 'Forgot User ID / Password...', 'OK']:
 						if Tc2Win32.windowCheckboxIsChecked(buttons['']):
@@ -203,7 +210,7 @@ class EventHandler(QtCore.QObject):
 		template = self.tableTemplate(hwnd)
 		if template is not None:
 			Tc2Config.globalObject.feedbackMessage.emit(template.name)
-			if Tc2Config.settingsValue('PokerStars/MoveMouseToActiveTable', False).toBool():
+			if Tc2Config.settingsValue(self.SettingsKeyMoveMouseToActiveTable, False).toBool():
 				if not Tc2Win32.mouseButtonsDown():
 					point = template.emptySpace
 					point = Tc2Win32.windowClientPointToScreenPoint(hwnd, point)
