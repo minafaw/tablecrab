@@ -239,7 +239,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self.setUpdatesEnabled(False)
 
 		self.setAlternatingRowColors(
-				Tc2Config.settingsValue('Gui/AlternatingRowColors', False).toBool()
+				Tc2Config.settingsValue(Tc2Config.SettingsKeyAlternatingRowColors, False).toBool()
 				)
 		self.clear()
 		hotkey = None

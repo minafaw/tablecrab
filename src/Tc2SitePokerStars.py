@@ -426,14 +426,14 @@ class EventHandler(QtCore.QObject):
 		# 5) we dont know when PS schows us buttons or checkboxes. bet box being
 		#    visible gives us an indicator at times, but is useless for example if s.o. is all-in
 		mi = Tc2Win32.MouseInput()
-		mi.leftClick(point, hwnd=hwnd).send(restoreCursor=Tc2Config.settingsValue('RestoreMousePosition', False).toBool())
+		mi.leftClick(point, hwnd=hwnd).send(restoreCursor=Tc2Config.settingsValue(Tc2Config.SettingsKeyRestoreMousePosition, False).toBool())
 		# workaround to send double clicks. this handles checkboxes as expected but may trigger
 		# accidental clicks on unrelated tables. we add an abitrary timeout to check if PS has thrown another
 		# table to the foreground. no way to get this fail save, we have a race condition
 		##time.sleep( min(0.05, Tc2Win32.mouseDoubleClickTime()) )
 		##hwnd2 = Tc2Win32.windowForeground()
 		##if hwnd == hwnd2:
-		##	mi.leftClick(point, hwnd=hwnd).send(restoreCursor=Tc2Config.settingsValue('RestoreMousePosition', False).toBool())
+		##	mi.leftClick(point, hwnd=hwnd).send(restoreCursor=Tc2Config.settingsValue(Tc2Config.SettingsKeyRestoreMousePosition, False).toBool())
 		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def tableHandleCheck(self, hotkey, template, hwnd, inputEvent):
@@ -524,7 +524,7 @@ class EventHandler(QtCore.QObject):
 			return
 		mi = Tc2Win32.MouseInput()
 		mi.leftDrag(pointSliderStart, pointSliderEnd, hwnd=hwnd)
-		mi.send(restoreCursor=Tc2Config.settingsValue('RestoreMousePosition', False).toBool())
+		mi.send(restoreCursor=Tc2Config.settingsValue(Tc2Config.SettingsKeyRestoreMousePosition, False).toBool())
 		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def tableHandleMultiplyBlind(self, hotkey, template, hwnd, inputEvent):
@@ -540,7 +540,7 @@ class EventHandler(QtCore.QObject):
 			newBet = data['smallBlind'] * hotkey.multiplier() * inputEvent.steps
 		else:
 			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
-		#TODO: adjust bet to 'Settings/RoundBets' ? kind of contradictionary
+		#TODO: adjust bet to Tc2Config.SettingsKeyRestoreMousePosition ? kind of contradictionary
 		newBet = Tc2Config.formatedBet(newBet, blinds=None)
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
@@ -559,7 +559,7 @@ class EventHandler(QtCore.QObject):
 			newBet = data['bet'] + (data['smallBlind'] * hotkey.multiplier() * inputEvent.steps)
 		else:
 			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
-		#TODO: adjust bet to 'Settings/RoundBets' ? kind of contradictionary
+		#TODO: adjust bet to Tc2Config.SettingsKeyRestoreMousePosition ? kind of contradictionary
 		newBet = Tc2Config.formatedBet(newBet, blinds=None)
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
@@ -578,7 +578,7 @@ class EventHandler(QtCore.QObject):
 			newBet = data['bet'] - (data['smallBlind'] * hotkey.multiplier() * inputEvent.steps)
 		else:
 			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
-		#TODO: adjust bet to 'Settings/RoundBets' ? kind of contradictionary
+		#TODO: adjust bet to Tc2Config.SettingsKeyRestoreMousePosition ? kind of contradictionary
 		newBet = Tc2Config.formatedBet(newBet, blinds=None)
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
@@ -643,7 +643,7 @@ class EventHandler(QtCore.QObject):
 		point = QtCore.QPoint(2, 2)
 		mi = Tc2Win32.MouseInput()
 		mi.leftClickDouble(point, hwnd=hwndBetBox)
-		mi.send(restoreCursor=Tc2Config.settingsValue('RestoreMousePosition', False).toBool())
+		mi.send(restoreCursor=Tc2Config.settingsValue(Tc2Config.SettingsKeyRestoreMousePosition, False).toBool())
 		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def _tableClickRestoreFocus(self, hwnd, point, template):
@@ -655,7 +655,7 @@ class EventHandler(QtCore.QObject):
 		#TODO: for some reason (linux/wine?) table regain focus but is not activated when the replayer is opend for the first time
 		mi = Tc2Win32.MouseInput()
 		mi.leftClickDouble(template.points['EmptySpace'], hwnd=hwnd)
-		mi.send(restoreCursor=Tc2Config.settingsValue('RestoreMousePosition', False).toBool())
+		mi.send(restoreCursor=Tc2Config.settingsValue(Tc2Config.SettingsKeyRestoreMousePosition, False).toBool())
 
 	def tableHandleReplayer(self, hotkey, template, hwnd, inputEvent):
 		point = self.tableGetPoint('Replayer', template)

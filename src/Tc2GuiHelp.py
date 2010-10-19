@@ -21,10 +21,7 @@ class FrameHelp(QtGui.QFrame):
 		page.setNetworkAccessManager(self.networkAccessManager)
 
 		# setup tool bar
-		self.toolBar = Tc2Config.WebViewToolBar(self.webView,
-				settingsKeyZoomFactor='Gui/Help/ZoomFactor',
-				settingsKeyZoomSteps='Gui/WebView/ZoomSteps',
-				)
+		self.toolBar = Tc2Config.WebViewToolBar(self.webView, settingsKeyZoomFactor='Gui/Help/ZoomFactor')
 
 		self.tree = QtGui.QTreeWidget(self)
 		self.tree.setUniformRowHeights(True)
@@ -82,7 +79,7 @@ class FrameHelp(QtGui.QFrame):
 		self.tree.setUpdatesEnabled(False)
 
 		self.webView.setUrl(QtCore.QUrl(''))
-		self.tree.setAlternatingRowColors( Tc2Config.settingsValue('Gui/AlternatingRowColors', False).toBool() )
+		self.tree.setAlternatingRowColors( Tc2Config.settingsValue(Tc2Config.SettingsKeyAlternatingRowColors, False).toBool() )
 		self.splitter.restoreState( Tc2Config.settingsValue('Gui/Help/SplitterState', QtCore.QByteArray()).toByteArray() )
 		#
 		lastTopic = Tc2Config.settingsValue('Gui/Help/Topic', '').toString()

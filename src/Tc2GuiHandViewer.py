@@ -37,8 +37,7 @@ class FrameHandViewer(QtGui.QFrame):
 
 		self.toolBar = Tc2Config.WebViewToolBar(self.webView,
 				#TODO: rename to Gui/HandViewer/ZoomFactor
-				settingsKeyZoomFactor='Gui/Hand/ZoomFactor',
-				settingsKeyZoomSteps='Gui/WebView/ZoomSteps',
+				settingsKeyZoomFactor='Gui/Hand/ZoomFactor'
 				)
 
 		# set up actions
