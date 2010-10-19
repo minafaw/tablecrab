@@ -17,6 +17,11 @@ from PyQt4 import QtCore, QtGui
 #************************************************************************************
 class FrameSettings(QtGui.QFrame):
 
+	SettingsKeyBase = 'Gui/Settings'
+	SettingsKeySplitterState = SettingsKeyBase + '/SplitterState'
+	SettingsKeyCurrentSettingIndex = SettingsKeyBase + '/CurrentIndex'
+
+
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
@@ -67,14 +72,14 @@ class FrameSettings(QtGui.QFrame):
 		self.stack.setCurrentIndex(row)
 
 	def onCloseEvent(self, event):
-		Tc2Config.settingsSetValue('Gui/Settings/SplitterState', self.splitter.saveState())
-		Tc2Config.settingsSetValue('Gui/Settings/CurrentIndex', self.stack.currentIndex())
+		Tc2Config.settingsSetValue(self.SettingsKeySplitterState, self.splitter.saveState())
+		Tc2Config.settingsSetValue(self.SettingsKeyCurrentSettingIndex, self.stack.currentIndex())
 
 	def onInit(self):
 		self.layout()
-		self.listWidget.setAlternatingRowColors( Tc2Config.settingsValue('Gui/AlternatingRowColors', False).toBool() )
-		self.splitter.restoreState( Tc2Config.settingsValue('Gui/Settings/SplitterState', QtCore.QByteArray()).toByteArray() )
-		self.listWidget.setCurrentRow( Tc2Config.settingsValue('Gui/Settings/CurrentIndex', 0).toInt()[0] )
+		self.listWidget.setAlternatingRowColors( Tc2Config.settingsValue(Tc2Config.SettingsKeyAlternatingRowColors, False).toBool() )
+		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
+		self.listWidget.setCurrentRow( Tc2Config.settingsValue(self.SettingsKeyCurrentSettingIndex, 0).toInt()[0] )
 
 	def onSettingAlternatingRowColorsChanged(self, flag):
 		self.listWidget.setAlternatingRowColors(flag)
