@@ -9,6 +9,8 @@ from PyQt4 import QtCore, QtGui
 #************************************************************************************
 class TemplatesWidget(QtGui.QTreeWidget):
 
+	SettingsKeyTemplates = 'Templates'
+
 	class MyDelegate(QtGui.QStyledItemDelegate):
 		editingFinished = QtCore.pyqtSignal()
 
@@ -227,7 +229,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		Tc2Config.globalObject.widgetScreenshotQuery.emit()
 
 	def dump(self):
-		Tc2Config.dumpPersistentItems('Templates', self)
+		Tc2Config.dumpPersistentItems(self.SettingsKeyTemplates, self)
 
 	def moveTemplateDown(self):
 		item = self.currentItem()
@@ -277,7 +279,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self.setRootIsDecorated( Tc2Config.settingsValue(Tc2Config.SettingsKeyChildItemIndicators, True).toBool() )
 		self.clear()
 		template = None
-		for template in Tc2Config.readPersistentItems('Templates', maxItems=Tc2Config.MaxTemplates, itemProtos=Tc2ConfigTemplates.Templates):
+		for template in Tc2Config.readPersistentItems(self.SettingsKeyTemplates, maxItems=Tc2Config.MaxTemplates, itemProtos=Tc2ConfigTemplates.Templates):
 			self.addTopLevelItem(template)
 			template.setExpanded(template.itemIsExpanded)
 		# set at least one template as default
