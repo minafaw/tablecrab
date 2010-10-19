@@ -9,6 +9,11 @@ from PyQt4 import QtCore, QtGui, QtWebKit
 #************************************************************************************
 class FrameHelp(QtGui.QFrame):
 
+	SettingsKeyBase = 'Gui/Help'
+	SettingsKeyZoomFactor = SettingsKeyBase + '/ZoomFactor'
+	SettingsKeySplitterState = SettingsKeyBase + '/SplitterState'
+	SettingsKeyHelpTopic = SettingsKeyBase + '/Topic'
+
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
@@ -21,7 +26,7 @@ class FrameHelp(QtGui.QFrame):
 		page.setNetworkAccessManager(self.networkAccessManager)
 
 		# setup tool bar
-		self.toolBar = Tc2Config.WebViewToolBar(self.webView, settingsKeyZoomFactor='Gui/Help/ZoomFactor')
+		self.toolBar = Tc2Config.WebViewToolBar(self.webView, settingsKeyZoomFactor=self.SettingsKeyZoomFactor)
 
 		self.tree = QtGui.QTreeWidget(self)
 		self.tree.setUniformRowHeights(True)
@@ -65,7 +70,7 @@ class FrameHelp(QtGui.QFrame):
 	# event handlers
 	#------------------------------------------------------------------------------------------------------------------
 	def onCloseEvent(self, event):
-		Tc2Config.settingsSetValue('Gui/Help/SplitterState', self.splitter.saveState() )
+		Tc2Config.settingsSetValue(self.SettingsKeySplitterState, self.splitter.saveState() )
 
 	def onContextMenuWebView(self, point):
 		menu = QtGui.QMenu(self)
@@ -80,9 +85,9 @@ class FrameHelp(QtGui.QFrame):
 
 		self.webView.setUrl(QtCore.QUrl(''))
 		self.tree.setAlternatingRowColors( Tc2Config.settingsValue(Tc2Config.SettingsKeyAlternatingRowColors, False).toBool() )
-		self.splitter.restoreState( Tc2Config.settingsValue('Gui/Help/SplitterState', QtCore.QByteArray()).toByteArray() )
+		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 		#
-		lastTopic = Tc2Config.settingsValue('Gui/Help/Topic', '').toString()
+		lastTopic = Tc2Config.settingsValue(self.SettingsKeyHelpTopic, '').toString()
 		lastTopicItem = None
 		firstTopicItem = None
 		stack = []
@@ -117,7 +122,7 @@ class FrameHelp(QtGui.QFrame):
 		topic = item.data(0, QtCore.Qt.UserRole).toString()
 		url = QtCore.QUrl('%s.html' % topic)
 		self.webView.setUrl(url)
-		Tc2Config.settingsSetValue('Gui/Help/Topic', topic)
+		Tc2Config.settingsSetValue(self.SettingsKeyHelpTopic, topic)
 
 	def onNetworkGetData(self, networkReply):
 		# serve pages from our resource modules
@@ -168,6 +173,11 @@ class FrameHelp(QtGui.QFrame):
 #
 #************************************************************************************
 class _DialogHelp(QtGui.QDialog):
+
+	SettingsKeyBase = 'Gui/DialogHelp'
+	SettingsKeyGeometry = SettingsKeyBase + '/Geometry'
+	SettingsKeySplitterState = SettingsKeyBase + '/SplitterState'
+
 	def __init__(self, topic, parent=None):
 		QtGui.QDialog.__init__(self, parent)
 
@@ -176,20 +186,20 @@ class _DialogHelp(QtGui.QDialog):
 		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
 		self.buttonBox.accepted.connect(self.accept)
 
-		Tc2Config.settingsSetValue('Gui/Help/Topic', topic)
+		Tc2Config.settingsSetValue(FrameHelp.SettingsKeyHelpTopic, topic)
 		self.frameHelp = FrameHelp(parent=self)
 		self.layout()
-		self.restoreGeometry( Tc2Config.settingsValue('Gui/DialogHelp/Geometry', QtCore.QByteArray()).toByteArray() )
-		self.frameHelp.splitter.restoreState( Tc2Config.settingsValue('Gui/DialogHelp/SplitterState', QtCore.QByteArray()).toByteArray() )
 		self.frameHelp.onInit()
 		self.frameHelp.toolBar.onInit()
+		self.restoreGeometry( Tc2Config.settingsValue(self.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray() )
+		self.frameHelp.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 
 	#------------------------------------------------------------------------------------------------------------------
 	# overwritten methods
 	#------------------------------------------------------------------------------------------------------------------
 	def hideEvent(self, event):
-		Tc2Config.settingsSetValue('Gui/DialogHelp/Geometry', self.saveGeometry() )
-		Tc2Config.settingsSetValue('Gui/Help/SplitterState', self.frameHelp.splitter.saveState() )
+		Tc2Config.settingsSetValue(self.SettingsKeyGeometry, self.saveGeometry() )
+		Tc2Config.settingsSetValue(self.SettingsKeySplitterState, self.frameHelp.splitter.saveState() )
 		QtGui.QDialog.hideEvent(self, event)
 
 	#--------------------------------------------------------------------------------------------------------------
