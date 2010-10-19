@@ -9,7 +9,7 @@ from PyQt4 import QtCore, QtGui
 app = QtGui.QApplication([])
 
 DirSelf = os.path.dirname( os.path.abspath(__file__) )
-DirRes = os.path.join(DirSelf, 'TableCrabRes')
+DirRes = os.path.join(DirSelf, 'Tc2Res')
 DirPixmaps = os.path.join(DirRes, 'Pixmaps')
 DirHtmlPages = os.path.join(DirRes, 'HtmlPages')
 
