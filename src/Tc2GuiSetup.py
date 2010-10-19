@@ -15,6 +15,10 @@ from PyQt4 import QtCore, QtGui
 #
 #************************************************************************************
 class FrameSetup(QtGui.QFrame):
+
+	SettingsKeyBase = 'Gui/Setup'
+	SettingsKeySplitterState = SettingsKeyBase + '/SplitterState'
+
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
@@ -58,9 +62,9 @@ class FrameSetup(QtGui.QFrame):
 		Tc2GuiHelp.dialogHelp('setup', parent=self)
 
 	def onCloseEvent(self, event):
-		Tc2Config.settingsSetValue('Gui/Setup/SplitterState', self.splitter.saveState())
+		Tc2Config.settingsSetValue(self.SettingsKeySplitterState, self.splitter.saveState())
 
 	def onInit(self):
 		self.layout()
-		self.splitter.restoreState( Tc2Config.settingsValue('Gui/Setup/SplitterState', QtCore.QByteArray()).toByteArray() )
+		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 
