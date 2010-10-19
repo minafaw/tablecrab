@@ -9,6 +9,10 @@ from PyQt4 import QtCore, QtGui
 #************************************************************************************
 class FrameSettings(QtGui.QFrame):
 
+	SettingsKeyBase = 'Gui/Settings/HandStyleSheet'
+	SettingsKeyDialogOpenState = SettingsKeyBase + '/DialogOpen/State'
+	SettingsKeyDialogSaveState = SettingsKeyBase + '/DialogSave/State'
+
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
@@ -71,13 +75,13 @@ class FrameSettings(QtGui.QFrame):
 				Tc2Config.globalObject.feedback.emit(self, 'Style sheet too big -- maximum Is %s chars' % Tc2Config.MaxHandStyleSheet)
 				return
 		Tc2Config.globalObject.feedback.emit(self, '')
-		Tc2Config.settingsSetValue('PokerStarsHandGrabber/handFornmatterHtmlTabular/StyleSheet', text)
+		Tc2Config.settingsSetValue(PokerStarsHandGrabber.HandFormatterHtmlTabular.SettingsKeyStyleSheet, text)
 
 	def onInit(self):
 		self.layout()
 
 		#NOTE: style sheet can not be ''
-		text = Tc2Config.settingsValue('PokerStarsHandGrabber/handFornmatterHtmlTabular/StyleSheet', '').toString()
+		text = Tc2Config.settingsValue(PokerStarsHandGrabber.HandFormatterHtmlTabular.SettingsKeyStyleSheet, '').toString()
 		if not text:
 			text = PokerStarsHandGrabber.HandFormatterHtmlTabular.StyleSheet
 		#NOTE: have to connect before setText so we can catch MaxCharsExceeded
@@ -91,7 +95,7 @@ class FrameSettings(QtGui.QFrame):
 				title='Open Style Sheet..',
 				fileFilters=('Style sheets (*.css)', 'All Files (*)'),
 				#TODO: rename to HandViewerStyleSheet
-				settingsKey='Gui/Settings/HandStyleSheet/DialogOpen/State',
+				settingsKey=self.SettingsKeyDialogOpenState,
 				)
 		if fileName is None:
 			return
@@ -111,7 +115,7 @@ class FrameSettings(QtGui.QFrame):
 				title='Save Style Sheet..',
 				fileFilters=('Stylesheets (*.css)', 'All Files (*)'),
 				#TODO: rename to HandViewerStyleSheet
-				settingsKey='Gui/Settings/HandStyleSheet/DialogSave/State',
+				settingsKey=self.SettingsKeyDialogSaveState,
 				defaultSuffix='css',
 				)
 		if fileName is None:
