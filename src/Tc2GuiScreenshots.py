@@ -93,6 +93,11 @@ class ScreenshotWidget(QtGui.QScrollArea):
 
 	widgetScreenshotInfo = QtCore.pyqtSignal(QtCore.QString)
 
+	SettingsKeyBase = 'Gui/Screenshot'
+	SettingsKeyDialogOpenState = SettingsKeyBase + '/DialogOpen/State'
+	SettingsKeyDialogSaveState = SettingsKeyBase + '/DialogSave/State'
+
+
 	def __init__(self, parent=None):
 		QtGui.QScrollArea.__init__(self, parent)
 
@@ -216,7 +221,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 				openFile=True,
 				title='Open Screenshot..',
 				fileFilters=('Images (%s)' % ' '.join(['*.%s' % i for i in imageFormats]), 'All Files (*)'),
-				settingsKey='Gui/Screenshot/DialogOpen/State',
+				settingsKey=self.SettingsKeyDialogOpenState,
 				)
 		if fileName is None:
 			return
@@ -249,7 +254,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 				title='Save Screenshot..',
 				fileFilters=('Images (%s)' % ' '.join(['*.%s' % i for i in imageFormats]), 'All Files (*)'),
 				defaultSuffix='png',
-				settingsKey='Gui/Screenshot/DialogSave/State',
+				settingsKey=self.SettingsKeyDialogOpenState,
 				)
 		if fileName is None:
 			return
