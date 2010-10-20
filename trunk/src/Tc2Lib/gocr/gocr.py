@@ -247,7 +247,7 @@ def scanImage(
 		if directoryDatabase[-1] not in '/\\':
 			directoryDatabase += '7'
 		cmd += '-p "%s" ' % directoryDatabase
-	if outputFormat is not None: cmd += '-f %s' % outputFormat
+	if outputFormat is not None: cmd += '-f %s ' % outputFormat
 	if grayLevel is not None: cmd += '-l %i ' % grayLevel
 	if dustSize is not None: cmd += '-d %i ' % dustSize
 	if wordSpacing is not None: cmd += '-s %i ' % wordSpacing
@@ -257,6 +257,8 @@ def scanImage(
 	if certainty is not None: cmd += '-a %i ' % certainty
 	if mode is not None: cmd += '-m %i ' % mode
 
+	#TODO: some images break subprocess stdin. i guess ...could be larger imagres
+	# breaking something in gocr or the pipe itself goes broke. error is "IOError [Errno 0] Error"
 	p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 	return p.communicate(string)
 
@@ -294,7 +296,7 @@ def _testFont():
 	app = QtGui.QApplication([])
 	pixmap = createQPixmap('arial', 6, '0.1234567,89')
 	pgm = ImagePGM.fromQPixmap(pixmap)
-	#pgm.save(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test.pgm'))
+	pgm.save(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test.pgm'))
 	t0 = time.time()
 	stdout, stderr = scanImage(
 			string=pgm.toString(),
