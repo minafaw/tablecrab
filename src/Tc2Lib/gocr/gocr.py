@@ -142,6 +142,15 @@ class ImagePGM(object):
 #************************************************************************************
 # gocr wrapper
 #************************************************************************************
+# see: [ http://manpages.ubuntu.com/manpages/intrepid/man1/gocr.1.html ]
+
+OutputFormatISO8859_1 = 'ISO8859_1'
+OutputFormatTeX = 'TeX'
+OutputFormatHTML = 'HTML'
+OutputFormatXML = 'XML'
+OutputFormatUTF8 = 'UTF8'
+OutputFormatASCII = 'ASCII'
+
 VerbosityInfo = 0x1
 VerbosityShapeBoxes = 0x2
 VerbotityPatternBoxes = 0x4
@@ -149,24 +158,52 @@ VerbosityPatternRecognition = 0x8
 VerbosityLineRecognition = 0x10
 VerbosityCreateOutImages = 0x20
 
+ModeUseDatabase = 0x2
+ModeDoLayoutAnalysis = 0x4
+ModeNoCompareUnrecognizedChars = 0x8
+ModeNoDivideOverlappingChars = 0x10
 ModeNoContextCorrection = 0x20
-# .. more here
+ModeCharPacking = 0x30
+ModeExtendDatabase = 0x82
+ModeNoRecognition = 0x100
 
 def scanImage(
 		fileNameGocr=FileNameGocr,
-		fileName=None,	# file name or None to scan string
-		string=None,		# string to scan or None if a file name is specified
+		fileName=None,
+		string=None,
 		fileNameOutput=None,
-		chars=None, 		# limit to these chars A-Z notation is ok
-		dustSize=None,	# 0-N
+		fileNameError=None,
+		#TODO: not implemented. have to testif this is supported gocr.exe
+		#fileNameProgress=None,	# can be: fileName, fifoName, fileDescriptor
+		directoryDatabase=None,
+		outputFormat=None,
 		grayLevel=None,	# 0-255
-		certainty=None,	# 0-100 - only recognize chars with sa certainity >= c
-		mode=None,		# Mode*
-		verbosity=None	# many outputs to stderr. Verbosity*
-		# .. more here
+		dustSize=None,	# 0-N
+		wordSpacing=None,
+		verbosity=None,
+		verbosityChars=None,
+		chars=None,
+		certainty=None,
+		mode=None,
 		):
 	'''
-	@return: (tuple) (str out, str err)
+	@param fileNameGocr: (str) file name of the gocr executable
+	@param fileName: (str) file name of the image to scan or None to scan string
+	@param string: (str) if no file name is specified string to scan
+	@param fileNameOutput: (str) file name to dump output to or None. if None output will be returned
+	@param fileNameError: (str) file name to dump errors to or None. if None errors will be returned
+	@param directoryDatabase: (str) directory to hold learned chars
+	@param outputFormat: (OutputFormat*)
+	@param grayLevel: (int) 0 - 255, 0 == autodetect
+	@param dustSize: (int) 0 - N, -1 == autodetect
+	@param wordSpacing: (int) 0 - N, 0 == autodetect
+	@param verbosity: (Verbosity*)
+	@param verbosityChars: (str) limit verbosity to these chars
+	@param chars: (str) only recognize these chars.0-9A-Z notation is ok. use '--' to specify '-'
+	@param ceratinty: (int) 0 - 100. only recognize chars with certainity >= this
+	@param mode: (Mode*) bitfield
+
+	@return: (tuple) (str output, str error)
 	'''
 	cmd = '"%s" ' % fileNameGocr
 	if fileName is None:
@@ -174,15 +211,22 @@ def scanImage(
 			raise ValueError('no string specified')
 		fileName = '-'
 	cmd += '-i %s ' % fileName
-	if fileNameOutput is not None:
-		cmd = '-o "%s" ' % fileNameOutput
-	if chars is not None: cmd += '-C %s ' % chars
-	if dustSize is not None: cmd += '-d %i ' % dustSize
+	if fileNameOutput is not None: cmd += '-o "%s" ' % fileNameOutput
+	if fileNameError is not None: cmd += '-e "%s" ' % fileNameError
+	#TODO: fileNameProgress
+	#if fileNameProgress is not None: cmd += '-x "%s" ' % fileNameProgress
+	if directoryDatabase is not None: cmd += '-p "%s" ' % directoryDatabase
+	if outputFormat is not None: cmd += '-f %s' % outputFormat
 	if grayLevel is not None: cmd += '-l %i ' % grayLevel
+	if dustSize is not None: cmd += '-d %i ' % dustSize
+	if wordSpacing is not None: cmd += '-s %i ' % wordSpacing
+	if verbosity is not None: cmd += '-v %i ' % verbosity
+	if verbosityChars is not None: cmd += '-c %s ' % verbosityChars
+	if chars is not None: cmd += '-C %s ' % chars
 	if certainty is not None: cmd += '-a %i ' % certainty
 	if mode is not None: cmd += '-m %i ' % mode
-	if verbosity is not None: cmd += '-v %i ' % verbosity
 
+	print cmd
 	p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 	return p.communicate(string)
 
@@ -222,6 +266,7 @@ def _testFont():
 	pgm = ImagePGM.fromQPixmap(pixmap)
 	t0 = time.time()
 	stdout, stderr = scanImage(string=pgm.toString(), chars='0-9,.', dustSize=0)
+
 	print 'time:', round(time.time() - t0, 3)
 	print 'stdout:', stdout, repr(stdout)
 	print 'stderr:', stderr, repr(stderr)
