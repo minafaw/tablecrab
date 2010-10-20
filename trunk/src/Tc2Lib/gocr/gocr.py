@@ -187,7 +187,7 @@ WordSpacingMax = sys.maxint
 WordSpacingAuto = 0
 
 CertaintyMin = 0
-CertainityMax = 100
+CertaintyMax = 100
 CertaintyDefault = 95
 
 #TODO: there seems to be no easy way to wrap ModeExtendDatabase. have to digg a bit
