@@ -9,7 +9,7 @@ from PyQt4 import QtCore, QtGui
 DirData = os.environ.get('_MEIPASS2', None)
 if DirData is None:
 	DirData = os.path.dirname(os.path.abspath(__file__))
-FileNameGocr = os.path.join(DirData, 'gocr048.exe')
+FileNameGocr = os.path.join(DirData, 'gocr049.exe')
 
 # for testing. creates a pixmap and dumps some chars on it
 def createQPixmap(fontFamily, fontSize, chars):
