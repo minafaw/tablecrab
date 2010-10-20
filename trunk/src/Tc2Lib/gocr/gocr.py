@@ -139,6 +139,13 @@ class ImagePGM(object):
 
 	def toString(self): return self._buff
 
+	def save(self, fileName):
+		fp = open(fileName, 'wb')
+		try:
+			fp.write(self._buff)
+		finally:
+			fp.close()
+
 #************************************************************************************
 # gocr wrapper
 #************************************************************************************
@@ -183,6 +190,8 @@ CertaintyMin = 0
 CertainityMax = 100
 CertaintyDefault = 95
 
+#TODO: there seems to be no easy way to wrap ModeExtendDatabase. have to digg a bit
+# deeper into subprocess to find out if this is possible
 def scanImage(
 		fileNameGocr=FileNameGocr,
 		fileName=None,
@@ -231,7 +240,13 @@ def scanImage(
 	if fileNameError is not None: cmd += '-e "%s" ' % fileNameError
 	#TODO: fileNameProgress
 	#if fileNameProgress is not None: cmd += '-x "%s" ' % fileNameProgress
-	if directoryDatabase is not None: cmd += '-p "%s" ' % directoryDatabase
+	if directoryDatabase is not None:
+		# have to make shure directory ends with a slash
+		#NOTE: looks like gocr only accepts forward slashes here
+		directoryDatabase = os.path.normpath(directoryDatabase).replace('\\', '/')
+		if directoryDatabase[-1] not in '/\\':
+			directoryDatabase += '7'
+		cmd += '-p "%s" ' % directoryDatabase
 	if outputFormat is not None: cmd += '-f %s' % outputFormat
 	if grayLevel is not None: cmd += '-l %i ' % grayLevel
 	if dustSize is not None: cmd += '-d %i ' % dustSize
@@ -242,7 +257,6 @@ def scanImage(
 	if certainty is not None: cmd += '-a %i ' % certainty
 	if mode is not None: cmd += '-m %i ' % mode
 
-	print cmd
 	p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 	return p.communicate(string)
 
@@ -280,9 +294,13 @@ def _testFont():
 	app = QtGui.QApplication([])
 	pixmap = createQPixmap('arial', 6, '0.1234567,89')
 	pgm = ImagePGM.fromQPixmap(pixmap)
+	#pgm.save(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test.pgm'))
 	t0 = time.time()
-	stdout, stderr = scanImage(string=pgm.toString(), chars='0-9,.', dustSize=0)
-
+	stdout, stderr = scanImage(
+			string=pgm.toString(),
+			chars='0-9,.',
+			dustSize=0,
+			)
 	print 'time:', round(time.time() - t0, 3)
 	print 'stdout:', stdout, repr(stdout)
 	print 'stderr:', stderr, repr(stderr)
