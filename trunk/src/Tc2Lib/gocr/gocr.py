@@ -1,5 +1,5 @@
 
-import os, subprocess, array
+import os, sys, subprocess, array
 from PyQt4 import QtCore, QtGui
 
 #************************************************************************************
@@ -167,6 +167,22 @@ ModeCharPacking = 0x30
 ModeExtendDatabase = 0x82
 ModeNoRecognition = 0x100
 
+GrayLevelMin = 1
+GrayLevelMax = 255
+GrayLevelAuto = 0
+
+DustSizeMin = 0
+DustSizeMax = sys.maxint
+DustSizeAuto = -1
+
+WordSpacingMin = 1
+WordSpacingMax = sys.maxint
+WordSpacingAuto = 0
+
+CertaintyMin = 0
+CertainityMax = 100
+CertaintyDefault = 95
+
 def scanImage(
 		fileNameGocr=FileNameGocr,
 		fileName=None,
@@ -177,8 +193,8 @@ def scanImage(
 		#fileNameProgress=None,	# can be: fileName, fifoName, fileDescriptor
 		directoryDatabase=None,
 		outputFormat=None,
-		grayLevel=None,	# 0-255
-		dustSize=None,	# 0-N
+		grayLevel=None,
+		dustSize=None,
 		wordSpacing=None,
 		verbosity=None,
 		verbosityChars=None,
