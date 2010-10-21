@@ -131,8 +131,8 @@ class Dialog(QtGui.QDialog):
 
 		self.setPixmap(pixmap=pixmap)
 		self.setGocrParams(params=gocrParams)
-		self.setOutput(string=None)
-		self.setError(string=None)
+		self.setOutput(string='')
+		self.setError(string='')
 		self.layout()
 
 	def layout(self):
@@ -298,29 +298,28 @@ class Dialog(QtGui.QDialog):
 
 				'flagInvertImage': self.checkBoxInvertImage.checkState() == QtCore.Qt.Checked,
 				'outputPattern': unicode(self.editOutputPattern.text().toUtf8(), 'Utf-8') if self.editOutputPattern.isEnabled() else None,
-				'outputType': None,
+				'outputType': self.comboOutputType.currentText(),
 				}
 		return params
 
-	def setOutput(self, string=None, formattedString=None, timeElapsed=None):
-		string = '' if string is None else string
+	def setOutput(self, string=None, number=None, formattedString=None, timeElapsed=None):
 		html = '<html>'
 		html += '<head>'
 		html += '<meta name="author" content="TableCrab">'
 		html += '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
 		html += '</head>'
 		html += '<body>'
-		html +='<h4>Raw output:</h4>'
-		if string:
+		html +='<h4>Output:</h4>'
+		if string is not None:
 			string = string.replace('\r', '')
 			for line in string.split('\n'):
 				if line:
 					html += '<span style="border: solid 1px black">%s</span>' % line
 				else:
 					html += '<span style="border-left: solid 1px black"></span>'
-
 				html += '<br>'
-
+		elif number is not None:
+			html += '<span style="border: solid 1px black">%s</span>' % number
 		html +='<h4>Time elapsed:</h4>'
 		html += '' if timeElapsed is None else (str(round(timeElapsed, 3)) + ' seconds')
 		html += '</body>'
@@ -359,7 +358,11 @@ class Dialog(QtGui.QDialog):
 			err = traceback.format_exc()
 			out = ''
 			timeElapsed = None
-		self.setOutput(string=out, timeElapsed=timeElapsed)
+
+		if params['outputType'] in (gocr.OutputTypeInt, gocr.OutputTypeFloat):
+			self.setOutput(number=out, timeElapsed=timeElapsed)
+		else:
+			self.setOutput(string=out, timeElapsed=timeElapsed)
 		self.setError(string=err)
 
 	def onActionOpenImageTriggered(self):
