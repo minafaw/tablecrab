@@ -383,6 +383,9 @@ def readWriteImageFormats():
 		if fmt == 'ico': continue
 		if fmt in read:
 			fmts.append(fmt.lower())
+	#NOTE: "pgm" works even though it is not listed
+	if 'pgm' not in fmts:
+		fmts.append('pgm')
 	return fmts
 
 def formatedBet(bet, blinds=None):
