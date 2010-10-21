@@ -1,3 +1,14 @@
+"""dialog to wrap (most of) gocr
+"""
+
+#TODO: implement help
+# TODO: input pipe seems to break on larger images. no idea why
+#TODO: have to find a way to handle post processing of gocr output. "ouput pattern"
+#           as present in dialog is just a placeholder.
+# TODO: could be possible to add database + training support. idea could be to grab
+#           gocr output all at once, format as image(s) and handcraft the database.
+#           problems: input pipe breaks for some reason on larger images, so could
+#           output pipe?
 
 import Tc2Config
 from Tc2Lib.gocr import gocr
@@ -9,7 +20,15 @@ import traceback, time
 #************************************************************************************
 class Dialog(QtGui.QDialog):
 
-	def __init__(self):
+	SettingsKeyBase = 'Gui/DialogOcr'
+	SettingsKeyGeometry = SettingsKeyBase + '/Geometry'
+	SettingsKeyDialogImageOpenState = SettingsKeyBase + '/DialogImageOpen/State'
+	SettingsKeyDialogImageSaveState = SettingsKeyBase + '/DialogImageSave/State'
+	SettingsKeySplitterSettingsState = SettingsKeyBase + '/SplitterSettingsState'
+	SettingsKeySplitterImageState = SettingsKeyBase + '/SplitterImageState'
+	SettingsKeySplitterOutputState = SettingsKeyBase + '/SplitteroutputState'
+
+	def __init__(self, pixmap=None, gocrParams=None):
 		QtGui.QDialog.__init__(self)
 
 		self.setWindowTitle(Tc2Config.dialogTitle('Adjust Ocr'))
@@ -41,12 +60,13 @@ class Dialog(QtGui.QDialog):
 		self.actionHelp.triggered.connect(self.onActionHelpTriggered)
 		self.toolBar.addAction(self.actionHelp)
 
+		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
 
-		self.splitterVert = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
+		self.splitterSettings = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
 
 		# setup settings pane
-		self.frameSettings = QtGui.QFrame(self.splitterVert)
-		self.splitterVert.addWidget(self.frameSettings)
+		self.frameSettings = QtGui.QFrame(self.splitterSettings)
+		self.splitterSettings.addWidget(self.frameSettings)
 
 		self.checkBoxChars = QtGui.QCheckBox('Chars', self.frameSettings)
 		self.checkBoxChars.stateChanged.connect(self.onCheckBoxCharsStateChanged)
@@ -76,20 +96,27 @@ class Dialog(QtGui.QDialog):
 		self.spinCertainty = QtGui.QSpinBox(self.frameSettings)
 		self.spinCertainty.setRange(gocr.CertaintyMin, gocr.CertaintyMax)
 
-		#
-		self.splitterHorz = QtGui.QSplitter(QtCore.Qt.Vertical, self.splitterVert)
-		self.splitterVert.addWidget(self.splitterHorz)
+		self.checkBoxInvertImage = QtGui.QCheckBox('Invert image', self.frameSettings)
+		self.checkBoxAnalyzeLayout = QtGui.QCheckBox('Analyze layout', self.frameSettings)
+		self.checkBoxContextCorrection = QtGui.QCheckBox('Context correction', self.frameSettings)
+		self.checkBoxCompareUnknownChars = QtGui.QCheckBox('Compare unknown chars', self.frameSettings)
+		self.checkBoxDivideOverlappingChars = QtGui.QCheckBox('Divide overlapping chars', self.frameSettings)
+		self.checkBoxPackChars = QtGui.QCheckBox('Pack chars', self.frameSettings)
 
-		self.scrollAreaInputImage = QtGui.QScrollArea( self.splitterHorz)
-		self.splitterHorz.addWidget(self.scrollAreaInputImage)
+		#
+		self.splitterImage = QtGui.QSplitter(QtCore.Qt.Vertical, self.splitterSettings)
+		self.splitterSettings.addWidget(self.splitterImage)
+
+		self.scrollAreaInputImage = QtGui.QScrollArea( self.splitterImage)
+		self.splitterImage.addWidget(self.scrollAreaInputImage)
 		self.scrollAreaInputImage.setBackgroundRole(QtGui.QPalette.Dark)
 		self.scrollAreaInputImage.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
 
 		self.labelInputImage = QtGui.QLabel(self.scrollAreaInputImage)
 		self.scrollAreaInputImage.setWidget(self.labelInputImage)
 
-		self.splitterOutput = QtGui.QSplitter(QtCore.Qt.Horizontal, self.splitterHorz)
-		self.splitterHorz.addWidget(self.splitterOutput)
+		self.splitterOutput = QtGui.QSplitter(QtCore.Qt.Horizontal, self.splitterImage)
+		self.splitterImage.addWidget(self.splitterOutput)
 
 		self.webViewOutput = QtWebKit.QWebView(self.splitterOutput)
 		self.splitterOutput.addWidget(self.webViewOutput)
@@ -97,17 +124,21 @@ class Dialog(QtGui.QDialog):
 		self.webViewError = QtWebKit.QWebView(self.splitterOutput)
 		self.splitterOutput.addWidget(self.webViewError)
 
-		self.layout()
-		self.setPixmap(pixmap=None)
-		self.setGocrParams(params=None)
+		self.setPixmap(pixmap=pixmap)
+		self.setGocrParams(params=gocrParams)
 		self.setOutput(string=None)
 		self.setError(string=None)
+		self.layout()
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
 		grid.col(self.toolBar)
 		grid.row()
-		grid.col(self.splitterVert)
+		grid.col(self.splitterSettings)
+		grid.row()
+		grid.col(Tc2Config.HLine())
+		grid.row()
+		grid.col(self.buttonBox)
 
 		grid = Tc2Config.GridBox(self.frameSettings)
 
@@ -124,7 +155,34 @@ class Dialog(QtGui.QDialog):
 		grid.col(self.checkBoxCertainty).col(self.spinCertainty)
 
 		grid.row()
+		grid.col(self.checkBoxInvertImage)
+		grid.row()
+		grid.col(self.checkBoxAnalyzeLayout)
+		grid.row()
+		grid.col(self.checkBoxContextCorrection)
+		grid.row()
+		grid.col(self.checkBoxCompareUnknownChars)
+		grid.row()
+		grid.col(self.checkBoxDivideOverlappingChars)
+		grid.row()
+		grid.col(self.checkBoxPackChars)
+
+		grid.row()
 		grid.col(Tc2Config.VStretch())
+
+		self.restoreGeometry( Tc2Config.settingsValue(self.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray())
+		self.splitterSettings.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterSettingsState, QtCore.QByteArray()).toByteArray() )
+		self.splitterImage.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterImageState, QtCore.QByteArray()).toByteArray() )
+		self.splitterOutput.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterOutputState, QtCore.QByteArray()).toByteArray() )
+
+
+	def hideEvent(self, event):
+		Tc2Config.settingsSetValue(self.SettingsKeySplitterSettingsState, self.splitterSettings.saveState())
+		Tc2Config.settingsSetValue(self.SettingsKeySplitterImageState, self.splitterImage.saveState())
+		Tc2Config.settingsSetValue(self.SettingsKeySplitterOutputState, self.splitterOutput.saveState())
+		Tc2Config.settingsSetValue(self.SettingsKeyGeometry, self.saveGeometry() )
+
+		QtGui.QDialog.hideEvent(self, event)
 
 	def setPixmap(self, pixmap=None):
 		if pixmap is None:
@@ -175,10 +233,27 @@ class Dialog(QtGui.QDialog):
 		self.spinCertainty.setEnabled(param is not None)
 		self.spinCertainty.setValue(gocr.CertaintyDefault if param is None else param)
 
+		param = params.get('mode', 0)
+		self.checkBoxAnalyzeLayout.setChecked(bool(param & gocr.ModeDoLayoutAnalysis))
+		self.checkBoxContextCorrection.setChecked(not bool(param & gocr.ModeNoContextCorrection))
+		self.checkBoxCompareUnknownChars.setChecked(not bool(param & gocr.ModeNoCompareUnrecognizedChars))
+		self.checkBoxDivideOverlappingChars.setChecked(not bool(param & gocr.ModeNoDivideOverlappingChars))
+		self.checkBoxPackChars.setChecked(bool(param & gocr.ModeCharPacking))
+
+		param = params.get('invertImage', False)
+		self.checkBoxInvertImage.setChecked(bool(param))
+
 	def gocrParams(self):
 		pixmap = self.labelInputImage.pixmap()
 		if pixmap.isNull():
 			return None
+		mode = 0
+		mode |= gocr.ModeDoLayoutAnalysis if self.checkBoxAnalyzeLayout.checkState() == QtCore.Qt.Checked else 0
+		mode |= 0 if self.checkBoxContextCorrection.checkState() == QtCore.Qt.Checked else gocr.ModeNoContextCorrection
+		mode |= 0 if self.checkBoxCompareUnknownChars.checkState() == QtCore.Qt.Checked else gocr.ModeNoCompareUnrecognizedChars
+		mode |= 0 if self.checkBoxDivideOverlappingChars.checkState() == QtCore.Qt.Checked else gocr.ModeNoDivideOverlappingChars
+		mode |= gocr.ModeCharPacking if self.checkBoxPackChars.checkState() == QtCore.Qt.Checked else 0
+
 		params = {
 				'chars': unicode(self.editChars.text().toUtf8(), 'Utf-8') if self.editChars.isEnabled() else None,
 				'outputPattern': unicode(self.editOutputPattern.text().toUtf8(), 'Utf-8') if self.editOutputPattern.isEnabled() else None,
@@ -186,6 +261,8 @@ class Dialog(QtGui.QDialog):
 				'dustSize': self.spinDustSize.value() if  self.spinDustSize.isEnabled() else None,
 				'wordSpacing': self.spinWordSpacing.value() if  self.spinWordSpacing.isEnabled() else None,
 				'certainty': self.spinCertainty.value() if  self.spinCertainty.isEnabled() else None,
+				'mode': mode,
+				'invertImage': self.checkBoxInvertImage.checkState() == QtCore.Qt.Checked,
 				}
 		return params
 
@@ -198,9 +275,18 @@ class Dialog(QtGui.QDialog):
 		html += '</head>'
 		html += '<body>'
 		html +='<h4>Raw output:</h4>'
-		html += repr(string)
+		if string:
+			string = string.replace('\r', '')
+			for line in string.split('\n'):
+				if line:
+					html += '<span style="border: solid 1px black">%s</span>' % line
+				else:
+					html += '<span style="border-left: solid 1px black"></span>'
+
+				html += '<br>'
+
 		html +='<h4>Time elapsed:</h4>'
-		html += '' if timeElapsed is None else str(round(timeElapsed, 2))
+		html += '' if timeElapsed is None else (str(round(timeElapsed, 3)) + ' seconds')
 		html += '</body>'
 		html += '</html>'
 		self.webViewOutput.setHtml(html)
@@ -225,9 +311,11 @@ class Dialog(QtGui.QDialog):
 			raise ValueError('invalid or no pixmap')
 		pgm = gocr.ImagePGM.fromQPixmap(pixmap)
 		params = self.gocrParams()
+		if params.pop('invertImage'):
+			pgm = pgm.inverted()
+		outputPattern = params.pop('outputPattern')
 		params['outputFormat'] = gocr.OutputFormatUTF8
 		params['string'] =  pgm.toString()
-		outputPattern = params.pop('outputPattern')
 		try:
 			timeElapsed = time.time()
 			out, err = gocr.scanImage(**params)
@@ -247,7 +335,7 @@ class Dialog(QtGui.QDialog):
 				openFile=True,
 				title='Open Image..',
 				fileFilters=('Images (%s)' % ' '.join(['*.%s' % i for i in imageFormats]), 'All Files (*)'),
-				##settingsKey=self.SettingsKeyDialogOpenState,
+				settingsKey=self.SettingsKeyDialogImageOpenState,
 				)
 		if fileName is None:
 			return
@@ -260,7 +348,24 @@ class Dialog(QtGui.QDialog):
 		self.setPixmap(pixmap=pixmap)
 
 	def onActionSaveImageTriggered(self):
-		pass
+		if self.labelInputImage.pixmap() is None:
+			self.actionSaveImage.setEnabled(False)
+			return
+		imageFormats = imageFormats = Tc2Config.readWriteImageFormats()
+		fileName = Tc2Config.dlgOpenSaveFile(
+				parent=self,
+				openFile=False,
+				title='Save Image..',
+				fileFilters=('Images (%s)' % ' '.join(['*.%s' % i for i in imageFormats]), 'All Files (*)'),
+				defaultSuffix='png',
+				settingsKey=self.SettingsKeyDialogImageSaveState,
+				)
+		if fileName is None:
+			return
+		fileInfo = QtCore.QFileInfo(fileName)
+		format = fileInfo.suffix().toLower()
+		if not self.labelInputImage.pixmap().save(fileName, format):
+			Tc2Config.msgWarning(self, 'Could Not Save Image')
 
 	def onActionHelpTriggered(self):
 		pass
@@ -283,8 +388,6 @@ class Dialog(QtGui.QDialog):
 	def onCheckBoxCertaintyStateChanged(self, state):
 		self.spinCertainty.setEnabled(state == QtCore.Qt.Checked)
 
-
-
 #************************************************************************************
 #
 #************************************************************************************
@@ -293,7 +396,7 @@ def main():
 	application = QtGui.QApplication(sys.argv)
 	gui = Dialog()
 	gui.show()
-	QtGui.qApp.setStyle('motif')
+	QtGui.qApp.setStyle('cleanlooks')
 	application.exec_()
 
 if __name__ == '__main__': main()
