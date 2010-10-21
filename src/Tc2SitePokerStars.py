@@ -127,22 +127,6 @@ def potGetAmount(pixmap):
 	scanTrace += '<image>%s</image>' % base64.b64encode(gocrImage.toString())
 	return num, scanTrace
 
-
-# for quick and dirty testing
-def testPotAmount():
-	buff = ''
-
-	buff = base64.b64decode(buff)
-	app = QtGui.QApplication([])
-	gocrImage = gocr.ImagePGM(buff)
-	pixmap = gocrImage.toQPixmap()
-	num, scanTrace = potGetAmount(pixmap)
-	print 'num:', num
-	print 'scanTrace:', scanTrace
-	import os
-	pixmap.save(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test-potamount.pgm'), 'PGM', 100)
-
-#testPotAmount()
 #************************************************************************************
 #
 #************************************************************************************
