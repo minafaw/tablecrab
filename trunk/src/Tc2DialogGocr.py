@@ -4,7 +4,7 @@
 #TODO: implement help
 # TODO: input pipe seems to break on larger images. no idea why
 #TODO: have to find a way to handle post processing of gocr output. "ouput pattern"
-#           as present in dialog is just a placeholder.
+#           and "output type" as present in dialog is just a placeholder.
 # TODO: could be possible to add database + training support. idea could be to grab
 #           gocr output all at once, format as image(s) and handcraft the database.
 #           problems: input pipe breaks for some reason on larger images, so could
@@ -72,10 +72,6 @@ class Dialog(QtGui.QDialog):
 		self.checkBoxChars.stateChanged.connect(self.onCheckBoxCharsStateChanged)
 		self.editChars = QtGui.QLineEdit(self.frameSettings)
 
-		self.checkBoxOutputPattern = QtGui.QCheckBox('Output pattern', self.frameSettings)
-		self.checkBoxOutputPattern.stateChanged.connect(self.onCheckBoxOutputPatternStateChanged)
-		self.editOutputPattern = QtGui.QLineEdit(self.frameSettings)
-
 		self.checkBoxGraylevel = QtGui.QCheckBox('Gray level', self.frameSettings)
 		self.checkBoxGraylevel.stateChanged.connect(self.onCheckBoxGraylevelStateChanged)
 		self.spinGrayLevel = QtGui.QSpinBox(self.frameSettings)
@@ -102,6 +98,15 @@ class Dialog(QtGui.QDialog):
 		self.checkBoxCompareUnknownChars = QtGui.QCheckBox('Compare unknown chars', self.frameSettings)
 		self.checkBoxDivideOverlappingChars = QtGui.QCheckBox('Divide overlapping chars', self.frameSettings)
 		self.checkBoxPackChars = QtGui.QCheckBox('Pack chars', self.frameSettings)
+
+		self.checkBoxOutputPattern = QtGui.QCheckBox('Output pattern', self.frameSettings)
+		self.checkBoxOutputPattern.stateChanged.connect(self.onCheckBoxOutputPatternStateChanged)
+		self.editOutputPattern = QtGui.QLineEdit(self.frameSettings)
+
+		self.checkBoxOutputType = QtGui.QCheckBox('Output type', self.frameSettings)
+		self.checkBoxOutputType.stateChanged.connect(self.onCheckBoxOutputTypeStateChanged)
+		self.comboOutputType = QtGui.QComboBox(self.frameSettings)
+		self.comboOutputType.addItems(gocr.OutputTypes)
 
 		#
 		self.splitterImage = QtGui.QSplitter(QtCore.Qt.Vertical, self.splitterSettings)
@@ -144,8 +149,6 @@ class Dialog(QtGui.QDialog):
 
 		grid.col(self.checkBoxChars).col(self.editChars)
 		grid.row()
-		grid.col(self.checkBoxOutputPattern).col(self.editOutputPattern)
-		grid.row()
 		grid.col(self.checkBoxGraylevel).col(self.spinGrayLevel)
 		grid.row()
 		grid.col(self.checkBoxDustSize).col(self.spinDustSize)
@@ -154,6 +157,8 @@ class Dialog(QtGui.QDialog):
 		grid.row()
 		grid.col(self.checkBoxCertainty).col(self.spinCertainty)
 
+		grid.row()
+		grid.col(Tc2Config.HLine(), colspan=2)
 		grid.row()
 		grid.col(self.checkBoxInvertImage)
 		grid.row()
@@ -166,6 +171,13 @@ class Dialog(QtGui.QDialog):
 		grid.col(self.checkBoxDivideOverlappingChars)
 		grid.row()
 		grid.col(self.checkBoxPackChars)
+
+		grid.row()
+		grid.col(Tc2Config.HLine(), colspan=2)
+		grid.row()
+		grid.col(self.checkBoxOutputPattern).col(self.editOutputPattern)
+		grid.row()
+		grid.col(self.checkBoxOutputType).col(self.comboOutputType)
 
 		grid.row()
 		grid.col(Tc2Config.VStretch())
@@ -208,11 +220,6 @@ class Dialog(QtGui.QDialog):
 		self.editChars.setEnabled(param is not None)
 		self.editChars.setText('' if param is None else '')
 
-		param = params.get('outputPattern', None)
-		self.checkBoxOutputPattern.setCheckState(QtCore.Qt.Unchecked if param is None else QtCore.Qt.Checked)
-		self.editOutputPattern.setEnabled(param is not None)
-		self.editOutputPattern.setText('' if param is None else '')
-
 		param = params.get('grayLevel', None)
 		self.checkBoxGraylevel.setCheckState(QtCore.Qt.Unchecked if param is None else QtCore.Qt.Checked)
 		self.spinGrayLevel.setEnabled(param is not None)
@@ -233,15 +240,37 @@ class Dialog(QtGui.QDialog):
 		self.spinCertainty.setEnabled(param is not None)
 		self.spinCertainty.setValue(gocr.CertaintyDefault if param is None else param)
 
-		param = params.get('mode', 0)
-		self.checkBoxAnalyzeLayout.setChecked(bool(param & gocr.ModeDoLayoutAnalysis))
-		self.checkBoxContextCorrection.setChecked(not bool(param & gocr.ModeNoContextCorrection))
-		self.checkBoxCompareUnknownChars.setChecked(not bool(param & gocr.ModeNoCompareUnrecognizedChars))
-		self.checkBoxDivideOverlappingChars.setChecked(not bool(param & gocr.ModeNoDivideOverlappingChars))
-		self.checkBoxPackChars.setChecked(bool(param & gocr.ModeCharPacking))
+		param = params.get('flagLayoutAnalysis', gocr.FlagLayoutAnalysisDefault)
+		self.checkBoxAnalyzeLayout.setChecked(bool(param))
 
-		param = params.get('invertImage', False)
+		param = params.get('flagContextCorrection', gocr.FlagContextCorrectionDefault)
+		self.checkBoxContextCorrection.setChecked(bool(param))
+
+		param = params.get('flagCompareUnrecognizedChars', gocr.FlagCompareUnrecognizedCharsDefault)
+		print param
+		self.checkBoxCompareUnknownChars.setChecked(bool(param))
+
+		param = params.get('flagDivideOverlappingChars', gocr.FlagDivideOverlappingCharsDefault)
+		self.checkBoxDivideOverlappingChars.setChecked(bool(param))
+
+		param = params.get('flagPackChars', gocr.FlagPackCharsDefault)
+		self.checkBoxPackChars.setChecked(bool(param))
+
+		param = params.get('flagInvertImage', False)
 		self.checkBoxInvertImage.setChecked(bool(param))
+
+		param = params.get('outputPattern', None)
+		self.checkBoxOutputPattern.setCheckState(QtCore.Qt.Unchecked if param is None else QtCore.Qt.Checked)
+		self.editOutputPattern.setEnabled(param is not None)
+		self.editOutputPattern.setText('' if param is None else '')
+
+		param = params.get('outputType', None)
+		self.checkBoxOutputType.setCheckState(QtCore.Qt.Unchecked if param is None else QtCore.Qt.Checked)
+		self.comboOutputType.setEnabled(param is not None)
+		if param is not None:
+			if param not in gocr.OutputTypes:
+				param = gocr.OutputTypeDefault
+			self.comboOutputType.setCurrentIndex( self.comboOutputType.findText(param, QtCore.Qt.MatchExactly) )
 
 	def gocrParams(self):
 		pixmap = self.labelInputImage.pixmap()
@@ -256,13 +285,20 @@ class Dialog(QtGui.QDialog):
 
 		params = {
 				'chars': unicode(self.editChars.text().toUtf8(), 'Utf-8') if self.editChars.isEnabled() else None,
-				'outputPattern': unicode(self.editOutputPattern.text().toUtf8(), 'Utf-8') if self.editOutputPattern.isEnabled() else None,
 				'grayLevel': self.spinGrayLevel.value() if  self.spinGrayLevel.isEnabled() else None,
 				'dustSize': self.spinDustSize.value() if  self.spinDustSize.isEnabled() else None,
 				'wordSpacing': self.spinWordSpacing.value() if  self.spinWordSpacing.isEnabled() else None,
 				'certainty': self.spinCertainty.value() if  self.spinCertainty.isEnabled() else None,
-				'mode': mode,
-				'invertImage': self.checkBoxInvertImage.checkState() == QtCore.Qt.Checked,
+
+				'flagLayoutAnalysis':self.checkBoxAnalyzeLayout.checkState() == QtCore.Qt.Checked,
+				'flagContextCorrection':self.checkBoxContextCorrection.checkState() == QtCore.Qt.Checked,
+				'flagCompareUnrecognizedChars':self.checkBoxPackChars.checkState() == QtCore.Qt.Checked,
+				'flagDivideOverlappingChars':self.checkBoxDivideOverlappingChars.checkState() == QtCore.Qt.Checked,
+				'flagPackChars':self.checkBoxPackChars.checkState() == QtCore.Qt.Checked,
+
+				'flagInvertImage': self.checkBoxInvertImage.checkState() == QtCore.Qt.Checked,
+				'outputPattern': unicode(self.editOutputPattern.text().toUtf8(), 'Utf-8') if self.editOutputPattern.isEnabled() else None,
+				'outputType': None,
 				}
 		return params
 
@@ -309,13 +345,11 @@ class Dialog(QtGui.QDialog):
 		pixmap = self.labelInputImage.pixmap()
 		if pixmap.isNull():
 			raise ValueError('invalid or no pixmap')
-		pgm = gocr.ImagePGM.fromQPixmap(pixmap)
+		pgmImage = gocr.ImagePGM.fromQPixmap(pixmap)
 		params = self.gocrParams()
-		if params.pop('invertImage'):
-			pgm = pgm.inverted()
+		params['pgmImage'] = pgmImage
 		outputPattern = params.pop('outputPattern')
 		params['outputFormat'] = gocr.OutputFormatUTF8
-		params['string'] =  pgm.toString()
 		try:
 			timeElapsed = time.time()
 			out, err = gocr.scanImage(**params)
@@ -373,9 +407,6 @@ class Dialog(QtGui.QDialog):
 	def onCheckBoxCharsStateChanged(self, state):
 		self.editChars.setEnabled(state == QtCore.Qt.Checked)
 
-	def onCheckBoxOutputPatternStateChanged(self, state):
-		self.editOutputPattern.setEnabled(state == QtCore.Qt.Checked)
-
 	def onCheckBoxGraylevelStateChanged(self, state):
 		self.spinGrayLevel.setEnabled(state == QtCore.Qt.Checked)
 
@@ -387,6 +418,12 @@ class Dialog(QtGui.QDialog):
 
 	def onCheckBoxCertaintyStateChanged(self, state):
 		self.spinCertainty.setEnabled(state == QtCore.Qt.Checked)
+
+	def onCheckBoxOutputPatternStateChanged(self, state):
+		self.editOutputPattern.setEnabled(state == QtCore.Qt.Checked)
+
+	def onCheckBoxOutputTypeStateChanged(self, state):
+		self.comboOutputType.setEnabled(state == QtCore.Qt.Checked)
 
 #************************************************************************************
 #
