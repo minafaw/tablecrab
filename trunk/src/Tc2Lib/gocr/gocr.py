@@ -206,6 +206,53 @@ OutputTypes = (
 		OutputTypeFloat
 		)
 
+class GocrOutputTypeError(Exception): pass
+
+def stringToInt(string):
+	num = string.replace(',', '.')
+	num = num.split('.')
+	if len(num) > 1:
+		if len(num[-1]) != 3:
+			raise GocrOutputTypeError('invalidliteral for int')
+		else:
+			num = ''.join(num)
+	else:
+		num = num[0]
+	try:
+		num = int(num)
+	except ValueError:
+		raise GocrOutputTypeError('invalidliteral for int')
+	return num
+
+def stringToFloat(string):
+	num = string.replace(',', '.')
+	num = num.split('.')
+	if len(num) > 1:
+		if len(num[-1]) == 2:
+			num = ''.join(num[:-1]) + '.' + num[-1]
+		else:
+			num = ''.join(num)
+	else:
+		num = num[0]
+	try:
+		num = float(num)
+	except ValueError:
+		raise GocrOutputTypeError('invalid literal for float')
+	return num
+
+def _adjustOutput(out, pattern):
+	try:
+		pattern = re.compile(outputPattern, re.X)
+	except re.error:
+		return '', 'invalid output pattern'
+	m = pattern.match(out)
+	if m is None:
+		return '', 'no match in output pattern'
+	try:
+		out = m.group(1)
+	except IndexError:
+		return '',  'no group (1) in output pattern'
+	return out, ''
 
 #TODO: there seems to be no easy way to wrap ModeExtendDatabase. have to digg a bit
 # deeper into subprocess to find out if this is possible
@@ -329,6 +376,37 @@ def scanImage(
 	# breaking something in gocr or the pipe itself goes broke. error is "IOError [Errno 0] Error"
 	p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 	out, err = p.communicate(string)
+	if not out:
+		return out, err
+
+	# clean output
+	out = out.replace('\r', '')
+
+	# do type conversions if desired
+	if outputType in (OutputTypeInt, OutputTypeFloat):
+		out = out[:-1]	# removes trailing \n
+
+		if outputPattern is not None:
+			out, err = _adjustOutput(out, outputPattern)
+			if err:
+				return '', err
+
+		if outputType == OutputTypeInt:
+			try:
+				out = stringToInt(out)
+			except GocrOutputTypeError:
+				return out, 'type conversion error: invalid literal for int'
+		elif outputType == OutputTypeFloat:
+			try:
+				out = stringToFloat(out)
+			except GocrOutputTypeError:
+				return out, 'type conversion error: invalid literal for float'
+
+	elif outputPattern is not None:
+		out, err = _adjustOutput(out, outputPattern)
+		if err:
+			return '', err
+
 	return out, err
 
 #************************************************************************************
