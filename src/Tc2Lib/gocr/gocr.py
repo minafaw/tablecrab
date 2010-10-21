@@ -170,7 +170,7 @@ ModeDoLayoutAnalysis = 0x4
 ModeNoCompareUnrecognizedChars = 0x8
 ModeNoDivideOverlappingChars = 0x10
 ModeNoContextCorrection = 0x20
-ModeCharPacking = 0x30
+ModePackChars = 0x30
 ModeExtendDatabase = 0x82
 ModeNoRecognition = 0x100
 
@@ -190,12 +190,30 @@ CertaintyMin = 0
 CertaintyMax = 100
 CertaintyDefault = 95
 
+FlagLayoutAnalysisDefault = False
+FlagCompareUnrecognizedCharsDefault = True
+FlagDivideOverlappingCharsDefault = True
+FlagContextCorrectionDefault = True
+FlagPackCharsDefault = False
+
+OutputTypeString = 'string'
+OutputTypeInt = 'int'
+OutputTypeFloat ='float'
+OutputTypeDefault = OutputTypeString
+OutputTypes = (
+		OutputTypeString,
+		OutputTypeInt,
+		OutputTypeFloat
+		)
+
+
 #TODO: there seems to be no easy way to wrap ModeExtendDatabase. have to digg a bit
 # deeper into subprocess to find out if this is possible
 def scanImage(
 		fileNameGocr=FileNameGocr,
 		fileName=None,
 		string=None,
+		pgmImage=None,
 		fileNameOutput=None,
 		fileNameError=None,
 		#TODO: not implemented. have to testif this is supported gocr.exe
@@ -209,12 +227,27 @@ def scanImage(
 		verbosityChars=None,
 		chars=None,
 		certainty=None,
-		mode=None,
+
+		flagExtendDatabase=False,
+		flagDoRecognition=True,
+		flagLayoutAnalysis=FlagLayoutAnalysisDefault,
+		flagCompareUnrecognizedChars=FlagCompareUnrecognizedCharsDefault,
+		flagDivideOverlappingChars=FlagDivideOverlappingCharsDefault,
+		flagContextCorrection=FlagContextCorrectionDefault,
+		flagPackChars=FlagPackCharsDefault,
+
+		# custom params
+		flagInvertImage=False,
+		#TODO: implement
+		outputPattern=None,
+		#TODO: implement
+		outputType=OutputTypeDefault,
 		):
 	'''
 	@param fileNameGocr: (str) file name of the gocr executable
 	@param fileName: (str) file name of the image to scan or None to scan string
 	@param string: (str) if no file name is specified string to scan
+	@param pgmImage: (L{PGMImage}) if no fileName and no string is specified PGMImage to scan
 	@param fileNameOutput: (str) file name to dump output to or None. if None output will be returned
 	@param fileNameError: (str) file name to dump errors to or None. if None errors will be returned
 	@param directoryDatabase: (str) directory to hold learned chars
@@ -226,14 +259,30 @@ def scanImage(
 	@param verbosityChars: (str) limit verbosity to these chars
 	@param chars: (str) only recognize these chars.0-9A-Z notation is ok. use '--' to specify '-'
 	@param ceratinty: (int) 0 - 100. only recognize chars with certainity >= this
-	@param mode: (Mode*) bitfield
+
+	@param flagExtendDatabase: (bool) not yet implemented
+	@param flagDoRecognition: (bool) scan image. if False no scanning is done
+	@param flagLayoutAnalysis: (bool) do layout analysis
+	@param flagCompareUnrecognizedChars: (bool)
+	@param flagDivideOverlappingChars: (bool)
+	@param flagContextCorrection: (bool)
+	@param flagPackChars: (bool)
+
+	@param flagInvertImage: (bool) used onlxy if image is passed as pgmImage
+	@param outputPatern: (regex)
+	@param outputType: (OutputType*)
+
 
 	@return: (tuple) (str output, str error)
 	'''
 	cmd = '"%s" ' % fileNameGocr
 	if fileName is None:
 		if string is None:
-			raise ValueError('no string specified')
+			if pgmImage is None:
+				raise ValueError('no input image specified')
+			if flagInvertImage:
+				pgmImage = pgmImage.inverted()
+			string = pgmImage.toString()
 		fileName = '-'
 	cmd += '-i %s ' % fileName
 	if fileNameOutput is not None: cmd += '-o "%s" ' % fileNameOutput
@@ -255,12 +304,32 @@ def scanImage(
 	if verbosityChars is not None: cmd += '-c %s ' % verbosityChars
 	if chars is not None: cmd += '-C %s ' % chars
 	if certainty is not None: cmd += '-a %i ' % certainty
-	if mode is not None: cmd += '-m %i ' % mode
+
+	mode = 0
+	if directoryDatabase is not None and not flagExtendDatabase:
+		mode |= ModeUseDatabase
+	elif directoryDatabase is not None and flagExtendDatabase:
+		mode |= ModeExtendDatabase
+	if not flagDoRecognition:
+		mode |= ModeNoRecognition
+	if flagLayoutAnalysis:
+		mode |= ModeDoLayoutAnalysis
+	if not flagCompareUnrecognizedChars:
+		mode |= ModeNoCompareUnrecognizedChars
+	if not flagDivideOverlappingChars:
+		mode |= ModeNoDivideOverlappingChars
+	if not flagContextCorrection:
+		mode |= ModeNoContextCorrection
+	if flagPackChars:
+		mode |= ModePackChars
+	if mode:
+		cmd += '-m %i ' % mode
 
 	#TODO: some images break subprocess stdin. i guess ...could be larger imagres
 	# breaking something in gocr or the pipe itself goes broke. error is "IOError [Errno 0] Error"
 	p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-	return p.communicate(string)
+	out, err = p.communicate(string)
+	return out, err
 
 #************************************************************************************
 # some code for playing around
