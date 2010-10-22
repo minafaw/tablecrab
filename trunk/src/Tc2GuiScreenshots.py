@@ -254,7 +254,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 				title='Save Screenshot..',
 				fileFilters=('Images (%s)' % ' '.join(['*.%s' % i for i in imageFormats]), 'All Files (*)'),
 				defaultSuffix='png',
-				settingsKey=self.SettingsKeyDialogOpenState,
+				settingsKey=self.SettingsKeyDialogSaveState,
 				)
 		if fileName is None:
 			return
