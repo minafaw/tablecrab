@@ -22,6 +22,8 @@ Notes:
 '''
 class DialogException(QtGui.QDialog):
 
+	SettingsKeyDialogSaveImageState = 'Gui/DialogException/DialogSaveImage/State'
+
 	ImagePat = re.compile('.*(?<=$|\n)\<image\>(.+?)\<\/image\>', re.X|re.M|re.S)
 
 	def __init__(self, info, parent=None):
@@ -50,6 +52,9 @@ class DialogException(QtGui.QDialog):
 			self.labelPixmapName = QtGui.QLabel('Image:', self)
 			self.labelPixmap = QtGui.QLabel(self)
 			self.labelPixmap.setPixmap(pixmap)
+			self.buttonSaveImage = QtGui.QPushButton('Save image..', self)
+			self.buttonSaveImage.clicked.connect(self.onButtonSaveImageClicked)
+			self.buttonBox.addButton(self.buttonSaveImage, self.buttonBox.ActionRole)
 
 		self.edit = QtGui.QPlainTextEdit(self)
 		self.edit.setPlainText(ErrText % (Tc2Config.ApplicationName, Tc2Config.ErrorLogName, info) )
@@ -82,3 +87,21 @@ class DialogException(QtGui.QDialog):
 	def onClearError(self, *args):
 		Tc2Config.globalObject.clearException.emit()
 		self.buttonClearError.setEnabled(False)
+
+	def onButtonSaveImageClicked(self):
+		imageFormats = imageFormats = Tc2Config.readWriteImageFormats()
+		fileName = Tc2Config.dlgOpenSaveFile(
+				parent=self,
+				openFile=False,
+				title='Save Screenshot..',
+				fileFilters=('Images (%s)' % ' '.join(['*.%s' % i for i in imageFormats]), 'All Files (*)'),
+				defaultSuffix='png',
+				settingsKey=self.SettingsKeyDialogSaveImageState,
+				)
+		if fileName is None:
+			return
+		fileInfo = QtCore.QFileInfo(fileName)
+		format = fileInfo.suffix().toLower()
+		if not self.labelPixmap.pixmap().save(fileName, format):
+			Tc2Config.msgWarning(self, 'Could Not Save Image')
+
