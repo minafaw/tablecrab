@@ -127,6 +127,15 @@ def potGetAmount(pixmap):
 	scanTrace += '<image>%s</image>' % base64.b64encode(gocrImage.toString())
 	return num, scanTrace
 
+
+# TODO: rewrite above to use regex pattern for pot size matching
+#[_\s]*
+#_0_\s*_?
+#(?P<output>[0-9,\.]+)
+#[_\s]*
+
+
+
 #************************************************************************************
 #
 #************************************************************************************
