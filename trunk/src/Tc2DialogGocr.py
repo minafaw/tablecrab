@@ -62,8 +62,8 @@ class Dialog(QtGui.QDialog):
 		self.toolBar.addAction(self.actionHelp)
 
 		self.buttonBox = QtGui.QDialogButtonBox(QtCore.Qt.Horizontal, self)
-		self.buttonBox.addButton(self.buttonBox.Ok).pressed.connect(self.accept)
-		self.buttonBox.addButton(self.buttonBox.Cancel).pressed.connect(self.reject)
+		self.buttonBox.addButton(self.buttonBox.Ok).clicked.connect(self.accept)
+		self.buttonBox.addButton(self.buttonBox.Cancel).clicked.connect(self.reject)
 		self.buttonBox.addButton(self.buttonBox.RestoreDefaults).setEnabled(self.gocrParamsDefault is not None)
 
 		self.splitterSettings = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
@@ -332,7 +332,7 @@ class Dialog(QtGui.QDialog):
 			pass
 
 		elif number is not None:
-			html += str(number)
+			html += '' if numer is None else str(number)
 		else:
 			raise ValueError('no output specified')
 

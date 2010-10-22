@@ -1,5 +1,5 @@
 
-import os, sys, subprocess, array
+import re, os, sys, subprocess, array
 from PyQt4 import QtCore, QtGui
 
 #************************************************************************************
@@ -245,7 +245,7 @@ def stringToFloat(string):
 
 def _patternAdjustOutput(out, pattern):
 	try:
-		pattern = re.compile(outputPattern, re.X)
+		pattern = re.compile(pattern, re.X)
 	except re.error:
 		return '', 'invalid output pattern'
 	m = pattern.match(out)
@@ -392,18 +392,18 @@ def scanImage(
 		if outputPattern is not None:
 			out, err = _patternAdjustOutput(out, outputPattern)
 			if err:
-				return '', err
+				return None, err
 
 		if outputType == OutputTypeInt:
 			try:
 				out = stringToInt(out)
 			except GocrOutputTypeError:
-				return '', 'type conversion error: invalid literal for int: %s' % out
+				return None, 'type conversion error: invalid literal for int: %s' % out
 		elif outputType == OutputTypeFloat:
 			try:
 				out = stringToFloat(out)
 			except GocrOutputTypeError:
-				return '', 'type conversion error: invalid literal for float: %s' % out
+				return None, 'type conversion error: invalid literal for float: %s' % out
 
 	elif outputPattern is not None:
 		out, err = _patternAdjustOutput(out, outputPattern)
