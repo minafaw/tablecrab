@@ -28,11 +28,12 @@ class Dialog(QtGui.QDialog):
 	SettingsKeySplitterImageState = SettingsKeyBase + '/SplitterImageState'
 	SettingsKeySplitterOutputState = SettingsKeyBase + '/SplitteroutputState'
 
-	def __init__(self, pixmap=None, gocrParams=None):
+	def __init__(self, pixmap=None, gocrParams=None, gocrParamsDefault=None):
 		QtGui.QDialog.__init__(self)
 
 		self.setWindowTitle(Tc2Config.dialogTitle('Adjust Ocr'))
 
+		self.gocrParamsDefault = gocrParamsDefault
 
 		self.toolBar = QtGui.QToolBar(self)
 
@@ -60,7 +61,10 @@ class Dialog(QtGui.QDialog):
 		self.actionHelp.triggered.connect(self.onActionHelpTriggered)
 		self.toolBar.addAction(self.actionHelp)
 
-		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel, QtCore.Qt.Horizontal, self)
+		self.buttonBox = QtGui.QDialogButtonBox(QtCore.Qt.Horizontal, self)
+		self.buttonBox.addButton(self.buttonBox.Ok).pressed.connect(self.accept)
+		self.buttonBox.addButton(self.buttonBox.Cancel).pressed.connect(self.reject)
+		self.buttonBox.addButton(self.buttonBox.RestoreDefaults).setEnabled(self.gocrParamsDefault is not None)
 
 		self.splitterSettings = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
 
@@ -310,16 +314,28 @@ class Dialog(QtGui.QDialog):
 		html += '</head>'
 		html += '<body>'
 		html +='<h4>Output:</h4>'
-		if string is not None:
-			string = string.replace('\r', '')
-			for line in string.split('\n'):
-				if line:
-					html += '<span style="border: solid 1px black">%s</span>' % line
-				else:
-					html += '<span style="border-left: solid 1px black"></span>'
-				html += '<br>'
+
+		if string is not None and string:
+			html += '<table border=1 cellspacing="0" cellpadding="0"><tr>'
+			tdLineno = '<td style="background-color: lightgray">'
+			tdText = '<td>'
+			for lineno, line in enumerate(string.split('\n')):
+				tdLineno += str(lineno +1).zfill(2) + '<br>'
+				tdText += line + '<br>'
+			tdLineno += '</td>'
+			tdText += '</td>'
+			html += tdLineno
+			html += tdText
+			html += '</tr></table>'
+
+		elif string is not None and not string:
+			pass
+
 		elif number is not None:
-			html += '<span style="border: solid 1px black">%s</span>' % number
+			html += str(number)
+		else:
+			raise ValueError('no output specified')
+
 		html +='<h4>Time elapsed:</h4>'
 		html += '' if timeElapsed is None else (str(round(timeElapsed, 3)) + ' seconds')
 		html += '</body>'
