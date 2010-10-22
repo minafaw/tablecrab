@@ -185,9 +185,6 @@ class Dialog(QtGui.QDialog):
 		grid.row()
 		grid.col(self.editOutputPattern, colspan=2)
 
-		grid.row()
-		grid.col(Tc2Config.VStretch())
-
 		self.restoreGeometry( Tc2Config.settingsValue(self.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray())
 		self.splitterSettings.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterSettingsState, QtCore.QByteArray()).toByteArray() )
 		self.splitterImage.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterImageState, QtCore.QByteArray()).toByteArray() )
