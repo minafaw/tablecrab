@@ -245,16 +245,16 @@ def stringToFloat(string):
 
 def _patternAdjustOutput(out, pattern):
 	try:
-		pattern = re.compile(pattern, re.X)
+		pattern = re.compile(pattern, re.X|re.U)
 	except re.error:
 		return '', 'invalid output pattern'
 	m = pattern.match(out)
 	if m is None:
 		return '', 'no match in output pattern'
 	try:
-		out = m.group(1)
+		out = m.group('output')
 	except IndexError:
-		return '',  'no group (1) in output pattern'
+		return '',  'no group "output" in output pattern'
 	return out, ''
 
 #TODO: there seems to be no easy way to wrap ModeExtendDatabase. have to digg a bit
@@ -319,7 +319,8 @@ def scanImage(
 	@param flagPackChars: (bool)
 
 	@param flagInvertImage: (bool) used onlxy if image is passed as pgmImage
-	@param outputPatern: (regex)
+	@param outputPatern: (regexPattern instance) gets compiled with flags U|X. should provide
+	a named group "output".
 	@param outputType: (OutputType*)
 
 
