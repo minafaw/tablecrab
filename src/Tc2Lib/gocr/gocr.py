@@ -208,6 +208,9 @@ OutputTypes = (
 
 class GocrOutputTypeError(Exception): pass
 
+#TODO: make thosandSep/floatSep adjustable
+#TODO:we are pretty generouse in type conversions here
+#    - make shure thousand sep spans 3 digits?
 def stringToInt(string):
 	num = string.replace(',', '.')
 	num = num.split('.')
@@ -240,7 +243,7 @@ def stringToFloat(string):
 		raise GocrOutputTypeError('invalid literal for float')
 	return num
 
-def _adjustOutput(out, pattern):
+def _patternAdjustOutput(out, pattern):
 	try:
 		pattern = re.compile(outputPattern, re.X)
 	except re.error:
@@ -387,7 +390,7 @@ def scanImage(
 		out = out[:-1]	# removes trailing \n
 
 		if outputPattern is not None:
-			out, err = _adjustOutput(out, outputPattern)
+			out, err = _patternAdjustOutput(out, outputPattern)
 			if err:
 				return '', err
 
@@ -395,15 +398,15 @@ def scanImage(
 			try:
 				out = stringToInt(out)
 			except GocrOutputTypeError:
-				return out, 'type conversion error: invalid literal for int'
+				return '', 'type conversion error: invalid literal for int: %s' % out
 		elif outputType == OutputTypeFloat:
 			try:
 				out = stringToFloat(out)
 			except GocrOutputTypeError:
-				return out, 'type conversion error: invalid literal for float'
+				return '', 'type conversion error: invalid literal for float: %s' % out
 
 	elif outputPattern is not None:
-		out, err = _adjustOutput(out, outputPattern)
+		out, err = _patternAdjustOutput(out, outputPattern)
 		if err:
 			return '', err
 
