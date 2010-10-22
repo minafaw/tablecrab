@@ -105,7 +105,7 @@ class Dialog(QtGui.QDialog):
 
 		self.checkBoxOutputPattern = QtGui.QCheckBox('Output pattern', self.frameSettings)
 		self.checkBoxOutputPattern.stateChanged.connect(self.onCheckBoxOutputPatternStateChanged)
-		self.editOutputPattern = QtGui.QLineEdit(self.frameSettings)
+		self.editOutputPattern = QtGui.QPlainTextEdit(self.frameSettings)
 
 		self.checkBoxOutputType = QtGui.QCheckBox('Output type', self.frameSettings)
 		self.checkBoxOutputType.stateChanged.connect(self.onCheckBoxOutputTypeStateChanged)
@@ -179,9 +179,11 @@ class Dialog(QtGui.QDialog):
 		grid.row()
 		grid.col(Tc2Config.HLine(), colspan=2)
 		grid.row()
-		grid.col(self.checkBoxOutputPattern).col(self.editOutputPattern)
-		grid.row()
 		grid.col(self.checkBoxOutputType).col(self.comboOutputType)
+		grid.row()
+		grid.col(self.checkBoxOutputPattern, colspan=2)
+		grid.row()
+		grid.col(self.editOutputPattern, colspan=2)
 
 		grid.row()
 		grid.col(Tc2Config.VStretch())
@@ -251,7 +253,6 @@ class Dialog(QtGui.QDialog):
 		self.checkBoxContextCorrection.setChecked(bool(param))
 
 		param = params.get('flagCompareUnrecognizedChars', gocr.FlagCompareUnrecognizedCharsDefault)
-		print param
 		self.checkBoxCompareUnknownChars.setChecked(bool(param))
 
 		param = params.get('flagDivideOverlappingChars', gocr.FlagDivideOverlappingCharsDefault)
@@ -266,7 +267,7 @@ class Dialog(QtGui.QDialog):
 		param = params.get('outputPattern', None)
 		self.checkBoxOutputPattern.setCheckState(QtCore.Qt.Unchecked if param is None else QtCore.Qt.Checked)
 		self.editOutputPattern.setEnabled(param is not None)
-		self.editOutputPattern.setText('' if param is None else '')
+		self.editOutputPattern.setPlainText('' if param is None else '')
 
 		param = params.get('outputType', None)
 		self.checkBoxOutputType.setCheckState(QtCore.Qt.Unchecked if param is None else QtCore.Qt.Checked)
@@ -301,7 +302,7 @@ class Dialog(QtGui.QDialog):
 				'flagPackChars':self.checkBoxPackChars.checkState() == QtCore.Qt.Checked,
 
 				'flagInvertImage': self.checkBoxInvertImage.checkState() == QtCore.Qt.Checked,
-				'outputPattern': unicode(self.editOutputPattern.text().toUtf8(), 'Utf-8') if self.editOutputPattern.isEnabled() else None,
+				'outputPattern': unicode(self.editOutputPattern.toPlainText().toUtf8(), 'Utf-8') if self.editOutputPattern.isEnabled() else None,
 				'outputType': self.comboOutputType.currentText(),
 				}
 		return params
@@ -332,7 +333,7 @@ class Dialog(QtGui.QDialog):
 			pass
 
 		elif number is not None:
-			html += '' if numer is None else str(number)
+			html += '' if number is None else str(number)
 		else:
 			raise ValueError('no output specified')
 
@@ -363,7 +364,6 @@ class Dialog(QtGui.QDialog):
 		pgmImage = gocr.ImagePGM.fromQPixmap(pixmap)
 		params = self.gocrParams()
 		params['pgmImage'] = pgmImage
-		outputPattern = params.pop('outputPattern')
 		params['outputFormat'] = gocr.OutputFormatUTF8
 		try:
 			timeElapsed = time.time()
@@ -374,6 +374,11 @@ class Dialog(QtGui.QDialog):
 			err = traceback.format_exc()
 			out = ''
 			timeElapsed = None
+
+		if out is None:
+			self.setOutput(string='', timeElapsed=timeElapsed)
+			self.setError(string=err)
+			return
 
 		if params['outputType'] in (gocr.OutputTypeInt, gocr.OutputTypeFloat):
 			self.setOutput(number=out, timeElapsed=timeElapsed)
