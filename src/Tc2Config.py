@@ -142,6 +142,7 @@ RoundBets = (RoundBetsNoRounding, RoundBetsBigBlind, RoundBetsSmallBlind)
 
 HelpTopics = [
 		('index', 'TableCrab'), [
+			('versionHistory', 'Version History'),
 			('setup', 'Setup'), [
 				('screenshotInfo', 'Screenshot Info Dialog'),
 				],
@@ -169,7 +170,6 @@ HelpTopics = [
 				('settingsHandViewerStyleSheet', 'Hand Viewer Style Sheet'),
 				],
 			],
-		('versionHistory', 'Version History'),
 		('developement', 'Developement'), [
 			('ocrEditor', 'Ocr Editor'),
 			],
