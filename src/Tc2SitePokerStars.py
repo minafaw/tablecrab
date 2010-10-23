@@ -626,7 +626,6 @@ class EventHandler(QtCore.QObject):
 		mi.leftClickDouble(point, hwnd=hwnd)
 		mi.send(restoreCursor=False)
 		# replayer gains focus, so we have to wait a bit and send another click to reactivate the table.
-		#TODO: for some reason (linux/wine?) table regain focus but is not activated when the replayer is opend for the first time
 		mi = Tc2Win32.MouseInput()
 		mi.leftClickDouble(template.points['EmptySpace'], hwnd=hwnd)
 		mi.send(restoreCursor=Tc2Config.settingsValue(Tc2Config.SettingsKeyRestoreMousePosition, False).toBool())
