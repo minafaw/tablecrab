@@ -1,6 +1,4 @@
 
-#TODO: would be nice to have some information on how many hotkeys are left until hitting MaxHotkeys
-
 import Tc2Config
 import Tc2Win32
 import Tc2GuiHelp
