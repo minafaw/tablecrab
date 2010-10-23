@@ -1,6 +1,4 @@
 
-#TODO: restore collasped / expanded in topic tree. overkill?
-
 import Tc2Config
 from PyQt4 import QtCore, QtGui, QtWebKit
 
