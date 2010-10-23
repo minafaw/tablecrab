@@ -1,5 +1,4 @@
 
-#TODO: would be nice to have some information on how many templates are left until hitting MaxTemplates
 #TODO: i kind of dislike in-place editing of template names. an "Edit" button would be more consistent but a bit of overkill right now. then .again .screenshot
 # 			open / save is taking away screenspace already. would have to find shorter names for these actions.
 #TODO: restore last selected template on restart?
