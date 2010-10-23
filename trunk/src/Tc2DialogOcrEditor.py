@@ -11,6 +11,7 @@
 #           output pipe?
 
 import Tc2Config
+import Tc2GuiHelp
 from Tc2Lib.gocr import gocr
 from PyQt4 import QtCore, QtGui, QtWebKit
 import traceback, time
@@ -506,7 +507,7 @@ class Dialog(QtGui.QDialog):
 			Tc2Config.msgWarning(self, 'Could Not Save Image')
 
 	def onActionHelpTriggered(self):
-		pass
+		Tc2GuiHelp.dialogHelp('ocrEditor', parent=self)
 
 	def onActionOpenSettingsTriggered(self):
 		fileName = Tc2Config.dlgOpenSaveFile(

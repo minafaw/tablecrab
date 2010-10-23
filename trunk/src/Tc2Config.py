@@ -170,6 +170,9 @@ HelpTopics = [
 				],
 			],
 		('versionHistory', 'Version History'),
+		('developement', 'Developement'), [
+			('ocrEditor', 'Ocr Editor'),
+			],
 		]
 
 #***********************************************************************************
