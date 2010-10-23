@@ -169,9 +169,10 @@ HelpTopics = [
 				('settingsHandViewer', 'Hand Viewer'),
 				('settingsHandViewerStyleSheet', 'Hand Viewer Style Sheet'),
 				],
-			],
-		('developement', 'Developement'), [
-			('ocrEditor', 'Ocr Editor'),
+
+			('developement', 'Developement'), [
+				('ocrEditor', 'Ocr Editor'),
+				],
 			],
 		]
 
