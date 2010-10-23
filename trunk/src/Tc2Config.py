@@ -467,7 +467,7 @@ class WebViewToolBar(QtGui.QToolBar):
 
 		self.actionZoomOut = QtGui.QAction(self)
 		self.actionZoomOut.setText('ZoomIn (Ctrl+-)')
-		self.actionZoomOut.setIcon(QtGui.QIcon(Pixmaps.magnifierPlus() ) )
+		self.actionZoomOut.setIcon(QtGui.QIcon(Pixmaps.magnifierMinus() ) )
 		self.actionZoomOut.setShortcut(QtGui.QKeySequence.ZoomOut)
 		self.actionZoomOut.setAutoRepeat(True)
 		self.actionZoomOut.triggered.connect(self.zoomOut)
