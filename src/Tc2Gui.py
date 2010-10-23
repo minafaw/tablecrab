@@ -48,13 +48,6 @@ class Gui(QtGui.QMainWindow):
 		try:
 			self.singleApplication.start()
 		except self.singleApplication.ErrorOtherInstanceRunning:
-			#TODO: give feedback here, usual stuff like bring other to top, flash window, whatevs
-			#			x. FlashWindow() does not work in wine
-			# 			x. FlashWindowEx() is not implemented in wine
-			#			x. in wine there is no way to put a window to the foreground
-			# none of the above is save anyways. only way to make this a bit more secure would
-			# be to start a conversation via WM_COPYDATA, trying to find out who is holding the mutex.
-			# i'd say ..not worth the efford.
 			raise RuntimeError('%s is already running' % Tc2Config.ApplicationName)
 
 		QtGui.QMainWindow.__init__(self)
