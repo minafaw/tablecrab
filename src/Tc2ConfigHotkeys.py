@@ -1,8 +1,4 @@
 
-#TODO: restore last selected hokey on restart? would require an attr "itemIsSelected", downside
-#				we'd have to dump the whole tree on every curent item change.
-
-
 import Tc2Config
 import Tc2GuiHelp
 
