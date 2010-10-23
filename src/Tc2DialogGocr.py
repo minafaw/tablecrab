@@ -27,11 +27,13 @@ class Dialog(QtGui.QDialog):
 	SettingsKeySplitterSettingsState = SettingsKeyBase + '/SplitterSettingsState'
 	SettingsKeySplitterImageState = SettingsKeyBase + '/SplitterImageState'
 	SettingsKeySplitterOutputState = SettingsKeyBase + '/SplitteroutputState'
+	SettingsKeyDialogSettingsOpenState = SettingsKeyBase + '/DialogSettingsOpen/State'
+	SettingsKeyDialogSettingsSaveState = SettingsKeyBase + '/DialogSettingsSave/State'
 
 	def __init__(self, pixmap=None, gocrParams=None, gocrParamsDefault=None):
 		QtGui.QDialog.__init__(self)
 
-		self.setWindowTitle(Tc2Config.dialogTitle('Adjust Ocr'))
+		self.setWindowTitle(Tc2Config.dialogTitle('Edit char recognition'))
 
 		self.gocrParamsDefault = gocrParamsDefault
 
@@ -39,25 +41,44 @@ class Dialog(QtGui.QDialog):
 
 		self.actionScanImage = QtGui.QAction(self)
 		self.actionScanImage.setText('Scan image')
-		#self.actionScanImage.setShortcut(QtGui.QKeySequence('F1') )
+		self.actionScanImage.setShortcut(QtGui.QKeySequence('Alt-N') )
+		self.actionScanImage.setToolTip('Scan Image (Alt+N)')
 		self.actionScanImage.triggered.connect(self.onActionScanImageTriggered)
 		self.toolBar.addAction(self.actionScanImage)
 
 		self.actionOpenImage = QtGui.QAction(self)
 		self.actionOpenImage.setText('Open image..')
-		#self.actionOpenImage.setShortcut(QtGui.QKeySequence('F1') )
+		self.actionOpenImage.setShortcut(QtGui.QKeySequence('Alt+O') )
+		self.actionOpenImage.setToolTip('Open Image (Alt+O)')
 		self.actionOpenImage.triggered.connect(self.onActionOpenImageTriggered)
 		self.toolBar.addAction(self.actionOpenImage)
 
 		self.actionSaveImage = QtGui.QAction(self)
 		self.actionSaveImage.setText('Save image..')
-		#self.actionOpenImage.setShortcut(QtGui.QKeySequence('F1') )
+		self.actionSaveImage.setShortcut(QtGui.QKeySequence('Alt+S') )
+		self.actionSaveImage.setToolTip('Save Image (Alt+S)')
 		self.actionSaveImage.triggered.connect(self.onActionSaveImageTriggered)
 		self.toolBar.addAction(self.actionSaveImage)
+
+		self.actionOpenSettings = QtGui.QAction(self)
+		self.actionOpenSettings.setText('Open settings..')
+		self.actionOpenSettings.setShortcut(QtGui.QKeySequence('Atlt+P') )
+		self.actionOpenSettings.setToolTip('Open Settings (Alt+P)')
+		self.actionOpenSettings.triggered.connect(self.onActionOpenSettingsTriggered)
+		self.toolBar.addAction(self.actionOpenSettings)
+
+		self.actionSaveSettings = QtGui.QAction(self)
+		self.actionSaveSettings.setText('Save settings..')
+		self.actionSaveSettings.setShortcut(QtGui.QKeySequence('Atlt+A') )
+		self.actionSaveSettings.setToolTip('Open Settings (Alt+A)')
+		self.actionSaveSettings.triggered.connect(self.onActionSaveSettingsTriggered)
+		self.toolBar.addAction(self.actionSaveSettings)
+
 
 		self.actionHelp = QtGui.QAction(self)
 		self.actionHelp.setText('Help')
 		self.actionHelp.setShortcut(QtGui.QKeySequence('F1') )
+		self.actionHelp.setToolTip('Help (F1)')
 		self.actionHelp.triggered.connect(self.onActionHelpTriggered)
 		self.toolBar.addAction(self.actionHelp)
 
@@ -103,14 +124,14 @@ class Dialog(QtGui.QDialog):
 		self.checkBoxDivideOverlappingChars = QtGui.QCheckBox('Divide overlapping chars', self.frameSettings)
 		self.checkBoxPackChars = QtGui.QCheckBox('Pack chars', self.frameSettings)
 
-		self.checkBoxOutputPattern = QtGui.QCheckBox('Output pattern', self.frameSettings)
-		self.checkBoxOutputPattern.stateChanged.connect(self.onCheckBoxOutputPatternStateChanged)
-		self.editOutputPattern = QtGui.QPlainTextEdit(self.frameSettings)
-
 		self.checkBoxOutputType = QtGui.QCheckBox('Output type', self.frameSettings)
 		self.checkBoxOutputType.stateChanged.connect(self.onCheckBoxOutputTypeStateChanged)
 		self.comboOutputType = QtGui.QComboBox(self.frameSettings)
 		self.comboOutputType.addItems(gocr.OutputTypes)
+
+		self.checkBoxOutputPattern = QtGui.QCheckBox('Output pattern', self.frameSettings)
+		self.checkBoxOutputPattern.stateChanged.connect(self.onCheckBoxOutputPatternStateChanged)
+		self.editOutputPattern = QtGui.QPlainTextEdit(self.frameSettings)
 
 		#
 		self.splitterImage = QtGui.QSplitter(QtCore.Qt.Vertical, self.splitterSettings)
@@ -214,6 +235,74 @@ class Dialog(QtGui.QDialog):
 		self.actionScanImage.setEnabled(pixmap is not None)
 		self.actionSaveImage.setEnabled(pixmap is not None)
 
+
+	@classmethod
+	def gocrParamsToQSettings(klass, params, qSettings, settingsKey=None):
+		if isinstance(settingsKey,tuple):
+			settingsKey = Tc2Config.settingsKeyJoin(*settingsKey)
+		for name, value in params.items():
+			key = Tc2Config.settingsKeyJoin(settingsKey, name[0].upper() + name[1:])
+			qSettings.setValue(key, QtCore.QVariant(value))
+
+	@classmethod
+	def gocrParamsFromQSettings(klass, qSettings, settingsKey=None):
+		"""reads gocr settings from settings
+		@param qSettings: (L{QSettings})
+		@param settingsKey: (str, list, None)
+		@return:(dict) gocr settings
+		"""
+		params= {}
+		if isinstance(settingsKey,tuple):
+			settingsKey = Tc2Config.settingsKeyJoin(*settingsKey)
+
+		chars = unicode(qSettings.value(Tc2Config.settingsKeyJoin(settingsKey, 'Chars'), '').toString().toUtf8(), 'Utf-8')
+		params['chars'] = chars if chars else None
+
+		grayLevel, ok = qSettings.value(Tc2Config.settingsKeyJoin(settingsKey, 'GrayLevel'), gocr.GrayLevelAuto).toInt()
+		params['grayLevel'] = grayLevel if (ok and grayLevel >= gocr.GrayLevelMin and grayLevel <= gocr.GrayLevelMax) else None
+
+		dustSize,ok = qSettings.value(Tc2Config.settingsKeyJoin(settingsKey, 'DustSize'), gocr.DustSizeAuto).toInt()
+		params['dustSize'] = dustSize if (ok and dustSize >= gocr.DustSizeMin and dustSize <= gocr.DustSizeMax) else None
+
+		wordSpacing,ok = qSettings.value(Tc2Config.settingsKeyJoin(settingsKey, 'WordSpacing'), gocr.WordSpacingAuto).toInt()
+		params['wordSpacing'] = wordSpacing if (ok and wordSpacing >= gocr.WordSpacingMin and wordSpacing <= gocr.WordSpacingMax) else None
+
+		certainty,ok = qSettings.value(Tc2Config.settingsKeyJoin(settingsKey, 'Certainty'), gocr.CertaintyDefault).toInt()
+		params['certainty'] = certainty if (ok and certainty >= gocr.CertaintyMin and dustSize <= gocr.CertaintyMax) else None
+
+		flagLayoutAnalysis = qSettings.value(Tc2Config.settingsKeyJoin(settingsKey, 'FlagLayoutAnalysis'), gocr.FlagLayoutAnalysisDefault).toBool()
+		params['flagLayoutAnalysis'] = flagLayoutAnalysis
+
+		flagContextCorrection = qSettings.value(Tc2Config.settingsKeyJoin(settingsKey, 'flagContextCorrection'), gocr.FlagContextCorrectionDefault).toBool()
+		params['flagContextCorrection'] = flagContextCorrection
+
+		flagCompareUnrecognizedChars = qSettings.value(Tc2Config.settingsKeyJoin(settingsKey, 'flagCompareUnrecognizedChars'), gocr.FlagCompareUnrecognizedCharsDefault).toBool()
+		params['flagCompareUnrecognizedChars'] = flagCompareUnrecognizedChars
+
+		flagCompareUnrecognizedChars = qSettings.value(Tc2Config.settingsKeyJoin(settingsKey, 'flagCompareUnrecognizedChars'), gocr.FlagCompareUnrecognizedCharsDefault).toBool()
+		params['flagCompareUnrecognizedChars'] = flagCompareUnrecognizedChars
+
+		flagDivideOverlappingChars = qSettings.value(Tc2Config.settingsKeyJoin(settingsKey, 'flagDivideOverlappingChars'), gocr.FlagDivideOverlappingCharsDefault).toBool()
+		params['flagDivideOverlappingChars'] = flagDivideOverlappingChars
+
+		flagPackChars = qSettings.value(Tc2Config.settingsKeyJoin(settingsKey, 'flagPackChars'), gocr.FlagPackCharsDefault).toBool()
+		params['flagPackChars'] = flagPackChars
+
+		flagPackChars = qSettings.value(Tc2Config.settingsKeyJoin(settingsKey, 'flagPackChars'), gocr.FlagPackCharsDefault).toBool()
+		params['flagPackChars'] = flagPackChars
+
+		flagInvertImage = qSettings.value(Tc2Config.settingsKeyJoin(settingsKey, 'flagInvertImage'), gocr.FlagInvertImageDefault).toBool()
+		params['flagInvertImage'] = flagInvertImage
+
+		outputType = unicode(qSettings.value(Tc2Config.settingsKeyJoin(settingsKey, 'OutputType'), gocr.OutputTypeDefault).toString().toUtf8(), 'Utf-8')
+		params['outputType'] = outputType if outputType in gocr.OutputTypes else gocr.OutputTypeDefault
+
+		outputPattern = unicode(qSettings.value(Tc2Config.settingsKeyJoin(settingsKey, 'OutputPattern'), '').toString().toUtf8(), 'Utf-8')
+		print outputPattern
+		params['outputPattern'] = outputPattern
+
+		return params
+
 	def setGocrParams(self, params=None):
 		if params is None:
 			params = {}
@@ -221,24 +310,28 @@ class Dialog(QtGui.QDialog):
 		param = params.get('chars', None)
 		self.checkBoxChars.setCheckState(QtCore.Qt.Unchecked if param is None else QtCore.Qt.Checked)
 		self.editChars.setEnabled(param is not None)
-		self.editChars.setText('' if param is None else '')
+		self.editChars.setText('' if param is None else param)
 
 		param = params.get('grayLevel', None)
+		param = None if param == gocr.GrayLevelAuto else param
 		self.checkBoxGraylevel.setCheckState(QtCore.Qt.Unchecked if param is None else QtCore.Qt.Checked)
 		self.spinGrayLevel.setEnabled(param is not None)
 		self.spinGrayLevel.setValue(gocr.GrayLevelMin if param is None else param)
 
 		param = params.get('dustSize', None)
+		param = None if param == gocr.DustSizeAuto else param
 		self.checkBoxDustSize.setCheckState(QtCore.Qt.Unchecked if param is None else QtCore.Qt.Checked)
 		self.spinDustSize.setEnabled(param is not None)
 		self.spinDustSize.setValue(gocr.DustSizeMin if param is None else param)
 
 		param = params.get('wordSpacing', None)
+		param = None if param == gocr.WordSpacingAuto else param
 		self.checkBoxWordSpacing.setCheckState(QtCore.Qt.Unchecked if param is None else QtCore.Qt.Checked)
 		self.spinWordSpacing.setEnabled(param is not None)
 		self.spinWordSpacing.setValue(gocr.WordSpacingMin if param is None else param)
 
 		param = params.get('certainty', None)
+		param = None if param == gocr.CertaintyDefault else param
 		self.checkBoxCertainty.setCheckState(QtCore.Qt.Unchecked if param is None else QtCore.Qt.Checked)
 		self.spinCertainty.setEnabled(param is not None)
 		self.spinCertainty.setValue(gocr.CertaintyDefault if param is None else param)
@@ -264,7 +357,7 @@ class Dialog(QtGui.QDialog):
 		param = params.get('outputPattern', None)
 		self.checkBoxOutputPattern.setCheckState(QtCore.Qt.Unchecked if param is None else QtCore.Qt.Checked)
 		self.editOutputPattern.setEnabled(param is not None)
-		self.editOutputPattern.setPlainText('' if param is None else '')
+		self.editOutputPattern.setPlainText('' if param is None else param)
 
 		param = params.get('outputType', None)
 		self.checkBoxOutputType.setCheckState(QtCore.Qt.Unchecked if param is None else QtCore.Qt.Checked)
@@ -275,16 +368,6 @@ class Dialog(QtGui.QDialog):
 			self.comboOutputType.setCurrentIndex( self.comboOutputType.findText(param, QtCore.Qt.MatchExactly) )
 
 	def gocrParams(self):
-		pixmap = self.labelInputImage.pixmap()
-		if pixmap.isNull():
-			return None
-		mode = 0
-		mode |= gocr.ModeDoLayoutAnalysis if self.checkBoxAnalyzeLayout.checkState() == QtCore.Qt.Checked else 0
-		mode |= 0 if self.checkBoxContextCorrection.checkState() == QtCore.Qt.Checked else gocr.ModeNoContextCorrection
-		mode |= 0 if self.checkBoxCompareUnknownChars.checkState() == QtCore.Qt.Checked else gocr.ModeNoCompareUnrecognizedChars
-		mode |= 0 if self.checkBoxDivideOverlappingChars.checkState() == QtCore.Qt.Checked else gocr.ModeNoDivideOverlappingChars
-		mode |= gocr.ModeCharPacking if self.checkBoxPackChars.checkState() == QtCore.Qt.Checked else 0
-
 		params = {
 				'chars': unicode(self.editChars.text().toUtf8(), 'Utf-8') if self.editChars.isEnabled() else None,
 				'grayLevel': self.spinGrayLevel.value() if  self.spinGrayLevel.isEnabled() else None,
@@ -424,6 +507,47 @@ class Dialog(QtGui.QDialog):
 
 	def onActionHelpTriggered(self):
 		pass
+
+	def onActionOpenSettingsTriggered(self):
+		fileName = Tc2Config.dlgOpenSaveFile(
+				parent=self,
+				openFile=True,
+				title='Open Settings..',
+				fileFilters=('ConfigFiles (*.cfg *.ini)', 'All Files (*)'),
+				defaultSuffix='cfg',
+				settingsKey=self.SettingsKeyDialogSettingsOpenState,
+				)
+		if fileName is None:
+			return
+		#TODO: we hapily assume we can read settings. how to handle errors?
+		qSettings = QtCore.QSettings(fileName, QtCore.QSettings.IniFormat)
+		params = self.gocrParamsFromQSettings(qSettings)
+		self.setGocrParams(params)
+
+	def onActionSaveSettingsTriggered(self):
+		fileName = Tc2Config.dlgOpenSaveFile(
+				parent=self,
+				openFile=False,
+				title='Save Settings..',
+				fileFilters=('ConfigFiles (*.cfg *.ini)', 'All Files (*)'),
+				defaultSuffix='cfg',
+				settingsKey=self.SettingsKeyDialogSettingsSaveState,
+				)
+		if fileName is None:
+			return
+		#NOTE: looks like Qt is only checking for write protect anything else may or may not pass ..and we don't get any IO errors
+		# 		 so we try in advance. obv there are still loopholes
+		fp = None
+		try: fp = open(fileName, 'w').close()
+		except Exception, d:
+			Tc2Config.msgWarning(self, 'Could Not Open Config File\n\n%s' % d)
+			return
+		finally:
+			if fp is not None: fp.close()
+
+		qSettings = QtCore.QSettings(fileName, QtCore.QSettings.IniFormat)
+		params = self.gocrParams()
+		self.gocrParamsToQSettings(params, qSettings)
 
 	def onCheckBoxCharsStateChanged(self, state):
 		self.editChars.setEnabled(state == QtCore.Qt.Checked)
