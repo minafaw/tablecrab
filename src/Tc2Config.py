@@ -200,7 +200,7 @@ class Settings:
 	qSettings = QtCore.QSettings(Author, ApplicationName)
 
 def settingsKeyJoin(*keys):
-	keys = [(str(key) if isinstance(key, QtCore.QString) else key) for key in keys]
+	keys = [(str(key) if isinstance(key, QtCore.QString) else key) for key in keys if key]
 	return QtCore.QString( posixpath.join(*keys) )
 
 def setSettings(settings):
