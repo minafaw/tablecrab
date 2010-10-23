@@ -8,10 +8,164 @@
 <div class="textBox">
 	<div class="headerBox">Ocr Editor</div>
 
-	blah here
+	dialog to adjust optical schar recognition of images
+	<br>
+	<br>
+
+	this dialog is currently under construction and can not be accessed through TableCrab.
+	you have to start it directly via <code>&gt;&gt;python Tc2DialogOcrEditor.py</code>.
+	some future version of TableCrab may add functionality to let users adjust optical char
+	recognition. until then the dialog should be useful as developer tool. in the background
+	of the dialog <b>gocr</b>, an open source optical char recognition engine, does the dirty work.
 
 
+	<br>
+	<br>
 
+</div>
+
+
+<div class="textBox">
+	<div class="headerBox">Tool bar</div>
+
+
+	<b>Scan image</b><br>
+	scans current image
+	<br>
+	<br>
+
+	<b>Open image..</b><br>
+	opens an image from disk for scanning
+	<br>
+	<br>
+
+	<b>Save image..</b><br>
+	saves current image to disk
+	<br>
+	<br>
+
+	<b>Open settings..</b><br>
+	loads settings from disk
+	<br>
+	<br>
+
+	<b>Save settings..</b><br>
+	saves current settigs to disk
+	<br>
+	<br>
+
+</div>
+
+
+<div class="textBox">
+	<div class="headerBox">left pane - Settings</div>
+
+	the settings pane to the left holds various settings to be adjusted for scanning
+	<br>
+	<br>
+
+
+	<b>Chars</b><br>
+	if enabled, limits chars to be recognized to the specified subset. range notation <code>0-9 A-Z</code> is supported
+	<br>
+	<br>
+
+	<b>Gray level</b><br>
+	if enabled, adjusts gray level for scanning. the ocr engine assumes black is text,
+	white is background, this setting adjusts the threshold (0-255)
+	<br>
+	<br>
+
+	<b>Dust size</b><br>
+	if enabled, adjust size of dust (in pixels) to be filtered from image
+	<br>
+	<br>
+
+	<b>Word spacing</b><br>
+	if enabled, adjusts size of word spacing as opposed to char spacing (in pixels)
+	<br>
+	<br>
+
+	<b>Ceratinty</b><br>
+	if enabled, adjusts the certainty required to recognize a char (0-100). NOTE: unrecognized chars
+	are represented in the output by an underscore
+	<br>
+	<br>
+
+	<b>Invert image</b><br>
+	if checked, inverts the image before scanning
+	<br>
+	<br>
+
+	<b>Analyze layout</b><br>
+	if checked, the ocr engine applies layout analysis
+	<br>
+	<br>
+
+	<b>Context correction</b><br>
+	if checked, the ocr engine applies context correction on chars
+	<br>
+	<br>
+
+
+	<b>Compare unknown chars</b><br>
+	if checked, the ocr engine tries to recongize unrecognized chars by comparing them to
+	recognized ones
+	<br>
+	<br>
+
+	<b>Divide overlapping chars</b><br>
+	if checked, the ocr engine tries to divide overlappng chars
+	<br>
+	<br>
+
+	<b>Pack chars</b><br>
+	if checked, the ocr engine does ..well ..whatever ocr engines do when packing chars
+	<br>
+	<br>
+
+
+	<b>Output type</b><br>
+	if enabled, tries to convert the output to the specified type ..integer or floating point number
+	are supported types for now.
+	<br>
+	<br>
+
+	<b>Output pattern</b><br>
+	if enabled, filters the output through the specified regular expression pattern. i assume
+	you are familliar with pythons regex engine. extended, multiline patterns are ok.
+	unicode flag will be set. the pattern should contain a named group <i>&quot;output&quot;</i>
+	that matches whatever is is intended to be returned as output. filtering is applied
+	before type conversion is done (if any).
+	<br>
+	<br>
+
+</div>
+
+
+<div class="textBox">
+	<div class="headerBox">top pane - Image</div>
+
+	holds the image to be scanned
+
+</div>
+
+
+<div class="textBox">
+	<div class="headerBox">bottom pane - Output</div>
+
+	output is dumped to the left sub pane, errors to the right one.
+
+</div>
+
+
+<div class="textBox">
+	<div class="headerBox">Buttons</div>
+
+	<b>Restore defaults</b><br>
+	currently not in use
+	<br>
+	<br>
 
 </div>
 
