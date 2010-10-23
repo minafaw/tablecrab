@@ -195,6 +195,7 @@ FlagCompareUnrecognizedCharsDefault = True
 FlagDivideOverlappingCharsDefault = True
 FlagContextCorrectionDefault = True
 FlagPackCharsDefault = False
+FlagInvertImageDefault = False
 
 OutputTypeString = 'string'
 OutputTypeInt = 'int'
@@ -287,7 +288,7 @@ def scanImage(
 		flagPackChars=FlagPackCharsDefault,
 
 		# custom params
-		flagInvertImage=False,
+		flagInvertImage=FlagInvertImageDefault,
 		#TODO: implement
 		outputPattern=None,
 		#TODO: implement
