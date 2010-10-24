@@ -110,13 +110,13 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		Tc2Config.globalObject.widgetScreenshotDoubleClicked.connect(self.onWidgetScreenshotDoubleClicked)
 
 		# connect to TreeWidget signals
-		self.itemDoubleClicked.connect(self.onEditItem)
+		self.itemDoubleClicked.connect(self.onEditItemInPlace)
 		self.itemExpanded.connect(self.onItemExpanded)
 		self.itemCollapsed.connect(self.onItemCollapsed)
 		self.itemSelectionChanged.connect(self.adjustActions)
 
 		# connect to ietm delegate signals
-		self.myDelegate.editingFinished.connect(self.onTemplateEditingFinished)
+		self.myDelegate.editingFinished.connect(self.onTemplateEditInPlaceFinished)
 
 	#----------------------------------------------------------------------------------------------------------------
 	# overwritten methods
@@ -270,8 +270,9 @@ class TemplatesWidget(QtGui.QTreeWidget):
 	#--------------------------------------------------------------------------------------------------------------
 	# event handlers
 	#--------------------------------------------------------------------------------------------------------------
-	def onEditItem(self, item):
-		self.editItem(item)
+	def onEditItemInPlace(self, item):
+		if item.flags() & QtCore.Qt.ItemIsEditable:
+			self.editItem(item)
 
 	def onInit(self):
 		self.setUpdatesEnabled(False)
@@ -312,10 +313,10 @@ class TemplatesWidget(QtGui.QTreeWidget):
 	def onSetRootIsDecorated(self, flag):
 		self.setRootIsDecorated(flag)
 
-	def onTemplateEditingFinished(self):
+	def onTemplateEditInPlaceFinished(self):
 		item = self.currentItem()
 		if item is not None:
-			if item.toplevel().handleEditingFinished(item):
+			if item.toplevel().handleEditInPlaceFinished(item):
 				self.dump()
 
 	def onWidgetScreenshotDoubleClicked(self, pixmap, point):

@@ -86,7 +86,7 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 	def toplevel(self):
 		return self
 
-	def handleEditingFinished(self, item):
+	def handleEditInPlaceFinished(self, item):
 		if item is self:
 			if self.text(0) != self.name:
 				self.name = self.text(0)
