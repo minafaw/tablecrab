@@ -18,9 +18,21 @@ def newPoint(point=None, x=None, y=None):
 		point.setY(y)
 	return point
 
-class PointItem(QtGui.QTreeWidgetItem):
+
+class ItemBase(QtGui.QTreeWidgetItem):
+	def topLevel(self):
+		parent = self
+		while True:
+			if parent.IsTopLevel:
+				return parent
+			parent = parent.parent()
+			if parent is None:
+				raise ValueError('no top level item found')
+
+class PointItem(ItemBase):
+	IsTopLevel = False
 	def __init__(self, pointName, point, parent=None):
-		QtGui.QTreeWidgetItem.__init__(self, parent)
+		ItemBase.__init__(self, parent)
 		self.point = None
 		self.pointName = pointName
 		self.setText(0, self.pointName)
@@ -32,10 +44,9 @@ class PointItem(QtGui.QTreeWidgetItem):
 			point = QtCore.QPoint(1, 1)
 		self.point = point
 		self.setText(1, Tc2Config.pointToString(self.point) )
-	def topLevel(self):
-		return self.parent()
 
-class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
+class TemplatePokerStarsTable(ItemBase):
+	IsTopLevel = True
 	PointNames = (
 		'EmptySpace',
 		'ButtonCheck',
@@ -57,7 +68,7 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 			itemIsExpanded=False,
 			**kws
 			):
-		QtGui.QTreeWidgetItem.__init__(self, parent)
+		ItemBase.__init__(self, parent)
 		self.name = name if name else self.menuName()
 		self.size = newValidSize(size)
 		self.itemIsExpanded = itemIsExpanded
@@ -82,9 +93,6 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 			point = newPoint(kws.get(pointName, None))
 			self.points[pointName] = point
 			self.pointItems.append(PointItem(pointName, point, parent=self) )
-
-	def topLevel(self):
-		return self
 
 	def handleEditInPlaceFinished(self, item):
 		if item is self:
