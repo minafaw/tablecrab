@@ -32,7 +32,7 @@ class PointItem(QtGui.QTreeWidgetItem):
 			point = QtCore.QPoint(1, 1)
 		self.point = point
 		self.setText(1, Tc2Config.pointToString(self.point) )
-	def toplevel(self):
+	def topLevel(self):
 		return self.parent()
 
 class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
@@ -83,7 +83,7 @@ class TemplatePokerStarsTable(QtGui.QTreeWidgetItem):
 			self.points[pointName] = point
 			self.pointItems.append(PointItem(pointName, point, parent=self) )
 
-	def toplevel(self):
+	def topLevel(self):
 		return self
 
 	def handleEditInPlaceFinished(self, item):

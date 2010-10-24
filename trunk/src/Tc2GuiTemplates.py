@@ -130,7 +130,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 				event.accept()
 				item = self.currentItem()
 				if item is not None:
-					if item.toplevel() is item:
+					if item.topLevel() is item:
 						self.editItem(item)
 					return
 		return QtGui.QTreeWidget.keyReleaseEvent(self, event)
@@ -206,7 +206,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		if item is None:
 			self.actionUp.setEnabled(False)
 		else:
-			return self.indexOfTopLevelItem(item.toplevel() ) > 0
+			return self.indexOfTopLevelItem(item.topLevel() ) > 0
 		return False
 
 	def canMoveTemplateDown(self):
@@ -214,7 +214,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		if item is None:
 			self.actionUp.setEnabled(False)
 		else:
-			return self.indexOfTopLevelItem(item.toplevel() ) < len(self) -1
+			return self.indexOfTopLevelItem(item.topLevel() ) < len(self) -1
 		return False
 
 	def createTemplate(self, templateProto):
@@ -236,7 +236,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		if item is None:
 			self.actionUp.setEnabled(False)
 			return
-		index = self.indexOfTopLevelItem(item.toplevel() )
+		index = self.indexOfTopLevelItem(item.topLevel() )
 		template = self.takeTopLevelItem(index)
 		self.insertTopLevelItem(index +1, template)
 		#NOTE: for some reason Qt collapses items on TakeItem()
@@ -249,7 +249,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		if item is None:
 			self.actionUp.setEnabled(False)
 			return
-		index = self.indexOfTopLevelItem(item.toplevel() )
+		index = self.indexOfTopLevelItem(item.topLevel() )
 		template = self.takeTopLevelItem(index)
 		self.insertTopLevelItem(index -1, template)
 		#NOTE: for some reason Qt collapses items on TakeItem()
@@ -262,7 +262,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		if item is None:
 			self.actionRemove.setEnabled(False)
 			return
-		index = self.indexOfTopLevelItem(item.toplevel() )
+		index = self.indexOfTopLevelItem(item.topLevel() )
 		self.takeTopLevelItem(index)
 		self.dump()
 		self.adjustTemplates()
@@ -298,13 +298,13 @@ class TemplatesWidget(QtGui.QTreeWidget):
 	def onItemCollapsed(self, item):
 		if not self._templatesRead:
 			return
-		if item.toplevel().handleItemCollapsed(item):
+		if item.topLevel().handleItemCollapsed(item):
 			self.dump()
 
 	def onItemExpanded(self, item):
 		if not self._templatesRead:
 			return
-		if item.toplevel().handleItemExpanded(item):
+		if item.topLevel().handleItemExpanded(item):
 			self.dump()
 
 	def onSetAlternatingRowColors(self, flag):
@@ -316,14 +316,14 @@ class TemplatesWidget(QtGui.QTreeWidget):
 	def onTemplateEditInPlaceFinished(self):
 		item = self.currentItem()
 		if item is not None:
-			if item.toplevel().handleEditInPlaceFinished(item):
+			if item.topLevel().handleEditInPlaceFinished(item):
 				self.dump()
 
 	def onWidgetScreenshotDoubleClicked(self, pixmap, point):
 		item = self.currentItem()
 		if item is None:
 			return False
-		if item.toplevel().handleScreenshotDoubleClicked(item, pixmap, point):
+		if item.topLevel().handleScreenshotDoubleClicked(item, pixmap, point):
 			self.dump()
 			self.adjustTemplates()
 
