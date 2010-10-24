@@ -731,31 +731,29 @@ class RawNetworkReply(QtNetwork.QNetworkReply):
 		QtNetwork.QNetworkReply.__init__(self, parent)
 		self._data = None
 		self._dataPos = 0
-		QtCore.QTimer.singleShot(0, self, QtCore.SIGNAL("readyRead()"))
-		QtCore.QTimer.singleShot(0, self, QtCore.SIGNAL("finished()"))
 		self.open(self.ReadOnly | self.Unbuffered)
+		self.timer = Timer(parent=self, singleShot=True, interval=0, slot=self.emitSignals)
+		self.timer.start()
+	def emitSignals(self):
+		self.readyRead.emit()
+		self.finished.emit()
 	def abort(self):	pass
 	def bytesAvailable(self):
-		if self._data is None:
-			return 0
-		return len(self._data)
+		if self._data is not None:
+			return len(self._data) - self._dataPos
+		return 0
 	def isSequential(self): return True
 	def readData(self, maxSize):
 		#NOTE: emitting finished() crashes in PyQt4.8.1. used to work in PyQt4-7.7 no idea why
 		# maybe i am getting wrong what it is supposed to do?
 		#self.finished.emit()
-		if self._data is None or self._dataPos >= len(self._data) -1:
-			arr = QtCore.QByteArray()
-			arr += ''
-			return arr.data()
+		#NOTE: we can not return -1 here. no idea how this is handled in PyQt
 		stop = self._dataPos + maxSize
-		if stop > len(self._data):
-			stop = len(self._data) -1
-		data = self._data[self._dataPos:stop]
+		if stop >= len(self._data):
+			stop = len(self._data)
+		data =  self._data[self._dataPos:stop]
 		self._dataPos = stop
-		# see note "finished.emit()" above
-		#if self._dataPos >= len(self._data) -1:
-		#self.finished.emit()
+		print self._dataPos
 		arr = QtCore.QByteArray()
 		arr += data
 		return arr.data()
