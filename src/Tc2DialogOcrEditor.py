@@ -384,7 +384,7 @@ class Dialog(QtGui.QDialog):
 
 				'flagInvertImage': self.checkBoxInvertImage.checkState() == QtCore.Qt.Checked,
 				'outputPattern': unicode(self.editOutputPattern.toPlainText().toUtf8(), 'Utf-8') if self.editOutputPattern.isEnabled() else None,
-				'outputType': self.comboOutputType.currentText(),
+				'outputType': self.comboOutputType.currentText() if self.comboOutputType.isEnabled() else None,
 				}
 		return params
 
