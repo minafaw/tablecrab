@@ -15,128 +15,6 @@ from PyQt4 import QtCore, QtGui
 #************************************************************************************
 #
 #************************************************************************************
-
-class ScanTrace(object):
-	def __init__(self):
-		self.data = []
-		self.gocrWarinings = []
-	def __str__(self):
-		return '\n'.join(self.data)
-	def __add__(self, data):
-		self.data.append(data)
-		return self
-	def __ladd__(self, data):
-		self.__add__(data)
-		return self
-	def __radd__(self, data):
-		self.__add__(data)
-		return self
-
-def potAmountFromGocrImage(gocrImage, scanTrace=None):
-	if scanTrace is None:
-		scanTrace = ScanTrace()
-
-	# determine gray level
-	#TODO: not shure if i am interpreting grayLevel param correcly. works nicely for
-	# regular pixmaps, but fails for inverted onse, having gocr reset to a default value
-	#
-	grayLevel = 90		# grayLevel in percent of maxGrayLevel. lower values smaller range of matching colors?
-	dustSize = 0
-	header = gocrImage.header()
-	minGray = gocrImage.minGray()
-	maxGray = gocrImage.maxGray()
-	scanTrace += 'detemined grayLevel: %s-%s' % (minGray, maxGray)
-	absGray =  float(grayLevel) / 100 * (maxGray - minGray)
-	absGray = int(round(minGray + absGray, 0))
-	scanTrace += 'set grayLevel: %s' % absGray
-
-	# scan image
-	#TODO: grayLevel threshold.
-	# 1) no real idea what it does. i guess it is a threshold in range(grayLevelMin, graylevelmax)
-	# 2) we may have to make this user adjustable per template. nasty.
-	result, err = gocr.scanImage(
-			string=gocrImage.toString(),
-			chars='0-9.,',
-			dustSize=dustSize,
-			grayLevel=absGray,
-			)
-	scanTrace += 'gocr result: %r' % result
-	scanTrace += 'gocr err: %s' % err
-	if not result:
-		return None, scanTrace
-	elif result and err:
-		scanTrace.gocrWarinings.append(err)
-
-	# clean gocr output from garbage
-	num = result.replace('\x20', '').replace('\n', '').replace('\r', '')
-	scanTrace += 'stripped string: %s' % num
-
-	# right strip string up to last digit
-	#NOTE: obv gocr may interpret borders and background as chars. funny enough
-	# it even chars we opted out may apperar in result
-	while num:
-		char = num[-1]
-		if char.isdigit(): break
-		num = num[:-1]
-	scanTrace += 'right stripped string: %s' % num
-
-	#NOTE:
-	# 1. assertion: pot rect contains at least the 'T' of 'POT' so we always get an unknown char preceeding number
-	# 2. assertion: gocr does not recognize any chars following our number
-	if '_' not in num:
-		scanTrace += 'error - expected unknown char preceeding number'
-		return None, scanTrace
-
-	# 'i' should be either '$' or some other currency symbol or the 'T' from 'POT'
-	i = num.rindex('_')
-	num = num[i +1:]
-	scanTrace += 'left stripped string: %s' % num
-
-	# try to reconstruct number
-	num = num.replace(',', '.')
-	num = num.split('.')
-	# check if pot is float
-	if len(num) > 1:
-		if len(num[-1]) == 2:
-			num = ''.join(num[:-1]) + '.' + num[-1]
-		else:
-			num = ''.join(num)
-	else:
-		num = num[0]
-	scanTrace += 'formatted number: %s' % num
-	try:
-		num = float(num)
-	except ValueError:
-		scanTrace += 'invalid float'
-		return None, scanTrace
-	return num, scanTrace
-
-#TODO: how to handle worst case: we get an amount but amount is garbage? no way..
-def potGetAmount(pixmap):
-	scanTrace = ScanTrace()
-	scanTrace += 'scan pot -- image: (%sx%s)' % (pixmap.width(), pixmap.height() )
-	gocrImage = gocr.ImagePGM.fromQPixmap(pixmap)
-	num, scanTrace = potAmountFromGocrImage(gocrImage, scanTrace=scanTrace)
-	if num is None:
-		# try again with inverted pixels
-		scanTrace += 'scan pot -- inverted image'
-		gocrImage2 = gocrImage.inverted()
-		num, scanTrace = potAmountFromGocrImage(gocrImage2, scanTrace=scanTrace)
-	if num is None:
-		scanTrace.data.insert(0, 'Could not scan pot\n')
-	scanTrace += '<image>%s</image>' % base64.b64encode(gocrImage.toString())
-	return num, scanTrace
-
-
-# TODO: rewrite above to use regex pattern for pot size matching
-#[_\s]*
-#_0_\s*_?
-#(?P<output>[0-9,\.]+)
-#[_\s]*
-
-#************************************************************************************
-#
-#************************************************************************************
 class EventHandler(QtCore.QObject):
 
 	SettingKeyBase = 'PokerStars'
@@ -568,6 +446,8 @@ class EventHandler(QtCore.QObject):
 		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
 		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
 
+
+	PatPot = re.compile(r'[_\s]*_0_\s*_?(?P<output>[0-9,\.]+)[_\s]*', re.X|re.U)
 	def tableHandleBetPot(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
@@ -590,16 +470,33 @@ class EventHandler(QtCore.QObject):
 					pointBottomRight.x() - pointTopLeft.x(),
 					pointBottomRight.y() - pointTopLeft.y(),
 					)
-		num, scanTrace = potGetAmount(pixmap)
-		#TODO: what to do with gocr warnings?
-		#num = None	# for testing, triggers exception
+		pgmImage = gocr.ImagePGM.fromQPixmap(pixmap)
+		# scan pot
+		num, err = gocr.scanImage(
+				pgmImage=pgmImage,
+				chars='0-9,.',
+				dustSize=0,
+				outputType=gocr.OutputTypeFloat,
+				outputPattern=self.PatPot,
+				)
 		if num is None:
-			try:
-				raise ValueError(scanTrace)
-			except:
-				Tc2Config.handleException()
-				Tc2Config.globalObject.feedbackMessage.emit('%s: Error - Could not scan pot' % hotkey.action() )
-				return
+			# try again with inverted image
+			num, err = gocr.scanImage(
+					pgmImage=pgmImage,
+					flagInvertImage=True,
+					chars='0-9,.',
+					dustSize=0,
+					outputType=gocr.OutputTypeFloat,
+					outputPattern=self.PatPot,
+					)
+			if num is None:
+				try:
+					raise ValueError('Could not scan pot\n<image>%s</image>' % base64.b64encode(pgmImage.toString()))
+				except:
+					Tc2Config.handleException()
+					Tc2Config.globalObject.feedbackMessage.emit('%s: Error - Could not scan pot' % hotkey.action() )
+					return
+
 		newBet = round(num * hotkey.multiplier(), 2)
 		newBet = Tc2Config.formatedBet(newBet, blinds=(data['smallBlind'], data['bigBlind']) )
 		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
