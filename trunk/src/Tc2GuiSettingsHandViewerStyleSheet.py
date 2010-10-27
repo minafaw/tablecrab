@@ -1,7 +1,7 @@
 
 import Tc2Config
 import Tc2GuiHelp
-import PokerStarsHandGrabber
+import Tc2HandGrabberPokerStars
 from PyQt4 import QtCore, QtGui
 
 #************************************************************************************
@@ -75,15 +75,15 @@ class FrameSettings(QtGui.QFrame):
 				Tc2Config.globalObject.feedback.emit(self, 'Style sheet too big -- maximum Is %s chars' % Tc2Config.MaxHandStyleSheet)
 				return
 		Tc2Config.globalObject.feedback.emit(self, '')
-		Tc2Config.settingsSetValue(PokerStarsHandGrabber.HandFormatterHtmlTabular.SettingsKeyStyleSheet, text)
+		Tc2Config.settingsSetValue(Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.SettingsKeyStyleSheet, text)
 
 	def onInit(self):
 		self.layout()
 
 		#NOTE: style sheet can not be ''
-		text = Tc2Config.settingsValue(PokerStarsHandGrabber.HandFormatterHtmlTabular.SettingsKeyStyleSheet, '').toString()
+		text = Tc2Config.settingsValue(Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.SettingsKeyStyleSheet, '').toString()
 		if not text:
-			text = PokerStarsHandGrabber.HandFormatterHtmlTabular.StyleSheet
+			text = Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.StyleSheet
 		#NOTE: have to connect before setText so we can catch MaxCharsExceeded
 		self.edit.textChanged.connect(self.onEditTextChanged)
 		self.edit.setPlainText(text)
@@ -134,5 +134,5 @@ class FrameSettings(QtGui.QFrame):
 
 	#TODO: resetting document jumps to top of widget. store/restore position would be nice
 	def onRestoreDefault(self):
-		self.edit.setPlainText(PokerStarsHandGrabber.HandFormatterHtmlTabular.StyleSheet)
+		self.edit.setPlainText(Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.StyleSheet)
 
