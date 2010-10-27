@@ -1,7 +1,7 @@
 
 import Tc2Config
 import Tc2GuiHelp
-import PokerStarsHandGrabber
+import Tc2HandGrabberPokerStars
 from PyQt4 import QtCore, QtGui
 
 #************************************************************************************
@@ -22,7 +22,7 @@ class FrameSettings(QtGui.QFrame):
 		self.labelPostfix = QtGui.QLabel('<i>Postfix</i>', self)
 
 		self.actionWidgets = []
-		for (actionName, settingsKeyPrefix, defaultPrefix, settingsKeyPostfix, defaultPostfix) in PokerStarsHandGrabber.HandFormatterHtmlTabular.ActionPrefixes:
+		for (actionName, settingsKeyPrefix, defaultPrefix, settingsKeyPostfix, defaultPostfix) in Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.ActionPrefixes:
 			editPrefix = self.ActionLineEdit(parent=self, settingsKey= settingsKeyPrefix, default=defaultPrefix)
 			editPrefix.setMaxLength(Tc2Config.MaxHandGrabberPrefix)
 			labelAction = QtGui.QLabel('<i>' + actionName + '</i>', self)
@@ -102,11 +102,11 @@ class FrameSettings(QtGui.QFrame):
 		Tc2GuiHelp.dialogHelp('settingsHandViewer', parent=self)
 
 	def onSpinMaxPlayerNameValueChanged(self, value):
-		Tc2Config.settingsSetValue(PokerStarsHandGrabber.HandFormatterHtmlTabular.SettingsKeyMaxPlayerName, value)
+		Tc2Config.settingsSetValue(Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.SettingsKeyMaxPlayerName, value)
 
 	def onNoFloatingPointChanged(self, state):
 		flag = state == QtCore.Qt.Checked
-		Tc2Config.settingsSetValue(PokerStarsHandGrabber.HandFormatterHtmlTabular.SettingsKeyNoFloatingPoint, flag)
+		Tc2Config.settingsSetValue(Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.SettingsKeyNoFloatingPoint, flag)
 
 	def onActionWidgetValueChanged(self):
 		edit = self.sender()
@@ -115,11 +115,11 @@ class FrameSettings(QtGui.QFrame):
 	def onInit(self):
 		self.layout()
 
-		maxPlayerName = Tc2Config.settingsValue(PokerStarsHandGrabber.HandFormatterHtmlTabular.SettingsKeyMaxPlayerName, -1).toInt()[0]
+		maxPlayerName = Tc2Config.settingsValue(Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.SettingsKeyMaxPlayerName, -1).toInt()[0]
 		self.spinMaxPlayerName.setValue(maxPlayerName)
 		self.spinMaxPlayerName.valueChanged.connect(self.onSpinMaxPlayerNameValueChanged)
 
-		state = QtCore.Qt.Checked if Tc2Config.settingsValue(PokerStarsHandGrabber.HandFormatterHtmlTabular.SettingsKeyNoFloatingPoint, False).toBool() else QtCore.Qt.Unchecked
+		state = QtCore.Qt.Checked if Tc2Config.settingsValue(Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.SettingsKeyNoFloatingPoint, False).toBool() else QtCore.Qt.Unchecked
 		self.checkNoFloatingPoint.setCheckState(state)
 		self.checkNoFloatingPoint.stateChanged.connect(self.onNoFloatingPointChanged)
 
