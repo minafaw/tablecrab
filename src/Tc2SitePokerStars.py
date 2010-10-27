@@ -514,7 +514,7 @@ class EventHandler(QtCore.QObject):
 		mi.send(restoreCursor=Tc2Config.settingsValue(Tc2Config.SettingsKeyRestoreMousePosition, False).toBool())
 		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
-	def _tableClickRestoreFocus(self, hwnd, point, template):
+	def tableClickRestoreFocus(self, hwnd, point, template):
 		#NOTE: we always double click. not realy necessary here
 		mi = Tc2Win32.MouseInput()
 		mi.leftClickDouble(point, hwnd=hwnd)
@@ -528,14 +528,14 @@ class EventHandler(QtCore.QObject):
 		point = self.tableGetPoint('Replayer', template)
 		if point is None:
 			return
-		self._tableClickRestoreFocus(hwnd, point, template)
+		self.tableClickRestoreFocus(hwnd, point, template)
 		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def tableHandleInstantHandHistory(self, hotkey, template, hwnd, inputEvent):
 		point = self.tableGetPoint('InstantHandHistory', template)
 		if point is None:
 			return
-		self._tableClickRestoreFocus(hwnd, point, template)
+		self.tableClickRestoreFocus(hwnd, point, template)
 		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 
