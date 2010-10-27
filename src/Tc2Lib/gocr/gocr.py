@@ -245,10 +245,11 @@ def stringToFloat(string):
 	return num
 
 def _patternAdjustOutput(out, pattern):
-	try:
-		pattern = re.compile(pattern, re.X|re.U)
-	except re.error:
-		return '', 'invalid output pattern'
+	if isinstance(pattern, basestring):
+		try:
+			pattern = re.compile(pattern, re.X|re.U)
+		except re.error:
+			return '', 'invalid output pattern'
 	m = pattern.match(out)
 	if m is None:
 		return '', 'no match in output pattern'
@@ -320,7 +321,7 @@ def scanImage(
 	@param flagPackChars: (bool)
 
 	@param flagInvertImage: (bool) used onlxy if image is passed as pgmImage
-	@param outputPatern: (regexPattern instance) gets compiled with flags U|X. should provide
+	@param outputPatern: (regexPattern or str) if string, the string gets compiled with flags U|X. should provide
 	a named group "output".
 	@param outputType: (OutputType*)
 
