@@ -412,7 +412,6 @@ def formatedBet(bet, blinds=None):
 			if float(r)/blind >= 0.5:
 				bet += blind
 			bet = round(bet / 100, 2)
-	print bet == int(bet)
 	if int(bet) == bet:
 		bet = int(bet)
 	return str(bet)
@@ -753,7 +752,6 @@ class RawNetworkReply(QtNetwork.QNetworkReply):
 			stop = len(self._data)
 		data =  self._data[self._dataPos:stop]
 		self._dataPos = stop
-		print self._dataPos
 		arr = QtCore.QByteArray()
 		arr += data
 		return arr.data()
