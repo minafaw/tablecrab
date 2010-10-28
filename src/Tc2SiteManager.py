@@ -14,6 +14,7 @@ import thread
 #**************************************************************************************
 
 class SiteManager(QtCore.QObject):
+
 	def __init__(self, parent=None):
 		QtCore.QObject.__init__(self, parent)
 		self._lock = thread.allocate_lock()
@@ -25,14 +26,14 @@ class SiteManager(QtCore.QObject):
 		Tc2Config.keyboardHook.inputEvent.connect(self.onInputEvent)
 		Tc2Config.mouseHook.inputEvent.connect(self.onInputEvent)
 
-		self._tableCrabActionHandler = Tc2SiteTableCrab.EventHandler(parent=self)
+		self._tableCrabSiteHandler = Tc2SiteTableCrab.SiteHandler(parent=self)
 		self._handlers = (
-				self._tableCrabActionHandler,	# should always be first item
-				Tc2SitePokerStars.EventHandler(parent=self),
+				self._tableCrabSiteHandler,	# should always be first item
+				Tc2SitePokerStars.SiteHandler(parent=self),
 				)
 
-	def tableCrabActionHandler(self):
-		return self._tableCrabActionHandler
+	def tableCrabSiteHandler(self):
+		return self._tableCrabSiteHandler
 
 	def onWindowDestroyed(self, hwnd):
 		for handler in self._handlers:

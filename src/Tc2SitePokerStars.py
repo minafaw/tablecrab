@@ -15,7 +15,7 @@ from PyQt4 import QtCore, QtGui
 #************************************************************************************
 #
 #************************************************************************************
-class EventHandler(QtCore.QObject):
+class SiteHandler(QtCore.QObject):
 
 	SettingKeyBase = 'PokerStars'
 	SettingsKeyAutoClosePopupNews = SettingKeyBase + '/AutoClosePopupNews'
