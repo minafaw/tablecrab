@@ -116,7 +116,7 @@ class Gui(QtGui.QMainWindow):
 		hwnd = self.effectiveWinId()
 		if hwnd is None:
 			raise RuntimeError('main window has no valid hwnd')
-		self.siteManager.tableCrabActionHandler().setHwndMain( int(hwnd) )
+		self.siteManager.tableCrabSiteHandler().setHwndMain( int(hwnd) )
 		Tc2Config.globalObject.init.emit()
 
 	#--------------------------------------------------------------------------------------------------------------

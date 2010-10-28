@@ -9,7 +9,7 @@ from PyQt4 import QtCore
 #**********************************************************************************************
 #
 #**********************************************************************************************
-class EventHandler(QtCore.QObject):
+class SiteHandler(QtCore.QObject):
 	def __init__(self, parent=None):
 		QtCore.QObject.__init__(self, parent)
 
