@@ -57,6 +57,13 @@ class FrameTool(QtGui.QFrame):
 		self.buttonCalculate.clicked.connect(self.onButtonCalculateClicked)
 		self.editResult = QtGui.QLineEdit(self)
 
+		self.editCache = QtGui.QPlainTextEdit(self)
+		self.editCache.setReadOnly(True)
+
+		self.buttonClearCache = QtGui.QPushButton('Clear', self)
+		self.buttonClearCache.setEnabled(False)
+		self.buttonClearCache.clicked.connect(self.onButtonClearCacheClicked)
+
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		self.buttonHelp.setToolTip('Help (F1)')
 		self.buttonHelp.clicked.connect(self.onHelp)
@@ -69,6 +76,7 @@ class FrameTool(QtGui.QFrame):
 		self.addAction(action)
 		self.addAction(action)
 
+		# connect signals
 		Tc2Config.globalObject.init.connect(self.onInit)
 
 	def toolTip(self):
@@ -99,7 +107,11 @@ class FrameTool(QtGui.QFrame):
 		grid.col(self.buttonCalculate).col(self.editResult, colspan=2)
 
 		grid.row()
-		grid.col(Tc2Config.VStretch())
+		grid.col(Tc2Config.HLine(self), colspan=3)
+		grid.row()
+		grid.col(self.editCache, colspan=3)
+		grid.row()
+		grid.col(self.buttonClearCache)
 
 		grid.row()
 		grid.col(Tc2Config.HLine(self), colspan=3)
@@ -141,9 +153,23 @@ class FrameTool(QtGui.QFrame):
 		else:
 			result = amount * 5.5 * multiplier
 		self.editResult.setText('%.2f' % result)
+		text = '%s %s%s == %s%s' % (
+				self.comboVIPStatus.currentText(),
+				Tc2Config.locale.toString(amount, 'f', 2),
+				'FPP' if toCash else 'Cash',
+				Tc2Config.locale.toString(result, 'f', 2),
+				'Cash' if toCash else 'FPPs',
+				)
+		self.editCache.appendPlainText(text)
+		self.buttonClearCache.setEnabled(True)
+
+	def onButtonClearCacheClicked(self):
+		self.editCache.clear()
+		self.buttonClearCache.setEnabled(False)
 
 	def onHelp(self):
 		Tc2GuiHelp.dialogHelp('toolsPokerStarsFPPs', parent=self)
+
 
 
 
