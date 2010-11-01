@@ -5,6 +5,7 @@ import Tc2GuiSettings
 import Tc2GuiSetup
 import Tc2GuiHotkeys
 import Tc2GuiHandViewer
+import Tc2GuiTools
 import Tc2GuiHelp
 import Tc2SiteManager
 import Tc2DialogException
@@ -86,6 +87,7 @@ class Gui(QtGui.QMainWindow):
 		self.tabHotkeys = self._addTab(Tc2GuiHotkeys.FrameHotkeys, 'Hot&keys')
 		self.tabHand = self._addTab(Tc2GuiHandViewer.FrameHandViewer, 'H&and')
 		self.tabSettings = self._addTab(Tc2GuiSettings.FrameSettings, 'Settin&gs')
+		self.tabTools = self._addTab(Tc2GuiTools.FrameTools, 'T&ools')
 		self.tabHelp = self._addTab(Tc2GuiHelp.FrameHelp, '&Help')
 		self.tabWidget.currentChanged.connect(self.onTabCurrentChanged)
 
