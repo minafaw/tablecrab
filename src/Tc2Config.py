@@ -170,6 +170,11 @@ HelpTopics = [
 				('settingsHandViewerStyleSheet', 'Hand Viewer Style Sheet'),
 				],
 
+			('tools', 'Tools'), [
+				('toolsPokerStarsFPPs', 'PokerStars FPPs'),
+				],
+
+
 			('developement', 'Developement'), [
 				('ocrEditor', 'Ocr Editor'),
 				],
