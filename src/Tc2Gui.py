@@ -86,8 +86,8 @@ class Gui(QtGui.QMainWindow):
 		self.tabSetup = self._addTab(Tc2GuiSetup.FrameSetup, 'Se&tup')
 		self.tabHotkeys = self._addTab(Tc2GuiHotkeys.FrameHotkeys, 'Hot&keys')
 		self.tabHand = self._addTab(Tc2GuiHandViewer.FrameHandViewer, 'H&and')
-		self.tabSettings = self._addTab(Tc2GuiSettings.FrameSettings, 'Settin&gs')
 		self.tabTools = self._addTab(Tc2GuiTools.FrameTools, 'T&ools')
+		self.tabSettings = self._addTab(Tc2GuiSettings.FrameSettings, 'Settin&gs')
 		self.tabHelp = self._addTab(Tc2GuiHelp.FrameHelp, '&Help')
 		self.tabWidget.currentChanged.connect(self.onTabCurrentChanged)
 
