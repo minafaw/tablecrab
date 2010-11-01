@@ -153,12 +153,12 @@ class FrameTool(QtGui.QFrame):
 		else:
 			result = amount * 5.5 * multiplier
 		self.editResult.setText('%.2f' % result)
-		text = '%s %s%s == %s%s' % (
+		text = '%s %s %s == %s %s' % (
 				self.comboVIPStatus.currentText(),
+				'fpp' if toCash else 'cash',
 				Tc2Config.locale.toString(amount, 'f', 2),
-				'FPP' if toCash else 'Cash',
+				'cash' if toCash else 'fpp',
 				Tc2Config.locale.toString(result, 'f', 2),
-				'Cash' if toCash else 'FPPs',
 				)
 		self.editCache.appendPlainText(text)
 		self.buttonClearCache.setEnabled(True)
