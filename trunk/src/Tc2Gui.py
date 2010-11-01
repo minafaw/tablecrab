@@ -17,6 +17,16 @@ import sys, os
 #************************************************************************************
 ErrMessage = '<div style="color: red;background-color: white;">&nbsp;Error: double click for details</div>'
 
+
+# double clickabe label. we use this to trigger ExceptionDialog
+class ClickableLabel(QtGui.QLabel):
+	doubleClicked = QtCore.pyqtSignal()
+	def __init__(self, *args):
+		QtGui.QLabel.__init__(self, *args)
+		self.setMouseTracking(True)
+	def mouseDoubleClickEvent(self, event):
+		self.doubleClicked.emit()
+
 #************************************************************************************
 #
 #************************************************************************************
@@ -27,14 +37,6 @@ class Gui(QtGui.QMainWindow):
 	SettingsKeyTabCurrent =  SettingsKeyBase + '/TabCurrent'
 	SettingsKeyDialogExceptionGeometry = SettingsKeyBase + '/DialogException/Geometry'
 
-	# double clickabe label. we use this to trigger ExceptionDialog
-	class ClickableLabel(QtGui.QLabel):
-		doubleClicked = QtCore.pyqtSignal()
-		def __init__(self, *args):
-			QtGui.QLabel.__init__(self, *args)
-			self.setMouseTracking(True)
-		def mouseDoubleClickEvent(self, event):
-			self.doubleClicked.emit()
 
 	def __init__(self):
 		scope = Tc2Config.settingsValue(Tc2Config.SettingsKeySingleApplicationScope, '').toString()
@@ -65,7 +67,7 @@ class Gui(QtGui.QMainWindow):
 				}
 
 		# setup status labels
-		self.labelStatus = self.ClickableLabel('Ready: ', self)
+		self.labelStatus = ClickableLabel('Ready: ', self)
 		self.labelStatus.setTextFormat(QtCore.Qt.RichText)
 		self.labelStatus.doubleClicked.connect(self.onLabelFeedbackDoubleClicked)
 		self.labelFeedback = QtGui.QLabel('', self)
