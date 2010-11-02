@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 #TODO: hotkeys
 #TODO: check calculation
 
@@ -8,13 +11,30 @@ from PyQt4 import QtCore, QtGui, QtWebKit
 #************************************************************************************
 #
 #************************************************************************************
-FPPMultipliers = (
+VIPLevels = (
 		('Bronce', 1.0),
 		('Silver', 1.5),
 		('Gold', 2.0),
 		('Platinum', 2.5),
 		('Supernova', 3.5),
 		('Supernova-Elite', 5.0),
+		)
+
+#NOTE:  acc to [ http://www.pokerstars.com/vip/earn/ ]
+# tournies and cash game (2-7 players):
+#     5.5 VIPs / $1.0 rake
+#     8 VIPs / €1.0 rake
+# cash game (8+ players)
+#     6 VIPs / $1.0 rake
+#     8.5 VIPs / €1.0 rake
+GameTypes = (
+		('Tourney', (('$', 5.5), (u'€', 8.0)) ),
+		('Cash Game (2-7 Players)', (('$', 5.5), (u'€', 8.0)) ),
+		('Cash Game (8+ Players)', (('$', 6), (u'€', 8.5))),
+		)
+Currencies = (
+		'$',
+		u'€',
 		)
 
 #************************************************************************************
@@ -24,6 +44,8 @@ class FrameTool(QtGui.QFrame):
 
 	SettingsKeyBase = 'Gui/Tools/PokerStars/FPPs'
 	SettingsKeyVIPStatus = 'Gui/Tools/PokerStars/FPPs/VIPStatus'
+	SettingsKeyGameType = 'Gui/Tools/PokerStars/FPPs/GameType'
+	SettingsKeyCurrency = 'Gui/Tools/PokerStars/FPPs/Currency'
 	SettingsKeyConversion = 'Gui/Tools/PokerStars/FPPs/Conversion'
 
 	def __init__(self, parent=None):
@@ -31,10 +53,20 @@ class FrameTool(QtGui.QFrame):
 
 		self.label = QtGui.QLabel('Calculate PokerStars FPPs', self)
 
-		self.labelVIPStatus = QtGui.QLabel('VIP-Status:', self)
+		self.labelVIPStatus = QtGui.QLabel('VIP status:', self)
 		self.comboVIPStatus = QtGui.QComboBox(self)
-		for vipStatus, multiplier in FPPMultipliers:
+		for vipStatus, multiplier in VIPLevels:
 			self.comboVIPStatus.addItem(vipStatus, QtCore.QVariant(multiplier))
+
+		self.labelGameType = QtGui.QLabel('Game type:', self)
+		self.comboGameType = QtGui.QComboBox(self)
+		for gameType, _ in GameTypes:
+			self.comboGameType.addItem(gameType)
+
+		self.labelCurrency = QtGui.QLabel('Game currency:', self)
+		self.comboCurrency = QtGui.QComboBox(self)
+		for currency in Currencies:
+			self.comboCurrency.addItem(currency)
 
 		self.labelAmount = QtGui.QLabel('Amount:', self)
 		self.editAmount = QtGui.QLineEdit(self)
@@ -95,16 +127,20 @@ class FrameTool(QtGui.QFrame):
 		grid.row()
 		grid.col(self.labelVIPStatus).col(self.comboVIPStatus).col(Tc2Config.HStretch())
 		grid.row()
-		grid.col(self.labelAmount).col(self.editAmount, colspan=2)
+		grid.col(self.labelGameType).col(self.comboGameType).col(Tc2Config.HStretch())
+		grid.row()
+		grid.col(self.labelCurrency).col(self.comboCurrency).col(Tc2Config.HStretch())
 		grid.row()
 		grid.col(self.radioCash)
 		grid.row()
 		grid.col(self.radioFPPs)
-
 		grid.row()
 		grid.col(Tc2Config.HLine(self), colspan=3)
 		grid.row()
-		grid.col(self.buttonCalculate).col(self.editResult, colspan=2)
+		grid.col(self.labelAmount).col(self.editAmount).col(Tc2Config.HStretch())
+
+		grid.row()
+		grid.col(self.buttonCalculate).col(self.editResult).col(Tc2Config.HStretch())
 
 		grid.row()
 		grid.col(Tc2Config.HLine(self), colspan=3)
@@ -127,6 +163,18 @@ class FrameTool(QtGui.QFrame):
 			self.comboVIPStatus.setCurrentIndex(index)
 		self.comboVIPStatus.currentIndexChanged.connect(self.onComboVIPStatusCurrentIndexChanged)
 
+		gameType = Tc2Config.settingsValue(self.SettingsKeyGameType, '').toString()
+		index = self.comboGameType.findText(gameType, QtCore.Qt.MatchExactly)
+		if index >= 0:
+			self.comboGameType.setCurrentIndex(index)
+		self.comboGameType.currentIndexChanged.connect(self.onComboGameTypeCurrentIndexChanged)
+
+		currency = Tc2Config.settingsValue(self.SettingsKeyCurrency, '').toString()
+		index = self.comboCurrency.findText(currency, QtCore.Qt.MatchExactly)
+		if index >= 0:
+			self.comboCurrency.setCurrentIndex(index)
+		self.comboCurrency.currentIndexChanged.connect(self.onComboCurrencyCurrentIndexChanged)
+
 		conversion =  Tc2Config.settingsValue(self.SettingsKeyConversion, '').toString()
 		if conversion == 'FPPs':
 			self.radioFPPs.setChecked(True)
@@ -137,6 +185,14 @@ class FrameTool(QtGui.QFrame):
 		vipStatus = self.comboVIPStatus.itemText(index)
 		Tc2Config.settingsSetValue(self.SettingsKeyVIPStatus, vipStatus)
 
+	def onComboGameTypeCurrentIndexChanged(self, index):
+		gameType = self.comboGameType.itemText(index)
+		Tc2Config.settingsSetValue(self.SettingsKeyGameType, gameType)
+
+	def onComboCurrencyCurrentIndexChanged(self, index):
+		currency = self.comboCurrency.itemText(index)
+		Tc2Config.settingsSetValue(self.SettingsKeyCurrency, currency)
+
 	def onButtonGroupConversionButtonClicked(self, button):
 		Tc2Config.settingsSetValue(self.SettingsKeyConversion, 'Cash' if button is self.radioCash else 'FPPs')
 
@@ -145,19 +201,37 @@ class FrameTool(QtGui.QFrame):
 
 	def onButtonCalculateClicked(self):
 		v = self.comboVIPStatus.itemData(self.comboVIPStatus.currentIndex())
-		multiplier = v.toDouble()[0]
+		vipMultiplier = v.toDouble()[0]
+		vipStatusName = self.comboVIPStatus.currentText()
+		gameType =  self.comboGameType.currentText()
+		gameTypeMultiplier = None
+		currency = None
+		for tmp_gameType, data in GameTypes:
+			if tmp_gameType == gameType:
+				#NOTE: fo some reason QString € does not compare equal to python string €
+				currency = unicode(self.comboCurrency.currentText().toUtf8(), 'utf-8')
+				for tmp_currency, tmp_multiplier in data:
+					if tmp_currency == currency:
+						gameTypeMultiplier = tmp_multiplier
+						break
+				else:
+					raise ValueError('game type currency not found')
+				break
+		else:
+			raise ValueError('game type multiplier not found')
 		toCash = self.radioCash.isChecked()
 		amount = float(self.editAmount.text())
 		if toCash:
-			result = amount / 5.5 / multiplier
+			result = amount / gameTypeMultiplier / vipMultiplier
 		else:
-			result = amount * 5.5 * multiplier
+			result = amount * gameTypeMultiplier * vipMultiplier
 		self.editResult.setText('%.2f' % result)
-		text = '%s %s %s == %s %s' % (
-				self.comboVIPStatus.currentText(),
-				'fpp' if toCash else 'cash',
+		text = '%s / %s -- %s %s == %s %s' % (
+				vipStatusName,
+				gameType,
+				'fpp' if toCash else currency,
 				Tc2Config.locale.toString(amount, 'f', 2),
-				'cash' if toCash else 'fpp',
+				currency if toCash else 'fpp',
 				Tc2Config.locale.toString(result, 'f', 2),
 				)
 		self.editCache.appendPlainText(text)
