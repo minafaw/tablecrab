@@ -382,15 +382,9 @@ class SiteHandler(QtCore.QObject):
 		if not data['hwndBetBox']: return
 		if not data['betBoxIsVisible']: return
 		if data['bet'] is None: return
-		if inputEvent.steps == 0: return
-		if hotkey.baseValue() == Tc2Config.BigBlind:
-			newBet = data['bigBlind'] * hotkey.multiplier() * inputEvent.steps
-		elif hotkey.baseValue() == Tc2Config.SmallBlind:
-			newBet = data['smallBlind'] * hotkey.multiplier() * inputEvent.steps
-		else:
-			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
-		#TODO: adjust bet to Tc2Config.SettingsKeyRestoreMousePosition ? kind of contradictionary
-		newBet = Tc2Config.formatedBet(newBet, blinds=None)
+		newBet = hotkey.applyAction(inputEvent, blinds=(data['smallBlind'], data['bigBlind']) )
+		if newBet is None:
+			return
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
 		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
@@ -401,15 +395,9 @@ class SiteHandler(QtCore.QObject):
 		if not data['hwndBetBox']: return
 		if not data['betBoxIsVisible']: return
 		if data['bet'] is None: return
-		if inputEvent.steps == 0: return
-		if hotkey.baseValue() == Tc2Config.BigBlind:
-			newBet = data['bet'] + (data['bigBlind'] * hotkey.multiplier() * inputEvent.steps)
-		elif hotkey.baseValue() == Tc2Config.SmallBlind:
-			newBet = data['bet'] + (data['smallBlind'] * hotkey.multiplier() * inputEvent.steps)
-		else:
-			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
-		#TODO: adjust bet to Tc2Config.SettingsKeyRestoreMousePosition ? kind of contradictionary
-		newBet = Tc2Config.formatedBet(newBet, blinds=None)
+		newBet = hotkey.applyAction(inputEvent, blinds=(data['smallBlind'], data['bigBlind']), bet=data['bet'])
+		if newBet is None:
+			return
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
 		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
@@ -420,15 +408,9 @@ class SiteHandler(QtCore.QObject):
 		if not data['hwndBetBox']: return
 		if not data['betBoxIsVisible']: return
 		if data['bet'] is None: return
-		if inputEvent.steps == 0: return
-		if hotkey.baseValue() == Tc2Config.BigBlind:
-			newBet = data['bet'] - (data['bigBlind'] * hotkey.multiplier() * inputEvent.steps)
-		elif hotkey.baseValue() == Tc2Config.SmallBlind:
-			newBet = data['bet'] - (data['smallBlind'] * hotkey.multiplier() * inputEvent.steps)
-		else:
-			raise ValueError('can not handle base value: %s' % hotkey.baseValue() )
-		#TODO: adjust bet to Tc2Config.SettingsKeyRestoreMousePosition ? kind of contradictionary
-		newBet = Tc2Config.formatedBet(newBet, blinds=None)
+		newBet = hotkey.applyAction(inputEvent, blinds=(data['smallBlind'], data['bigBlind']), bet=data['bet'])
+		if newBet is None:
+			return
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
 		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
@@ -439,13 +421,12 @@ class SiteHandler(QtCore.QObject):
 		if not data['hwndBetBox']: return
 		if not data['betBoxIsVisible']: return
 		if data['bet'] is None: return
-		if inputEvent.steps == 0: return
-		newBet = data['bet'] * hotkey.multiplier() * inputEvent.steps
-		newBet = Tc2Config.formatedBet(newBet, blinds=(data['smallBlind'], data['bigBlind']) )
+		newBet = hotkey.applyAction(inputEvent, blinds=(data['smallBlind'], data['bigBlind']), bet=data['bet'])
+		if newBet is None:
+			return
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
 		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
-
 
 	PatPot = re.compile(r'[_\s]*_0_\s*_?(?P<output>[0-9,\.]+)[_\s]*', re.X|re.U)
 	def tableHandleBetPot(self, hotkey, template, hwnd, inputEvent):
@@ -497,8 +478,9 @@ class SiteHandler(QtCore.QObject):
 					Tc2Config.globalObject.feedbackMessage.emit('%s: Error - Could not scan pot' % hotkey.action() )
 					return
 
-		newBet = round(num * hotkey.multiplier(), 2)
-		newBet = Tc2Config.formatedBet(newBet, blinds=(data['smallBlind'], data['bigBlind']) )
+		newBet = hotkey.applyAction(inputEvent, blinds=(data['smallBlind'], data['bigBlind']), bet=num)
+		if newBet is None:
+			return
 		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
 		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet) )
 
