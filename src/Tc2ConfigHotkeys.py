@@ -325,7 +325,7 @@ class HotkeyMultiplyBlind(HotkeyBase):
 		else:
 			raise ValueError('can not handle base value: %s' % self.baseValue() )
 		#TODO: HotkeyMultiplyBlind: round bet to blinds?
-		return Tc2Config.formatedBet(newBet, blinds=linds)
+		return Tc2Config.formatedBet(newBet, blinds=blinds)
 Hotkeys.append(HotkeyMultiplyBlind)
 
 class HotkeyMultiplyBet(HotkeyBase):
