@@ -51,7 +51,7 @@ class FrameTool(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
-		self.label = QtGui.QLabel('Calculate PokerStars FPPs', self)
+		self.label = QtGui.QLabel('PokerStars FPP calculator', self)
 
 		self.labelVIPStatus = QtGui.QLabel('VIP status:', self)
 		self.comboVIPStatus = QtGui.QComboBox(self)
