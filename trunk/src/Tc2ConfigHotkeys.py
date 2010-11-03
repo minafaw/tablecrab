@@ -164,6 +164,9 @@ class HotkeyBase(QtGui.QTreeWidgetItem):
 		raise NotImplementedError()
 	def action(self):
 		return self.menuName()
+	def applyAction(self,inputEvent):
+		return None
+
 	def key(self):
 		return self._key
 	def setKey(self, key):
@@ -310,6 +313,19 @@ class HotkeyMultiplyBlind(HotkeyBase):
 		else:
 			text = 'Multiply %s blind by %s' % (baseValue, self.multiplier())
 		return text
+	def applyAction(self,inputEvent, blinds=None):
+		if blinds is None:
+			raise ValueError('no blinds specified')
+		if inputEvent.steps == 0:
+			return None
+		if self.baseValue() == Tc2Config.BigBlind:
+			newBet = blinds[1] * self.multiplier() * inputEvent.steps
+		elif self.baseValue() == Tc2Config.SmallBlind:
+			newBet = blinds[0] * self.multiplier() * inputEvent.steps
+		else:
+			raise ValueError('can not handle base value: %s' % self.baseValue() )
+		#TODO: HotkeyMultiplyBlind: round bet to blinds?
+		return Tc2Config.formatedBet(newBet, blinds=linds)
 Hotkeys.append(HotkeyMultiplyBlind)
 
 class HotkeyMultiplyBet(HotkeyBase):
@@ -330,6 +346,15 @@ class HotkeyMultiplyBet(HotkeyBase):
 		else:
 			text = 'Multiply bet by %s' % self.multiplier()
 		return text
+	def applyAction(self, inputEvent, blinds=None, bet=None):
+		if blinds is None:
+			raise ValueError('no blinds specified')
+		if bet is None:
+			raise ValueError('no bet specified')
+		if inputEvent.steps == 0:
+			return None
+		newBet = bet * self.multiplier() * inputEvent.steps
+		return Tc2Config.formatedBet(newBet, blinds=blinds)
 Hotkeys.append(HotkeyMultiplyBet)
 
 class HotkeyBetPot(HotkeyBase):
@@ -350,6 +375,15 @@ class HotkeyBetPot(HotkeyBase):
 		else:
 			text = 'Bet %s pot' % self.multiplier()
 		return text
+	def applyAction(self, inputEvent, blinds=None, bet=None):
+		if blinds is None:
+			raise ValueError('no blinds specified')
+		if bet is None:
+			raise ValueError('no bet specified')
+		if inputEvent.steps == 0:
+			return None
+		newBet = round(bet * self.multiplier(), 2)
+		return Tc2Config.formatedBet(newBet, blinds=blinds)
 Hotkeys.append(HotkeyBetPot)
 
 class HotkeyAddToBet(HotkeyBase):
@@ -378,6 +412,21 @@ class HotkeyAddToBet(HotkeyBase):
 			baseValue = 'big blinds' if self.baseValue() == Tc2Config.BigBlind else 'small blinds'
 			multiplier = self.multiplier()
 		return 'Add %s %s to bet' % (multiplier, baseValue)
+	def applyAction(self, inputEvent, blinds=None, bet=None):
+		if blinds is None:
+			raise ValueError('no blinds specified')
+		if bet is None:
+			raise ValueError('no bet specified')
+		if inputEvent.steps == 0:
+			return None
+		if self.baseValue() == Tc2Config.BigBlind:
+			newBet = bet + (blinds[1] * self.multiplier() * inputEvent.steps)
+		elif self.baseValue() == Tc2Config.SmallBlind:
+			newBet = bet + (blinds[0] * self.multiplier() * inputEvent.steps)
+		else:
+			raise ValueError('can not handle base value: %s' % self.baseValue() )
+		#TODO: HotkeyAddToBet: round bet to blinds?
+		return Tc2Config.formatedBet(newBet, blinds=None)
 Hotkeys.append(HotkeyAddToBet)
 
 class HotkeySubtractFromBet(HotkeyBase):
@@ -406,6 +455,21 @@ class HotkeySubtractFromBet(HotkeyBase):
 			baseValue = 'big blinds' if self.baseValue() == Tc2Config.BigBlind else 'small blinds'
 			multiplier = self.multiplier()
 		return 'Subtract %s %s from bet' % (multiplier, baseValue)
+	def applyAction(self, inputEvent, blinds=None, bet=None):
+		if blinds is None:
+			raise ValueError('no blinds specified')
+		if bet is None:
+			raise ValueError('no bet specified')
+		if inputEvent.steps == 0:
+			return None
+		if self.baseValue() == Tc2Config.BigBlind:
+			newBet = bet - (blinds[1] * self.multiplier() * inputEvent.steps)
+		elif self.baseValue() == Tc2Config.SmallBlind:
+			newBet = bet - (blinds[0] * self.multiplier() * inputEvent.steps)
+		else:
+			raise ValueError('can not handle base value: %s' % self.baseValue() )
+		#TODO: HotkeySubtractFromBet: round bet to blinds?
+		return Tc2Config.formatedBet(newBet, blinds=None)
 Hotkeys.append(HotkeySubtractFromBet)
 
 class HotkeyReplayer(HotkeyBase):
