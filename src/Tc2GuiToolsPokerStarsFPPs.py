@@ -91,18 +91,23 @@ class FrameTool(QtGui.QFrame):
 		self.buttonCalculate.clicked.connect(self.onCalculate)
 		self.editResult = QtGui.QLineEdit(self)
 
-		self.actionCalculate = QtGui.QAction(self)
-		self.actionCalculate.setEnabled(False)
+		self.actionCalculate = QtGui.QAction(self.buttonCalculate)
 		self.actionCalculate.setShortcut(QtGui.QKeySequence('RETURN') )
 		self.actionCalculate.triggered.connect(self.onCalculate)
-		self.addAction(self.actionCalculate)
+		self.buttonCalculate.addAction(self.actionCalculate)
 
 		self.editCache = QtGui.QPlainTextEdit(self)
 		self.editCache.setReadOnly(True)
 
 		self.buttonClearCache = QtGui.QPushButton('Clear', self)
+		self.buttonClearCache.setToolTip('Clears cached results (Alt+L)')
 		self.buttonClearCache.setEnabled(False)
-		self.buttonClearCache.clicked.connect(self.onButtonClearCacheClicked)
+		self.buttonClearCache.clicked.connect(self.onClearCache)
+
+		self.actionClearCache = QtGui.QAction(self.buttonClearCache)
+		self.actionClearCache.setShortcut(QtGui.QKeySequence('Alt+L') )
+		self.actionClearCache.triggered.connect(self.onClearCache)
+		self.buttonClearCache.addAction(self.actionClearCache)
 
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		self.buttonHelp.setToolTip('Help (F1)')
@@ -205,7 +210,6 @@ class FrameTool(QtGui.QFrame):
 
 	def onEditAmountTextChanged(self, text):
 		self.buttonCalculate.setEnabled(bool(text))
-		self.actionCalculate.setEnabled(bool(text))
 
 	def onCalculate(self):
 		v = self.comboVIPStatus.itemData(self.comboVIPStatus.currentIndex())
@@ -245,7 +249,7 @@ class FrameTool(QtGui.QFrame):
 		self.editCache.appendPlainText(text)
 		self.buttonClearCache.setEnabled(True)
 
-	def onButtonClearCacheClicked(self):
+	def onClearCache(self):
 		self.editCache.clear()
 		self.buttonClearCache.setEnabled(False)
 
