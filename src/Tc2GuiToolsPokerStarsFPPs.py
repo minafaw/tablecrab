@@ -85,9 +85,16 @@ class FrameTool(QtGui.QFrame):
 		self.buttonGroupConversion.addButton(self.radioFPPs , 1)
 
 		self.buttonCalculate = QtGui.QPushButton('Calculate', self)
+		self.buttonCalculate.setToolTip('Calculates FPPs (Return)')
 		self.buttonCalculate.setEnabled(False)
-		self.buttonCalculate.clicked.connect(self.onButtonCalculateClicked)
+		self.buttonCalculate.clicked.connect(self.onCalculate)
 		self.editResult = QtGui.QLineEdit(self)
+
+		self.actionCalculate = QtGui.QAction(self)
+		self.actionCalculate.setEnabled(False)
+		self.actionCalculate.setShortcut(QtGui.QKeySequence('RETURN') )
+		self.actionCalculate.triggered.connect(self.onCalculate)
+		self.addAction(self.actionCalculate)
 
 		self.editCache = QtGui.QPlainTextEdit(self)
 		self.editCache.setReadOnly(True)
@@ -105,7 +112,6 @@ class FrameTool(QtGui.QFrame):
 		action = QtGui.QAction(self)
 		action.setShortcut(QtGui.QKeySequence('F1') )
 		action.triggered.connect(self.onHelp)
-		self.addAction(action)
 		self.addAction(action)
 
 		# connect signals
@@ -198,8 +204,9 @@ class FrameTool(QtGui.QFrame):
 
 	def onEditAmountTextChanged(self, text):
 		self.buttonCalculate.setEnabled(bool(text))
+		self.actionCalculate.setEnabled(bool(text))
 
-	def onButtonCalculateClicked(self):
+	def onCalculate(self):
 		v = self.comboVIPStatus.itemData(self.comboVIPStatus.currentIndex())
 		vipMultiplier = v.toDouble()[0]
 		vipStatusName = self.comboVIPStatus.currentText()
