@@ -74,6 +74,7 @@ class FrameTool(QtGui.QFrame):
 		validator = QtGui.QDoubleValidator(self)
 		validator.setBottom(0)
 		validator.setDecimals(2)
+		validator.setNotation(validator.StandardNotation)
 		self.editAmount.setValidator(validator)
 
 		self.buttonGroupConversion = QtGui.QButtonGroup(self)
