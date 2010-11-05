@@ -146,6 +146,12 @@ ToolBarPositionDefault= ToolBarPositionTop
 ToolBarPositions = (ToolBarPositionBottom, ToolBarPositionTop)
 SettingsKeyToolBarPosition = 'Gui/ToolBar/Position'
 
+TabPositionBottom = 'Bottom'
+TabPositionTop = 'Top'
+TabPositionDefault= ToolBarPositionTop
+TabPositions = (TabPositionBottom, TabPositionTop)
+SettingsKeyTabPosition = 'Gui/Tab/Position'
+
 HelpTopics = [
 		('index', 'TableCrab'), [
 			('versionHistory', 'Version History'),
@@ -258,6 +264,7 @@ class _GlobalObject(QtCore.QObject):
 	settingAlternatingRowColorsChanged = QtCore.pyqtSignal(bool)
 	settingChildItemIndicatorsChanged = QtCore.pyqtSignal(bool)
 	settingToolBarPositionChanged = QtCore.pyqtSignal(str)
+	settingTabPositionChanged = QtCore.pyqtSignal(str)
 
 
 	# new screenshot created (hwnd, pixmap)

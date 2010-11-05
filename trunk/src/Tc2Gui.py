@@ -98,6 +98,7 @@ class Gui(QtGui.QMainWindow):
 		g.feedbackException.connect(self.onFeedbackException)
 		g.clearException.connect(self.onClearException)
 		g.feedbackMessage.connect(self.onFeedbackMessage)
+		g.settingTabPositionChanged.connect(self.onSettingTabPositionChanged)
 
 	#--------------------------------------------------------------------------------------------------------------
 	# overwritten methods
@@ -121,6 +122,8 @@ class Gui(QtGui.QMainWindow):
 		if hwnd is None:
 			raise RuntimeError('main window has no valid hwnd')
 		self.siteManager.tableCrabSiteHandler().setHwndMain( int(hwnd) )
+		value = Tc2Config.settingsValue(Tc2Config.SettingsKeyTabPosition, Tc2Config.TabPositionDefault).toString()
+		self.onSettingTabPositionChanged(value)
 		Tc2Config.globalObject.init.emit()
 
 	#--------------------------------------------------------------------------------------------------------------
@@ -181,6 +184,10 @@ class Gui(QtGui.QMainWindow):
 		widget = self.tabWidget.widget(index)
 		data = self._feedbackMessages[widget]
 		self.labelFeedback.setText(data)
+
+	def onSettingTabPositionChanged(self, position):
+		position = self.tabWidget.South if position == Tc2Config.TabPositionBottom else self.tabWidget.North
+		self.tabWidget.setTabPosition(position)
 
 #************************************************************************************
 #
