@@ -11,11 +11,11 @@ class FrameSettings(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
-		self.checkAutoClosePopupNews = QtGui.QCheckBox('Close Popup &News', self)
-		self.checkAutoCloseTourneyRegistrationBoxes = QtGui.QCheckBox('Close T&ourney Registration Boxes', self)
-		self.checkAutoCloseTableMessageBoxes = QtGui.QCheckBox('PokerStars/AutoCloseTableMessageBoxes', self)
-		self.checkAutoLogIn = QtGui.QCheckBox('Close &Log In Box', self)
-		self.checkMoveMouseToActiveTable = QtGui.QCheckBox('Move &Mouse To Active table', self)
+		self.checkAutoClosePopupNews = QtGui.QCheckBox('Close popup &news', self)
+		self.checkAutoCloseTourneyRegistrationBoxes = QtGui.QCheckBox('Close t&ourney registration boxes', self)
+		self.checkAutoCloseTableMessageBoxes = QtGui.QCheckBox('Close &table message boxes', self)
+		self.checkAutoLogIn = QtGui.QCheckBox('Close &log In box', self)
+		self.checkMoveMouseToActiveTable = QtGui.QCheckBox('Move &mouse To active table', self)
 
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 
