@@ -90,9 +90,12 @@ class TemplatePokerStarsTable(ItemBase):
 		self.points = {}
 		self.pointItems = []
 		for pointName in self.PointNames:
+			#NOTE: we have to make shure points in out point dict are the same as
+			# points points in our tree items
 			point = newPoint(kws.get(pointName, None))
-			self.points[pointName] = point
-			self.pointItems.append(PointItem(pointName, point, parent=self) )
+			item = PointItem(pointName, point, parent=self)
+			self.points[pointName] = item.point
+			self.pointItems.append(item)
 
 	def handleEditInPlaceFinished(self, item):
 		if item is self:
@@ -135,13 +138,9 @@ class TemplatePokerStarsTable(ItemBase):
 		self.size.setWidth(pixmap.width())
 		self.size.setHeight(pixmap.height())
 		self.itemSize.setText(1, Tc2Config.sizeToString(self.size) )
-		if item.pointName == 'EmptySpace' and point == Tc2Config.PointNone:
-			item.point.setX(1)
-			item.point.setY(1)
-		else:
-			item.point.setX(point.x())
-			item.point.setY(point.y())
-		item.setPoint(item.point)
+		point = QtCore.QPoint(point)
+		item.setPoint(point)
+		self.points[item.pointName] = item.point
 		return True
 
 	@classmethod
