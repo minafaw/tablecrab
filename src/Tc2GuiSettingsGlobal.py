@@ -49,7 +49,7 @@ class FrameSettings(QtGui.QFrame):
 
 		self.comboToolBarPosition = QtGui.QComboBox(self)
 		self.comboToolBarPosition.addItems(Tc2Config.ToolBarPositions)
-		self.labelToolBarPosition = QtGui.QLabel('T&oolBar position:', self)
+		self.labelToolBarPosition = QtGui.QLabel('T&ool bar position:', self)
 		self.labelToolBarPosition.setBuddy(self.comboToolBarPosition)
 
 		self.comboTabPosition = QtGui.QComboBox(self)
