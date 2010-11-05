@@ -15,6 +15,8 @@ class FrameHelp(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
+		self.grid = Tc2Config.GridBox(self)
+
 		self.webView = QtWebKit.QWebView(self)
 		self.webView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)		#
 		self.webView.customContextMenuRequested.connect(self.onContextMenuWebView)
@@ -49,6 +51,7 @@ class FrameHelp(QtGui.QFrame):
 		Tc2Config.globalObject.init.connect(self.onInit)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 		Tc2Config.globalObject.settingAlternatingRowColorsChanged.connect(self.onSettingAlternatingRowColorsChanged)
+		Tc2Config.globalObject.settingToolBarPositionChanged.connect(self.onSettingToolBarPositionChanged)
 		self.tree.itemSelectionChanged.connect(self.onItemSelectionChanged)
 		self.tree.itemActivated.connect(self.onItemSelectionChanged)
 		self.webView.urlChanged.connect(self.onUrlChanged)
@@ -59,10 +62,15 @@ class FrameHelp(QtGui.QFrame):
 	# methods
 	#------------------------------------------------------------------------------------------------------------------
 	def layout(self):
-		grid = Tc2Config.GridBox(self)
-		grid.col(self.toolBar)
-		grid.row()
+		toolBarPositionBottom = Tc2Config.settingsValue(Tc2Config.SettingsKeyToolBarPosition, Tc2Config.ToolBarPositionTop).toString() == Tc2Config.ToolBarPositionBottom
+		grid = self.grid
+		if not toolBarPositionBottom:
+			grid.col(self.toolBar)
+			grid.row()
 		grid.col(self.splitter)
+		if toolBarPositionBottom:
+			grid.row()
+			grid.col(self.toolBar)
 
 	#------------------------------------------------------------------------------------------------------------------
 	# event handlers
@@ -166,6 +174,10 @@ class FrameHelp(QtGui.QFrame):
 				break
 		else:
 			raise ValueError('no topic found for url: %s' % url.path())
+
+	def onSettingToolBarPositionChanged(self, position):
+		self.grid.clear()
+		self.layout()
 
 #************************************************************************************
 #

@@ -272,9 +272,12 @@ class FrameHotkeys(QtGui.QFrame):
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
-		self.HotkeyWidget = HotkeyWidget(self)
+
+		self.grid = Tc2Config.GridBox(self)
+
+		self.hotkeyWidget = HotkeyWidget(self)
 		self.toolBar = QtGui.QToolBar(self)
-		for action in self.HotkeyWidget.actions():
+		for action in self.hotkeyWidget.actions():
 			self.toolBar.addAction(action)
 
 		self.actionHelp = QtGui.QAction(self)
@@ -284,20 +287,32 @@ class FrameHotkeys(QtGui.QFrame):
 		self.toolBar.addAction(self.actionHelp)
 		self.layout()
 
+		Tc2Config.globalObject.settingToolBarPositionChanged.connect(self.onSettingToolBarPositionChanged)
+
 	#----------------------------------------------------------------------------------------------------------------
 	# methods
 	#---------------------------------------------------------------------------------------------------------------
 	def layout(self):
-		grid = Tc2Config.GridBox(self)
-		grid.col(self.toolBar)
-		grid.row()
-		grid.col(self.HotkeyWidget)
+		toolBarPositionBottom = Tc2Config.settingsValue(Tc2Config.SettingsKeyToolBarPosition, Tc2Config.ToolBarPositionTop).toString() == Tc2Config.ToolBarPositionBottom
+		grid = self.grid
+		if not toolBarPositionBottom:
+			grid.col(self.toolBar)
+			grid.row()
+		grid.col(self.hotkeyWidget)
+		if toolBarPositionBottom:
+			grid.row()
+			grid.col(self.toolBar)
+
 
 	#--------------------------------------------------------------------------------------------------------------
 	# event handlers
 	#--------------------------------------------------------------------------------------------------------------
 	def onActionHelpTriggered(self):
 		Tc2GuiHelp.dialogHelp('hotkeys', parent=self)
+
+	def onSettingToolBarPositionChanged(self, position):
+		self.grid.clear()
+		self.layout()
 
 
 
