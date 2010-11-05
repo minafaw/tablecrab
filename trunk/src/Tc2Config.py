@@ -139,6 +139,7 @@ RoundBetsBigBlind = BigBlind
 RoundBetsSmallBlind = SmallBlind
 RoundBetsDefault = RoundBetsNoRounding
 RoundBets = (RoundBetsNoRounding, RoundBetsBigBlind, RoundBetsSmallBlind)
+SettingsKeyRoundBets = 'Settings/RoundBets'
 
 ToolBarPositionBottom = 'Bottom'
 ToolBarPositionTop = 'Top'
@@ -185,8 +186,6 @@ HelpTopics = [
 			('tools', 'Tools'), [
 				('toolsPokerStarsFPPs', 'PokerStars FPPs'),
 				],
-
-
 			('developement', 'Developement'), [
 				('ocrEditor', 'Ocr Editor'),
 				],
@@ -215,7 +214,7 @@ SettingsKeyWebViewZoomSteps = 'Gui/WebView/ZoomSteps'
 SettingsKeyAlternatingRowColors = 'Gui/AlternatingRowColors'
 SettingsKeyChildItemIndicators = 'Gui/ChildItemIndicators'
 SettingsKeyRestoreMousePosition = 'RestoreMousePosition'
-SettingsKeyRoundBets = 'Settings/RoundBets'
+
 
 class Settings:
 	qSettings = QtCore.QSettings(Author, ApplicationName)
