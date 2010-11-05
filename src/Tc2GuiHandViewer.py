@@ -22,6 +22,8 @@ class FrameHandViewer(QtGui.QFrame):
 
 		self._handCache = []
 
+		self.grid = Tc2Config.GridBox(self)
+
 		self.webView = QtWebKit.QWebView(self)
 		self.webView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		self.webView.customContextMenuRequested.connect(self.onContextMenuWebView)
@@ -78,6 +80,7 @@ class FrameHandViewer(QtGui.QFrame):
 		# connect global signals
 		Tc2Config.globalObject.init.connect(self.onInit)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
+		Tc2Config.globalObject.settingToolBarPositionChanged.connect(self.onSettingToolBarPositionChanged)
 
 	#----------------------------------------------------------------------------------------------------------------
 	# methods
@@ -87,11 +90,16 @@ class FrameHandViewer(QtGui.QFrame):
 		self.toolBar.actionZoomOut.setEnabled(bool(self._handCache))
 		self.actionSave.setEnabled(bool(self._handCache))
 
-	def layout(self):
-		grid = Tc2Config.GridBox(self)
-		grid.col(self.toolBar)
-		grid.row()
+	def layout(self,):
+		toolBarPositionBottom = Tc2Config.settingsValue(Tc2Config.SettingsKeyToolBarPosition, Tc2Config.ToolBarPositionTop).toString() == Tc2Config.ToolBarPositionBottom
+		grid = self.grid
+		if not toolBarPositionBottom:
+			grid.col(self.toolBar)
+			grid.row()
 		grid.col(self.webView)
+		if toolBarPositionBottom:
+			grid.row()
+			grid.col(self.toolBar)
 
 	def setHand(self, data, fileName=None):
 		if data and fileName is None:
@@ -203,4 +211,10 @@ class FrameHandViewer(QtGui.QFrame):
 		else:
 			#NOTE: we assert only an invalid or no-hand gets here
 			pass
+
+	def onSettingToolBarPositionChanged(self, position):
+		self.grid.clear()
+		self.layout()
+
+
 

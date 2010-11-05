@@ -20,6 +20,8 @@ class FrameSetup(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
+		self.grid = Tc2Config.GridBox(self)
+
 		self.templatesWidget = Tc2GuiTemplates.TemplatesWidget(parent=self)
 		self.screenshotWidget = Tc2GuiScreenshots.ScreenshotWidget(parent=self)
 
@@ -43,15 +45,21 @@ class FrameSetup(QtGui.QFrame):
 
 		Tc2Config.globalObject.init.connect(self.onInit)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
+		Tc2Config.globalObject.settingToolBarPositionChanged.connect(self.onSettingToolBarPositionChanged)
 
 	#--------------------------------------------------------------------------------------------------------------
 	# methods
 	#--------------------------------------------------------------------------------------------------------------
 	def layout(self):
-		grid = Tc2Config.GridBox(self)
-		grid.col(self.toolBar)
-		grid.row()
+		toolBarPositionBottom = Tc2Config.settingsValue(Tc2Config.SettingsKeyToolBarPosition, Tc2Config.ToolBarPositionTop).toString() == Tc2Config.ToolBarPositionBottom
+		grid = self.grid
+		if not toolBarPositionBottom:
+			grid.col(self.toolBar)
+			grid.row()
 		grid.col(self.splitter)
+		if toolBarPositionBottom:
+			grid.row()
+			grid.col(self.toolBar)
 
 	#--------------------------------------------------------------------------------------------------------------
 	# event handlers
@@ -65,4 +73,8 @@ class FrameSetup(QtGui.QFrame):
 	def onInit(self):
 		self.layout()
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
+
+	def onSettingToolBarPositionChanged(self, position):
+		self.grid.clear()
+		self.layout()
 

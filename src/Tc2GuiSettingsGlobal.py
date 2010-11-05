@@ -47,6 +47,11 @@ class FrameSettings(QtGui.QFrame):
 		self.checkChildItemIndicators = QtGui.QCheckBox('&Child Item Indicators', self)
 		self.checkRestoreMousePosition = QtGui.QCheckBox('Restore Mouse &Position', self)
 
+		self.comboToolBarPosition = QtGui.QComboBox(self)
+		self.comboToolBarPosition.addItems(Tc2Config.ToolBarPositions)
+		self.labelToolBarPosition = QtGui.QLabel('T&oolBar position:', self)
+		self.labelToolBarPosition.setBuddy(self.comboToolBarPosition)
+
 		self.comboRoundBets = QtGui.QComboBox(self)
 		self.comboRoundBets.addItems(Tc2Config.RoundBets)
 		self.labelRoundBets = QtGui.QLabel('Round &bets to:', self)
@@ -79,6 +84,8 @@ class FrameSettings(QtGui.QFrame):
 		grid.col(self.labelFixedFont).col(self.buttonFixedFont).col(Tc2Config.HStretch())
 		grid.row()
 		grid.col(self.labelSingleApplication).col(self.comboSingleApplication).col(Tc2Config.HStretch())
+		grid.row()
+		grid.col(self.labelToolBarPosition).col(self.comboToolBarPosition).col(Tc2Config.HStretch())
 		grid.row()
 		grid.col(self.labelZoomSteps).col(self.spinZoomSteps).col(Tc2Config.HStretch())
 		grid.row()
@@ -228,6 +235,11 @@ class FrameSettings(QtGui.QFrame):
 	def onSpinZoomValueChanged(self, value):
 		Tc2Config.settingsSetValue(Tc2Config.SettingsKeyWebViewZoomSteps, value)
 
+	def onComboToolBarPositionCurrentIndexChanged(self, index):
+		value = self.comboToolBarPosition.itemText(index)
+		Tc2Config.settingsSetValue(Tc2Config.SettingsKeyToolBarPosition, value)
+		Tc2Config.globalObject.settingToolBarPositionChanged.emit(value)
+
 	def onInit(self):
 		self.layout()
 
@@ -258,6 +270,12 @@ class FrameSettings(QtGui.QFrame):
 		state = QtCore.Qt.Checked if Tc2Config.settingsValue(Tc2Config.SettingsKeyRestoreMousePosition, False).toBool() else QtCore.Qt.Unchecked
 		self.checkRestoreMousePosition.setCheckState(state)
 		self.checkRestoreMousePosition.stateChanged.connect(self.onRestoreMousePositionChanged)
+
+		value= Tc2Config.settingsValue(Tc2Config.SettingsKeyToolBarPosition, '').toString()
+		if value not in Tc2Config.ToolBarPositions:
+			value = Tc2Config.ToolBarPositionDefault
+		self.comboToolBarPosition.setCurrentIndex( self.comboToolBarPosition.findText(value, QtCore.Qt.MatchExactly) )
+		self.comboToolBarPosition.currentIndexChanged.connect(self.onComboToolBarPositionCurrentIndexChanged)
 
 		roundBets = Tc2Config.settingsValue(Tc2Config.SettingsKeyRoundBets, '').toString()
 		if roundBets not in Tc2Config.RoundBets:

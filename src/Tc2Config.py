@@ -140,6 +140,12 @@ RoundBetsSmallBlind = SmallBlind
 RoundBetsDefault = RoundBetsNoRounding
 RoundBets = (RoundBetsNoRounding, RoundBetsBigBlind, RoundBetsSmallBlind)
 
+ToolBarPositionBottom = 'Bottom'
+ToolBarPositionTop = 'Top'
+ToolBarPositionDefault= ToolBarPositionTop
+ToolBarPositions = (ToolBarPositionBottom, ToolBarPositionTop)
+SettingsKeyToolBarPosition = 'Gui/ToolBar/Position'
+
 HelpTopics = [
 		('index', 'TableCrab'), [
 			('versionHistory', 'Version History'),
@@ -251,6 +257,8 @@ class _GlobalObject(QtCore.QObject):
 
 	settingAlternatingRowColorsChanged = QtCore.pyqtSignal(bool)
 	settingChildItemIndicatorsChanged = QtCore.pyqtSignal(bool)
+	settingToolBarPositionChanged = QtCore.pyqtSignal(str)
+
 
 	# new screenshot created (hwnd, pixmap)
 	widgetScreenshot = QtCore.pyqtSignal(int, QtGui.QPixmap)
@@ -592,6 +600,10 @@ class GridBox(QtGui.QGridLayout):
 			raise ValueError('widget must be QWidget or QLayout')
 		method(widget, y, x, h, w)
 		return self
+	def clear(self):
+		while self.takeAt(0) is not None: pass
+		self._grid = self.Grid()
+
 
 class HLine(QtGui.QFrame):
 	def __init__(self, *args):
