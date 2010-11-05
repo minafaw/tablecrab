@@ -52,6 +52,11 @@ class FrameSettings(QtGui.QFrame):
 		self.labelToolBarPosition = QtGui.QLabel('T&oolBar position:', self)
 		self.labelToolBarPosition.setBuddy(self.comboToolBarPosition)
 
+		self.comboTabPosition = QtGui.QComboBox(self)
+		self.comboTabPosition.addItems(Tc2Config.TabPositions)
+		self.labelTabPosition = QtGui.QLabel('&Tab position:', self)
+		self.labelTabPosition.setBuddy(self.comboTabPosition)
+
 		self.comboRoundBets = QtGui.QComboBox(self)
 		self.comboRoundBets.addItems(Tc2Config.RoundBets)
 		self.labelRoundBets = QtGui.QLabel('Round &bets to:', self)
@@ -84,6 +89,8 @@ class FrameSettings(QtGui.QFrame):
 		grid.col(self.labelFixedFont).col(self.buttonFixedFont).col(Tc2Config.HStretch())
 		grid.row()
 		grid.col(self.labelSingleApplication).col(self.comboSingleApplication).col(Tc2Config.HStretch())
+		grid.row()
+		grid.col(self.labelTabPosition).col(self.comboTabPosition).col(Tc2Config.HStretch())
 		grid.row()
 		grid.col(self.labelToolBarPosition).col(self.comboToolBarPosition).col(Tc2Config.HStretch())
 		grid.row()
@@ -240,6 +247,11 @@ class FrameSettings(QtGui.QFrame):
 		Tc2Config.settingsSetValue(Tc2Config.SettingsKeyToolBarPosition, value)
 		Tc2Config.globalObject.settingToolBarPositionChanged.emit(value)
 
+	def onComboTabPositionCurrentIndexChanged(self, index):
+		value = self.comboTabPosition.itemText(index)
+		Tc2Config.settingsSetValue(Tc2Config.SettingsKeyTabPosition, value)
+		Tc2Config.globalObject.settingTabPositionChanged.emit(value)
+
 	def onInit(self):
 		self.layout()
 
@@ -276,6 +288,12 @@ class FrameSettings(QtGui.QFrame):
 			value = Tc2Config.ToolBarPositionDefault
 		self.comboToolBarPosition.setCurrentIndex( self.comboToolBarPosition.findText(value, QtCore.Qt.MatchExactly) )
 		self.comboToolBarPosition.currentIndexChanged.connect(self.onComboToolBarPositionCurrentIndexChanged)
+
+		value= Tc2Config.settingsValue(Tc2Config.SettingsKeyTabPosition, '').toString()
+		if value not in Tc2Config.TabPositions:
+			value = Tc2Config.TabPositionDefault
+		self.comboTabPosition.setCurrentIndex( self.comboTabPosition.findText(value, QtCore.Qt.MatchExactly) )
+		self.comboTabPosition.currentIndexChanged.connect(self.onComboTabPositionCurrentIndexChanged)
 
 		roundBets = Tc2Config.settingsValue(Tc2Config.SettingsKeyRoundBets, '').toString()
 		if roundBets not in Tc2Config.RoundBets:
