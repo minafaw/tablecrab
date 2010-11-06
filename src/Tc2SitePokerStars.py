@@ -82,7 +82,9 @@ class SiteHandler(QtCore.QObject):
 				if not Tc2Win32.mouseButtonsDown():
 					point = template.points['EmptySpace']
 					point = Tc2Win32.windowClientPointToScreenPoint(hwnd, point)
-					Tc2Win32.mouseSetPos(point)
+					rect = Tc2Win32.windowGetRect(hwnd)
+					if rect.contains(point):
+						Tc2Win32.mouseSetPos(point)
 			return True
 		return False
 
