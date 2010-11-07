@@ -109,6 +109,8 @@ class SiteHandler(QtCore.QObject):
 					for template in Tc2Config.templateManager:
 						if template.id() != Tc2ConfigTemplates.TemplatePokerStarsTable.id():
 							continue
+						if not template.isEnabled():
+							continue
 						if template.size	== Tc2Config.SizeNone:
 							continue
 						if template.size == size:

@@ -179,5 +179,9 @@ class TemplatePokerStarsTable(ItemBase):
 			Tc2Config.settingsSetValue( (key, pointName), point)
 		return True
 
+	def isEnabled(self):
+		return not self.name.startsWith('disabled', QtCore.Qt.CaseInsensitive)
+
+
 Templates.append(TemplatePokerStarsTable)
 
