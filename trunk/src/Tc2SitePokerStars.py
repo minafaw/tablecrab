@@ -80,10 +80,11 @@ class SiteHandler(QtCore.QObject):
 			Tc2Config.globalObject.feedbackMessage.emit(template.name)
 			if Tc2Config.settingsValue(self.SettingsKeyMoveMouseToActiveTable, False).toBool():
 				if not Tc2Win32.mouseButtonsDown():
-					point = template.points['EmptySpace']
-					point = Tc2Win32.windowClientPointToScreenPoint(hwnd, point)
+					point = Tc2Win32.mouseGetPos()
 					rect = Tc2Win32.windowGetRect(hwnd)
-					if rect.contains(point):
+					if not rect.contains(point):
+						point = template.points['EmptySpace']
+						point = Tc2Win32.windowClientPointToScreenPoint(hwnd, point)
 						Tc2Win32.mouseSetPos(point)
 			return True
 		return False
