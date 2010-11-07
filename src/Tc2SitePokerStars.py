@@ -103,21 +103,24 @@ class SiteHandler(QtCore.QObject):
 				if inputEvent.keyIsDown:
 					#  find next table template that is not of current tables size
 					size = Tc2Win32.windowGetClientRect(hwnd).size()
-					template = None
-					pickNext = False
-					for i, tmp_template in enumerate(Tc2Config.templateManager):
-						if tmp_template.id() == Tc2ConfigTemplates.TemplatePokerStarsTable.id():
-							if tmp_template.size	== Tc2Config.SizeNone:
-								continue
-							if pickNext:
-								template = tmp_template
-								break
-							if template is None:
-								template = tmp_template
-							if tmp_template.size == size:
-								pickNext = True
-					# resize table to next templates size
-					if template is not None:
+					templates = []
+					indexCurrent = None
+					i = 0
+					for template in Tc2Config.templateManager:
+						if template.size	== Tc2Config.SizeNone:
+							continue
+						print template.size, size
+						if template.size == size:
+							indexCurrent = i
+						templates.append(template)
+						i += 1
+					if templates:
+						if indexCurrent is None:
+							indexCurrent = len(templates) -1
+						indexNext = indexCurrent +1
+						if indexNext >= len(templates):
+							indexNext = 0
+						template = templates[indexNext]
 						#NOTE: on wine tables do not get redrawn on resize [ http://bugs.winehq.org/show_bug.cgi?id=5941 ].
 						# 	for some reson sending F5 via KeyboardInput has no effect whatsoever, so we tell Tc2Win32
 						# to wrap resizing into enter- exitsizemove messages. tested on winXP as well - works nicely
