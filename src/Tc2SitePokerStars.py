@@ -107,9 +107,10 @@ class SiteHandler(QtCore.QObject):
 					indexCurrent = None
 					i = 0
 					for template in Tc2Config.templateManager:
+						if template.id() != Tc2ConfigTemplates.TemplatePokerStarsTable.id():
+							continue
 						if template.size	== Tc2Config.SizeNone:
 							continue
-						print template.size, size
 						if template.size == size:
 							indexCurrent = i
 						templates.append(template)
