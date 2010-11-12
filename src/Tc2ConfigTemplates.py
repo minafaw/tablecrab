@@ -54,7 +54,6 @@ class TemplatePokerStarsTable(ItemBase):
 		'ButtonRaise',
 		'CheckboxFold',
 		'CheckboxCheckFold',
-		'BetSliderStart',
 		'BetSliderEnd',
 		'PotTopLeft',
 		'PotBottomRight',

@@ -374,15 +374,11 @@ class SiteHandler(QtCore.QObject):
 		if not data: return
 		if not data['hwndBetBox']: return
 		if not data['betBoxIsVisible']: return
-		pointSliderStart = self.tableGetPoint('BetSliderStart', template)
-		if pointSliderStart is None:
-			return
-		pointSliderEnd = self.tableGetPoint('BetSliderEnd', template)
-		if pointSliderEnd is None:
+		point = self.tableGetPoint('BetSliderEnd', template)
+		if point is None:
 			return
 		mi = Tc2Win32.MouseInput()
-		mi.leftDrag(pointSliderStart, pointSliderEnd, hwnd=hwnd)
-		mi.send(restoreCursor=Tc2Config.settingsValue(Tc2Config.SettingsKeyRestoreMousePosition, False).toBool())
+		mi.leftClick(point, hwnd=hwnd).send(restoreCursor=Tc2Config.settingsValue(Tc2Config.SettingsKeyRestoreMousePosition, False).toBool())
 		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def tableHandleMultiplyBlind(self, hotkey, template, hwnd, inputEvent):
