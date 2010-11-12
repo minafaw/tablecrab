@@ -1,0 +1,4 @@
+
+PyInstaller does not support adding of data files currently. at least everything i tried failed.
+
+so for now we dump all data into python modules (that get included automatically) and serve from there
