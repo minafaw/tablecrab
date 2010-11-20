@@ -15,6 +15,7 @@ from PyQt4 import QtCore, QtGui
 #************************************************************************************
 #
 #************************************************************************************
+#TODO: iso table
 class SiteHandler(QtCore.QObject):
 
 	SettingKeyBase = 'PokerStars'
