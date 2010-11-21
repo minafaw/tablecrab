@@ -140,6 +140,9 @@ class FrameTool(QtGui.QFrame):
 			self.spinBox.setRange(1, len(self.handHistoryFile))
 			self.spinBox.setValue(1)
 			self.spinBox.setSuffix(' /%s' % len(self.handHistoryFile))
+		else:
+			self.spinBox.setRange(0, 0)
+			self.spinBox.setSuffix(' /0' )
 		self.adjustActions()
 
 	def onActionSaveTriggered(self):
@@ -195,14 +198,15 @@ class FrameTool(QtGui.QFrame):
 		url = networkReply.url()
 		if url.scheme() == 'hand':
 			handNo = int(url.path()[1:])
-			data = self.handHistoryFile[handNo -1]
-			try:
-				hand = self.handParser.parse(data)
-			except:
-				Tc2Config.handleException('\n' + data)
-			else:
-				data = self.handFormatter.dump(hand)
-			networkReply.setData(data, 'text/html; charset=UTF-8')
+			if handNo > 0:
+				data = self.handHistoryFile[handNo -1]
+				try:
+					hand = self.handParser.parse(data)
+				except:
+					Tc2Config.handleException('\n' + data)
+				else:
+					data = self.handFormatter.dump(hand)
+				networkReply.setData(data, 'text/html; charset=UTF-8')
 
 	def onSpinBoxValueChanged(self, handNo):
 		self.webView.setUrl(QtCore.QUrl('hand:///%s' % handNo))
