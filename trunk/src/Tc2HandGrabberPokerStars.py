@@ -824,7 +824,37 @@ if sys.platform == 'win32':
 						handData = self.handFormatter.dump(hand)
 				self.handGrabbed.emit(handData)
 
+#************************************************************************************
+#
+#************************************************************************************
+class HandHistoryFile(object):
 
+	def __init__(self, filePath):
+		self.filePath = filePath
+		self._handHistories = []
+		self._data = ''
+		self._parse()
+
+	def _parse(self):
+		with open(self.filePath, 'r') as fp:
+			self._data = fp.read()
+		data = self._data.replace('\r', '')
+		handHistory = None
+		for line in data.split('\n'):
+			line = line.strip().strip('\xef\xbb\xbf')
+			if line.startswith('PokerStars Game #'):
+				handHistory = [line, ]
+				continue
+			elif handHistory and line:
+				handHistory.append(line)
+			elif handHistory and not line:
+				self._handHistories.append('\n'.join(handHistory))
+				handHistory = None
+
+	def __len__(self): return len(self._handHistories)
+	def __getitem__(self, i): return self._handHistories[i]
+	def __iter__(self): return iter(self._handHistories)
+	def raw(self): return self._data
 
 
 
