@@ -4,7 +4,7 @@ import Tc2HandGrabberPokerStars
 import Tc2GuiHelp
 
 from PyQt4 import QtCore, QtGui, QtWebKit
-import hashlib
+import hashlib, codecs
 
 #*******************************************************************************************
 #
@@ -163,7 +163,7 @@ class FrameHandViewer(QtGui.QFrame):
 			return
 		fp = None
 		try:
-			fp = open(fileName, 'w')
+			fp = codecs.open(fileName, 'w', encoding='utf-8')
 			fp.write(self.webView.page().mainFrame().toHtml().toUtf8()  )
 		except Exception, d:
 			Tc2Config.msgWarning(self, 'Could Not Save Hand\n\n%s' % d)
