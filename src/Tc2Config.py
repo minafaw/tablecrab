@@ -185,6 +185,7 @@ HelpTopics = [
 
 			('tools', 'Tools'), [
 				('toolsPokerStarsFPPs', 'PokerStars FPPs'),
+				('toolsHandHistoryViewer', 'Hand history viewer'),
 				],
 			('developement', 'Developement'), [
 				('ocrEditor', 'Ocr Editor'),
