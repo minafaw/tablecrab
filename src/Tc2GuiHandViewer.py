@@ -153,7 +153,7 @@ class FrameHandViewer(QtGui.QFrame):
 		fileName = Tc2Config.dlgOpenSaveFile(
 				parent=self,
 				openFile=False,
-				title='Save Save Hand..',
+				title='Save Hand..',
 				fileFilters=('HtmlFiles (*.html *.htm)', 'All Files (*)'),
 				#TODO: rename to Gui/HandViewer/DialogSave/State
 				settingsKey=self.SettingsKeyDialogSaveState,
