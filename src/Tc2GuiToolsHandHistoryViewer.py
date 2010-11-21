@@ -25,7 +25,11 @@ class FrameTool(QtGui.QFrame):
 
 		self.grid = Tc2Config.GridBox(self)
 
-		self.comboBox = QtGui.QComboBox(self)
+		self.spinBox = QtGui.QSpinBox(self)
+		self.spinBox.setPrefix('Hand# ')
+		self.spinBox.setRange(0, 0)
+		self.spinBox.setSuffix(' /0')
+
 		self.webView = QtWebKit.QWebView(self)
 		self.webView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		self.webView.customContextMenuRequested.connect(self.onContextMenuWebView)
@@ -88,7 +92,7 @@ class FrameTool(QtGui.QFrame):
 		if not toolBarPositionBottom:
 			grid.col(self.toolBar)
 			grid.row()
-		grid.col(self.comboBox)
+		grid.col(self.spinBox)
 		grid.row()
 		grid.col(self.webView)
 		if toolBarPositionBottom:
@@ -104,7 +108,7 @@ class FrameTool(QtGui.QFrame):
 	def onInit(self):
 		self.layout()
 		self.webView.setUrl(QtCore.QUrl(''))
-		self.comboBox.currentIndexChanged.connect(self.onComboBoxCurrentIndexChanged)
+		self.spinBox.valueChanged.connect(self.onSpinBoxValueChanged)
 		self.adjustActions()
 
 	def adjustActions(self):
@@ -132,10 +136,11 @@ class FrameTool(QtGui.QFrame):
 		except Exception, d:
 			Tc2Config.msgWarning(self, 'Could Not Open Hand history\n\n%s' % d)
 
-		self.comboBox.clear()
-		for i, handHistory in enumerate(self.handHistoryFile):
-			self.comboBox.addItem('Hand #%s' % (i +1), QtCore.QVariant(i))
-			self.adjustActions()
+		if self.handHistoryFile:
+			self.spinBox.setRange(1, len(self.handHistoryFile))
+			self.spinBox.setValue(1)
+			self.spinBox.setSuffix(' /%s' % len(self.handHistoryFile))
+		self.adjustActions()
 
 	def onActionSaveTriggered(self):
 		fileName = Tc2Config.dlgOpenSaveFile(
@@ -189,8 +194,8 @@ class FrameTool(QtGui.QFrame):
 	def onNetworkGetData(self, networkReply):
 		url = networkReply.url()
 		if url.scheme() == 'hand':
-			no = int(url.path()[1:])
-			data = self.handHistoryFile[no]
+			handNo = int(url.path()[1:])
+			data = self.handHistoryFile[handNo -1]
 			try:
 				hand = self.handParser.parse(data)
 			except:
@@ -199,15 +204,14 @@ class FrameTool(QtGui.QFrame):
 				data = self.handFormatter.dump(hand)
 			networkReply.setData(data, 'text/html; charset=UTF-8')
 
-	def onComboBoxCurrentIndexChanged(self, i):
-		i = self.comboBox.itemData(i).toInt()[0]
-		self.webView.setUrl(QtCore.QUrl('hand:///%s' % i))
+	def onSpinBoxValueChanged(self, handNo):
+		self.webView.setUrl(QtCore.QUrl('hand:///%s' % handNo))
 
 	def onUrlChanged(self, url):
 		if url.scheme() == 'hand':
-			no = int(url.path()[1:])
-			if self.comboBox.currentIndex() != no:
-				self.comboBox.setCurrentIndex(no)
+			handNo = int(url.path()[1:])
+			if self.spinBox.value() != handNo:
+				self.spinBox.setValue(handNo)
 
 	def onSettingToolBarPositionChanged(self, position):
 		self.grid.clear()
