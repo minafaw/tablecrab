@@ -51,7 +51,7 @@ class FrameTool(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
-		self.label = QtGui.QLabel('PokerStars FPP calculator', self)
+		self.label = QtGui.QLabel('FPP calculator', self)
 
 		self.labelVIPStatus = QtGui.QLabel('VIP status:', self)
 		self.comboVIPStatus = QtGui.QComboBox(self)
@@ -124,10 +124,10 @@ class FrameTool(QtGui.QFrame):
 		Tc2Config.globalObject.init.connect(self.onInit)
 
 	def toolTip(self):
-		return 'PokerStars - FPPs'
+		return 'FPPCalculator'
 
 	def toolName(self):
-		return 'PokerStars - FPPs'
+		return 'FPPCalculator'
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
@@ -254,7 +254,7 @@ class FrameTool(QtGui.QFrame):
 		self.buttonClearCache.setEnabled(False)
 
 	def onHelp(self):
-		Tc2GuiHelp.dialogHelp('toolsPokerStarsFPPs', parent=self)
+		Tc2GuiHelp.dialogHelp('toolsFPPCalculator', parent=self)
 
 
 

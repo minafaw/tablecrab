@@ -2,7 +2,7 @@
 import Tc2Config
 import Tc2GuiHelp
 
-import Tc2GuiToolsPokerStarsFPPs
+import Tc2GuiToolsFPPCalculator
 import Tc2GuiToolsHandHistoryViewer
 
 from PyQt4 import QtCore, QtGui
@@ -29,7 +29,7 @@ class FrameTools(QtGui.QFrame):
 		self.splitter.addWidget(self.listWidget)
 		self.splitter.addWidget(self.stack)
 
-		self.addTool(Tc2GuiToolsPokerStarsFPPs.FrameTool(parent=self.stack), self.listWidget)
+		self.addTool(Tc2GuiToolsFPPCalculator.FrameTool(parent=self.stack), self.listWidget)
 		self.addTool(Tc2GuiToolsHandHistoryViewer.FrameTool(parent=self.stack), self.listWidget)
 
 
