@@ -142,9 +142,9 @@ class FrameHandViewer(QtGui.QFrame):
 				)
 		if fileName is None:
 			return
-		fp = open(fileName, 'r')
+		fp = codecs.open(fileName, 'r', encoding='utf-8')
 		try:
-			data = QtCore.QString.fromUtf8(fp.read())
+			data = QtCore.QString(fp.read()).toUtf8()
 		finally:
 			fp.close()
 		self.setHand(data, fileName=fileName)
@@ -164,7 +164,7 @@ class FrameHandViewer(QtGui.QFrame):
 		fp = None
 		try:
 			fp = codecs.open(fileName, 'w', encoding='utf-8')
-			fp.write(self.webView.page().mainFrame().toHtml().toUtf8()  )
+			fp.write( unicode(self.webView.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
 		except Exception, d:
 			Tc2Config.msgWarning(self, 'Could Not Save Hand\n\n%s' % d)
 		finally:
@@ -197,7 +197,7 @@ class FrameHandViewer(QtGui.QFrame):
 		url = networkReply.url()
 		for myUrl, data in self._handCache:
 			if myUrl == url:
-				networkReply.setData(data,  'text/html; charset=UTF-8')
+				networkReply.setData(data,  'text/html; charset=utf-8')
 				# give feedback
 				if url.scheme() == 'file':
 					fileName = url.path()[1:]
