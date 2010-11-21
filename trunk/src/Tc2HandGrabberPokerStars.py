@@ -13,6 +13,8 @@ from ctypes.wintypes import INT, HANDLE, LPARAM, DWORD
 
 user32 = windll.user32
 
+from cStringIO import StringIO
+
 #***********************************************************************************************
 #
 #***********************************************************************************************
@@ -832,15 +834,14 @@ class HandHistoryFile(object):
 	def __init__(self, filePath):
 		self.filePath = filePath
 		self._handHistories = []
-		self._data = ''
+		self._io = None
 		self._parse()
 
 	def _parse(self):
 		with open(self.filePath, 'r') as fp:
-			self._data = fp.read()
-		data = self._data.replace('\r', '')
+			self._io = StringIO(fp.read())
 		handHistory = None
-		for line in data.split('\n'):
+		for line in self._io:
 			line = line.strip().strip('\xef\xbb\xbf')
 			if line.startswith('PokerStars Game #'):
 				handHistory = [line, ]
@@ -854,7 +855,7 @@ class HandHistoryFile(object):
 	def __len__(self): return len(self._handHistories)
 	def __getitem__(self, i): return self._handHistories[i]
 	def __iter__(self): return iter(self._handHistories)
-	def raw(self): return self._data
+	def raw(self): return self._io.getvalue()
 
 
 
