@@ -101,9 +101,9 @@ class Hand(QtCore.QObject):
 		return None
 
 	def seatsButtonOrdered(self):
-		seats = [seat for seat in self.seats if seat is not None]
-		seats = seats[self.seatNoButton-1:] + seats[:self.seatNoButton-1]
-		return seats
+		"""returns seats of hand orderd button player first, excluding empty seats"""
+		seats = self.seats[self.seatNoButton:] + self.seats[:self.seatNoButton]
+		return [seat for seat in seats if seat is not None]
 
 #********************************************************************************************************
 # hand parser
@@ -174,7 +174,7 @@ class HandParser(object):
 		if result is not None:
 			hand.tableName = result.group('tableName')
 			hand.seats = [None for i in range( int(result.group('maxPlayers') ))]
-			hand.seatNoButton = int(result.group('seatNoButton'))
+			hand.seatNoButton = int(result.group('seatNoButton')) -1
 		return result is not None
 
 	PatternSeat = re.compile('^Seat \s(?P<seatNo>[1-9]+)\:\s   (?P<player>.*?) \s\( [%s]? (?P<stack>.*?)\s.*  \)' % Currencies, re.X)
