@@ -55,9 +55,6 @@ class FrameNashCalculations(QtGui.QFrame):
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
-		grid.setRowStretch(0, 99)
-		grid.col(self.webView, colspan=2)
-		grid.row()
 		grid.col(self.label, colspan=2)
 		grid.row()
 		grid.col(self.comboBox)
@@ -65,6 +62,9 @@ class FrameNashCalculations(QtGui.QFrame):
 		grid.row()
 		grid.col(self.labelProxy)
 		grid.col(self.editProxyName)
+		iRow = grid.row()
+		grid.setRowStretch(iRow, 99)
+		grid.col(self.webView, colspan=2)
 
 	def setHand(self, hand):
 		self.lastHand = hand
