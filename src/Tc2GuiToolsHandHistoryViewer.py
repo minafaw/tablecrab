@@ -10,6 +10,7 @@ import codecs
 #************************************************************************************
 
 #TODO: we have to give some kind of feedback while fetching data
+#TODO: hotkeys
 class FrameNashCalculations(QtGui.QFrame):
 
 	SettingsKeyBase = 'Gui/Tools/PHandHistoryViewer/NashCalculations'
