@@ -81,6 +81,12 @@ td{text-align: left;vertical-align: text-top;}
 		self.seats = None
 
 	def parse(self, p):
+		try:
+			return self._parse(p)
+		except Exception, details:
+			raise Exception(detalis + ('\n\n%s' % p) )
+
+	def _parse(self, p):
 		tables = self.PatTable.findall(p)
 		if not tables:
 			raise ParseError()
