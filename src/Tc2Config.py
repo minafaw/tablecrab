@@ -129,6 +129,7 @@ Ellipsis = '..'
 MaxWindowText = 512		# maximum number of chars we retrieve as text / title from other windows
 MaxHandHistoryText = 16384
 MaxPokerStarsBetBoxText = 16	# maximum number of chars to retrieve from PS bet amount box
+MaxProxyServerName = 1024
 
 
 SmallBlind = 'SmallBlind'

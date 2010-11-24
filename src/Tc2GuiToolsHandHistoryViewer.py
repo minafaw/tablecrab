@@ -8,10 +8,13 @@ import codecs
 #************************************************************************************
 #
 #************************************************************************************
+
+#TODO: we have to give some kind of feedback while fetching data
 class FrameNashCalculations(QtGui.QFrame):
 
-	SettingsKeyBase = 'Gui/Tools/PHandHistoryViewer'
-	SettingsKeyStyleSheet = SettingsKeyBase + 'NashCalculations/StyleSheet'
+	SettingsKeyBase = 'Gui/Tools/PHandHistoryViewer/NashCalculations'
+	SettingsKeyStyleSheet = SettingsKeyBase + '/StyleSheet'
+	SettingsKeyProxyName = SettingsKeyBase + '/Proxy'
 	PayoutStructures = (
 			('None', ''),
 			('PokerStars 9 man sitNgo', '50, 30, 20'),
@@ -31,20 +34,24 @@ class FrameNashCalculations(QtGui.QFrame):
 		self.formatter = HoldemResources.NashFormatter()
 
 		self.label = QtGui.QLabel('Select payouts to fetch nash calculations for hand', self)
-		self.edit = QtGui.QLineEdit(self)
-		self.edit.setEnabled(False)
-		self.edit.setInputMask('99,99,99,99,99,99,99,99,99,99')
+		self.editPayoutStructure = QtGui.QLineEdit(self)
+		self.editPayoutStructure.setEnabled(False)
+		self.editPayoutStructure.setInputMask('99/99/99/99/99/99/99/99/99/99')
 		self.webView = QtWebKit.QWebView(self)
 
 		self.comboBox = QtGui.QComboBox(self)
 		for i, (text, _) in enumerate(self.PayoutStructures):
 			self.comboBox.addItem(text, i)
 
+		self.labelProxy = QtGui.QLabel('Proxy server:')
+		self.editProxyName = QtGui.QLineEdit(self)
+		self.editProxyName.setMaxLength(Tc2Config.MaxProxyServerName)
+
 		# connect signals
 		Tc2Config.globalObject.init.connect(self.onInit)
 
 	def payoutStructure(self):
-		return [round( int(i) / 100.0, 2) for i in str(self.edit.text()).split(',') if i]
+		return [round( int(i) / 100.0, 2) for i in str(self.editPayoutStructure.text()).split('/') if i]
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
@@ -54,8 +61,10 @@ class FrameNashCalculations(QtGui.QFrame):
 		grid.col(self.label, colspan=2)
 		grid.row()
 		grid.col(self.comboBox)
-		grid.col(self.edit)
-
+		grid.col(self.editPayoutStructure)
+		grid.row()
+		grid.col(self.labelProxy)
+		grid.col(self.editProxyName)
 
 	def setHand(self, hand):
 		self.lastHand = hand
@@ -74,6 +83,8 @@ class FrameNashCalculations(QtGui.QFrame):
 			seats.append(seats.pop(0))
 			seats.append(seats.pop(0))
 		stacks = [seat.stack for seat in seats]
+		proxy = unicode(self.editProxyName.text().toUtf8(), 'utf-8')
+		proxy = None if not proxy else proxy
 		try:
 			url, data = self.fetcher.getData(
 					bigBlind=hand.blindBig,
@@ -81,10 +92,10 @@ class FrameNashCalculations(QtGui.QFrame):
 					ante=hand.blindAnte,
 					payouts=payoutStructure,
 					stacks=stacks,
-					proxy=None,
+					proxy=proxy,
 					)
 		except HoldemResources.FetchError, details:
-			Tc2Config.msgCritical('could not fetch data:%s\n%s' % (details) )
+			Tc2Config.msgCritical(self, 'could not fetch data:%s\n' % details )
 			return
 		self.formatter.parse(data)
 
@@ -108,9 +119,13 @@ class FrameNashCalculations(QtGui.QFrame):
 		self.comboBox.currentIndexChanged.connect(self.onComboBoxCurrentIndexChanged)
 		self.webView.setHtml('')
 
+		text = Tc2Config.settingsValue(self.SettingsKeyProxyName, '').toString()
+		self.editProxyName.setText(text)
+		self.editProxyName.editingFinished.connect(self.onEditProxyNameEditingFinished)
+
 	def onComboBoxCurrentIndexChanged(self, i):
-		self.edit.setText(self.PayoutStructures[i][1])
-		self.edit.setEnabled(i != 0)
+		self.editPayoutStructure.setText(self.PayoutStructures[i][1])
+		self.editPayoutStructure.setEnabled(i != 0)
 		self.setHand(self.lastHand)
 
 	def onHandSet(self, hand):
@@ -118,6 +133,10 @@ class FrameNashCalculations(QtGui.QFrame):
 
 	def onZoomFactorChanged(self, factor):
 		self.webView.setZoomFactor(factor)
+
+	def onEditProxyNameEditingFinished(self):
+		edit = self.sender()
+		Tc2Config.settingsSetValue(self.SettingsKeyProxyName, edit.text())
 
 #************************************************************************************
 #
