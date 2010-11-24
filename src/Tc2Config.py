@@ -460,6 +460,10 @@ class WebViewToolBar(QtGui.QToolBar):
 	ZoomStepsMin = 1
 	ZoomMin = 0.5
 	ZoomMax = 7
+
+
+	zoomFactorChanged = QtCore.pyqtSignal(float)
+
 	def __init__(self, webView, settingsKeyZoomFactor=None):
 		QtGui.QToolBar.__init__(self, webView)
 		self.webView = webView
@@ -497,6 +501,7 @@ class WebViewToolBar(QtGui.QToolBar):
 		if self.settingsKeyZoomFactor is not None:
 			factor = settingsValue(self.settingsKeyZoomFactor, 1).toDouble()[0]
 			self.webView.setZoomFactor(factor)
+			self.zoomFactorChanged.emit(factor)
 		self.adjustActions()
 
 	def _zoomSteps(self):
@@ -520,6 +525,7 @@ class WebViewToolBar(QtGui.QToolBar):
 			factor -= self.ZoomMax / float(steps)
 			factor = max(factor, self.ZoomMin)
 		self.webView.setZoomFactor(factor)
+		self.zoomFactorChanged.emit(factor)
 		if self.settingsKeyZoomFactor is not None:
 			settingsSetValue(self.settingsKeyZoomFactor, factor)
 		self.adjustActions()
@@ -559,6 +565,7 @@ class GridBox(QtGui.QGridLayout):
 			self._currentRow += 1
 			if self._currentRow +1 > len(self._items):
 				self._items.append([False]*len(self._items[self._currentRow -1]))
+			return self._currentRow
 		def newColumn(self, w, h):
 			row = self._items[self._currentRow]
 			row = [(item, i) for (i, item) in enumerate(row)]
@@ -591,9 +598,9 @@ class GridBox(QtGui.QGridLayout):
 		self.setContentsMargins(contentsMargins)
 		self._grid = self.Grid()
 	def row(self):
-		self._grid.newRow()
+		return self._grid.newRow()
 	#TODO: GridBox.col() can not handle right to left rowspaning columns
-	def col(self, widget, colspan=1, rowspan=1, debug=False):
+	def col(self, widget, colspan=1, rowspan=1, align=None, debug=False):
 		if rowspan < 1: raise ValueError('rowspan must be > 0')
 		if colspan < 1: raise ValueError('colspan must be > 0')
 		x, y, w, h = self._grid.newColumn(colspan, rowspan)
@@ -605,7 +612,10 @@ class GridBox(QtGui.QGridLayout):
 			method = self.addLayout
 		else:
 			raise ValueError('widget must be QWidget or QLayout')
-		method(widget, y, x, h, w)
+		if align:
+			method(widget, y, x, h, w, align)
+		else:
+			method(widget, y, x, h, w)
 		return self
 	def clear(self):
 		while self.takeAt(0) is not None: pass
