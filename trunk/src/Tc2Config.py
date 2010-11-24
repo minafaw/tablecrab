@@ -182,6 +182,7 @@ HelpTopics = [
 				('settingsPokerStars', 'PokerStars'),
 				('settingsHandViewer', 'Hand Viewer'),
 				('settingsHandViewerStyleSheet', 'Hand Viewer Style Sheet'),
+				('settingsNashCalculationsStyleSheet', 'Nash Calculations Style Sheet'),
 				],
 
 			('tools', 'Tools'), [
