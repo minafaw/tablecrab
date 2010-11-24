@@ -73,6 +73,10 @@ class FrameNashCalculations(QtGui.QFrame):
 		payoutStructure = self.payoutStructure()
 		if not payoutStructure:
 			return
+		proxy = unicode(self.editProxyName.text().toUtf8(), 'utf-8')
+		proxy = None if not proxy else proxy
+
+		# prep seats/stacks
 		seats = hand.seatsButtonOrdered()
 		if len(seats) == 1:
 			return
@@ -81,8 +85,8 @@ class FrameNashCalculations(QtGui.QFrame):
 			seats.append(seats.pop(0))
 			seats.append(seats.pop(0))
 		stacks = [seat.stack for seat in seats]
-		proxy = unicode(self.editProxyName.text().toUtf8(), 'utf-8')
-		proxy = None if not proxy else proxy
+
+		# fetch data from HoldemResources
 		try:
 			url, data = self.fetcher.getData(
 					bigBlind=hand.blindBig,
@@ -95,8 +99,11 @@ class FrameNashCalculations(QtGui.QFrame):
 		except HoldemResources.FetchError, details:
 			Tc2Config.msgCritical(self, unicode(details))
 			return
+
+		# parse data
 		self.formatter.parse(data)
 
+		# format data
 		def sortf(seats, mySeats=hand.seats, mySeatsButtonOrder=seats):
 			mySeats = [i for i in mySeats if i is not None]
 			result = [None]* len(mySeatsButtonOrder)
@@ -105,7 +112,6 @@ class FrameNashCalculations(QtGui.QFrame):
 				myIndex = mySeats.index(mySeat)
 				result[myIndex] = seat
 			return result
-
 		html = self.formatter.toHtml(
 				seatSortf=sortf,
 				styleSheet=Tc2Config.settingsValue(self.SettingsKeyStyleSheet, HoldemResources.NashFormatter.StyleSheet).toString()
