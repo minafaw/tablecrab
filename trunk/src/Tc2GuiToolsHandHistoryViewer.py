@@ -16,10 +16,14 @@ class FrameNashCalculations(QtGui.QFrame):
 	SettingsKeyBase = 'Gui/Tools/PHandHistoryViewer/NashCalculations'
 	SettingsKeyStyleSheet = SettingsKeyBase + '/StyleSheet'
 	SettingsKeyProxyName = SettingsKeyBase + '/Proxy'
-	PayoutStructures = (
-			('None', ''),
-			('PokerStars 9 man sitNgo', '50, 30, 20'),
-			('PokerStars 6 man sitNgo', '65, 35'),
+	SettingsKeyCustomPayoutStructure = SettingsKeyBase + '/CustomPayoutStructure'
+
+	PayoutStructures = (	# text, payoutStructure, lineEditMask
+			('None', '', ''),
+			('PokerStars 9 man sitNgo', '50/30/20', '99/99/99'),
+			('PokerStars 6 man sitNgo', '65/35', '99/99'),
+			('Winner takes all', '100', '999'),
+			('Custom', '', '99/99/99/99/99/99/99/99/99/99')
 			)
 
 	def __init__(self, parent, toolBar=None):
@@ -37,11 +41,10 @@ class FrameNashCalculations(QtGui.QFrame):
 		self.webView = QtWebKit.QWebView(self)
 		self.label = QtGui.QLabel('Select payout to fetch nash calculations', self)
 		self.comboBox = QtGui.QComboBox(self)
-		for i, (text, _) in enumerate(self.PayoutStructures):
+		for i, (text, _, _) in enumerate(self.PayoutStructures):
 			self.comboBox.addItem(text, i)
 		self.editPayoutStructure = QtGui.QLineEdit(self)
 		self.editPayoutStructure.setEnabled(False)
-		self.editPayoutStructure.setInputMask('99/99/99/99/99/99/99/99/99/99')
 
 		self.labelProxy = QtGui.QLabel('Proxy server:')
 		self.editProxyName = QtGui.QLineEdit(self)
@@ -127,9 +130,17 @@ class FrameNashCalculations(QtGui.QFrame):
 		self.editProxyName.setText(text)
 		self.editProxyName.editingFinished.connect(self.onEditProxyNameEditingFinished)
 
+		#NOTE: editingFinished() is only emitted when the whole mask is filled in so we need to connect to textChanged()
+		self.editPayoutStructure.textChanged.connect(self.onEditPayoutStructureTextChanged)
+
 	def onComboBoxCurrentIndexChanged(self, i):
-		self.editPayoutStructure.setText(self.PayoutStructures[i][1])
-		self.editPayoutStructure.setEnabled(i != 0)
+		payoutStructure, mask = self.PayoutStructures[i][1], self.PayoutStructures[i][2]
+		if i == len(self.PayoutStructures) -1:
+			payoutStructure = Tc2Config.settingsValue(self.SettingsKeyCustomPayoutStructure, '').toString()
+		self.editPayoutStructure.setInputMask(mask)
+		self.editPayoutStructure.setText(payoutStructure)
+		self.editPayoutStructure.setEnabled(bool(mask))
+
 		self.editPayoutStructure.home(False)
 		self.setHand(self.lastHand)
 
@@ -142,6 +153,11 @@ class FrameNashCalculations(QtGui.QFrame):
 	def onEditProxyNameEditingFinished(self):
 		edit = self.sender()
 		Tc2Config.settingsSetValue(self.SettingsKeyProxyName, edit.text())
+
+	def onEditPayoutStructureTextChanged(self, text):
+		if self.comboBox.currentIndex() == len(self.PayoutStructures) -1:
+			edit = self.sender()
+			Tc2Config.settingsSetValue(self.SettingsKeyCustomPayoutStructure, text)
 
 #************************************************************************************
 #
