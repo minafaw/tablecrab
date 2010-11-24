@@ -35,7 +35,7 @@ class FrameNashCalculations(QtGui.QFrame):
 		self.formatter = HoldemResources.NashFormatter()
 
 		self.webView = QtWebKit.QWebView(self)
-		self.label = QtGui.QLabel('Select payouts to fetch nash calculations for hand', self)
+		self.label = QtGui.QLabel('Select payout to fetch nash calculations', self)
 		self.comboBox = QtGui.QComboBox(self)
 		for i, (text, _) in enumerate(self.PayoutStructures):
 			self.comboBox.addItem(text, i)
@@ -124,6 +124,7 @@ class FrameNashCalculations(QtGui.QFrame):
 	def onComboBoxCurrentIndexChanged(self, i):
 		self.editPayoutStructure.setText(self.PayoutStructures[i][1])
 		self.editPayoutStructure.setEnabled(i != 0)
+		self.editPayoutStructure.home(False)
 		self.setHand(self.lastHand)
 
 	def onHandSet(self, hand):
