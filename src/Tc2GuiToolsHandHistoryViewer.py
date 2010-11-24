@@ -33,15 +33,14 @@ class FrameNashCalculations(QtGui.QFrame):
 		self.fetcher = HoldemResources.NashFetcher()
 		self.formatter = HoldemResources.NashFormatter()
 
-		self.label = QtGui.QLabel('Select payouts to fetch nash calculations for hand', self)
-		self.editPayoutStructure = QtGui.QLineEdit(self)
-		self.editPayoutStructure.setEnabled(False)
-		self.editPayoutStructure.setInputMask('99/99/99/99/99/99/99/99/99/99')
 		self.webView = QtWebKit.QWebView(self)
-
+		self.label = QtGui.QLabel('Select payouts to fetch nash calculations for hand', self)
 		self.comboBox = QtGui.QComboBox(self)
 		for i, (text, _) in enumerate(self.PayoutStructures):
 			self.comboBox.addItem(text, i)
+		self.editPayoutStructure = QtGui.QLineEdit(self)
+		self.editPayoutStructure.setEnabled(False)
+		self.editPayoutStructure.setInputMask('99/99/99/99/99/99/99/99/99/99')
 
 		self.labelProxy = QtGui.QLabel('Proxy server:')
 		self.editProxyName = QtGui.QLineEdit(self)
