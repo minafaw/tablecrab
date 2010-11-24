@@ -100,6 +100,11 @@ class Hand(QtCore.QObject):
 				return player
 		return None
 
+	def seatsButtonOrdered(self):
+		seats = [seat for seat in self.seats if seat is not None]
+		seats = seats[self.seatNoButton-1:] + seats[:self.seatNoButton-1]
+		return seats
+
 #********************************************************************************************************
 # hand parser
 #********************************************************************************************************
