@@ -69,11 +69,9 @@ class FrameNashCalculations(QtGui.QFrame):
 	def setHand(self, hand):
 		self.lastHand = hand
 		if hand is None:
-			self.webView.setHtml('')
 			return
 		payoutStructure = self.payoutStructure()
 		if not payoutStructure:
-			self.webView.setHtml('')
 			return
 		seats = hand.seatsButtonOrdered()
 		if len(seats) == 1:
