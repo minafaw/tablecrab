@@ -93,7 +93,7 @@ class FrameNashCalculations(QtGui.QFrame):
 					proxy=proxy,
 					)
 		except HoldemResources.FetchError, details:
-			Tc2Config.msgCritical(self, 'could not fetch data:%s\n' % details )
+			Tc2Config.msgCritical(self, unicode(details))
 			return
 		self.formatter.parse(data)
 

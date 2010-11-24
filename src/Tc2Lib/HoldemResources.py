@@ -7,7 +7,6 @@ class FetchError(Exception): pass
 
 class ParseError(Exception): pass
 
-
 #************************************************************************************
 #
 #************************************************************************************
@@ -30,7 +29,7 @@ class NashFetcher(object):
 			finally:
 				fp.close()
 		except Exception, d:
-			raise FetchError(d)
+			raise FetchError('%s\n\n%s' % (d, url))
 		return  data
 
 	def getData(self,
