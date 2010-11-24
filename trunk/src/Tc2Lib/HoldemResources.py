@@ -5,6 +5,12 @@ import urllib2, re
 #************************************************************************************
 class FetchError(Exception): pass
 
+class ParseError(Exception): pass
+
+
+#************************************************************************************
+#
+#************************************************************************************
 class NashFetcher(object):
 
 	PatTable = re.compile('<table\s .*? </table>', re.X|re.I)
@@ -51,9 +57,9 @@ class NashFetcher(object):
 			return (url, data)
 		raise FetchError('could not retrieve data: %s' % url)
 
-
-class ParseError(Exception): pass
-
+#************************************************************************************
+#
+#************************************************************************************
 class NashFormatter(object):
 	StyleSheet = '''body{}
 td{text-align: left;vertical-align: text-top;}
@@ -114,7 +120,7 @@ td{text-align: left;vertical-align: text-top;}
 			tds.extend([i.strip() for i in tds.pop(-1).split(',')])	# add call
 			actions.append(tds)
 
-		# bring actions in normal form
+		# bring actions to normal form
 		# CO
 		# ---  BU
 		# ---  --- SB
@@ -188,7 +194,6 @@ td{text-align: left;vertical-align: text-top;}
 				nRows = None
 				if not seat['push']:
 					nRows = len(seat['call'])
-
 				for others, perc, rng in seat['call']:
 					p += '<tr>'
 					if nRows is not None:
