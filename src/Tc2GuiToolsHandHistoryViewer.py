@@ -8,10 +8,6 @@ import codecs
 #************************************************************************************
 #
 #************************************************************************************
-
-#TODO: we have to give some kind of feedback that we are busy fetching data
-#           and maybe fetch data threaded, but no idea yet how to do this.
-#TODO: hotkeys
 class FrameNashCalculations(QtGui.QFrame):
 
 	SettingsKeyBase = 'Gui/Tools/PHandHistoryViewer/NashCalculations'
@@ -87,6 +83,9 @@ class FrameNashCalculations(QtGui.QFrame):
 				myIndex = mySeats.index(mySeat)
 				result[myIndex] = seat
 			return result
+		#TODO: from time to time we get strange errors here. had seats num seats as
+		# returned did not match our seats so seat list could contain a None seat.
+		#maybe data as returned from HoldemResources is corrupted?
 		html = self.formatter.toHtml(
 				seatSortf=sortf,
 				styleSheet=Tc2Config.settingsValue(self.SettingsKeyStyleSheet, HoldemResources.NashFormatter.StyleSheet).toString(),
