@@ -86,7 +86,8 @@ class FrameNashCalculations(QtGui.QFrame):
 			return result
 		html = self.formatter.toHtml(
 				seatSortf=sortf,
-				styleSheet=Tc2Config.settingsValue(self.SettingsKeyStyleSheet, HoldemResources.NashFormatter.StyleSheet).toString()
+				styleSheet=Tc2Config.settingsValue(self.SettingsKeyStyleSheet, HoldemResources.NashFormatter.StyleSheet).toString(),
+				url=url,
 				)
 		self.webView.setHtml(html)
 
