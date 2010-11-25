@@ -43,6 +43,11 @@ class FrameNashCalculations(QtGui.QFrame):
 		self.formatter = HoldemResources.NashFormatter()
 
 		self.webView = QtWebKit.QWebView(self)
+		settings = self.webView.page().settings()
+		settings.setAttribute(settings.AutoLoadImages, False)
+		settings.setAttribute(settings.JavascriptEnabled, False)
+		settings.setAttribute(settings.JavaEnabled, False)
+
 		self.label = QtGui.QLabel('Select payout to fetch nash calculations', self)
 		self.comboBox = QtGui.QComboBox(self)
 		for i, (text, _, _) in enumerate(self.PayoutStructures):
