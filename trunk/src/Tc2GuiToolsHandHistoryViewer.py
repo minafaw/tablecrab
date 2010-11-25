@@ -60,11 +60,6 @@ class FrameNashCalculations(QtGui.QFrame):
 		self.webView.setHtml('<h3>Request failed: %s</h3>%s' % (msg, url.toString()))
 
 	def onRequestCompleted(self, url, qString):
-		try:
-			self.formatter.parse(qString)
-		except HoldemResources.ParseError, details:
-			self.webView.setHtml(unicode(details))
-			return
 
 		# prep seats/stacks
 		seats = self.lastHand.seatsButtonOrdered()
@@ -74,6 +69,12 @@ class FrameNashCalculations(QtGui.QFrame):
 			seats.append(seats.pop(0))
 			seats.append(seats.pop(0))
 			seats.append(seats.pop(0))
+
+		try:
+			self.formatter.parse(qString, len(seats))
+		except HoldemResources.ParseError, details:
+			self.webView.setHtml(unicode(details))
+			return
 
 		def sortf(seats, mySeats=self.lastHand.seats, mySeatsButtonOrder=seats):
 			mySeats = [i for i in mySeats if i is not None]

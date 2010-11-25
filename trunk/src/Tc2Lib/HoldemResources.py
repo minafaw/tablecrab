@@ -171,9 +171,11 @@ td{text-align: left;vertical-align: text-top;}
 
 	def __init__(self):
 		self.seats = None
+		self.raw = ''
 
-	def parse(self, qString):
+	def parse(self, qString, nSeatsExpected):
 		p = unicode(qString.toUtf8(), 'utf-8')
+		self.raw = p
 		tables = self.PatTable.findall(p)
 		if not tables:
 			raise ParseError(p)
@@ -187,7 +189,7 @@ td{text-align: left;vertical-align: text-top;}
 			seats.append({
 					'seat': tds[0],
 					'stack': tds[1][:-2],
-					'push': (),		# (percentage, range)
+					'push': ('???', '???'),		# (percentage, range)
 					'call': [],		# list (seat(s)ToCall, percentage, range)
 					})
 
@@ -198,6 +200,10 @@ td{text-align: left;vertical-align: text-top;}
 			tr = tr.replace('<td />', '<td></td>')	# makes parsing easier on us
 			tds = self.PatTd.findall(tr)
 			if not tds: continue
+			if len(tds) != 4:
+				raise parseError(self.raw)
+			if tds[-1].count(',') != 1:
+				raise parseError(self.raw)
 			tds.extend([i.strip() for i in tds.pop(-1).split(',')])	# add call
 			actions.append(tds)
 
@@ -227,6 +233,8 @@ td{text-align: left;vertical-align: text-top;}
 						seat['call'].append( (action[0][:-1], action[-2], action[-1]) )
 			seat['call'].sort(cmp=sortf)
 
+		if len(seats) != nSeatsExpected:
+			raise ParseError(self.raw)
 		self.seats = seats
 
 	def toString(self, seatSortf=None):
