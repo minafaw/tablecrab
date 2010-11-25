@@ -1,5 +1,6 @@
 
-import urllib2, re
+from PyQt4 import QtCore, QtNetwork
+import re
 #************************************************************************************
 #
 #************************************************************************************
@@ -10,38 +11,34 @@ class ParseError(Exception): pass
 #************************************************************************************
 #
 #************************************************************************************
-class NashFetcher(object):
+class NashFetcher(QtNetwork.QNetworkAccessManager):
 
-	PatTable = re.compile('<table\s .*? </table>', re.X|re.I)
+	requestFailed = QtCore.pyqtSignal(QtCore.QUrl, QtCore.QString)
+	requestCompleted = QtCore.pyqtSignal(QtCore.QUrl, QtCore.QString)
 
-	def __init__(self):
-		pass
+	def __init__(self, parent=None):
+		QtNetwork.QNetworkAccessManager.__init__(self, parent)
+		self._reply = None
+		self._data = None
+		self._timer = QtCore.QTimer(self)
+		self._timer.setSingleShot(True)
+		self._timer.timeout.connect(self.onTimeout)
+		self.finished.connect(self.onReplyFinished)
 
-	def fetch(self, url, proxy=None):
-		opener = urllib2.build_opener(urllib2.HTTPHandler)
-		if proxy is not None:
-			proxy_support = urllib2.ProxyHandler({"http": "http://" + proxy})
-			opener.add_handler(proxy_support)
-		try:
-			fp = opener.open(url)
-			try:
-				data = fp.read()
-			finally:
-				fp.close()
-		except Exception, d:
-			raise FetchError('%s\n\n%s' % (d, url))
-		return  data
+	def abortRequest(self):
+		if self._reply is not None:
+			self._reply.abort()
+			self._reply = None
+		self._timer.stop()
 
-	def getData(self,
+	def createRequestUrl(self,
 			bigBlind=None,
 			smallBlind=None,
 			ante=None,
 			payouts=None,
 			stacks=None,
-			proxy=None,
 			):
 		ante = (0 if ante is None else ante)	# required
-
 		url = 'http://www.holdemresources.net/hr/sngs/icmcalculator.html?action=calculate'
 		url += '&bb=%s' % bigBlind
 		url += '&sb=%s' % smallBlind
@@ -49,12 +46,39 @@ class NashFetcher(object):
 		url += '&structure=%s' % ('%2C'.join(['%.2f' % i for i in payouts]))
 		for i, stack in enumerate(stacks):
 			url += '&s%s=%s' % (i+1, stack)
-		data = self.fetch(url, proxy=proxy)
+		#NOTE: have to use QUrl.fomEncoded() here
+		return QtCore.QUrl.fromEncoded(url)
 
-		result = self.PatTable.findall(data)
-		if len(result) > 1:
-			return (url, data)
-		raise FetchError('could not retrieve data: %s' % url)
+	def requestHandData(self, url, timeout=-1):
+		if self._reply is not None:
+			self._reply.abort()
+		self._timer.stop()
+		request = QtNetwork.QNetworkRequest(url)
+		self._reply = self.get(request)
+		if timeout >= 0:
+			self._timer.start(timeout)
+
+	def onTimeout(self):
+		if self._reply is not None:
+			url = QtCore.QUrl(self._reply.url())
+			self._reply.abort()
+			self.requestFailed.emit(url, 'timed out')
+
+	def onReplyFinished(self, reply):
+		arr = None
+		url = QtCore.QUrl(reply.url())
+		err = reply.error()
+		if err == reply.NoError:
+			arr = reply.readAll()
+		elif err == reply.OperationCanceledError:
+			pass
+		else:
+			self.requestFailed.emit(url, reply.errorString())
+		self._reply = None
+		reply.deleteLater()
+		if arr is not None:
+			p = QtCore.QString.fromUtf8(arr.data())
+			self.requestCompleted.emit(url, p)
 
 #************************************************************************************
 #
@@ -85,16 +109,11 @@ td{text-align: left;vertical-align: text-top;}
 	def __init__(self):
 		self.seats = None
 
-	def parse(self, p):
-		try:
-			return self._parse(p)
-		except Exception, details:
-			raise Exception(detalis + ('\n\n%s' % p) )
-
-	def _parse(self, p):
+	def parse(self, qString):
+		p = unicode(qString.toUtf8(), 'utf-8')
 		tables = self.PatTable.findall(p)
 		if not tables:
-			raise ParseError()
+			raise ParseError(p)
 		seats = []
 
 		# gather sall seats from top table
@@ -147,12 +166,12 @@ td{text-align: left;vertical-align: text-top;}
 
 		self.seats = seats
 
+
 	def toString(self, seatSortf=None):
 		if self.seats is None: raise ValueError('nothing to format')
 		result = ''
 		seats = self.seats  if  seatSortf is None else seatSortf(self.seats)
 		for seat in seats:
-			#print seat
 			result += '%s %s\n' % (seat['seat'], seat['stack'])
 			if seat['push']:
 				result += '\x20\x20\x20\x20push: %s / %s\n' % (seat['push'][0], seat['push'][1])

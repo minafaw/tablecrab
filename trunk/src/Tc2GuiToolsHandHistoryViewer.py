@@ -9,7 +9,8 @@ import codecs
 #
 #************************************************************************************
 
-#TODO: we have to give some kind of feedback while fetching data
+#TODO: we have to give some kind of feedback that we are busy fetching data
+#           and maybe fetch data threaded, but no idea yet how to do this.
 #TODO: hotkeys
 class FrameNashCalculations(QtGui.QFrame):
 
@@ -36,6 +37,9 @@ class FrameNashCalculations(QtGui.QFrame):
 			toolBar.zoomFactorChanged.connect(self.onZoomFactorChanged)
 
 		self.fetcher = HoldemResources.NashFetcher()
+		self.fetcher.requestFailed.connect(self.onRequestFailed)
+		self.fetcher.requestCompleted.connect(self.onRequestCompleted)
+
 		self.formatter = HoldemResources.NashFormatter()
 
 		self.webView = QtWebKit.QWebView(self)
@@ -52,6 +56,39 @@ class FrameNashCalculations(QtGui.QFrame):
 
 		# connect signals
 		Tc2Config.globalObject.init.connect(self.onInit)
+
+	def onRequestFailed(self, url, msg):
+		self.webView.setHtml('<h3>Request failed: %s</h3>%s' % (msg, url.toString()))
+
+	def onRequestCompleted(self, url, qString):
+		try:
+			self.formatter.parse(qString)
+		except HoldemResources.ParseError, details:
+			self.webView.setHtml(unicode(details))
+			return
+
+		# prep seats/stacks
+		seats = self.lastHand.seatsButtonOrdered()
+		if len(seats) == 1:
+			return
+		elif len(seats) > 3:
+			seats.append(seats.pop(0))
+			seats.append(seats.pop(0))
+			seats.append(seats.pop(0))
+
+		def sortf(seats, mySeats=self.lastHand.seats, mySeatsButtonOrder=seats):
+			mySeats = [i for i in mySeats if i is not None]
+			result = [None]* len(mySeatsButtonOrder)
+			for i, seat in enumerate(seats):
+				mySeat = mySeatsButtonOrder[i]
+				myIndex = mySeats.index(mySeat)
+				result[myIndex] = seat
+			return result
+		html = self.formatter.toHtml(
+				seatSortf=sortf,
+				styleSheet=Tc2Config.settingsValue(self.SettingsKeyStyleSheet, HoldemResources.NashFormatter.StyleSheet).toString()
+				)
+		self.webView.setHtml(html)
 
 	def payoutStructure(self):
 		return [round( int(i) / 100.0, 2) for i in str(self.editPayoutStructure.text()).split('/') if i]
@@ -89,37 +126,16 @@ class FrameNashCalculations(QtGui.QFrame):
 			seats.append(seats.pop(0))
 		stacks = [seat.stack for seat in seats]
 
-		# fetch data from HoldemResources
-		try:
-			url, data = self.fetcher.getData(
-					bigBlind=hand.blindBig,
-					smallBlind=hand.blindSmall,
-					ante=hand.blindAnte,
-					payouts=payoutStructure,
-					stacks=stacks,
-					proxy=proxy,
-					)
-		except HoldemResources.FetchError, details:
-			Tc2Config.msgCritical(self, unicode(details))
-			return
-
-		# parse data
-		self.formatter.parse(data)
-
-		# format data
-		def sortf(seats, mySeats=hand.seats, mySeatsButtonOrder=seats):
-			mySeats = [i for i in mySeats if i is not None]
-			result = [None]* len(mySeatsButtonOrder)
-			for i, seat in enumerate(seats):
-				mySeat = mySeatsButtonOrder[i]
-				myIndex = mySeats.index(mySeat)
-				result[myIndex] = seat
-			return result
-		html = self.formatter.toHtml(
-				seatSortf=sortf,
-				styleSheet=Tc2Config.settingsValue(self.SettingsKeyStyleSheet, HoldemResources.NashFormatter.StyleSheet).toString()
+		self.fetcher.abortRequest()
+		#TODO: should we clear out webView here?
+		url = self.fetcher.createRequestUrl(
+				bigBlind=hand.blindBig,
+				smallBlind=hand.blindSmall,
+				ante=hand.blindAnte,
+				payouts=payoutStructure,
+				stacks=stacks,
 				)
-		self.webView.setHtml(html)
+		self.fetcher.requestHandData(url, timeout=1000)
 
 	def onInit(self):
 		self.layout()
