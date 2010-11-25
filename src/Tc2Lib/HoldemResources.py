@@ -229,7 +229,6 @@ td{text-align: left;vertical-align: text-top;}
 
 		self.seats = seats
 
-
 	def toString(self, seatSortf=None):
 		if self.seats is None: raise ValueError('nothing to format')
 		result = ''
