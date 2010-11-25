@@ -6,6 +6,7 @@
 
 import Tc2Config
 import Tc2GuiSettingsGlobal
+import Tc2GuiSettingsNetwork
 import Tc2GuiSettingsPokerStars
 import Tc2GuiSettingsHandViewer
 import Tc2GuiSettingsHandViewerStyleSheet
@@ -37,10 +38,11 @@ class FrameSettings(QtGui.QFrame):
 
 		#
 		self.settingsGlobal = self.addSetting('Global', Tc2GuiSettingsGlobal.FrameSettings(parent=self.stack), 'Shift+G', 'Global (Shift+G)')
+		self.settingsNetwork = self.addSetting('Network', Tc2GuiSettingsNetwork.FrameSettings(parent=self.stack), 'Shift+G', 'Global (Shift+N)')
 		self.settingsPokerStars = self.addSetting('PokerStars', Tc2GuiSettingsPokerStars.FrameSettings(parent=self.stack), 'Shift+P', 'PokerStars (Shift+P)')
 		self.settingsHand = self.addSetting('Hand viewer', Tc2GuiSettingsHandViewer.FrameSettings(parent=self.stack), 'Shift+H', 'Hand viewer (Shift+H)')
 		self.settingsHandStyleSheet = self.addSetting('Hand viewer style sheet', Tc2GuiSettingsHandViewerStyleSheet.FrameSettings(parent=self.stack), 'Shift+S', 'Hand viewer style sheet (Shift+S)')
-		self.settingsNashCalculationsStyleSheet = self.addSetting('Nash calculations style sheet', Tc2GuiSettingsNashCalculationsStyleSheet.FrameSettings(parent=self.stack), 'Shift+S', 'Nash calculations style sheet (Shift+N)')
+		self.settingsNashCalculationsStyleSheet = self.addSetting('Nash calculations style sheet', Tc2GuiSettingsNashCalculationsStyleSheet.FrameSettings(parent=self.stack), 'Shift+S', 'Nash calculations style sheet (Shift+C)')
 
 		Tc2Config.globalObject.init.connect(self.onInit)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
