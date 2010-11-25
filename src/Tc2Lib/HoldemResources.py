@@ -24,6 +24,7 @@ class NashFetcher(QtNetwork.QNetworkAccessManager):
 		self._timer.setSingleShot(True)
 		self._timer.timeout.connect(self.onTimeout)
 		self.finished.connect(self.onReplyFinished)
+		self.defaultProxy = self.proxy()
 
 	def abortRequest(self):
 		if self._reply is not None:
@@ -49,7 +50,37 @@ class NashFetcher(QtNetwork.QNetworkAccessManager):
 		#NOTE: have to use QUrl.fomEncoded() here
 		return QtCore.QUrl.fromEncoded(url)
 
-	def requestHandData(self, url, timeout=-1):
+	def requestHandData(self, url, timeout=-1, proxyHostName=None, proxyPort=80, proxyUserName=None, proxyPassword=None):
+		# check what proxy to use
+		if not proxyHostName and not self.proxy().hostName():
+			# no proxy set
+			pass
+		elif not proxyHostName and self.proxy().hostName():
+			# reset proxy to default
+			self.setProxy(self.defaultProxy)
+		elif proxyHostName == self.proxy().hostName():
+			# check if we have to create another proxy
+			myProxy = self.proxy()
+			if proxyPort != myProxy.port() or proxyUserName !=  myProxy.user() or proxyPassword != myProxy.password():
+				proxy = QtNetwork.QNetworkProxy()
+				proxy.setType(proxy.HttpProxy)
+				proxy.setHostName(proxyHostName)
+				proxy.setPort(proxyPort)
+				if proxyUserName: proxy.setUser(proxyUserName)
+				if proxyPassword: proxy.setPassword(proxyPassword)
+				self.setProxy(proxy)
+		elif proxyHostName != self.proxy().hostName():
+			# create new proxy
+			proxy = QtNetwork.QNetworkProxy()
+			proxy.setType(proxy.HttpProxy)
+			proxy.setHostName(proxyHostName)
+			proxy.setPort(proxyPort)
+			if proxyUserName: proxy.setUser(proxyUserName)
+			if proxyPassword: proxy.setPassword(proxyPassword)
+			self.setProxy(proxy)
+		else:
+			raise valueError('we should not have ended here!')
+
 		if self._reply is not None:
 			self._reply.abort()
 		self._timer.stop()
@@ -79,6 +110,38 @@ class NashFetcher(QtNetwork.QNetworkAccessManager):
 		if arr is not None:
 			p = QtCore.QString.fromUtf8(arr.data())
 			self.requestCompleted.emit(url, p)
+
+
+def test():
+	import time
+	from PyQt4 import QtGui
+
+	class W(QtGui.QMainWindow):
+		def __init__(self):
+			QtGui.QMainWindow.__init__(self)
+			self.show()
+			self.f = NashFetcher()
+			self.f.requestCompleted.connect(self.onRequestCompleted)
+			self.f.requestFailed.connect(self.onRequestFailed)
+			url = self.f.createRequestUrl(
+					bigBlind=200,
+					smallBlind=100,
+					ante=25,
+					payouts=(0.5, 0.3, 0.2),
+					stacks=(1000, 1000, 2000)
+					)
+			self.f.requestHandData(url, timeout=1000)
+		def onRequestCompleted(self, url, data):
+			print '>>request completed'
+			print repr(data)
+		def onRequestFailed(self, url, msg):
+			print '>>request failed'
+			print msg
+	app = QtGui.QApplication([])
+	w = W()
+	app.exec_()
+
+#test()
 
 #************************************************************************************
 #

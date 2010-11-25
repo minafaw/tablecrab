@@ -31,6 +31,7 @@ class FrameNashCalculations(QtGui.QFrame):
 		QtGui.QFrame.__init__(self, parent)
 
 		self.lastHand = None
+		self.networkSettings = None
 
 		parent.handSet.connect(self.onHandSet)
 		if toolBar is not None:
@@ -55,12 +56,9 @@ class FrameNashCalculations(QtGui.QFrame):
 		self.editPayoutStructure = QtGui.QLineEdit(self)
 		self.editPayoutStructure.setEnabled(False)
 
-		self.labelProxy = QtGui.QLabel('Proxy server:')
-		self.editProxyName = QtGui.QLineEdit(self)
-		self.editProxyName.setMaxLength(Tc2Config.MaxProxyServerName)
-
 		# connect signals
 		Tc2Config.globalObject.init.connect(self.onInit)
+		Tc2Config.globalObject.objectCreatedNetworkSettings.connect(self.onObjectCreatedNetworkSettings)
 
 	def onRequestFailed(self, url, msg):
 		self.webView.setHtml('<h3>Request failed: %s</h3>%s' % (msg, url.toString()))
@@ -105,9 +103,6 @@ class FrameNashCalculations(QtGui.QFrame):
 		grid.row()
 		grid.col(self.comboBox)
 		grid.col(self.editPayoutStructure)
-		grid.row()
-		grid.col(self.labelProxy)
-		grid.col(self.editProxyName)
 		iRow = grid.row()
 		grid.setRowStretch(iRow, 99)
 		grid.col(self.webView, colspan=2)
@@ -119,8 +114,6 @@ class FrameNashCalculations(QtGui.QFrame):
 		payoutStructure = self.payoutStructure()
 		if not payoutStructure:
 			return
-		proxy = unicode(self.editProxyName.text().toUtf8(), 'utf-8')
-		proxy = None if not proxy else proxy
 
 		# prep seats/stacks
 		seats = hand.seatsButtonOrdered()
@@ -141,16 +134,19 @@ class FrameNashCalculations(QtGui.QFrame):
 				payouts=payoutStructure,
 				stacks=stacks,
 				)
-		self.fetcher.requestHandData(url, timeout=1000)
+		self.fetcher.requestHandData(
+				url,
+				timeout=self.networkSettings.fetchTimeout() * 1000,
+				proxyHostName=self.networkSettings.proxyHostName(),
+				proxyPort=self.networkSettings.proxyPort(),
+				proxyUserName=self.networkSettings.proxyUserName(),
+				proxyPassword=self.networkSettings.proxyPassword(),
+				)
 
 	def onInit(self):
 		self.layout()
 		self.comboBox.currentIndexChanged.connect(self.onComboBoxCurrentIndexChanged)
 		self.webView.setHtml('')
-
-		text = Tc2Config.settingsValue(self.SettingsKeyProxyName, '').toString()
-		self.editProxyName.setText(text)
-		self.editProxyName.editingFinished.connect(self.onEditProxyNameEditingFinished)
 
 		#NOTE: editingFinished() is only emitted when the whole mask is filled in so we need to connect to textChanged()
 		self.editPayoutStructure.textChanged.connect(self.onEditPayoutStructureTextChanged)
@@ -172,14 +168,13 @@ class FrameNashCalculations(QtGui.QFrame):
 	def onZoomFactorChanged(self, factor):
 		self.webView.setZoomFactor(factor)
 
-	def onEditProxyNameEditingFinished(self):
-		edit = self.sender()
-		Tc2Config.settingsSetValue(self.SettingsKeyProxyName, edit.text())
-
 	def onEditPayoutStructureTextChanged(self, text):
 		if self.comboBox.currentIndex() == len(self.PayoutStructures) -1:
 			edit = self.sender()
 			Tc2Config.settingsSetValue(self.SettingsKeyCustomPayoutStructure, text)
+
+	def onObjectCreatedNetworkSettings(self, obj):
+		self.networkSettings = obj
 
 #************************************************************************************
 #
