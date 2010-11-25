@@ -14,6 +14,7 @@ class FrameNashCalculations(QtGui.QFrame):
 	SettingsKeyStyleSheet = SettingsKeyBase + '/StyleSheet'
 	SettingsKeyProxyName = SettingsKeyBase + '/Proxy'
 	SettingsKeyCustomPayoutStructure = SettingsKeyBase + '/CustomPayoutStructure'
+	SettingsKeyDialogSaveState = SettingsKeyBase + '/DialogSave/State'
 
 	PayoutStructures = (	# text, payoutStructure, lineEditMask
 			('None', '', ''),
@@ -40,6 +41,8 @@ class FrameNashCalculations(QtGui.QFrame):
 		self.formatter = HoldemResources.NashFormatter()
 
 		self.webView = QtWebKit.QWebView(self)
+		self.webView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+		self.webView.customContextMenuRequested.connect(self.onContextMenuWebView)
 		settings = self.webView.page().settings()
 		settings.setAttribute(settings.AutoLoadImages, False)
 		settings.setAttribute(settings.JavascriptEnabled, False)
@@ -51,6 +54,15 @@ class FrameNashCalculations(QtGui.QFrame):
 			self.comboBox.addItem(text, i)
 		self.editPayoutStructure = QtGui.QLineEdit(self)
 		self.editPayoutStructure.setEnabled(False)
+
+		#setup actions
+		self.actionSave = QtGui.QAction(self)
+		self.actionSave.setText('Save..')
+		#self.actionSave.setToolTip('Save hand history (Alt+S)')
+		#self.actionSave.setShortcut(QtGui.QKeySequence('Alt+S') )
+		self.actionSave.triggered.connect(self.onActionSaveTriggered)
+		#self.toolBar.addAction(self.actionSave)
+
 
 		# connect signals
 		Tc2Config.globalObject.init.connect(self.onInit)
@@ -175,6 +187,36 @@ class FrameNashCalculations(QtGui.QFrame):
 
 	def onObjectCreatedNetworkSettings(self, obj):
 		self.networkSettings = obj
+
+	def onContextMenuWebView(self, point):
+		menu = QtGui.QMenu(self)
+		menu.addAction(self.webView.pageAction(QtWebKit.QWebPage.Copy))
+		menu.addAction(self.webView.pageAction(QtWebKit.QWebPage.SelectAll))
+		menu.addAction(self.actionSave)
+		point = self.webView.mapToGlobal(point)
+		menu.exec_(point)
+
+	def onActionSaveTriggered(self):
+		fileName = Tc2Config.dlgOpenSaveFile(
+				parent=self,
+				openFile=False,
+				title='Save Hand..',
+				fileFilters=('HtmlFiles (*.html *.htm)', 'All Files (*)'),
+				#TODO: rename to Gui/HandViewer/DialogSave/State
+				settingsKey=self.SettingsKeyDialogSaveState,
+				defaultSuffix='html',
+				)
+		if fileName is None:
+			return
+		fp = None
+		try:
+			fp = codecs.open(fileName, 'w', encoding='utf-8')
+			fp.write( unicode(self.webView.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
+		except Exception, d:
+			Tc2Config.msgWarning(self, 'Could Not Save Nash Calculations\n\n%s' % d)
+		finally:
+			if fp is not None: fp.close()
+		#TODO: can we rename hand in cache? i font think so. no way to inform WebKit
 
 #************************************************************************************
 #
