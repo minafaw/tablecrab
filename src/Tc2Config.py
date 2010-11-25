@@ -129,8 +129,18 @@ Ellipsis = '..'
 MaxWindowText = 512		# maximum number of chars we retrieve as text / title from other windows
 MaxHandHistoryText = 16384
 MaxPokerStarsBetBoxText = 16	# maximum number of chars to retrieve from PS bet amount box
-MaxProxyServerName = 1024
 
+MaxProxyHostName = 1024
+MaxProxyUserName = 2048
+MaxProxyPassword = 2048
+
+MinProxyPort = 0
+MaxProxyPort = 99999
+DefaultProxyPort = 80
+
+MinFetchTimeout = 1.0
+MaxFetchTimeout = 20.0
+DefaultFetchTimeout = 4.0
 
 SmallBlind = 'SmallBlind'
 BigBlind = 'BigBlind'
@@ -179,6 +189,7 @@ HelpTopics = [
 			('handViewer', 'Hand Viewer'),
 			('settings', 'Settings'), [
 				('settingsGlobal', 'Global'),
+				('settingsNetwork', 'Network'),
 				('settingsPokerStars', 'PokerStars'),
 				('settingsHandViewer', 'Hand Viewer'),
 				('settingsHandViewerStyleSheet', 'Hand Viewer Style Sheet'),
@@ -263,11 +274,14 @@ class _GlobalObject(QtCore.QObject):
 	feedbackException =  QtCore.pyqtSignal(QtCore.QString)
 	clearException = QtCore.pyqtSignal()
 
+	#TODO: rewrite to objectCreated() signal
 	settingAlternatingRowColorsChanged = QtCore.pyqtSignal(bool)
 	settingChildItemIndicatorsChanged = QtCore.pyqtSignal(bool)
 	settingToolBarPositionChanged = QtCore.pyqtSignal(str)
 	settingTabPositionChanged = QtCore.pyqtSignal(str)
 
+	#inform listeners about objects created
+	objectCreatedNetworkSettings = QtCore.pyqtSignal(QtCore.QObject)
 
 	# new screenshot created (hwnd, pixmap)
 	widgetScreenshot = QtCore.pyqtSignal(int, QtGui.QPixmap)
