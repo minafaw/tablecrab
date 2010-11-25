@@ -180,7 +180,7 @@ td{text-align: left;vertical-align: text-top;}
 					result += '\x20\x20\x20\x20call: %s %s / %s\n' % ('-'.join(others), perc, rng)
 		return result
 
-	def toHtml(self, blinds=None, seatSortf=None, styleSheet=None):
+	def toHtml(self, blinds=None, seatSortf=None, styleSheet=None, url=None):
 		if self.seats is None: raise ValueError('nothing to format')
 
 		p = '<html><head>'
@@ -224,6 +224,9 @@ td{text-align: left;vertical-align: text-top;}
 					p += '</tr>'
 
 		p += '</table>'
+
+		if url is not None:
+			p += '<br><b>HoldemResources url:</b><br>%s<br><br>' % url.toString()
 		p += '</body></html>'
 		return p
 
