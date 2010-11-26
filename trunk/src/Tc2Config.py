@@ -164,6 +164,19 @@ TabPositionDefault= ToolBarPositionTop
 TabPositions = (TabPositionBottom, TabPositionTop)
 SettingsKeyTabPosition = 'Gui/Tab/Position'
 
+HandViewerSideBarPositionTop = 'Top'
+HandViewerSideBarPositionBottom = 'Bottom'
+HandViewerSideBarPositionLeft = 'Left'
+HandViewerSideBarPositionRight = 'Right'
+HandViewerSideBarPositionDefault = HandViewerSideBarPositionRight
+HandViewerSideBarPositions = (
+		HandViewerSideBarPositionTop,
+		HandViewerSideBarPositionBottom,
+		HandViewerSideBarPositionLeft,
+		HandViewerSideBarPositionRight,
+		)
+SettingsKeyHandViewerSideBarPosition = 'Gui/HandViewer/SideBarPosition'
+
 HelpTopics = [
 		('index', 'TableCrab'), [
 			('versionHistory', 'Version History'),
@@ -279,6 +292,7 @@ class _GlobalObject(QtCore.QObject):
 	settingChildItemIndicatorsChanged = QtCore.pyqtSignal(bool)
 	settingToolBarPositionChanged = QtCore.pyqtSignal(str)
 	settingTabPositionChanged = QtCore.pyqtSignal(str)
+	settingHandViewerSideBarPositionChanged = QtCore.pyqtSignal(str)
 
 	#inform listeners about objects created
 	objectCreatedSettingsNetwork = QtCore.pyqtSignal(QtCore.QObject)

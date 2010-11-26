@@ -758,7 +758,7 @@ if sys.platform == 'win32':
 
 	class HandGrabber(QtCore.QObject):
 
-		handGrabbed = QtCore.pyqtSignal(QtCore.QString)
+		handGrabbed = QtCore.pyqtSignal(QtCore.QObject, QtCore.QString)
 
 		WindowClassName = '#32770'
 		WindowTitle = 'Instant Hand History'
@@ -817,6 +817,7 @@ if sys.platform == 'win32':
 			if data and data != self._data:
 				self._data = data
 				handData = ''
+				hand = Hand()
 				#TODO: very sloppy test to minimize risk we are grabbing 'show summary only' in instant hand history
 				if not '*** HOLE CARDS ***' in data:
 					pass
@@ -829,7 +830,7 @@ if sys.platform == 'win32':
 						Tc2Config.handleException('\n' + data)
 					else:
 						handData = self.handFormatter.dump(hand)
-				self.handGrabbed.emit(handData)
+				self.handGrabbed.emit(hand, handData)
 
 #************************************************************************************
 #

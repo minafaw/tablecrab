@@ -34,6 +34,11 @@ class FrameSettings(QtGui.QFrame):
 				editPostfix = None
 			self.actionWidgets.append({'EditPrefix': editPrefix, 'LabelAction': labelAction, 'EditPostfix': editPostfix})
 
+		self.comboSideBarPosition = QtGui.QComboBox(self)
+		self.comboSideBarPosition.addItems(Tc2Config.HandViewerSideBarPositions)
+		self.labelSideBarPosition = QtGui.QLabel('&Side bar position:', self)
+		self.labelSideBarPosition.setBuddy(self.comboSideBarPosition)
+
 		self.spinMaxPlayerName = QtGui.QSpinBox(self)
 		self.spinMaxPlayerName.setRange(-1, 999)
 		self.labelMaxPlayerName = QtGui.QLabel('Ma&x Player Name:', self)
@@ -68,6 +73,8 @@ class FrameSettings(QtGui.QFrame):
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
 		grid.col(Tc2Config.HLine(self), colspan=3)
+		grid.row()
+		grid.col(self.labelSideBarPosition).col(self.comboSideBarPosition)
 		grid.row()
 		grid.col(self.labelMaxPlayerName).col(self.spinMaxPlayerName)
 		grid.row()
@@ -112,8 +119,19 @@ class FrameSettings(QtGui.QFrame):
 		edit = self.sender()
 		Tc2Config.settingsSetValue(edit.settingsKey, edit.text())
 
+	def onComboSideBarPositionCurrentIndexChanged(self, index):
+		value = self.comboSideBarPosition.itemText(index)
+		Tc2Config.settingsSetValue(Tc2Config.SettingsKeyHandViewerSideBarPosition, value)
+		Tc2Config.globalObject.settingHandViewerSideBarPositionChanged.emit(value)
+
 	def onInit(self):
 		self.layout()
+
+		value= Tc2Config.settingsValue(Tc2Config.SettingsKeyHandViewerSideBarPosition, '').toString()
+		if value not in Tc2Config.HandViewerSideBarPositions:
+			value = Tc2Config.HandViewerSideBarPositionDefault
+		self.comboSideBarPosition.setCurrentIndex( self.comboSideBarPosition.findText(value, QtCore.Qt.MatchExactly) )
+		self.comboSideBarPosition.currentIndexChanged.connect(self.onComboSideBarPositionCurrentIndexChanged)
 
 		maxPlayerName = Tc2Config.settingsValue(Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.SettingsKeyMaxPlayerName, -1).toInt()[0]
 		self.spinMaxPlayerName.setValue(maxPlayerName)
