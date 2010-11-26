@@ -11,8 +11,6 @@ import codecs
 class FrameNashCalculations(QtGui.QFrame):
 
 	SettingsKeyBase = 'Gui/Tools/PHandHistoryViewer/NashCalculations'
-	SettingsKeyStyleSheet = SettingsKeyBase + '/StyleSheet'
-	SettingsKeyProxyName = SettingsKeyBase + '/Proxy'
 	SettingsKeyCustomPayoutStructure = SettingsKeyBase + '/CustomPayoutStructure'
 	SettingsKeyDialogSaveState = SettingsKeyBase + '/DialogSave/State'
 
@@ -28,7 +26,8 @@ class FrameNashCalculations(QtGui.QFrame):
 		QtGui.QFrame.__init__(self, parent)
 
 		self.lastHand = None
-		self.networkSettings = None
+		self.settingsNetwork = None
+		self.settingsNashCalculationsStyleSheet = None
 
 		parent.handSet.connect(self.onHandSet)
 		if toolBar is not None:
@@ -63,10 +62,10 @@ class FrameNashCalculations(QtGui.QFrame):
 		self.actionSave.triggered.connect(self.onActionSaveTriggered)
 		#self.toolBar.addAction(self.actionSave)
 
-
 		# connect signals
 		Tc2Config.globalObject.init.connect(self.onInit)
-		Tc2Config.globalObject.objectCreatedNetworkSettings.connect(self.onObjectCreatedNetworkSettings)
+		Tc2Config.globalObject.objectCreatedSettingsNetwork.connect(self.onObjectCreatedSettingsNetwork)
+		Tc2Config.globalObject.objectCreatedSettingsNashCalculationsStyleSheet.connect(self.onObjectCreatedSettingsNashCalculationsStyleSheet)
 
 	def onRequestFailed(self, url, msg):
 		self.webView.setHtml('<h3>Request failed: %s</h3>%s' % (msg, url.toString()))
@@ -101,7 +100,7 @@ class FrameNashCalculations(QtGui.QFrame):
 		#maybe data as returned from HoldemResources is corrupted?
 		html = self.formatter.toHtml(
 				seatSortf=sortf,
-				styleSheet=Tc2Config.settingsValue(self.SettingsKeyStyleSheet, HoldemResources.NashFormatter.StyleSheet).toString(),
+				styleSheet=self.settingsNashCalculationsStyleSheet.styleSheet(),
 				url=url,
 				)
 		self.webView.setHtml(html)
@@ -148,11 +147,11 @@ class FrameNashCalculations(QtGui.QFrame):
 				)
 		self.fetcher.requestHandData(
 				url,
-				timeout=self.networkSettings.fetchTimeout() * 1000,
-				proxyHostName=self.networkSettings.proxyHostName(),
-				proxyPort=self.networkSettings.proxyPort(),
-				proxyUserName=self.networkSettings.proxyUserName(),
-				proxyPassword=self.networkSettings.proxyPassword(),
+				timeout=self.settingsNetwork.fetchTimeout() * 1000,
+				proxyHostName=self.settingsNetwork.proxyHostName(),
+				proxyPort=self.settingsNetwork.proxyPort(),
+				proxyUserName=self.settingsNetwork.proxyUserName(),
+				proxyPassword=self.settingsNetwork.proxyPassword(),
 				)
 
 	def onInit(self):
@@ -185,8 +184,11 @@ class FrameNashCalculations(QtGui.QFrame):
 			edit = self.sender()
 			Tc2Config.settingsSetValue(self.SettingsKeyCustomPayoutStructure, text)
 
-	def onObjectCreatedNetworkSettings(self, obj):
-		self.networkSettings = obj
+	def onObjectCreatedSettingsNetwork(self, obj):
+		self.settingsNetwork = obj
+
+	def onObjectCreatedSettingsNashCalculationsStyleSheet(self, obj):
+		self.settingsNashCalculationsStyleSheet = obj
 
 	def onContextMenuWebView(self, point):
 		menu = QtGui.QMenu(self)

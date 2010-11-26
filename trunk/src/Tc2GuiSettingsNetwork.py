@@ -121,7 +121,7 @@ class FrameSettings(QtGui.QFrame):
 		self.spinFetchTimeout.setValue(self.fetchTimeout())
 		self.spinFetchTimeout.valueChanged.connect(self.onSpinFetchTimeoutValueChanged)
 
-		Tc2Config.globalObject.objectCreatedNetworkSettings.emit(self)
+		Tc2Config.globalObject.objectCreatedSettingsNetwork.emit(self)
 
 	def onEditProxyHostNameEditingFinished(self):
 		edit = self.sender()
