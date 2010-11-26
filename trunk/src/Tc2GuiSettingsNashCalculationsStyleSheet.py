@@ -15,6 +15,8 @@ class FrameSettings(QtGui.QFrame):
 	SettingsKeyDialogSaveState = SettingsKeyBase + '/DialogSave/State'
 	SettingsKeyStyleSheet = SettingsKeyBase + '/StyleSheet'
 
+	styleSheetChanged = QtCore.pyqtSignal(QtCore.QString)
+
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
@@ -84,8 +86,11 @@ class FrameSettings(QtGui.QFrame):
 
 		#NOTE: style sheet can not be ''
 		#NOTE: have to connect before setText so we can catch MaxCharsExceeded
+		value = Tc2Config.settingsValue(self.SettingsKeyStyleSheet, '').toString()
+		if not value:
+			value = HoldemResources.NashFormatter.StyleSheet
+		self.edit.setPlainText(value)
 		self.edit.textChanged.connect(self.onEditTextChanged)
-		self.edit.setPlainText(self.styleSheet())
 
 		Tc2Config.globalObject.objectCreatedSettingsNashCalculationsStyleSheet.emit(self)
 
@@ -103,11 +108,14 @@ class FrameSettings(QtGui.QFrame):
 		fp = None
 		try:
 			fp = open(fileName, 'r')
-			self.edit.setPlainText(fp.read() )
 		except Exception, d:
 			Tc2Config.msgWarning(self, 'Could Not Open Style sheet\n\n%s' % d)
+			return
+		else:
+			value = fp.read()
 		finally:
 			if fp is not None: fp.close()
+		self.edit.setPlainText(value)
 
 	def onSave(self, checked):
 		fileName = Tc2Config.dlgOpenSaveFile(
@@ -138,10 +146,19 @@ class FrameSettings(QtGui.QFrame):
 		self.edit.setPlainText(HoldemResources.NashFormatter.StyleSheet)
 
 	def styleSheet(self):
-		text = Tc2Config.settingsValue(self.SettingsKeyStyleSheet, '').toString()
-		if not text:
-			text = HoldemResources.NashFormatter.StyleSheet
-		return text
+		return self.edit.toPlainText()
+
+	def setStyleSheet(self, value):
+		if Tc2Config.MaxHandStyleSheet >= 0:
+			if value.length() > Tc2Config.MaxHandStyleSheet:
+				Tc2Config.globalObject.feedback.emit(self, 'Style sheet too big -- maximum Is %s chars' % Tc2Config.MaxHandStyleSheet)
+				return
+		Tc2Config.globalObject.feedback.emit(self, '')
+		Tc2Config.settingsSetValue(self.SettingsKeyStyleSheet, text)
+		styleSheetChanged.emit(value)
+
+
+
 
 
 

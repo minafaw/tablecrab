@@ -14,27 +14,11 @@ class FrameSettings(QtGui.QFrame):
 	SettingsKeyProxyUserName = SettingsKeyBase + '/ProxyUserName'
 	SettingsKeyFetchTimeout = SettingsKeyBase + '/FetchTimeout'
 
-	def proxyHostName(self):
-		return Tc2Config.settingsValue(self.SettingsKeyProxyHostName, '').toString()
-
-	def proxyPort(self):
-		value, ok = Tc2Config.settingsValue(self.SettingsKeyProxyPort, '').toInt()
-		if not ok or value > Tc2Config.MaxProxyPort or value < Tc2Config.MinProxyPort:
-			value = Tc2Config.DefaultProxyPort
-		return value
-
-	def proxyUserName(self):
-		return Tc2Config.settingsValue(self.SettingsKeyProxyUserName, '').toString()
-
-	def proxyPassword(self):
-		return self.editProxyPassword.text()
-
-	def fetchTimeout(self):
-		value, ok = Tc2Config.settingsValue(self.SettingsKeyFetchTimeout, '').toDouble()
-		if not ok or value > Tc2Config.MaxFetchTimeout or value < Tc2Config.MinFetchTimeout:
-			value = Tc2Config.DefaultFetchTimeout
-		return value
-
+	proxyHostNameChanged = QtCore.pyqtSignal(QtCore.QString)
+	proxyPortChanged = QtCore.pyqtSignal(int)
+	proxyUserNameChanged = QtCore.pyqtSignal(QtCore.QString)
+	proxyPasswordChanged = QtCore.pyqtSignal(QtCore.QString)
+	fetchTimeoutChanged = QtCore.pyqtSignal(float)
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -110,41 +94,64 @@ class FrameSettings(QtGui.QFrame):
 	def onInit(self):
 		self.layout()
 
-		self.editProxyHostName.setText(self.proxyHostName())
-		self.editProxyHostName.editingFinished.connect(self.onEditProxyHostNameEditingFinished)
-		self.spinProxyPort.setValue(self.proxyPort())
-		self.spinProxyPort.valueChanged.connect(self.onSpinProxyPortValueChanged)
-		self.editProxyUserName.setText(self.proxyUserName())
-		self.editProxyUserName.editingFinished.connect(self.onEditProxyUserNameEditingFinished)
-		#NOTE: proxy password is never stored
-		self.editProxyPassword.editingFinished.connect(self.onEditProxyPasswordEditingFinished)
-		self.spinFetchTimeout.setValue(self.fetchTimeout())
-		self.spinFetchTimeout.valueChanged.connect(self.onSpinFetchTimeoutValueChanged)
+		value = Tc2Config.settingsValue(self.SettingsKeyProxyHostName, '').toString()
+		self.editProxyHostName.setText(value)
+		self.editProxyHostName.textChanged.connect(self.setProxyHostName)
+
+		value, ok = Tc2Config.settingsValue(self.SettingsKeyProxyPort, '').toInt()
+		if not ok or value > Tc2Config.MaxProxyPort or value < Tc2Config.MinProxyPort:
+			value = Tc2Config.DefaultProxyPort
+		self.spinProxyPort.setValue(value)
+		self.spinProxyPort.valueChanged.connect(self.setProxyPort)
+
+		value = Tc2Config.settingsValue(self.SettingsKeyProxyUserName, '').toString()
+		self.editProxyUserName.setText(value)
+		self.editProxyUserName.textChanged.connect(self.setProxyUserName)
+
+		self.editProxyPassword.textChanged.connect(self.setProxyPassword)
+
+		value, ok = Tc2Config.settingsValue(self.SettingsKeyFetchTimeout, '').toDouble()
+		if not ok or value > Tc2Config.MaxFetchTimeout or value < Tc2Config.MinFetchTimeout:
+			value = Tc2Config.DefaultFetchTimeout
+		self.spinFetchTimeout.setValue(value)
+		self.spinFetchTimeout.valueChanged.connect(self.setFetchTimeout)
 
 		Tc2Config.globalObject.objectCreatedSettingsNetwork.emit(self)
 
-	def onEditProxyHostNameEditingFinished(self):
-		edit = self.sender()
-		Tc2Config.settingsSetValue(self.SettingsKeyProxyHostName, edit.text())
+	def proxyHostName(self):
+		return self.editProxyHostName.text()
 
-	def onSpinProxyPortValueChanged(self, value):
+	def setProxyHostName(self, value):
+		Tc2Config.settingsSetValue(self.SettingsKeyProxyHostName, value)
+		self.proxyHostNameChanged.emit(value)
+
+	def proxyPort(self):
+		return self.spinProxyPort.value()
+
+	def setProxyPort(self, value):
 		Tc2Config.settingsSetValue(self.SettingsKeyProxyPort, value)
+		self.proxyPortChanged.emit(value)
 
-	def onEditProxyUserNameEditingFinished(self):
-		edit = self.sender()
-		Tc2Config.settingsSetValue(self.SettingsKeyProxyUserName, edit.text())
+	def proxyUserName(self):
+		return self.editProxyUserName.text()
 
-	def onEditProxyPasswordEditingFinished(self):
-		edit = self.sender()
-		self.__class__.ProxyPassword = edit.text()
+	def setProxyUserName(self, value):
+		Tc2Config.settingsSetValue(self.SettingsKeyProxyUserName, value)
+		self.proxyUserNameChanged.emit(value)
 
-	def onSpinFetchTimeoutValueChanged(self, value):
+	def proxyPassword(self):
+		return self.editProxyPassword.text()
+
+	def setProxyPassword(self, value):
+		#NOTE: proxy password is never stored
+		self.proxyPasswordChanged.emit(value)
+
+	def fetchTimeout(self):
+		return self.spinFetchTimeout.value()
+
+	def setFetchTimeout(self, value):
 		Tc2Config.settingsSetValue(self.SettingsKeyFetchTimeout, value)
-
-
-
-
-
+		self.fetchTimeoutChanged.emit(value)
 
 
 
