@@ -281,7 +281,8 @@ class _GlobalObject(QtCore.QObject):
 	settingTabPositionChanged = QtCore.pyqtSignal(str)
 
 	#inform listeners about objects created
-	objectCreatedNetworkSettings = QtCore.pyqtSignal(QtCore.QObject)
+	objectCreatedSettingsNetwork = QtCore.pyqtSignal(QtCore.QObject)
+	objectCreatedSettingsNashCalculationsStyleSheet = QtCore.pyqtSignal(QtCore.QObject)
 
 	# new screenshot created (hwnd, pixmap)
 	widgetScreenshot = QtCore.pyqtSignal(int, QtGui.QPixmap)
