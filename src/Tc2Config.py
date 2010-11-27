@@ -240,7 +240,7 @@ HelpTopics = [
 # needs rename: Gui/Hand/ZoomFactor --> Gui/HandViewer/ZoomFactor
 # needs rename: typo in: 'PokerStarsHandGrabber/HandFornmatterHtmlTabular' --> should read "For[n]matter"
 
-#TODO: all below need rename
+#TODO: we have to use this key at two places: 1) Gui 2) settingsGlobal
 SettingsKeySingleApplicationScope ='Gui/SingleApplication/Scope'
 
 
@@ -283,9 +283,9 @@ class _GlobalObject(QtCore.QObject):
 	closeEvent = QtCore.pyqtSignal(QtCore.QEvent)
 
 	#TODO: overload signal to accept QObject as well
-	feedback =  QtCore.pyqtSignal(QtGui.QWidget, QtCore.QString)
-	feedbackMessage =  QtCore.pyqtSignal(QtCore.QString)
-	feedbackException =  QtCore.pyqtSignal(QtCore.QString)
+	feedback = QtCore.pyqtSignal(QtGui.QWidget, QtCore.QString)
+	feedbackMessage = QtCore.pyqtSignal(QtCore.QString)
+	feedbackException = QtCore.pyqtSignal(QtCore.QString)
 	clearException = QtCore.pyqtSignal()
 
 	# inform listeners about objects created
