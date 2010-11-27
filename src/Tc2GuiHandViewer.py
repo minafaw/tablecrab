@@ -62,6 +62,7 @@ class FrameNashCalculations(QtGui.QFrame):
 		settings.setAttribute(settings.JavaEnabled, False)
 
 		self.label = QtGui.QLabel('Select payout to fetch nash calculations', self)
+		self.label.setWordWrap(True)
 		self.comboBox = QtGui.QComboBox(self)
 		for i, (text, _, _) in enumerate(self.PayoutStructures):
 			self.comboBox.addItem(text, i)
