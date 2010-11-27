@@ -212,6 +212,8 @@ class _DialogHelp(QtGui.QDialog):
 	# methods
 	#--------------------------------------------------------------------------------------------------------------
 	def layout(self):
+		#TODO: how to adjust tool bar position acc to SettingsGlobal?
+		self.frameHelp.layout(Tc2Config.ToolBarPositionTop)
 		grid = Tc2Config.GridBox(self)
 		grid.col(self.frameHelp)
 		grid.row()
