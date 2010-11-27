@@ -575,10 +575,15 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 
 	def __init__(self):
 		self.settingsHandViewer = None
+		self.settingsHandViewerStyleSheet = None
 		Tc2Config.globalObject.objectCreatedSettingsHandViewer.connect(self.onObjectCreatedSettingsHandViewer)
+		Tc2Config.globalObject.objectCreatedSettingsHandViewerStyleSheet.connect(self.onObjectCreatedSettingsHandViewerStyleSheet)
 
 	def onObjectCreatedSettingsHandViewer(self, obj):
 		self.settingsHandViewer = obj
+
+	def onObjectCreatedSettingsHandViewerStyleSheet(self, obj):
+		self.settingsHandViewerStyleSheet = obj
 
 	def formatNum(self, hand, num):
 		if not num:
@@ -644,7 +649,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		p >> '<head>'
 		p | '<meta name="author" content="TableCrab">'
 		p | '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
-		p | '<style type="text/css"><!-- %s --></style>' % Tc2Config.settingsValue(self.SettingsKeyStyleSheet, self.StyleSheet).toString()
+		p | '<style type="text/css"><!-- %s --></style>' % self.settingsHandViewerStyleSheet.styleSheet()
 		p << '</head>'
 
 		p >> '<body class="handBody">'

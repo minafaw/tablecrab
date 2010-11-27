@@ -30,15 +30,20 @@ class SiteHandler(QtCore.QObject):
 
 		self._pokerStarsLoginBox = None
 		self.settingsGlobal = None
+		self.settingsPokerStars = None
 		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
+		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsPokerStars)
 
 	def onObjectCreatedSettingsGlobal(self, obj):
 		self.settingsGlobal = obj
 
+	def onObjectCreatedSettingsPokerStars(self, obj):
+		self.settingsPokerStars = obj
+
 	def handleWindowCreated(self, hwnd):
 
 		if self.isPopupNews(hwnd):
-			if Tc2Config.settingsValue(self.SettingsKeyAutoClosePopupNews, False).toBool():
+			if self.settingsPokerStars.autoClosePopupNews():
 				Tc2Win32.windowClose(hwnd)
 				Tc2Config.globalObject.feedbackMessage.emit('Closed Popup News')
 			return True
@@ -54,7 +59,7 @@ class SiteHandler(QtCore.QObject):
 			return True
 
 		elif self.isTableMessageBox(hwnd):
-			if Tc2Config.settingsValue(self.SettingsKeyAutoCloseTableMessageBoxes, False).toBool():
+			if self.settingsPokerStars.autoCloseTourneyRegistrationBoxes():
 				buttons = Tc2Win32.windowGetButtons(hwnd)
 				if len(buttons) != 1: return
 				if not 'OK' in buttons: return
@@ -65,7 +70,7 @@ class SiteHandler(QtCore.QObject):
 		elif self.isLogIn(hwnd):
 			if self._pokerStarsLoginBox is None:
 				self._pokerStarsLoginBox = hwnd
-				if Tc2Config.settingsValue(self.SettingsKeyAutoCloseLogin, False).toBool():
+				if self.settingsPokerStars.autoCloseLogin():
 					buttons = Tc2Win32.windowGetButtons(hwnd)
 					if sorted(buttons) == ['', 'Cancel', 'Create New Account...', 'Forgot User ID / Password...', 'OK']:
 						if Tc2Win32.windowCheckboxIsChecked(buttons['']):
@@ -83,7 +88,7 @@ class SiteHandler(QtCore.QObject):
 		template = self.tableTemplate(hwnd)
 		if template is not None:
 			Tc2Config.globalObject.feedbackMessage.emit(template.name)
-			if Tc2Config.settingsValue(self.SettingsKeyMoveMouseToActiveTable, False).toBool():
+			if self.settingsPokerStars.moveMouseToActivetable():
 				if not Tc2Win32.mouseButtonsDown():
 					point = Tc2Win32.mouseGetPos()
 					rect = Tc2Win32.windowGetRect(hwnd)
