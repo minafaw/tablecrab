@@ -574,13 +574,17 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			self.data += (self.indent*self.indentLevel) + chars + '\n'
 
 	def __init__(self):
-		''''''
+		self.settingsHandViewer = None
+		Tc2Config.globalObject.objectCreatedSettingsHandViewer.connect(self.onObjectCreatedSettingsHandViewer)
+
+	def onObjectCreatedSettingsHandViewer(self, obj):
+		self.settingsHandViewer = obj
 
 	def formatNum(self, hand, num):
 		if not num:
 			result = ''
 		elif hand.hasCents:
-			if Tc2Config.settingsValue(self.SettingsKeyNoFloatingPoint, False).toBool():
+			if self.settingsHandViewer.noFloatingPoint():
 				result = Tc2Config.locale.toString( int(num*100) )
 			else:
 				result = Tc2Config.locale.toString(num, 'f', 2)
@@ -621,7 +625,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 
 	#TODO: use Tc2Config.truncateString()
 	def formatPlayerName(self, playerName):
-		maxPlayerName = Tc2Config.settingsValue(self.SettingsKeyMaxPlayerName, self.MaxPlayerName).toInt()[0]
+		maxPlayerName = self.settingsHandViewer.maxPlayerName()
 		if maxPlayerName > -1 and len(playerName) > maxPlayerName:
 			if maxPlayerName <= 0:
 				playerName = ''
@@ -671,38 +675,38 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 				nActions = None
 				for nActions, action in enumerate(actions):
 					if action.type == action.TypeFold:
-						p | '<div class="playerActionFold">%s</div>' % Tc2Config.settingsValue(self.SettingsKeyPrefixFold, self.PrefixFold).toString()
+						p | '<div class="playerActionFold">%s</div>' % self.settingsHandViewer.actionPrefix('Fold')
 					elif action.type == action.TypeCheck:
-						p |  '<div class="playerActionCheck">%s</div>' % Tc2Config.settingsValue(self.SettingsKeyPrefixCheck, self.PrefixCheck).toString()
+						p |  '<div class="playerActionCheck">%s</div>' % self.settingsHandViewer.actionPrefix('Check')
 					elif action.type == action.TypeBet:
 						p | '<div class="playerActionBet">%s%s%s</div>' % (
-								Tc2Config.settingsValue(self.SettingsKeyPrefixBet, self.PrefixBet).toString(),
+								self.settingsHandViewer.actionPrefix('Bet'),
 								self.formatNum(hand, action.amount),
-								Tc2Config.settingsValue(self.SettingsKeyPostfixBet, self.PostfixBet).toString()
+								self.settingsHandViewer.actionPostfix('Bet')
 								)
 					elif action.type == action.TypeRaise:
 						p | '<div class="playerActionRaise">%s%s%s</div>' % (
-								Tc2Config.settingsValue(self.SettingsKeyPrefixRaise, self.PrefixRaise).toString(),
+								self.settingsHandViewer.actionPrefix('Raise'),
 								self.formatNum(hand, action.amount),
-								Tc2Config.settingsValue(self.SettingsKeyPostfixRaise, self.PostfixRaise).toString()
+								self.settingsHandViewer.actionPostfix('Raise')
 								)
 					elif action.type == action.TypeCall:
 						p | '<div class="playerActionCall">%s%s%s</div>' % (
-								Tc2Config.settingsValue(self.SettingsKeyPrefixCall, self.PrefixCall).toString(),
+								self.settingsHandViewer.actionPrefix('Call'),
 								self.formatNum(hand, action.amount),
-								Tc2Config.settingsValue(self.SettingsKeyPostfixCall, self.PostfixCall).toString()
+								self.settingsHandViewer.actionPostfix('Call')
 								)
 					elif action.type == action.TypePostBlindBig:
 						p | '<div class="playerActionPostBlindBig">%s%s%s</div>' % (
-								Tc2Config.settingsValue(self.SettingsKeyPrefixBigBlind, self.PrefixBigBlind).toString(),
+								self.settingsHandViewer.actionPrefix('BigBlind'),
 								self.formatNum(hand, action.amount),
-								Tc2Config.settingsValue(self.SettingsKeyPostfixBigBlind, self.PostfixBigBlind).toString()
+								self.settingsHandViewer.actionPostfix('BigBlind')
 								)
 					elif action.type == action.TypePostBlindSmall:
 						p | '<div class="playerActionPostBlindSmall">%s%s%s</div>' % (
-								Tc2Config.settingsValue(self.SettingsKeyPrefixSmallBlind, self.PrefixSmallBlind).toString(),
+								self.settingsHandViewer.actionPrefix('SmallBlind'),
 								self.formatNum(hand, action.amount),
-								Tc2Config.settingsValue(self.SettingsKeyPostfixSmallBlind, self.PostfixSmallBlind).toString()
+								self.settingsHandViewer.actionPostfix('SmallBlind')
 								)
 
 				if nActions is None:
@@ -716,9 +720,9 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		pot = hand.calcPotSizes()
 		#TODO: to save some space we don't display ante for individual player. good idea or not?
 		potCellExtra = (
-				Tc2Config.settingsValue(self.SettingsKeyPrefixAnte, 'ante ').toString() +
+				self.settingsHandViewer.actionPrefix('Ante') +
 				self.formatNum(hand, hand.blindAnte) +
-				Tc2Config.settingsValue(self.SettingsKeyPostfixAnte, '').toString()
+				self.settingsHandViewer.actionPostfix('Ante')
 				) if hand.blindAnte else '&nbsp;'
 		p | '<td colspan="2" class="potCellExtra">%s</td>' % potCellExtra
 		p | '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetBlinds])

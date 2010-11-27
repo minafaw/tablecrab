@@ -306,7 +306,7 @@ class FrameHandViewer(QtGui.QFrame):
 		Tc2Config.globalObject.init.connect(self.onInit)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
-		Tc2Config.globalObject.settingHandViewerSideBarPositionChanged.connect(self.onSettingSideBarPositionChanged)
+		Tc2Config.globalObject.objectCreatedSettingsHandViewer.connect(self.onObjectCreatedSettingsHandViewer)
 
 
 	#----------------------------------------------------------------------------------------------------------------
@@ -420,11 +420,6 @@ class FrameHandViewer(QtGui.QFrame):
 		self.webView.setUrl(QtCore.QUrl(''))
 		self.adjustActions()
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
-		value= Tc2Config.settingsValue(Tc2Config.SettingsKeyHandViewerSideBarPosition, '').toString()
-		if value not in Tc2Config.HandViewerSideBarPositions:
-			value = Tc2Config.HandViewerSideBarPositionDefault
-		self.onSettingSideBarPositionChanged(value)
-
 		self.Tc2HandGrabberPokerStars.start()
 
 	def onNetworkGetData(self, networkReply):
@@ -450,7 +445,11 @@ class FrameHandViewer(QtGui.QFrame):
 		self.layout(obj.toolBarPosition())
 		obj.toolBarPositionChanged.connect(self.layout)
 
-	def onSettingSideBarPositionChanged(self, position):
+	def onObjectCreatedSettingsHandViewer(self, obj):
+		self.setSideBarPosition(obj.sideBarPosition())
+		obj.sideBarPositionChanged.connect(self.setSideBarPosition)
+
+	def setSideBarPosition(self, position):
 		if position == Tc2Config.HandViewerSideBarPositionTop:
 			self.splitter.setOrientation(QtCore.Qt.Vertical)
 			if self.splitter.widget(0) == self.webView:
