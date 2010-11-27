@@ -13,6 +13,8 @@ class FrameSettings(QtGui.QFrame):
 	SettingsKeyDialogOpenState = SettingsKeyBase + '/DialogOpen/State'
 	SettingsKeyDialogSaveState = SettingsKeyBase + '/DialogSave/State'
 
+	SettingsKeyStyleSheet = SettingsKeyBase +  'PokerStarsHandGrabber/HandFornmatterHtmlTabular/StyleSheet'
+
 	styleSheetChanged = QtCore.pyqtSignal(QtCore.QString)
 
 	def __init__(self, parent=None):
@@ -79,7 +81,7 @@ class FrameSettings(QtGui.QFrame):
 				Tc2Config.globalObject.feedback.emit(self, 'Style sheet too big -- maximum Is %s chars' % Tc2Config.MaxHandStyleSheet)
 				return
 		Tc2Config.globalObject.feedback.emit(self, '')
-		Tc2Config.settingsSetValue(Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.SettingsKeyStyleSheet, value)
+		Tc2Config.settingsSetValue(self.SettingsKeyStyleSheet, value)
 		self.styleSheetChanged.emit(value)
 
 	def onInit(self):
@@ -87,7 +89,7 @@ class FrameSettings(QtGui.QFrame):
 
 		#NOTE: style sheet can not be ''
 		#NOTE: have to connect before setText so we can catch MaxCharsExceeded
-		value = Tc2Config.settingsValue(Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.SettingsKeyStyleSheet, '').toString()
+		value = Tc2Config.settingsValue(self.SettingsKeyStyleSheet, '').toString()
 		if not value:
 			value = Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.StyleSheet
 		self.edit.setPlainText(value)

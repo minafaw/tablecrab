@@ -413,26 +413,6 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	"""Hand formatter that formats a hand as a tabular html"""
 	Name = 'HtmlTabular'
 
-	#TODO: typo in settings key. should be "Formatter" not "Fornmatter"
-	SettingsKeyBase = 'PokerStarsHandGrabber/HandFornmatterHtmlTabular'
-	SettingsKeyStyleSheet = SettingsKeyBase + '/StyleSheet'
-	SettingsKeyMaxPlayerName = SettingsKeyBase + '/MaxPlayerName'
-	SettingsKeyNoFloatingPoint = SettingsKeyBase + '/NoFloatingPoint'
-	SettingsKeyPrefixFold = SettingsKeyBase + '/PrefixFold'
-	SettingsKeyPrefixCheck = SettingsKeyBase + '/PrefixCheck'
-	SettingsKeyPrefixBet = SettingsKeyBase + '/PrefixBet'
-	SettingsKeyPostfixBet = SettingsKeyBase + '/PostfixBet'
-	SettingsKeyPrefixRaise = SettingsKeyBase + '/PrefixRaise'
-	SettingsKeyPostfixRaise = SettingsKeyBase + '/PostfixRaise'
-	SettingsKeyPrefixCall = SettingsKeyBase + '/PrefixCall'
-	SettingsKeyPostfixCall = SettingsKeyBase + '/PotfixCall'
-	SettingsKeyPrefixAnte = SettingsKeyBase + '/PrefixAnte'
-	SettingsKeyPostfixAnte = SettingsKeyBase + '/PostfixAnte'
-	SettingsKeyPrefixBigBlind = SettingsKeyBase + '/PrefixBigBlind'
-	SettingsKeyPostfixBigBlind = SettingsKeyBase + '/PostfixBigBlind'
-	SettingsKeyPrefixSmallBlind = SettingsKeyBase + '/PrefixSmallBlind'
-	SettingsKeyPostfixSmallBlind = SettingsKeyBase + '/PostfixSmallBlind'
-
 	PrefixBet = 'b'
 	PostfixBet = ''
 	PrefixRaise = 'r'
@@ -447,17 +427,6 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	PostfixBigBlind = ''
 	PrefixCheck = 'ck'
 	PrefixFold = 'f'
-
-	ActionPrefixes = (
-			('Bet', SettingsKeyPrefixBet, PrefixBet, SettingsKeyPostfixBet, PostfixBet),
-			('Call', SettingsKeyPrefixCall, PrefixCall, SettingsKeyPostfixCall, PostfixCall),
-			('Check', SettingsKeyPrefixCheck, PrefixCheck, None, None),
-			('Fold', SettingsKeyPrefixFold, PrefixFold, None, None),
-			('Raise', SettingsKeyPrefixRaise, PrefixRaise, SettingsKeyPostfixRaise, PostfixRaise),
-			('Ante', SettingsKeyPrefixAnte, PrefixAnte, SettingsKeyPostfixAnte, PostfixAnte),
-			('BigBlind', SettingsKeyPrefixBigBlind, PrefixBigBlind, SettingsKeyPostfixBigBlind, PostfixBigBlind),
-			('SmallBlind', SettingsKeyPrefixSmallBlind, PrefixSmallBlind, SettingsKeyPostfixSmallBlind, PostfixSmallBlind),
-			)
 
 	MaxPlayerName = -1
 	# and this is the css for the html file
