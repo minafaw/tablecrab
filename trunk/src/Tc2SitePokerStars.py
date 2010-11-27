@@ -18,13 +18,6 @@ from PyQt4 import QtCore, QtGui
 #TODO: iso table
 class SiteHandler(QtCore.QObject):
 
-	SettingKeyBase = 'PokerStars'
-	SettingsKeyAutoClosePopupNews = SettingKeyBase + '/AutoClosePopupNews'
-	SettingsKeyAutoCloseTourneyRegistrationBoxes = SettingKeyBase + '/AutoCloseTourneyRegistrationBoxes'
-	SettingsKeyAutoCloseTableMessageBoxes = SettingKeyBase + '/AutoCloseTableMessageBoxes'
-	SettingsKeyAutoCloseLogin = SettingKeyBase + '/AutoCloseLogin'
-	SettingsKeyMoveMouseToActiveTable = SettingKeyBase + '/MoveMouseToActiveTable'
-
 	def __init__(self, parent=None):
 		QtCore.QObject.__init__(self, parent)
 
