@@ -103,8 +103,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self._actions.append(self.actionRemove)
 
 		# connect signals
-		Tc2Config.globalObject.init.connect(self.onInit)
-		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
+		Tc2Config.globalObject.initGui.connect(self.onInitGui)
 		Tc2Config.globalObject.widgetScreenshotSet.connect(self.onWidgetScreenshotSet)
 		Tc2Config.globalObject.widgetScreenshotDoubleClicked.connect(self.onWidgetScreenshotDoubleClicked)
 
@@ -273,7 +272,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		if item.flags() & QtCore.Qt.ItemIsEditable:
 			self.editItem(item)
 
-	def onInit(self):
+	def onInitGui(self):
 		self.setUpdatesEnabled(False)
 		self.clear()
 		template = None
@@ -289,6 +288,13 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self.setCurrentItem( self.topLevelItem(0) )
 		self.setUpdatesEnabled(True)
 		self.adjustActions()
+
+		settingsGlobal = Tc2Config.globalObject.settingsGlobal
+		self.setAlternatingRowColors(settingsGlobal.alternatingRowColors())
+		settingsGlobal.alternatingRowColorsChanged.connect(self.setAlternatingRowColors)
+		self.setRootIsDecorated(settingsGlobal.childItemIndicators())
+		settingsGlobal.childItemIndicatorsChanged.connect(self.setRootIsDecorated)
+
 		Tc2Config.globalObject.widgetScreenshotQuery.emit()
 
 
@@ -303,12 +309,6 @@ class TemplatesWidget(QtGui.QTreeWidget):
 			return
 		if item.topLevel().handleItemExpanded(item):
 			self.dump()
-
-	def onObjectCreatedSettingsGlobal(self, obj):
-		self.setAlternatingRowColors(obj.alternatingRowColors())
-		obj.alternatingRowColorsChanged.connect(self.setAlternatingRowColors)
-		self.setRootIsDecorated(obj.childItemIndicators())
-		obj.childItemIndicatorsChanged.connect(self.setRootIsDecorated)
 
 	def onTemplateEditInPlaceFinished(self):
 		item = self.currentItem()

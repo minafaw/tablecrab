@@ -65,7 +65,7 @@ class FrameSettings(QtGui.QFrame):
 		self.addAction(action)
 		self.addAction(action)
 
-		Tc2Config.globalObject.init.connect(self.onInit)
+		Tc2Config.globalObject.initSettings.connect(self.onInitSettings)
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
@@ -91,7 +91,7 @@ class FrameSettings(QtGui.QFrame):
 	def onHelp(self, *args):
 		Tc2GuiHelp.dialogHelp('settingsNetwork', parent=self)
 
-	def onInit(self):
+	def onInitSettings(self):
 		self.layout()
 
 		value = Tc2Config.settingsValue(self.SettingsKeyProxyHostName, '').toString()

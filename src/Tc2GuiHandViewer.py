@@ -41,8 +41,6 @@ class FrameNashCalculations(QtGui.QFrame):
 		self.lastHand = None
 		self.lastUrl = None
 		self.requestDelay = requestDelay
-		self.settingsNetwork = None
-		self.settingsNashCalculationsStyleSheet = None
 
 		if toolBar is not None:
 			toolBar.zoomFactorChanged.connect(self.onZoomFactorChanged)
@@ -78,9 +76,7 @@ class FrameNashCalculations(QtGui.QFrame):
 		#self.toolBar.addAction(self.actionSave)
 
 		# connect signals
-		Tc2Config.globalObject.init.connect(self.onInit)
-		Tc2Config.globalObject.objectCreatedSettingsNetwork.connect(self.onObjectCreatedSettingsNetwork)
-		Tc2Config.globalObject.objectCreatedSettingsNashCalculationsStyleSheet.connect(self.onObjectCreatedSettingsNashCalculationsStyleSheet)
+		Tc2Config.globalObject.initGui.connect(self.onInitGui)
 		parent.handSet.connect(self.setHand)
 
 	def onRequestFailed(self, url, msg):
@@ -120,7 +116,7 @@ class FrameNashCalculations(QtGui.QFrame):
 		#maybe data as returned from HoldemResources is corrupted?
 		html = self.formatter.toHtml(
 				seatSortf=sortf,
-				styleSheet=self.settingsNashCalculationsStyleSheet.styleSheet(),
+				styleSheet=Tc2Config.globalObject.settingsNashCalculationsStyleSheet.styleSheet(),
 				url=url,
 				)
 		self.webView.setHtml(html)
@@ -181,15 +177,15 @@ class FrameNashCalculations(QtGui.QFrame):
 
 			self.fetcher.requestHandData(
 				url,
-				timeout=self.settingsNetwork.fetchTimeout() * 1000,
-				proxyHostName=self.settingsNetwork.proxyHostName(),
-				proxyPort=self.settingsNetwork.proxyPort(),
-				proxyUserName=self.settingsNetwork.proxyUserName(),
-				proxyPassword=self.settingsNetwork.proxyPassword(),
+				timeout=Tc2Config.globalObject.settingsNetwork.fetchTimeout() * 1000,
+				proxyHostName=Tc2Config.globalObject.settingsNetwork.proxyHostName(),
+				proxyPort=Tc2Config.globalObject.settingsNetwork.proxyPort(),
+				proxyUserName=Tc2Config.globalObject.settingsNetwork.proxyUserName(),
+				proxyPassword=Tc2Config.globalObject.settingsNetwork.proxyPassword(),
 				userAgent=Tc2Config.ReleaseName,
 				)
 
-	def onInit(self):
+	def onInitGui(self):
 		self.layout()
 		self.comboBox.currentIndexChanged.connect(self.onComboBoxCurrentIndexChanged)
 		self.webView.setHtml('')
@@ -215,12 +211,6 @@ class FrameNashCalculations(QtGui.QFrame):
 		if self.comboBox.currentIndex() == len(self.PayoutStructures) -1:
 			edit = self.sender()
 			Tc2Config.settingsSetValue(self.SettingsKeyCustomPayoutStructure, text)
-
-	def onObjectCreatedSettingsNetwork(self, obj):
-		self.settingsNetwork = obj
-
-	def onObjectCreatedSettingsNashCalculationsStyleSheet(self, obj):
-		self.settingsNashCalculationsStyleSheet = obj
 
 	def onContextMenuWebView(self, point):
 		menu = QtGui.QMenu(self)
@@ -334,11 +324,8 @@ class FrameHandViewer(QtGui.QFrame):
 		self.toolBar.addAction(self.actionHelp)
 
 		# connect global signals
-		Tc2Config.globalObject.init.connect(self.onInit)
+		Tc2Config.globalObject.initGui.connect(self.onInitGui)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
-		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
-		Tc2Config.globalObject.objectCreatedSettingsHandViewer.connect(self.onObjectCreatedSettingsHandViewer)
-
 
 	#----------------------------------------------------------------------------------------------------------------
 	# methods
@@ -449,9 +436,17 @@ class FrameHandViewer(QtGui.QFrame):
 		else:
 			Tc2Config.globalObject.feedbackMessage.emit('Could not grab hand')
 
-	def onInit(self):
+	def onInitGui(self):
 		self.webView.setUrl(QtCore.QUrl(''))
 		self.adjustActions()
+
+		settingsGlobal = Tc2Config.globalObject.settingsGlobal
+		self.layout(settingsGlobal.toolBarPosition())
+		settingsGlobal.toolBarPositionChanged.connect(self.layout)
+		settingsHandViewer = Tc2Config.globalObject.settingsHandViewer
+		self.setSideBarPosition(settingsHandViewer.sideBarPosition())
+		settingsHandViewer.sideBarPositionChanged.connect(self.setSideBarPosition)
+
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 		self.Tc2HandGrabberPokerStars.start()
 
@@ -473,14 +468,6 @@ class FrameHandViewer(QtGui.QFrame):
 		else:
 			#NOTE: we assert only an invalid or no-hand gets here
 			pass
-
-	def onObjectCreatedSettingsGlobal(self, obj):
-		self.layout(obj.toolBarPosition())
-		obj.toolBarPositionChanged.connect(self.layout)
-
-	def onObjectCreatedSettingsHandViewer(self, obj):
-		self.setSideBarPosition(obj.sideBarPosition())
-		obj.sideBarPositionChanged.connect(self.setSideBarPosition)
 
 	def setSideBarPosition(self, position):
 		if position == Tc2Config.HandViewerSideBarPositionTop:
