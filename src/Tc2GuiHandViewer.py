@@ -153,6 +153,7 @@ class FrameNashCalculations(QtGui.QFrame):
 				proxyPort=self.settingsNetwork.proxyPort(),
 				proxyUserName=self.settingsNetwork.proxyUserName(),
 				proxyPassword=self.settingsNetwork.proxyPassword(),
+				userAgent=Tc2Config.ReleaseName,
 				)
 
 	def onInit(self):

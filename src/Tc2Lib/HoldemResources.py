@@ -50,7 +50,14 @@ class NashFetcher(QtNetwork.QNetworkAccessManager):
 		#NOTE: have to use QUrl.fomEncoded() here
 		return QtCore.QUrl.fromEncoded(url)
 
-	def requestHandData(self, url, timeout=-1, proxyHostName=None, proxyPort=80, proxyUserName=None, proxyPassword=None):
+	def requestHandData(self,
+			url, timeout=-1,
+			proxyHostName=None,
+			proxyPort=80,
+			proxyUserName=None,
+			proxyPassword=None,
+			userAgent=None
+			):
 		# check what proxy to use
 		if not proxyHostName and not self.proxy().hostName():
 			# no proxy set
@@ -85,6 +92,8 @@ class NashFetcher(QtNetwork.QNetworkAccessManager):
 			self._reply.abort()
 		self._timer.stop()
 		request = QtNetwork.QNetworkRequest(url)
+		if userAgent is not None:
+			request.setRawHeader('User-Agent', userAgent)
 		self._reply = self.get(request)
 		if timeout >= 0:
 			self._timer.start(timeout)
