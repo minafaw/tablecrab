@@ -90,7 +90,9 @@ class FrameSettings(QtGui.QFrame):
 		if not value:
 			value = HoldemResources.NashFormatter.StyleSheet
 		self.edit.setPlainText(value)
-		self.edit.textChanged.connect(self.onEditTextChanged)
+		self.edit.textChanged.connect(
+				lambda self=self: self.setStyleSheet(self.edit.toPlainText())
+				)
 
 		Tc2Config.globalObject.objectCreatedSettingsNashCalculationsStyleSheet.emit(self)
 
@@ -154,8 +156,8 @@ class FrameSettings(QtGui.QFrame):
 				Tc2Config.globalObject.feedback.emit(self, 'Style sheet too big -- maximum Is %s chars' % Tc2Config.MaxHandStyleSheet)
 				return
 		Tc2Config.globalObject.feedback.emit(self, '')
-		Tc2Config.settingsSetValue(self.SettingsKeyStyleSheet, text)
-		styleSheetChanged.emit(value)
+		Tc2Config.settingsSetValue(self.SettingsKeyStyleSheet, value)
+		self.styleSheetChanged.emit(value)
 
 
 

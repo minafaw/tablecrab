@@ -13,6 +13,8 @@ class FrameSettings(QtGui.QFrame):
 	SettingsKeyDialogOpenState = SettingsKeyBase + '/DialogOpen/State'
 	SettingsKeyDialogSaveState = SettingsKeyBase + '/DialogSave/State'
 
+	styleSheetChanged = QtCore.pyqtSignal(QtCore.QString)
+
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
@@ -68,25 +70,32 @@ class FrameSettings(QtGui.QFrame):
 		grid.row()
 		grid.col(self.buttonBox)
 
-	def onEditTextChanged(self):
-		text = self.edit.toPlainText()
+	def styleSheet(self):
+		return self.edit.toPlainText()
+
+	def setStyleSheet(self, value):
 		if Tc2Config.MaxHandStyleSheet >= 0:
-			if text.length() > Tc2Config.MaxHandStyleSheet:
+			if value.length() > Tc2Config.MaxHandStyleSheet:
 				Tc2Config.globalObject.feedback.emit(self, 'Style sheet too big -- maximum Is %s chars' % Tc2Config.MaxHandStyleSheet)
 				return
 		Tc2Config.globalObject.feedback.emit(self, '')
-		Tc2Config.settingsSetValue(Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.SettingsKeyStyleSheet, text)
+		Tc2Config.settingsSetValue(Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.SettingsKeyStyleSheet, value)
+		self.styleSheetChanged.emit(value)
 
 	def onInit(self):
 		self.layout()
 
 		#NOTE: style sheet can not be ''
-		text = Tc2Config.settingsValue(Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.SettingsKeyStyleSheet, '').toString()
-		if not text:
-			text = Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.StyleSheet
 		#NOTE: have to connect before setText so we can catch MaxCharsExceeded
-		self.edit.textChanged.connect(self.onEditTextChanged)
-		self.edit.setPlainText(text)
+		value = Tc2Config.settingsValue(Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.SettingsKeyStyleSheet, '').toString()
+		if not value:
+			value = Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.StyleSheet
+		self.edit.setPlainText(value)
+		self.edit.textChanged.connect(
+				lambda self=self: self.setStyleSheet(self.edit.toPlainText())
+				)
+
+		Tc2Config.globalObject.objectCreatedSettingsHandViewerStyleSheet.emit(self)
 
 	def onOpen(self, checked):
 		fileName = Tc2Config.dlgOpenSaveFile(

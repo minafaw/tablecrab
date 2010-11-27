@@ -289,7 +289,9 @@ class _GlobalObject(QtCore.QObject):
 	# inform listeners about objects created
 	objectCreatedSettingsGlobal = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsNetwork = QtCore.pyqtSignal(QtCore.QObject)
+	objectCreatedSettingsPokerStars = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsHandViewer = QtCore.pyqtSignal(QtCore.QObject)
+	objectCreatedSettingsHandViewerStyleSheet = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsNashCalculationsStyleSheet = QtCore.pyqtSignal(QtCore.QObject)
 
 	# new screenshot created (hwnd, pixmap)
