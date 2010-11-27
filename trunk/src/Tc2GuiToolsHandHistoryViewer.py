@@ -51,7 +51,10 @@ class FrameTool(QtGui.QFrame):
 				settingsKeyZoomFactor=self.SettingsKeyZoomFactor
 				)
 
-		self.frameNashCalculations = Tc2GuiHandViewer.FrameNashCalculations(self, toolBar=self.toolBar)
+		self.frameNashCalculations = Tc2GuiHandViewer.FrameNashCalculations(self,
+				toolBar=self.toolBar,
+				requestDelay=Tc2Config.HoldemResourcesHandHistoryViewerRequestDelay * 1000,
+				)
 		self.splitter.addWidget(self.frameNashCalculations)
 
 		# set up actions

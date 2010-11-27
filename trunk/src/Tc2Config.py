@@ -183,6 +183,8 @@ HandViewerMaxPlayerNameMin = -1
 HandViewerMaxPlayerNameMax = 999
 HandViewerMaxPlayerNameDefault = -1
 
+HoldemResourcesHandHistoryViewerRequestDelay = 0.2
+
 HelpTopics = [
 		('index', 'TableCrab'), [
 			('versionHistory', 'Version History'),
