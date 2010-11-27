@@ -178,7 +178,10 @@ HandViewerSideBarPositions = (
 		HandViewerSideBarPositionLeft,
 		HandViewerSideBarPositionRight,
 		)
-SettingsKeyHandViewerSideBarPosition = 'Gui/HandViewer/SideBarPosition'
+
+HandViewerMaxPlayerNameMin = -1
+HandViewerMaxPlayerNameMax = 999
+HandViewerMaxPlayerNameDefault = -1
 
 HelpTopics = [
 		('index', 'TableCrab'), [
@@ -283,12 +286,10 @@ class _GlobalObject(QtCore.QObject):
 	feedbackException =  QtCore.pyqtSignal(QtCore.QString)
 	clearException = QtCore.pyqtSignal()
 
-	#TODO: rewrite to objectCreated() signal
-	settingHandViewerSideBarPositionChanged = QtCore.pyqtSignal(str)
-
-	#inform listeners about objects created
+	# inform listeners about objects created
 	objectCreatedSettingsGlobal = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsNetwork = QtCore.pyqtSignal(QtCore.QObject)
+	objectCreatedSettingsHandViewer = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsNashCalculationsStyleSheet = QtCore.pyqtSignal(QtCore.QObject)
 
 	# new screenshot created (hwnd, pixmap)
