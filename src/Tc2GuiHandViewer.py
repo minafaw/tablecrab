@@ -23,14 +23,27 @@ class FrameNashCalculations(QtGui.QFrame):
 			('Custom', '', '99/99/99/99/99/99/99/99/99/99')
 			)
 
-	def __init__(self, parent, toolBar=None):
+
+	class RequestDelayTimer(QtCore.QTimer):
+		def __init__(self, parent, requestFetcher, url, requestDelay=0):
+			QtCore.QTimer.__init__(self, parent)
+			self.setSingleShot(True)
+			self.setInterval(requestDelay)
+			self.url = url
+			self.requestFetcher = requestFetcher
+			self.timeout.connect(self.onTimeout)
+		def onTimeout(self):
+			self.requestFetcher(self.url)
+
+	def __init__(self, parent, toolBar=None, requestDelay=None):
 		QtGui.QFrame.__init__(self, parent)
 
 		self.lastHand = None
+		self.lastUrl = None
+		self.requestDelay = requestDelay
 		self.settingsNetwork = None
 		self.settingsNashCalculationsStyleSheet = None
 
-		parent.handSet.connect(self.onHandSet)
 		if toolBar is not None:
 			toolBar.zoomFactorChanged.connect(self.onZoomFactorChanged)
 
@@ -67,13 +80,18 @@ class FrameNashCalculations(QtGui.QFrame):
 		Tc2Config.globalObject.init.connect(self.onInit)
 		Tc2Config.globalObject.objectCreatedSettingsNetwork.connect(self.onObjectCreatedSettingsNetwork)
 		Tc2Config.globalObject.objectCreatedSettingsNashCalculationsStyleSheet.connect(self.onObjectCreatedSettingsNashCalculationsStyleSheet)
+		parent.handSet.connect(self.setHand)
 
 	def onRequestFailed(self, url, msg):
+		if url != self.lastUrl:
+			return
 		self.webView.setHtml('<h3>Request failed: %s</h3>%s' % (msg, url.toString()))
 
 	def onRequestCompleted(self, url, qString):
+		if url != self.lastUrl:
+			return
 
-		# prep seats/stacks
+	# prep seats/stacks
 		seats = self.lastHand.seatsButtonOrdered()
 		if len(seats) == 1:
 			return
@@ -137,7 +155,6 @@ class FrameNashCalculations(QtGui.QFrame):
 			seats.append(seats.pop(0))
 		stacks = [seat.stack for seat in seats]
 
-		self.fetcher.abortRequest()
 		#TODO: should we clear out webView here?
 		url = self.fetcher.createRequestUrl(
 				bigBlind=hand.blindBig,
@@ -146,7 +163,19 @@ class FrameNashCalculations(QtGui.QFrame):
 				payouts=payoutStructure,
 				stacks=stacks,
 				)
-		self.fetcher.requestHandData(
+		self.lastUrl = url
+		self.fetcher.abortRequest()
+		if self.requestDelay is not None:
+			timer = self.RequestDelayTimer(self, self.fetchHandData, url, requestDelay=self.requestDelay)
+			timer.start()
+		else:
+			self.fetchHandData(url)
+
+	def fetchHandData(self, url):
+			if url != self.lastUrl:
+				return
+
+			self.fetcher.requestHandData(
 				url,
 				timeout=self.settingsNetwork.fetchTimeout() * 1000,
 				proxyHostName=self.settingsNetwork.proxyHostName(),
@@ -174,9 +203,6 @@ class FrameNashCalculations(QtGui.QFrame):
 
 		self.editPayoutStructure.home(False)
 		self.setHand(self.lastHand)
-
-	def onHandSet(self, hand):
-		self.setHand(hand)
 
 	def onZoomFactorChanged(self, factor):
 		self.webView.setZoomFactor(factor)
