@@ -44,9 +44,8 @@ class FrameSettings(QtGui.QFrame):
 		self.settingsHandStyleSheet = self.addSetting('Hand viewer style sheet', Tc2GuiSettingsHandViewerStyleSheet.FrameSettings(parent=self.stack), 'Shift+S', 'Hand viewer style sheet (Shift+S)')
 		self.settingsNashCalculationsStyleSheet = self.addSetting('Nash calculations style sheet', Tc2GuiSettingsNashCalculationsStyleSheet.FrameSettings(parent=self.stack), 'Shift+S', 'Nash calculations style sheet (Shift+C)')
 
-		Tc2Config.globalObject.init.connect(self.onInit)
+		Tc2Config.globalObject.initGui.connect(self.onInitGui)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
-		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
@@ -79,14 +78,14 @@ class FrameSettings(QtGui.QFrame):
 		Tc2Config.settingsSetValue(self.SettingsKeySplitterState, self.splitter.saveState())
 		Tc2Config.settingsSetValue(self.SettingsKeyCurrentSettingIndex, self.stack.currentIndex())
 
-	def onInit(self):
+	def onInitGui(self):
 		self.layout()
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 		self.listWidget.setCurrentRow( Tc2Config.settingsValue(self.SettingsKeyCurrentSettingIndex, 0).toInt()[0] )
 
-	def onObjectCreatedSettingsGlobal(self, obj):
-		self.listWidget.setAlternatingRowColors(obj.alternatingRowColors())
-		obj.alternatingRowColorsChanged.connect(self.listWidget.setAlternatingRowColors)
+		settingsGlobal = Tc2Config.globalObject.settingsGlobal
+		self.listWidget.setAlternatingRowColors(settingsGlobal.alternatingRowColors())
+		settingsGlobal.alternatingRowColorsChanged.connect(self.listWidget.setAlternatingRowColors)
 
 
 

@@ -42,7 +42,7 @@ class FrameSettings(QtGui.QFrame):
 		action.triggered.connect(self.onHelp)
 		self.addAction(action)
 
-		Tc2Config.globalObject.init.connect(self.onInit)
+		Tc2Config.globalObject.initSettings.connect(self.onInitSettings)
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
@@ -102,7 +102,7 @@ class FrameSettings(QtGui.QFrame):
 		Tc2Config.settingsSetValue(self.SettingsKeyMoveMouseToActiveTable, value)
 		self.moveMouseToActiveTableChanged.emit(value)
 
-	def onInit(self):
+	def onInitSettings(self):
 		self.layout()
 
 		value = QtCore.Qt.Checked if Tc2Config.settingsValue(self.SettingsKeyAutoClosePopupNews, False).toBool() else QtCore.Qt.Unchecked

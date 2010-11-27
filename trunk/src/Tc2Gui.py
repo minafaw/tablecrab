@@ -93,12 +93,11 @@ class Gui(QtGui.QMainWindow):
 
 		# connect global signals
 		g = Tc2Config.globalObject
-		g.init.connect(self.onInit)
+		g.initGui.connect(self.onInitGui)
 		g.feedback.connect(self.onFeedback)
 		g.feedbackException.connect(self.onFeedbackException)
 		g.clearException.connect(self.onClearException)
 		g.feedbackMessage.connect(self.onFeedbackMessage)
-		g.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
 
 	#--------------------------------------------------------------------------------------------------------------
 	# overwritten methods
@@ -115,6 +114,8 @@ class Gui(QtGui.QMainWindow):
 
 	def show(self):
 		QtGui.QMainWindow.show(self)
+		Tc2Config.globalObject.initSettings.emit()
+		Tc2Config.globalObject.initGui.emit()
 		Tc2Config.mouseHook.start()
 		Tc2Config.keyboardHook.start()
 		Tc2Config.windowHook.start()
@@ -122,7 +123,6 @@ class Gui(QtGui.QMainWindow):
 		if hwnd is None:
 			raise RuntimeError('main window has no valid hwnd')
 		self.siteManager.tableCrabSiteHandler().setHwndMain( int(hwnd) )
-		Tc2Config.globalObject.init.emit()
 
 	#--------------------------------------------------------------------------------------------------------------
 	# methods
@@ -165,8 +165,14 @@ class Gui(QtGui.QMainWindow):
 	def onFeedbackMessage(self, qString):
 		self.statusBar().showMessage('>>' + qString, Tc2Config.StatusBarMessageTimeout * 1000)
 
-	def onInit(self):
+	def onInitGui(self):
 		self.tabWidget.setCurrentIndex( Tc2Config.settingsValue(self.SettingsKeyTabCurrent, QtCore.QVariant()).toInt()[0] )
+		settingsGlobal = Tc2Config.globalObject.settingsGlobal
+		position = self.tabWidget.South if settingsGlobal.tabPosition() == Tc2Config.TabPositionBottom else self.tabWidget.North
+		self.tabWidget.setTabPosition(position)
+		settingsGlobal.tabPositionChanged.connect(
+				lambda value, self=self: self.tabWidget.setTabPosition(self.tabWidget.South if value == Tc2Config.TabPositionBottom else self.tabWidget.North)
+				)
 
 	def onLabelFeedbackDoubleClicked(self):
 		lastError = self._feedbackMessages[None]
@@ -182,13 +188,6 @@ class Gui(QtGui.QMainWindow):
 		widget = self.tabWidget.widget(index)
 		data = self._feedbackMessages[widget]
 		self.labelFeedback.setText(data)
-
-	def onObjectCreatedSettingsGlobal(self, obj):
-		position = self.tabWidget.South if obj.tabPosition() == Tc2Config.TabPositionBottom else self.tabWidget.North
-		self.tabWidget.setTabPosition(position)
-		obj.tabPositionChanged.connect(
-				lambda value, self=self: self.tabWidget.setTabPosition(self.tabWidget.South if value == Tc2Config.TabPositionBottom else self.tabWidget.North)
-				)
 
 #************************************************************************************
 #

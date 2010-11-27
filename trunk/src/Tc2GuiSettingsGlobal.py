@@ -96,7 +96,7 @@ class FrameSettings(QtGui.QFrame):
 		self.addAction(action)
 		self.addAction(action)
 
-		Tc2Config.globalObject.init.connect(self.onInit)
+		Tc2Config.globalObject.initSettings.connect(self.onInitSettings)
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
@@ -305,7 +305,7 @@ class FrameSettings(QtGui.QFrame):
 		Tc2Config.settingsSetValue(self.SettingsKeyRoundBets, value)
 		self.roundBetsChanged.emit(value)
 
-	def onInit(self):
+	def onInitSettings(self):
 		self.layout()
 
 		# have to set font ahread of stylre to make it work as expected

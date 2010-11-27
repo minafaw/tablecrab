@@ -279,14 +279,9 @@ def settingsRemoveKey(key):
 class _GlobalObject(QtCore.QObject):
 
 	# global signals
-	init = QtCore.pyqtSignal()
+	initSettings = QtCore.pyqtSignal()
+	initGui = QtCore.pyqtSignal()
 	closeEvent = QtCore.pyqtSignal(QtCore.QEvent)
-
-	#TODO: overload signal to accept QObject as well
-	feedback = QtCore.pyqtSignal(QtGui.QWidget, QtCore.QString)
-	feedbackMessage = QtCore.pyqtSignal(QtCore.QString)
-	feedbackException = QtCore.pyqtSignal(QtCore.QString)
-	clearException = QtCore.pyqtSignal()
 
 	# inform listeners about objects created
 	objectCreatedSettingsGlobal = QtCore.pyqtSignal(QtCore.QObject)
@@ -295,6 +290,12 @@ class _GlobalObject(QtCore.QObject):
 	objectCreatedSettingsHandViewer = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsHandViewerStyleSheet = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsNashCalculationsStyleSheet = QtCore.pyqtSignal(QtCore.QObject)
+
+	#TODO: overload signal to accept QObject as well
+	feedback = QtCore.pyqtSignal(QtGui.QWidget, QtCore.QString)
+	feedbackMessage = QtCore.pyqtSignal(QtCore.QString)
+	feedbackException = QtCore.pyqtSignal(QtCore.QString)
+	clearException = QtCore.pyqtSignal()
 
 	# new screenshot created (hwnd, pixmap)
 	widgetScreenshot = QtCore.pyqtSignal(int, QtGui.QPixmap)
@@ -305,8 +306,17 @@ class _GlobalObject(QtCore.QObject):
 	# a sceenshot has been set to screenshot widget. a null pixmap is passed if no screenshot has been set
 	widgetScreenshotSet = QtCore.pyqtSignal(QtGui.QPixmap)
 
-globalObject = _GlobalObject()
+	def __init__(self):
+		QtCore.QObject.__init__(self)
 
+		self.settingsGlobal = self.objectCreatedSettingsGlobal.connect(lambda obj, self=self: setattr(self, 'settingsGlobal', obj))
+		self.settingsNetwork = self.objectCreatedSettingsNetwork.connect(lambda obj, self=self: setattr(self, 'settingsNetwork', obj))
+		self.settingsPokerStars = self.objectCreatedSettingsPokerStars.connect(lambda obj, self=self: setattr(self, 'settingsPokerStars', obj))
+		self.settingsHandViewer = self.objectCreatedSettingsHandViewer.connect(lambda obj, self=self: setattr(self, 'settingsHandViewer', obj))
+		self.settingsPHandViewerStyleSheet = self.objectCreatedSettingsHandViewerStyleSheet.connect(lambda obj, self=self: setattr(self, 'settingsHandViewerStyleSheet', obj))
+		self.settingsNashCalculationsStyleSheet = self.objectCreatedSettingsNashCalculationsStyleSheet.connect(lambda obj, self=self: setattr(self, 'settingsNashCalculationsStyleSheet', obj))
+
+globalObject = _GlobalObject()
 #***********************************************************************************
 # other global objects
 #***********************************************************************************
@@ -441,7 +451,7 @@ def readWriteImageFormats():
 		fmts.append('pgm')
 	return fmts
 
-def formatedBet(bet, blinds=None, roundTo=None):
+def formatedBet(bet, blinds=None):
 	'''fromats and adjusts bet size to user settings
 	@param bet: (int, float) bet size to format
 	@param blinds: (tuple) smallBlind, bigBlind
@@ -451,7 +461,7 @@ def formatedBet(bet, blinds=None, roundTo=None):
 		return '0'
 	bet = round(bet, 2)
 	if blinds is not None:
-		if roundTo in (RoundBetsBigBlind, RoundBetsSmallBlind):
+		if globalObject.settingsGlobal.roundBets() in (RoundBetsBigBlind, RoundBetsSmallBlind):
 			blind = blinds[1] if roundTo == RoundBetsBigBlind else blinds[0]
 			bet = bet * 100
 			blind = blind * 100
@@ -495,9 +505,7 @@ class WebViewToolBar(QtGui.QToolBar):
 		self.settingsKeyZoomFactor = settingsKeyZoomFactor
 		self.settingsGlobal = None
 
-		globalObject.init.connect(self.onInit)
-		globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
-
+		globalObject.initGui.connect(self.onInitGui)
 
 		self.actionBack = self.webView.pageAction(QtWebKit.QWebPage.Back)
 		self.actionBack.setShortcut(QtGui.QKeySequence.Back)
@@ -524,15 +532,12 @@ class WebViewToolBar(QtGui.QToolBar):
 		self.actionZoomOut.triggered.connect(self.zoomOut)
 		self.addAction(self.actionZoomOut)
 
-	def onInit(self):
+	def onInitGui(self):
 		if self.settingsKeyZoomFactor is not None:
 			factor = settingsValue(self.settingsKeyZoomFactor, 1).toDouble()[0]
 			self.webView.setZoomFactor(factor)
 			self.zoomFactorChanged.emit(factor)
 		self.adjustActions()
-
-	def onObjectCreatedSettingsGlobal(self, obj):
-		self.settingsGlobal = obj
 
 	def _zoomSteps(self):
 		if self.settingsKeyZoomSteps is not None:
@@ -547,7 +552,7 @@ class WebViewToolBar(QtGui.QToolBar):
 
 	def _nextZoom(self, zoomIn=True):
 		factor = self.webView.zoomFactor()
-		steps = self.settingsGlobal.webViewZoomSteps()
+		steps = globalObject.settingsGlobal.webViewZoomSteps()
 		if zoomIn:
 			factor += self.ZoomMax / float(steps)
 			factor = min(factor, self.ZoomMax)

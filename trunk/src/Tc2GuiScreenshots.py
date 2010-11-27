@@ -134,7 +134,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		self._actions.append(self.actionInfo)
 
 		# connect global signals
-		Tc2Config.globalObject.init.connect(self.onInit)
+		Tc2Config.globalObject.initGui.connect(self.onInitGui)
 		Tc2Config.globalObject.widgetScreenshotQuery.connect(self.onWidgetScreenshotQuery)
 		Tc2Config.globalObject.widgetScreenshot.connect(self.onWidgetScreenshot)
 
@@ -263,7 +263,7 @@ class ScreenshotWidget(QtGui.QScrollArea):
 		if not self.label.pixmap().save(fileName, format):
 			Tc2Config.msgWarning(self, 'Could Not Save Screenshot')
 
-	def onInit(self):
+	def onInitGui(self):
 		self.adjustActions()
 
 	def onWidgetScreenshot(self, hwnd, pixmap):

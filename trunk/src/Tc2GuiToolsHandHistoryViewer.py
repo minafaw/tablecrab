@@ -95,10 +95,9 @@ class FrameTool(QtGui.QFrame):
 
 
 		# connect signals
-		Tc2Config.globalObject.init.connect(self.onInit)
+		Tc2Config.globalObject.initGui.connect(self.onInitGui)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 		self.webView.urlChanged.connect(self.onUrlChanged)
-		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
 
 	def layout(self, toolBarPosition):
 		grid = self.grid
@@ -119,7 +118,10 @@ class FrameTool(QtGui.QFrame):
 	def toolName(self):
 		return 'HandHistoryViewer'
 
-	def onInit(self):
+	def onInitGui(self):
+		settingsGlobal = Tc2Config.globalObject.settingsGlobal
+		self.layout(settingsGlobal.toolBarPosition())
+		settingsGlobal.toolBarPositionChanged.connect(self.layout)
 		self.webView.setUrl(QtCore.QUrl(''))
 		self.spinBox.valueChanged.connect(self.onSpinBoxValueChanged)
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
@@ -227,7 +229,6 @@ class FrameTool(QtGui.QFrame):
 					self.handSet.emit(hand)
 				networkReply.setData(data, 'text/html; charset=UTF-8')
 
-
 	def onSpinBoxValueChanged(self, handNo):
 		self.webView.setUrl(QtCore.QUrl('hand:///%s' % handNo))
 
@@ -236,11 +237,6 @@ class FrameTool(QtGui.QFrame):
 			handNo = int(url.path()[1:])
 			if self.spinBox.value() != handNo:
 				self.spinBox.setValue(handNo)
-
-	def onObjectCreatedSettingsGlobal(self, obj):
-		self.layout(obj.toolBarPosition())
-		obj.toolBarPositionChanged.connect(self.layout)
-
 
 
 

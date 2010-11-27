@@ -82,8 +82,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self._actions.append(self.actionRemove)
 
 		# connect signals
-		Tc2Config.globalObject.init.connect(self.onInit)
-		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
+		Tc2Config.globalObject.initGui.connect(self.onInitGui)
 		self.itemDoubleClicked.connect(self.onHotkeyDoubleClicked)
 		self.itemSelectionChanged.connect(self.adjustActions)
 
@@ -235,7 +234,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 	def onHotkeyDoubleClicked(self, hotkey):
 		self.editHotkey()
 
-	def onInit(self):
+	def onInitGui(self):
 		self.setUpdatesEnabled(False)
 		self.clear()
 		hotkey = None
@@ -255,9 +254,9 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self.adjustHotkeys()
 		self.adjustActions()
 
-	def onObjectCreatedSettingsGlobal(self, obj):
-		self.setAlternatingRowColors(obj.alternatingRowColors())
-		obj.alternatingRowColorsChanged.connect(self.setAlternatingRowColors)
+		settingsGlobal = Tc2Config.globalObject.settingsGlobal
+		self.setAlternatingRowColors(settingsGlobal.alternatingRowColors())
+		settingsGlobal.alternatingRowColorsChanged.connect(self.setAlternatingRowColors)
 
 #**********************************************************************************************
 #
@@ -281,7 +280,7 @@ class FrameHotkeys(QtGui.QFrame):
 		self.toolBar.addAction(self.actionHelp)
 
 		# connect global signals
-		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
+		Tc2Config.globalObject.initGui.connect(self.onInitGui)
 
 	#----------------------------------------------------------------------------------------------------------------
 	# methods
@@ -304,9 +303,10 @@ class FrameHotkeys(QtGui.QFrame):
 	def onActionHelpTriggered(self):
 		Tc2GuiHelp.dialogHelp('hotkeys', parent=self)
 
-	def onObjectCreatedSettingsGlobal(self, obj):
-		self.layout(obj.toolBarPosition())
-		obj.toolBarPositionChanged.connect(self.layout)
+	def onInitGui(self):
+		settingsGlobal = Tc2Config.globalObject.settingsGlobal
+		self.layout(settingsGlobal.toolBarPosition())
+		settingsGlobal.toolBarPositionChanged.connect(self.layout)
 
 
 

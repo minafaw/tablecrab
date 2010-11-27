@@ -48,9 +48,8 @@ class FrameHelp(QtGui.QFrame):
 		self.addAction(self.actionSelectAll)
 
 		# connect signals
-		Tc2Config.globalObject.init.connect(self.onInit)
+		Tc2Config.globalObject.initGui.connect(self.onInitGui)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
-		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
 		self.tree.itemSelectionChanged.connect(self.onItemSelectionChanged)
 		self.tree.itemActivated.connect(self.onItemSelectionChanged)
 		self.webView.urlChanged.connect(self.onUrlChanged)
@@ -84,7 +83,7 @@ class FrameHelp(QtGui.QFrame):
 		point = self.webView.mapToGlobal(point)
 		menu.exec_(point)
 
-	def onInit(self):
+	def onInitGui(self):
 		self.tree.setUpdatesEnabled(False)
 
 		self.webView.setUrl(QtCore.QUrl(''))
@@ -117,6 +116,12 @@ class FrameHelp(QtGui.QFrame):
 			self.tree.setCurrentItem(firstTopicItem)
 
 		self.tree.setUpdatesEnabled(True)
+
+		settingsGlobal = Tc2Config.globalObject.settingsGlobal
+		self.tree.setAlternatingRowColors(settingsGlobal.alternatingRowColors())
+		settingsGlobal.alternatingRowColorsChanged.connect(self.tree.setAlternatingRowColors)
+		self.layout(settingsGlobal.toolBarPosition())
+		settingsGlobal.toolBarPositionChanged.connect(self.layout)
 
 	def onItemSelectionChanged(self):
 		items = self.tree.selectedItems()
@@ -158,12 +163,6 @@ class FrameHelp(QtGui.QFrame):
 				if func is not None:
 					networkReply.setData(func(), mimeType)
 
-	def onObjectCreatedSettingsGlobal(self, obj):
-		self.tree.setAlternatingRowColors(obj.alternatingRowColors())
-		obj.alternatingRowColorsChanged.connect(self.tree.setAlternatingRowColors)
-		self.layout(obj.toolBarPosition())
-		obj.toolBarPositionChanged.connect(self.layout)
-
 	def onUrlChanged(self, url):
 		fileInfo = QtCore.QFileInfo(url.path())
 		topic = fileInfo.baseName()
@@ -195,8 +194,8 @@ class _DialogHelp(QtGui.QDialog):
 		Tc2Config.settingsSetValue(FrameHelp.SettingsKeyHelpTopic, topic)
 		self.frameHelp = FrameHelp(parent=self)
 		self.layout()
-		self.frameHelp.onInit()
-		self.frameHelp.toolBar.onInit()
+		self.frameHelp.onInitGui()
+		self.frameHelp.toolBar.onInitGui()
 		self.restoreGeometry( Tc2Config.settingsValue(self.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray() )
 		self.frameHelp.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 
@@ -213,7 +212,6 @@ class _DialogHelp(QtGui.QDialog):
 	#--------------------------------------------------------------------------------------------------------------
 	def layout(self):
 		#TODO: how to adjust tool bar position acc to SettingsGlobal?
-		self.frameHelp.layout(Tc2Config.ToolBarPositionTop)
 		grid = Tc2Config.GridBox(self)
 		grid.col(self.frameHelp)
 		grid.row()
