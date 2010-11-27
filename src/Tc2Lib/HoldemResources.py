@@ -305,7 +305,7 @@ td{text-align: left;vertical-align: text-top;}
 		p += '</table>'
 
 		if url is not None:
-			p += '<br><b>HoldemResources url:</b><br>%s<br><br>' % url.toString()
+			p += '<br><pre>HoldemResources url:</b><br>%s</pre><br><br>' % url.toString()
 		p += '</body></html>'
 		return p
 
