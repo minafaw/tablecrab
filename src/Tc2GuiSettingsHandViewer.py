@@ -10,6 +10,26 @@ import operator
 #************************************************************************************
 class FrameSettings(QtGui.QFrame):
 
+	#TODO: typo in settings key. should be "Formatter" not "Fornmatter"
+	SettingsKeyBase = 'PokerStarsHandGrabber/HandFornmatterHtmlTabular'
+	SettingsKeyStyleSheet = SettingsKeyBase + '/StyleSheet'
+	SettingsKeyMaxPlayerName = SettingsKeyBase + '/MaxPlayerName'
+	SettingsKeyNoFloatingPoint = SettingsKeyBase + '/NoFloatingPoint'
+	SettingsKeyPrefixFold = SettingsKeyBase + '/PrefixFold'
+	SettingsKeyPrefixCheck = SettingsKeyBase + '/PrefixCheck'
+	SettingsKeyPrefixBet = SettingsKeyBase + '/PrefixBet'
+	SettingsKeyPostfixBet = SettingsKeyBase + '/PostfixBet'
+	SettingsKeyPrefixRaise = SettingsKeyBase + '/PrefixRaise'
+	SettingsKeyPostfixRaise = SettingsKeyBase + '/PostfixRaise'
+	SettingsKeyPrefixCall = SettingsKeyBase + '/PrefixCall'
+	SettingsKeyPostfixCall = SettingsKeyBase + '/PotfixCall'
+	SettingsKeyPrefixAnte = SettingsKeyBase + '/PrefixAnte'
+	SettingsKeyPostfixAnte = SettingsKeyBase + '/PostfixAnte'
+	SettingsKeyPrefixBigBlind = SettingsKeyBase + '/PrefixBigBlind'
+	SettingsKeyPostfixBigBlind = SettingsKeyBase + '/PostfixBigBlind'
+	SettingsKeyPrefixSmallBlind = SettingsKeyBase + '/PrefixSmallBlind'
+	SettingsKeyPostfixSmallBlind = SettingsKeyBase + '/PostfixSmallBlind'
+
 	SettingsKeySideBarPosition = 'Gui/HandViewer/SideBarPosition'
 
 	actionPrefixChanged = QtCore.pyqtSignal(QtCore.QString)
@@ -18,6 +38,16 @@ class FrameSettings(QtGui.QFrame):
 	noFloatingPoint = QtCore.pyqtSignal(bool)
 	sideBarPositionChanged = QtCore.pyqtSignal(QtCore.QString)
 
+	ActionPrefixes = (
+			('Bet', SettingsKeyPrefixBet, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PrefixBet, SettingsKeyPostfixBet, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PostfixBet),
+			('Call', SettingsKeyPrefixCall, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PrefixCall, SettingsKeyPostfixCall, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PostfixCall),
+			('Check', SettingsKeyPrefixCheck, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PrefixCheck, None, None),
+			('Fold', SettingsKeyPrefixFold, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PrefixFold, None, None),
+			('Raise', SettingsKeyPrefixRaise, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PrefixRaise, SettingsKeyPostfixRaise, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PostfixRaise),
+			('Ante', SettingsKeyPrefixAnte, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PrefixAnte, SettingsKeyPostfixAnte, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PostfixAnte),
+			('BigBlind', SettingsKeyPrefixBigBlind, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PrefixBigBlind, SettingsKeyPostfixBigBlind, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PostfixBigBlind),
+			('SmallBlind', SettingsKeyPrefixSmallBlind, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PrefixSmallBlind, SettingsKeyPostfixSmallBlind, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PostfixSmallBlind),
+			)
 
 	class ActionLineEdit(QtGui.QLineEdit):
 		def __init__(self, parent=None, actionName='', text='', settingsKey=None, default=None):
@@ -33,7 +63,7 @@ class FrameSettings(QtGui.QFrame):
 		self.labelPostfix = QtGui.QLabel('<i>Postfix</i>', self)
 
 		self.actionWidgets = {}
-		for i,(actionName, settingsKeyPrefix, defaultPrefix, settingsKeyPostfix, defaultPostfix) in enumerate(Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.ActionPrefixes):
+		for i,(actionName, settingsKeyPrefix, defaultPrefix, settingsKeyPostfix, defaultPostfix) in enumerate(self.ActionPrefixes):
 			editPrefix = self.ActionLineEdit(parent=self, actionName=actionName, settingsKey= settingsKeyPrefix, default=defaultPrefix)
 			editPrefix.setMaxLength(Tc2Config.MaxHandGrabberPrefix)
 			labelAction = QtGui.QLabel('<i>' + actionName + '</i>', self)
@@ -173,13 +203,13 @@ class FrameSettings(QtGui.QFrame):
 		#NOTE: pySlot decorator does not work as expected so we have to connect slot the old fashioned way
 		self.connect(self.comboSideBarPosition, QtCore.SIGNAL('currentIndexChanged(QString)'), self.setSideBarPosition)
 
-		value, ok = Tc2Config.settingsValue(Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.SettingsKeyMaxPlayerName, Tc2Config.HandViewerMaxPlayerNameDefault).toInt()
+		value, ok = Tc2Config.settingsValue(self.SettingsKeyMaxPlayerName, Tc2Config.HandViewerMaxPlayerNameDefault).toInt()
 		if not ok or value < Tc2Config.HandViewerMaxPlayerNameMin or value > Tc2Config.HandViewerMaxPlayerNameMax:
 			value = Tc2Config.WebView.HandViewerMaxPlayerNameDefault
 		self.spinMaxPlayerName.setValue(value)
 		self.spinMaxPlayerName.valueChanged.connect(self.setMaxPlayerName)
 
-		value = QtCore.Qt.Checked if Tc2Config.settingsValue(Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.SettingsKeyNoFloatingPoint, False).toBool() else QtCore.Qt.Unchecked
+		value = QtCore.Qt.Checked if Tc2Config.settingsValue(self.SettingsKeyNoFloatingPoint, False).toBool() else QtCore.Qt.Unchecked
 		self.checkNoFloatingPoint.setCheckState(value)
 		self.checkNoFloatingPoint.stateChanged.connect(
 				lambda value, self=self: self.setNoFloatingPoint(self.checkNoFloatingPoint.checkState() == QtCore.Qt.Checked)

@@ -145,7 +145,7 @@ class FrameNashCalculations(QtGui.QFrame):
 		if not payoutStructure:
 			return
 		if not hand:
-			self.webView.setHtml('<h3>Can not fetch data for hands loaded from disk</h3>This is not yet implemented.')
+			self.webView.setHtml('<h3>Can not fetch data for hands loaded from disk</h3>This featureis not yet implemented.')
 			return
 
 		# prep seats/stacks
