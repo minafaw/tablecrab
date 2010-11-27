@@ -11,6 +11,29 @@ class FrameSettings(QtGui.QFrame):
 
 	SettingsKeyBase = 'Gui/Settings'
 	SettingsKeyDialogBackupState = SettingsKeyBase + '/DialogBackup/State'
+	SettingsKeyGuiStyle = 'Gui/Style'
+	SettingsKeyGuiFont = 'Gui/Font'
+	SettingsKeyFontFixed = 'Gui/FontFixed'
+	SettingsKeyWebViewZoomSteps = 'Gui/WebView/ZoomSteps'
+	SettingsKeyAlternatingRowColors = 'Gui/AlternatingRowColors'
+	SettingsKeyChildItemIndicators = 'Gui/ChildItemIndicators'
+	SettingsKeyRestoreMousePosition = 'RestoreMousePosition'
+	SettingsKeyToolBarPosition = 'Gui/ToolBar/Position'
+	SettingsKeyTabPosition = 'Gui/Tab/Position'
+	SettingsKeyRoundBets = 'Settings/RoundBets'
+
+	guiStyleChanged = QtCore.pyqtSignal(QtCore.QString)
+	guiFontChanged = QtCore.pyqtSignal(QtGui.QFont)
+	fixedFontChanged = QtCore.pyqtSignal(QtGui.QFont)
+	singleApplicationScopeChanged = QtCore.pyqtSignal(QtCore.QString)
+	webViewZoomStepsChanged = QtCore.pyqtSignal(int)
+	alternatingRowColorsChanged = QtCore.pyqtSignal(bool)
+	childItemIndicatorsChanged = QtCore.pyqtSignal(bool)
+	restoreMousePositionChanged = QtCore.pyqtSignal(bool)
+	toolBarPositionChanged = QtCore.pyqtSignal(QtCore.QString)
+	tabPositionChanged = QtCore.pyqtSignal(QtCore.QString)
+	roundBetsChanged = QtCore.pyqtSignal(QtCore.QString)
+
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -21,27 +44,26 @@ class FrameSettings(QtGui.QFrame):
 		self.labelBackup.setBuddy(self.buttonBackup)
 
 		self.comboGuiStyle = QtGui.QComboBox(self)
-		self.comboGuiStyle.addItems( QtGui.QStyleFactory().keys() )
 		self.labelGuiStyle = QtGui.QLabel('Global &Style:', self)
 		self.labelGuiStyle.setBuddy(self.comboGuiStyle)
 
-		self.buttonFont = QtGui.QPushButton('..', self)
+		self.buttonGuiFont = QtGui.QPushButton('..', self)
 		self.labelFont = QtGui.QLabel('Global &Font:', self)
-		self.labelFont.setBuddy(self.buttonFont)
+		self.labelFont.setBuddy(self.buttonGuiFont)
 
 		self.buttonFixedFont = QtGui.QPushButton('..', self)
 		self.labelFixedFont = QtGui.QLabel('Fi&xed Font:', self)
 		self.labelFixedFont.setBuddy(self.buttonFixedFont)
 
-		self.comboSingleApplication = QtGui.QComboBox(self)
-		self.comboSingleApplication.addItems(Tc2Win32.SingleApplication.Scopes)
+		self.comboSingleApplicationScope = QtGui.QComboBox(self)
+		self.comboSingleApplicationScope.addItems(Tc2Win32.SingleApplication.Scopes)
 		self.labelSingleApplication = QtGui.QLabel('Single a&pplication scope:', self)
-		self.labelSingleApplication.setBuddy(self.comboSingleApplication)
+		self.labelSingleApplication.setBuddy(self.comboSingleApplicationScope)
 
-		self.spinZoomSteps = QtGui.QSpinBox(self)
-		self.spinZoomSteps.setRange(Tc2Config.WebViewToolBar.ZoomStepsMin, Tc2Config.WebViewToolBar.ZoomStepsMax)
-		self.labelZoomSteps = QtGui.QLabel('&Zoom Steps (%s max):' % Tc2Config.WebViewToolBar.ZoomStepsMax, self)
-		self.labelZoomSteps.setBuddy(self.spinZoomSteps)
+		self.spinWebViewZoomSteps = QtGui.QSpinBox(self)
+		self.spinWebViewZoomSteps.setRange(Tc2Config.WebViewZoomStepsMin, Tc2Config.WebViewZoomStepsMax)
+		self.labelWebViewZoomSteps = QtGui.QLabel('&Zoom Steps (%s max):' % Tc2Config.WebViewZoomStepsMax, self)
+		self.labelWebViewZoomSteps.setBuddy(self.spinWebViewZoomSteps)
 
 		self.checkAlternatingRowColors = QtGui.QCheckBox('Alternating &Row Colors', self)
 		self.checkChildItemIndicators = QtGui.QCheckBox('&Child Item Indicators', self)
@@ -84,17 +106,17 @@ class FrameSettings(QtGui.QFrame):
 		grid.row()
 		grid.col(self.labelGuiStyle).col(self.comboGuiStyle).col(Tc2Config.HStretch())
 		grid.row()
-		grid.col(self.labelFont).col(self.buttonFont).col(Tc2Config.HStretch())
+		grid.col(self.labelFont).col(self.buttonGuiFont).col(Tc2Config.HStretch())
 		grid.row()
 		grid.col(self.labelFixedFont).col(self.buttonFixedFont).col(Tc2Config.HStretch())
 		grid.row()
-		grid.col(self.labelSingleApplication).col(self.comboSingleApplication).col(Tc2Config.HStretch())
+		grid.col(self.labelSingleApplication).col(self.comboSingleApplicationScope).col(Tc2Config.HStretch())
 		grid.row()
 		grid.col(self.labelTabPosition).col(self.comboTabPosition).col(Tc2Config.HStretch())
 		grid.row()
 		grid.col(self.labelToolBarPosition).col(self.comboToolBarPosition).col(Tc2Config.HStretch())
 		grid.row()
-		grid.col(self.labelZoomSteps).col(self.spinZoomSteps).col(Tc2Config.HStretch())
+		grid.col(self.labelWebViewZoomSteps).col(self.spinWebViewZoomSteps).col(Tc2Config.HStretch())
 		grid.row()
 		grid.col(self.checkAlternatingRowColors)
 		grid.row()
@@ -109,36 +131,6 @@ class FrameSettings(QtGui.QFrame):
 		grid.col(Tc2Config.HLine(self), colspan=3)
 		grid.row()
 		grid.col(self.buttonBox, colspan=3)
-
-	def setFont(self):
-		font = QtGui.QFont()
-		# try to read font from config, if not take application font
-		if font.fromString( Tc2Config.settingsValue(Tc2Config.SettingsKeyFont, '').toString() ):
-			QtGui.qApp.setFont(font)
-		else:
-			font = QtGui.qApp.font()
-
-		# we have to reload style on font changes anyways, so global style setting is dome here
-		styleName = Tc2Config.settingsValue(Tc2Config.SettingsKeyStyle, '').toString()
-		styleNames = QtGui.QStyleFactory().keys()
-		if styleName in styleNames:
-			pass
-		else:
-			#HACK:  not documented for getting style name but the lights are on. so i assume it works
-			styleName =QtGui.qApp.style().objectName()
-		style = QtGui.QStyleFactory.create(styleName)
-		#TODO: we currently set no palette. QStyle docs say palette should not be set
-		# for styles that use system defaults, but there seems to be no way to find out
-		# so ..and where to find some kind of default palette.
-		##QtGui.qApp.setPalette(style.standardPalette())
-		QtGui.qApp.setStyle(style)
-
-		self.comboGuiStyle.setCurrentIndex( self.comboGuiStyle.findText(styleName, QtCore.Qt.MatchExactly) )
-		self.buttonFont.setText( QtCore.QString('%1 %2').arg(font.family()).arg(font.pointSize()) )
-		# take QWebKit StandardFont from application font
-		settings = QtWebKit.QWebSettings.globalSettings()
-		settings.setFontFamily(settings.StandardFont, font.family() )
-		settings.setFontSize(settings.DefaultFontSize, font.pointSize() )
 
 	def setFixedFont(self):
 		font = QtGui.QFont()
@@ -196,11 +188,11 @@ class FrameSettings(QtGui.QFrame):
 	def onHelp(self, *args):
 		Tc2GuiHelp.dialogHelp('settingsGlobal', parent=self)
 
-	def onButtonFontClicked(self, checked):
+	def onButtonGuiFontClicked(self, checked):
 		font, ok = QtGui.QFontDialog.getFont(QtGui.qApp.font(), self)
 		if ok:
-			Tc2Config.settingsSetValue(Tc2Config.SettingsKeyFont, font.toString())
-			self.setFont()
+			self.buttonGuiFont.setText( QtCore.QString('%1 %2').arg(font.family()).arg(font.pointSize()) )
+			self.setGuiFont(font)
 
 	def onButtonFixedFontClicked(self, checked):
 		font = QtGui.QFont()
@@ -209,94 +201,194 @@ class FrameSettings(QtGui.QFrame):
 		font.setPointSize( settings.fontSize(settings.DefaultFixedFontSize) )
 		font, ok = QtGui.QFontDialog.getFont(font, self)
 		if ok:
-			Tc2Config.settingsSetValue(Tc2Config.SettingsKeyFontFixed, font.toString())
-			self.setFixedFont()
+			self.setFixedFont(font)
 
-	def onComboGuiStyleCurrentIndexChanged(self, index):
-		style = self.comboGuiStyle.itemText(index)
-		Tc2Config.settingsSetValue(Tc2Config.SettingsKeyStyle, style)
-		self.setFont()
+	def guiStyle(self):
+		return self.comboGuiStyle.currentText()
 
-	def onComboRoundBetsCurrentIndexChanged(self, index):
-		roundBets = self.comboRoundBets.itemText(index)
-		Tc2Config.settingsSetValue(Tc2Config.SettingsKeyRoundBets, roundBets)
+	def setGuiStyle(self, value):
+		style = QtGui.QStyleFactory.create(value)
+		#TODO: we currently set no palette. QStyle docs say palette should not be set
+		# for styles that use system defaults, but there seems to be no way to find out
+		# so ..and where to find some kind of default palette.
+		##QtGui.qApp.setPalette(style.standardPalette())
+		QtGui.qApp.setStyle(style)
+		Tc2Config.settingsSetValue(self.SettingsKeyGuiStyle, value)
+		self.guiStyleChanged.emit(value)
 
-	def onComboSingleApplicationCurrentIndexChanged(self, index):
-		scope = self.comboSingleApplication.itemText(index)
-		Tc2Config.settingsSetValue(Tc2Config.SettingsKeySingleApplicationScope, scope)
+	def guiFont(self):
+		return QtGui.qApp.font()
 
-	def onAlternatingRowColorsChanged(self, state):
-		flag = state == QtCore.Qt.Checked
-		Tc2Config.settingsSetValue(Tc2Config.SettingsKeyAlternatingRowColors, flag)
-		Tc2Config.globalObject.settingAlternatingRowColorsChanged.emit(flag)
+	def setGuiFont(self, value):
+		Tc2Config.settingsSetValue(self.SettingsKeyGuiFont, value.toString())
+		QtGui.qApp.setFont(value)
+		#NOTE: have to re-set style to make font changes work as expected
+		self.setGuiStyle(self.guiStyle())
+		# take QWebKit StandardFont from application font
+		settings = QtWebKit.QWebSettings.globalSettings()
+		settings.setFontFamily(settings.StandardFont, value.family() )
+		settings.setFontSize(settings.DefaultFontSize, value.pointSize() )
+		self.guiFontChanged.emit(value)
 
-	def onChildItemIndicatorsChanged(self, state):
-		flag = state == QtCore.Qt.Checked
-		Tc2Config.settingsSetValue(Tc2Config.SettingsKeyChildItemIndicators, flag)
-		Tc2Config.globalObject.settingChildItemIndicatorsChanged.emit(state == QtCore.Qt.Checked)
+	def fixedFont(self):
+		font = QtGui.QFont()
+		# take fixed font from QWebKit
+		settings = QtWebKit.QWebSettings.globalSettings()
+		family = settings.fontFamily(settings.FixedFont)
+		pointSize = settings.fontSize(settings.DefaultFixedFontSize)
+		font.setFamily(family)
+		font.setPointSize(pointSize)
+		return font
 
-	def onRestoreMousePositionChanged(self, state):
-		flag = state == QtCore.Qt.Checked
-		Tc2Config.settingsSetValue(Tc2Config.SettingsKeyRestoreMousePosition, flag)
+	def setFixedFont(self, value):
+		Tc2Config.settingsSetValue(self.SettingsKeyFontFixed, value.toString())
+		# sdjust WeKit fixed font here
+		settings = QtWebKit.QWebSettings.globalSettings()
+		settings.setFontFamily(settings.FixedFont, value.family() )
+		settings.setFontSize(settings.DefaultFixedFontSize, value.pointSize() )
+		self.buttonFixedFont.setText( QtCore.QString('%1 %2').arg(value.family()).arg(value.pointSize()) )
+		self.fixedFontChanged.emit(value)
 
-	def onSpinZoomValueChanged(self, value):
-		Tc2Config.settingsSetValue(Tc2Config.SettingsKeyWebViewZoomSteps, value)
+	def singleApplicationScope(self):
+		return self.comboSingleApplicationScopeScope.currentText()
 
-	def onComboToolBarPositionCurrentIndexChanged(self, index):
-		value = self.comboToolBarPosition.itemText(index)
-		Tc2Config.settingsSetValue(Tc2Config.SettingsKeyToolBarPosition, value)
-		Tc2Config.globalObject.settingToolBarPositionChanged.emit(value)
+	def setSingleApplicationScope(self, value):
+		Tc2Config.settingsSetValue(Tc2Config.SettingsKeySingleApplicationScope, value)
+		self.singleApplicationScopeChanged.emit(value)
 
-	def onComboTabPositionCurrentIndexChanged(self, index):
-		value = self.comboTabPosition.itemText(index)
-		Tc2Config.settingsSetValue(Tc2Config.SettingsKeyTabPosition, value)
-		Tc2Config.globalObject.settingTabPositionChanged.emit(value)
+	def webViewZoomSteps(self):
+		return self.spinWebViewZoomSteps.value()
+
+	def setWebViewZoomSteps(self, value):
+		Tc2Config.settingsSetValue(self.SettingsKeyWebViewZoomSteps, value)
+		self.webViewZoomStepsChanged.emit(value)
+
+	def alternatingRowColors(self):
+		return self.checkAlternatingRowColors.checkState() == QtCore.Qt.Checked
+
+	def setAlternatingRowColors(self,value):
+		Tc2Config.settingsSetValue(self.SettingsKeyAlternatingRowColors, value)
+		self.alternatingRowColorsChanged.emit(value)
+
+	def childItemIndicators(self):
+		return self.checkChildItemIndicators.checkState() == QtCore.Qt.Checked
+
+	def setChildItemIndicators(self,value):
+		Tc2Config.settingsSetValue(self.SettingsKeyChildItemIndicators, value)
+		self.childItemIndicatorsChanged.emit(value)
+
+	def restoreMousePosition(self):
+		return self.checkRestoreMousePosition.checkState() == QtCore.Qt.Checked
+
+	def setRestoreMousePosition(self,value):
+		Tc2Config.settingsSetValue(self.SettingsKeyRestoreMousePosition, value)
+		self.restoreMousePositionChanged.emit(value)
+
+	def toolBarPosition(self):
+		return self.comboToolBarPosition.currentText()
+
+	def setToolBarPosition(self,value):
+		Tc2Config.settingsSetValue(self.SettingsKeyToolBarPosition, value)
+		self.toolBarPositionChanged.emit(value)
+
+	def tabPosition(self):
+		return self.comboTabPosition.currentText()
+
+	def setTabPosition(self,value):
+		Tc2Config.settingsSetValue(self.SettingsKeyTabPosition, value)
+		self.tabPositionChanged.emit(value)
+
+	def roundBets(self):
+		return self.comboRoundBets.currentText()
+
+	def setRoundBets(self,value):
+		Tc2Config.settingsSetValue(self.SettingsKeyRoundBets, value)
+		self.roundBetsChanged.emit(value)
 
 	def onInit(self):
 		self.layout()
 
-		self.setFont()	#NOTE: sets gui style as well
-		self.comboGuiStyle.currentIndexChanged.connect(self.onComboGuiStyleCurrentIndexChanged)
-		self.buttonFont.clicked.connect(self.onButtonFontClicked)
-		self.setFixedFont()
+		# have to set font ahread of stylre to make it work as expected
+		value = QtGui.QFont()
+		if value.fromString( Tc2Config.settingsValue(self.SettingsKeyGuiFont, '').toString() ):
+			QtGui.qApp.setFont(value)
+		else:
+			value = QtGui.qApp.font()
+		self.buttonGuiFont.setText( QtCore.QString('%1 %2').arg(value.family()).arg(value.pointSize()) )
+		self.buttonGuiFont.clicked.connect(self.onButtonGuiFontClicked)
+
+		value = Tc2Config.settingsValue(self.SettingsKeyGuiStyle, '').toString()
+		styleNames = QtGui.QStyleFactory().keys()
+		self.comboGuiStyle.addItems(styleNames)
+		if value in styleNames:
+			self.comboGuiStyle.setCurrentIndex( self.comboGuiStyle.findText(value, QtCore.Qt.MatchExactly) )
+		#NOTE: for some reason pyqtSlot decorator is not working, so we connect old style here
+		self.connect(self.comboGuiStyle, QtCore.SIGNAL('currentIndexChanged(QString)'), self.setGuiStyle)
+		if value != QtGui.qApp.style().objectName():	# unddocumented but works
+			QtGui.qApp.setStyle(value)
+
+		value = QtGui.QFont()
+		if value.fromString(Tc2Config.settingsValue(self.SettingsKeyFontFixed, '').toString() ):
+			settings = QtWebKit.QWebSettings.globalSettings()
+			settings.setFontFamily(settings.FixedFont, value.family() )
+			settings.setFontSize(settings.DefaultFixedFontSize, value.pointSize() )
+		self.buttonFixedFont.setText( QtCore.QString('%1 %2').arg(value.family()).arg(value.pointSize()) )
 		self.buttonFixedFont.clicked.connect(self.onButtonFixedFontClicked)
 
-		scope= Tc2Config.settingsValue(Tc2Config.SettingsKeySingleApplicationScope, '').toString()
-		if scope not in Tc2Win32.SingleApplication.Scopes:
-			scope = Tc2Config.SingleApplicationScopeDefault
-		self.comboSingleApplication.setCurrentIndex( self.comboSingleApplication.findText(scope, QtCore.Qt.MatchExactly) )
-		self.comboSingleApplication.currentIndexChanged.connect(self.onComboSingleApplicationCurrentIndexChanged)
+		value = Tc2Config.settingsValue(Tc2Config.SettingsKeySingleApplicationScope, '').toString()
+		if value not in Tc2Win32.SingleApplication.Scopes:
+			value = Tc2Config.SingleApplicationScopeDefault
+		self.comboSingleApplicationScope.setCurrentIndex( self.comboSingleApplicationScope.findText(value, QtCore.Qt.MatchExactly) )
+		#NOTE: pySlot decorator does not work as expected so we have to connect slot the old fashioned way
+		self.connect(self.comboSingleApplicationScope, QtCore.SIGNAL('currentIndexChanged(QString)'), self.setSingleApplicationScope)
 
-		zoomSteps = Tc2Config.settingsValue(Tc2Config.SettingsKeyWebViewZoomSteps, Tc2Config.WebViewToolBar.ZoomStepsDefault).toInt()[0]
-		self.spinZoomSteps.setValue(zoomSteps)
-		self.spinZoomSteps.valueChanged.connect(self.onSpinZoomValueChanged)
+		value, ok = Tc2Config.settingsValue(self.SettingsKeyWebViewZoomSteps, Tc2Config.WebViewZoomStepsDefault).toInt()
+		if not ok or value < Tc2Config.WebViewZoomStepsMin or value > Tc2Config.WebViewZoomStepsMax:
+			value = Tc2Config.WebView.ZoomStepsDefault
+		self.spinWebViewZoomSteps.setValue(value)
+		self.spinWebViewZoomSteps.valueChanged.connect(self.setWebViewZoomSteps)
 
-		state = QtCore.Qt.Checked if Tc2Config.settingsValue(Tc2Config.SettingsKeyAlternatingRowColors, False).toBool() else QtCore.Qt.Unchecked
-		self.checkAlternatingRowColors.setCheckState(state)
-		self.checkAlternatingRowColors.stateChanged.connect(self.onAlternatingRowColorsChanged)
+		value = QtCore.Qt.Checked if Tc2Config.settingsValue(self.SettingsKeyAlternatingRowColors, False).toBool() else QtCore.Qt.Unchecked
+		self.checkAlternatingRowColors.setCheckState(value)
+		self.checkAlternatingRowColors.stateChanged.connect(
+				lambda value, self=self: self.setAlternatingRowColors(self.checkAlternatingRowColors.checkState() == QtCore.Qt.Checked)
+				)
 
-		state = QtCore.Qt.Checked if Tc2Config.settingsValue(Tc2Config.SettingsKeyChildItemIndicators, False).toBool() else QtCore.Qt.Unchecked
-		self.checkChildItemIndicators.setCheckState(state)
-		self.checkChildItemIndicators.stateChanged.connect(self.onChildItemIndicatorsChanged)
+		value = QtCore.Qt.Checked if Tc2Config.settingsValue(self.SettingsKeyChildItemIndicators, False).toBool() else QtCore.Qt.Unchecked
+		self.checkChildItemIndicators.setCheckState(value)
+		self.checkChildItemIndicators.stateChanged.connect(
+				lambda value, self=self: self.setChildItemIndicators(self.checkChildItemIndicators.checkState() == QtCore.Qt.Checked)
+				)
 
-		state = QtCore.Qt.Checked if Tc2Config.settingsValue(Tc2Config.SettingsKeyRestoreMousePosition, False).toBool() else QtCore.Qt.Unchecked
-		self.checkRestoreMousePosition.setCheckState(state)
-		self.checkRestoreMousePosition.stateChanged.connect(self.onRestoreMousePositionChanged)
+		value = QtCore.Qt.Checked if Tc2Config.settingsValue(self.SettingsKeyRestoreMousePosition, False).toBool() else QtCore.Qt.Unchecked
+		self.checkRestoreMousePosition.setCheckState(value)
+		self.checkRestoreMousePosition.stateChanged.connect(
+				lambda value, self=self: self.setRestoreMousePosition(self.checkRestoreMousePosition.checkState() == QtCore.Qt.Checked)
+				)
 
-		value= Tc2Config.settingsValue(Tc2Config.SettingsKeyToolBarPosition, '').toString()
+		value = Tc2Config.settingsValue(self.SettingsKeyToolBarPosition, '').toString()
 		if value not in Tc2Config.ToolBarPositions:
 			value = Tc2Config.ToolBarPositionDefault
 		self.comboToolBarPosition.setCurrentIndex( self.comboToolBarPosition.findText(value, QtCore.Qt.MatchExactly) )
-		self.comboToolBarPosition.currentIndexChanged.connect(self.onComboToolBarPositionCurrentIndexChanged)
+		#NOTE: pySlot decorator does not work as expected so we have to connect slot the old fashioned way
+		self.connect(self.comboToolBarPosition, QtCore.SIGNAL('currentIndexChanged(QString)'), self.setToolBarPosition)
 
-		value= Tc2Config.settingsValue(Tc2Config.SettingsKeyTabPosition, '').toString()
+		value = Tc2Config.settingsValue(self.SettingsKeyTabPosition, '').toString()
 		if value not in Tc2Config.TabPositions:
 			value = Tc2Config.TabPositionDefault
 		self.comboTabPosition.setCurrentIndex( self.comboTabPosition.findText(value, QtCore.Qt.MatchExactly) )
-		self.comboTabPosition.currentIndexChanged.connect(self.onComboTabPositionCurrentIndexChanged)
+		#NOTE: pySlot decorator does not work as expected so we have to connect slot the old fashioned way
+		self.connect(self.comboTabPosition, QtCore.SIGNAL('currentIndexChanged(QString)'), self.setTabPosition)
 
-		roundBets = Tc2Config.settingsValue(Tc2Config.SettingsKeyRoundBets, '').toString()
-		if roundBets not in Tc2Config.RoundBets:
-			roundBets = Tc2Config.RoundBetsDefault
-		self.comboRoundBets.setCurrentIndex( self.comboRoundBets.findText(roundBets, QtCore.Qt.MatchExactly) )
-		self.comboRoundBets.currentIndexChanged.connect(self.onComboRoundBetsCurrentIndexChanged)
+		value = Tc2Config.settingsValue(self.SettingsKeyRoundBets, '').toString()
+		if value not in Tc2Config.RoundBets:
+			value = Tc2Config.RoundBetsDefault
+		self.comboRoundBets.setCurrentIndex( self.comboRoundBets.findText(value, QtCore.Qt.MatchExactly) )
+		#NOTE: pySlot decorator does not work as expected so we have to connect slot the old fashioned way
+		self.connect(self.comboRoundBets, QtCore.SIGNAL('currentIndexChanged(QString)'), self.setRoundBets)
+
+
+		Tc2Config.globalObject.objectCreatedSettingsGlobal.emit(self)
+
+
+

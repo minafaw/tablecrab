@@ -104,8 +104,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 
 		# connect signals
 		Tc2Config.globalObject.init.connect(self.onInit)
-		Tc2Config.globalObject.settingAlternatingRowColorsChanged.connect(self.onSetAlternatingRowColors)
-		Tc2Config.globalObject.settingChildItemIndicatorsChanged.connect(self.onSetRootIsDecorated)
+		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
 		Tc2Config.globalObject.widgetScreenshotSet.connect(self.onWidgetScreenshotSet)
 		Tc2Config.globalObject.widgetScreenshotDoubleClicked.connect(self.onWidgetScreenshotDoubleClicked)
 
@@ -276,8 +275,6 @@ class TemplatesWidget(QtGui.QTreeWidget):
 
 	def onInit(self):
 		self.setUpdatesEnabled(False)
-		self.setAlternatingRowColors( Tc2Config.settingsValue(Tc2Config.SettingsKeyAlternatingRowColors, False).toBool() )
-		self.setRootIsDecorated( Tc2Config.settingsValue(Tc2Config.SettingsKeyChildItemIndicators, True).toBool() )
 		self.clear()
 		template = None
 		for template in Tc2Config.readPersistentItems(self.SettingsKeyTemplates, maxItems=Tc2Config.MaxTemplates, itemProtos=Tc2ConfigTemplates.Templates):
@@ -307,11 +304,11 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		if item.topLevel().handleItemExpanded(item):
 			self.dump()
 
-	def onSetAlternatingRowColors(self, flag):
-		self.setAlternatingRowColors(flag)
-
-	def onSetRootIsDecorated(self, flag):
-		self.setRootIsDecorated(flag)
+	def onObjectCreatedSettingsGlobal(self, obj):
+		self.setAlternatingRowColors(obj.alternatingRowColors())
+		obj.alternatingRowColorsChanged.connect(self.setAlternatingRowColors)
+		self.setRootIsDecorated(obj.childItemIndicators())
+		obj.childItemIndicatorsChanged.connect(self.setRootIsDecorated)
 
 	def onTemplateEditInPlaceFinished(self):
 		item = self.currentItem()

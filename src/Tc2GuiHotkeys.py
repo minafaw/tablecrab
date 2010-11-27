@@ -83,9 +83,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 
 		# connect signals
 		Tc2Config.globalObject.init.connect(self.onInit)
-		Tc2Config.globalObject.settingAlternatingRowColorsChanged.connect(
-				self.onSetAlternatingRowColors
-				)
+		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
 		self.itemDoubleClicked.connect(self.onHotkeyDoubleClicked)
 		self.itemSelectionChanged.connect(self.adjustActions)
 
@@ -239,10 +237,6 @@ class HotkeyWidget(QtGui.QTreeWidget):
 
 	def onInit(self):
 		self.setUpdatesEnabled(False)
-
-		self.setAlternatingRowColors(
-				Tc2Config.settingsValue(Tc2Config.SettingsKeyAlternatingRowColors, False).toBool()
-				)
 		self.clear()
 		hotkey = None
 		for hotkey in Tc2Config.readPersistentItems(
@@ -261,9 +255,9 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self.adjustHotkeys()
 		self.adjustActions()
 
-	def onSetAlternatingRowColors(self, flag):
-		self.setAlternatingRowColors(flag)
-
+	def onObjectCreatedSettingsGlobal(self, obj):
+		self.setAlternatingRowColors(obj.alternatingRowColors())
+		obj.alternatingRowColorsChanged.connect(self.setAlternatingRowColors)
 
 #**********************************************************************************************
 #
@@ -285,21 +279,21 @@ class FrameHotkeys(QtGui.QFrame):
 		self.actionHelp.setShortcut(QtGui.QKeySequence('F1') )
 		self.actionHelp.triggered.connect(self.onActionHelpTriggered)
 		self.toolBar.addAction(self.actionHelp)
-		self.layout()
 
-		Tc2Config.globalObject.settingToolBarPositionChanged.connect(self.onSettingToolBarPositionChanged)
+		# connect global signals
+		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
 
 	#----------------------------------------------------------------------------------------------------------------
 	# methods
 	#---------------------------------------------------------------------------------------------------------------
-	def layout(self):
-		toolBarPositionBottom = Tc2Config.settingsValue(Tc2Config.SettingsKeyToolBarPosition, Tc2Config.ToolBarPositionTop).toString() == Tc2Config.ToolBarPositionBottom
+	def layout(self, toolBarPosition):
 		grid = self.grid
-		if not toolBarPositionBottom:
+		self.grid.clear()
+		if toolBarPosition == Tc2Config.ToolBarPositionTop:
 			grid.col(self.toolBar)
 			grid.row()
 		grid.col(self.hotkeyWidget)
-		if toolBarPositionBottom:
+		if toolBarPosition == Tc2Config.ToolBarPositionBottom:
 			grid.row()
 			grid.col(self.toolBar)
 
@@ -310,9 +304,9 @@ class FrameHotkeys(QtGui.QFrame):
 	def onActionHelpTriggered(self):
 		Tc2GuiHelp.dialogHelp('hotkeys', parent=self)
 
-	def onSettingToolBarPositionChanged(self, position):
-		self.grid.clear()
-		self.layout()
+	def onObjectCreatedSettingsGlobal(self, obj):
+		self.layout(obj.toolBarPosition())
+		obj.toolBarPositionChanged.connect(self.layout)
 
 
 

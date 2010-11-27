@@ -50,8 +50,7 @@ class FrameHelp(QtGui.QFrame):
 		# connect signals
 		Tc2Config.globalObject.init.connect(self.onInit)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
-		Tc2Config.globalObject.settingAlternatingRowColorsChanged.connect(self.onSettingAlternatingRowColorsChanged)
-		Tc2Config.globalObject.settingToolBarPositionChanged.connect(self.onSettingToolBarPositionChanged)
+		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
 		self.tree.itemSelectionChanged.connect(self.onItemSelectionChanged)
 		self.tree.itemActivated.connect(self.onItemSelectionChanged)
 		self.webView.urlChanged.connect(self.onUrlChanged)
@@ -61,14 +60,14 @@ class FrameHelp(QtGui.QFrame):
 	#------------------------------------------------------------------------------------------------------------------
 	# methods
 	#------------------------------------------------------------------------------------------------------------------
-	def layout(self):
-		toolBarPositionBottom = Tc2Config.settingsValue(Tc2Config.SettingsKeyToolBarPosition, Tc2Config.ToolBarPositionTop).toString() == Tc2Config.ToolBarPositionBottom
+	def layout(self, toolBarPosition):
 		grid = self.grid
-		if not toolBarPositionBottom:
+		grid.clear()
+		if toolBarPosition == Tc2Config.ToolBarPositionTop:
 			grid.col(self.toolBar)
 			grid.row()
 		grid.col(self.splitter)
-		if toolBarPositionBottom:
+		if toolBarPosition == Tc2Config.ToolBarPositionBottom:
 			grid.row()
 			grid.col(self.toolBar)
 
@@ -86,11 +85,9 @@ class FrameHelp(QtGui.QFrame):
 		menu.exec_(point)
 
 	def onInit(self):
-		self.layout()
 		self.tree.setUpdatesEnabled(False)
 
 		self.webView.setUrl(QtCore.QUrl(''))
-		self.tree.setAlternatingRowColors( Tc2Config.settingsValue(Tc2Config.SettingsKeyAlternatingRowColors, False).toBool() )
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 		#
 		lastTopic = Tc2Config.settingsValue(self.SettingsKeyHelpTopic, '').toString()
@@ -161,8 +158,11 @@ class FrameHelp(QtGui.QFrame):
 				if func is not None:
 					networkReply.setData(func(), mimeType)
 
-	def onSettingAlternatingRowColorsChanged(self, flag):
-		self.tree.setAlternatingRowColors(flag)
+	def onObjectCreatedSettingsGlobal(self, obj):
+		self.tree.setAlternatingRowColors(obj.alternatingRowColors())
+		obj.alternatingRowColorsChanged.connect(self.tree.setAlternatingRowColors)
+		self.layout(obj.toolBarPosition())
+		obj.toolBarPositionChanged.connect(self.layout)
 
 	def onUrlChanged(self, url):
 		fileInfo = QtCore.QFileInfo(url.path())
@@ -174,10 +174,6 @@ class FrameHelp(QtGui.QFrame):
 				break
 		else:
 			raise ValueError('no topic found for url: %s' % url.path())
-
-	def onSettingToolBarPositionChanged(self, position):
-		self.grid.clear()
-		self.layout()
 
 #************************************************************************************
 #
