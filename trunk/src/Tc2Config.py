@@ -142,6 +142,12 @@ MinFetchTimeout = 1.0
 MaxFetchTimeout = 20.0
 DefaultFetchTimeout = 4.0
 
+WebViewZoomStepsDefault = 10
+WebViewZoomStepsMax = 40
+WebViewZoomStepsMin = 1
+WebViewZoomMin = 0.5
+WebViewZoomMax = 7
+
 SmallBlind = 'SmallBlind'
 BigBlind = 'BigBlind'
 
@@ -150,19 +156,16 @@ RoundBetsBigBlind = BigBlind
 RoundBetsSmallBlind = SmallBlind
 RoundBetsDefault = RoundBetsNoRounding
 RoundBets = (RoundBetsNoRounding, RoundBetsBigBlind, RoundBetsSmallBlind)
-SettingsKeyRoundBets = 'Settings/RoundBets'
 
 ToolBarPositionBottom = 'Bottom'
 ToolBarPositionTop = 'Top'
 ToolBarPositionDefault= ToolBarPositionTop
 ToolBarPositions = (ToolBarPositionBottom, ToolBarPositionTop)
-SettingsKeyToolBarPosition = 'Gui/ToolBar/Position'
 
 TabPositionBottom = 'Bottom'
 TabPositionTop = 'Top'
 TabPositionDefault= ToolBarPositionTop
 TabPositions = (TabPositionBottom, TabPositionTop)
-SettingsKeyTabPosition = 'Gui/Tab/Position'
 
 HandViewerSideBarPositionTop = 'Top'
 HandViewerSideBarPositionBottom = 'Bottom'
@@ -234,13 +237,6 @@ HelpTopics = [
 
 #TODO: all below need rename
 SettingsKeySingleApplicationScope ='Gui/SingleApplication/Scope'
-SettingsKeyFont = 'Gui/Font'
-SettingsKeyFontFixed = 'Gui/FontFixed'
-SettingsKeyStyle = 'Gui/Style'
-SettingsKeyWebViewZoomSteps = 'Gui/WebView/ZoomSteps'
-SettingsKeyAlternatingRowColors = 'Gui/AlternatingRowColors'
-SettingsKeyChildItemIndicators = 'Gui/ChildItemIndicators'
-SettingsKeyRestoreMousePosition = 'RestoreMousePosition'
 
 
 class Settings:
@@ -288,13 +284,10 @@ class _GlobalObject(QtCore.QObject):
 	clearException = QtCore.pyqtSignal()
 
 	#TODO: rewrite to objectCreated() signal
-	settingAlternatingRowColorsChanged = QtCore.pyqtSignal(bool)
-	settingChildItemIndicatorsChanged = QtCore.pyqtSignal(bool)
-	settingToolBarPositionChanged = QtCore.pyqtSignal(str)
-	settingTabPositionChanged = QtCore.pyqtSignal(str)
 	settingHandViewerSideBarPositionChanged = QtCore.pyqtSignal(str)
 
 	#inform listeners about objects created
+	objectCreatedSettingsGlobal = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsNetwork = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsNashCalculationsStyleSheet = QtCore.pyqtSignal(QtCore.QObject)
 
@@ -443,7 +436,7 @@ def readWriteImageFormats():
 		fmts.append('pgm')
 	return fmts
 
-def formatedBet(bet, blinds=None):
+def formatedBet(bet, blinds=None, roundTo=None):
 	'''fromats and adjusts bet size to user settings
 	@param bet: (int, float) bet size to format
 	@param blinds: (tuple) smallBlind, bigBlind
@@ -453,7 +446,6 @@ def formatedBet(bet, blinds=None):
 		return '0'
 	bet = round(bet, 2)
 	if blinds is not None:
-		roundTo = settingsValue(SettingsKeyRoundBets, '')
 		if roundTo in (RoundBetsBigBlind, RoundBetsSmallBlind):
 			blind = blinds[1] if roundTo == RoundBetsBigBlind else blinds[0]
 			bet = bet * 100
@@ -486,9 +478,6 @@ def walkHelpTopics():
 # some Qt wrappers to make live easier
 #***********************************************************************************
 class WebViewToolBar(QtGui.QToolBar):
-	ZoomStepsDefault = 10
-	ZoomStepsMax = 40
-	ZoomStepsMin = 1
 	ZoomMin = 0.5
 	ZoomMax = 7
 
@@ -499,9 +488,11 @@ class WebViewToolBar(QtGui.QToolBar):
 		QtGui.QToolBar.__init__(self, webView)
 		self.webView = webView
 		self.settingsKeyZoomFactor = settingsKeyZoomFactor
-		self.settingsKeyZoomSteps = None if settingsKeyZoomFactor is None else SettingsKeyWebViewZoomSteps
+		self.settingsGlobal = None
 
 		globalObject.init.connect(self.onInit)
+		globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
+
 
 		self.actionBack = self.webView.pageAction(QtWebKit.QWebPage.Back)
 		self.actionBack.setShortcut(QtGui.QKeySequence.Back)
@@ -535,6 +526,9 @@ class WebViewToolBar(QtGui.QToolBar):
 			self.zoomFactorChanged.emit(factor)
 		self.adjustActions()
 
+	def onObjectCreatedSettingsGlobal(self, obj):
+		self.settingsGlobal = obj
+
 	def _zoomSteps(self):
 		if self.settingsKeyZoomSteps is not None:
 			steps = settingsValue(self.settingsKeyZoomSteps, self.ZoomStepsDefault).toInt()[0]
@@ -548,7 +542,7 @@ class WebViewToolBar(QtGui.QToolBar):
 
 	def _nextZoom(self, zoomIn=True):
 		factor = self.webView.zoomFactor()
-		steps = self._zoomSteps()
+		steps = self.settingsGlobal.webViewZoomSteps()
 		if zoomIn:
 			factor += self.ZoomMax / float(steps)
 			factor = min(factor, self.ZoomMax)

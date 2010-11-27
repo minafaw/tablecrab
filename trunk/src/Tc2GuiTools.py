@@ -36,7 +36,7 @@ class FrameTools(QtGui.QFrame):
 		#
 		Tc2Config.globalObject.init.connect(self.onInit)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
-		Tc2Config.globalObject.settingAlternatingRowColorsChanged.connect(self.onSettingAlternatingRowColorsChanged)
+		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
@@ -65,10 +65,10 @@ class FrameTools(QtGui.QFrame):
 
 	def onInit(self):
 		self.layout()
-		self.listWidget.setAlternatingRowColors( Tc2Config.settingsValue(Tc2Config.SettingsKeyAlternatingRowColors, False).toBool() )
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 		self.listWidget.setCurrentRow( Tc2Config.settingsValue(self.SettingsKeyCurrentToolIndex, 0).toInt()[0] )
 
-	def onSettingAlternatingRowColorsChanged(self, flag):
-		self.listWidget.setAlternatingRowColors(flag)
+	def onObjectCreatedSettingsGlobal(self, obj):
+		self.listWidget.setAlternatingRowColors(obj.alternatingRowColors())
+		obj.alternatingRowColorsChanged.connect(self.listWidget.setAlternatingRowColors)
 

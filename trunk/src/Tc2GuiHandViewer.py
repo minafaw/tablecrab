@@ -305,7 +305,7 @@ class FrameHandViewer(QtGui.QFrame):
 		# connect global signals
 		Tc2Config.globalObject.init.connect(self.onInit)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
-		Tc2Config.globalObject.settingToolBarPositionChanged.connect(self.onSettingToolBarPositionChanged)
+		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
 		Tc2Config.globalObject.settingHandViewerSideBarPositionChanged.connect(self.onSettingSideBarPositionChanged)
 
 
@@ -317,14 +317,14 @@ class FrameHandViewer(QtGui.QFrame):
 		self.toolBar.actionZoomOut.setEnabled(bool(self._handCache))
 		self.actionSave.setEnabled(bool(self._handCache))
 
-	def layout(self,):
-		toolBarPositionBottom = Tc2Config.settingsValue(Tc2Config.SettingsKeyToolBarPosition, Tc2Config.ToolBarPositionTop).toString() == Tc2Config.ToolBarPositionBottom
+	def layout(self, toolBarPosition):
 		grid = self.grid
-		if not toolBarPositionBottom:
+		grid.clear()
+		if toolBarPosition == Tc2Config.ToolBarPositionTop:
 			grid.col(self.toolBar)
 			grid.row()
 		grid.col(self.splitter)
-		if toolBarPositionBottom:
+		if toolBarPosition == Tc2Config.ToolBarPositionBottom:
 			grid.row()
 			grid.col(self.toolBar)
 
@@ -419,7 +419,6 @@ class FrameHandViewer(QtGui.QFrame):
 	def onInit(self):
 		self.webView.setUrl(QtCore.QUrl(''))
 		self.adjustActions()
-		self.layout()
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 		value= Tc2Config.settingsValue(Tc2Config.SettingsKeyHandViewerSideBarPosition, '').toString()
 		if value not in Tc2Config.HandViewerSideBarPositions:
@@ -447,9 +446,9 @@ class FrameHandViewer(QtGui.QFrame):
 			#NOTE: we assert only an invalid or no-hand gets here
 			pass
 
-	def onSettingToolBarPositionChanged(self, position):
-		self.grid.clear()
-		self.layout()
+	def onObjectCreatedSettingsGlobal(self, obj):
+		self.layout(obj.toolBarPosition())
+		obj.toolBarPositionChanged.connect(self.layout)
 
 	def onSettingSideBarPositionChanged(self, position):
 		if position == Tc2Config.HandViewerSideBarPositionTop:

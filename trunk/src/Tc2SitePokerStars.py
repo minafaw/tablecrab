@@ -29,7 +29,11 @@ class SiteHandler(QtCore.QObject):
 		QtCore.QObject.__init__(self, parent)
 
 		self._pokerStarsLoginBox = None
+		self.settingsGlobal = None
+		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
 
+	def onObjectCreatedSettingsGlobal(self, obj):
+		self.settingsGlobal = obj
 
 	def handleWindowCreated(self, hwnd):
 
@@ -311,14 +315,14 @@ class SiteHandler(QtCore.QObject):
 		# 5) we dont know when PS schows us buttons or checkboxes. bet box being
 		#    visible gives us an indicator at times, but is useless for example if s.o. is all-in
 		mi = Tc2Win32.MouseInput()
-		mi.leftClick(point, hwnd=hwnd).send(restoreCursor=Tc2Config.settingsValue(Tc2Config.SettingsKeyRestoreMousePosition, False).toBool())
+		mi.leftClick(point, hwnd=hwnd).send(restoreCursor=self.settingsGlobal.restoreMousePosition())
 		# workaround to send double clicks. this handles checkboxes as expected but may trigger
 		# accidental clicks on unrelated tables. we add an abitrary timeout to check if PS has thrown another
 		# table to the foreground. no way to get this fail save, we have a race condition
 		##time.sleep( min(0.05, Tc2Win32.mouseDoubleClickTime()) )
 		##hwnd2 = Tc2Win32.windowForeground()
 		##if hwnd == hwnd2:
-		##	mi.leftClick(point, hwnd=hwnd).send(restoreCursor=Tc2Config.settingsValue(Tc2Config.SettingsKeyRestoreMousePosition, False).toBool())
+		##	mi.leftClick(point, hwnd=hwnd).send(restoreCursor=self.settingsGlobal.restoreMousePosition())
 		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def tableHandleCheck(self, hotkey, template, hwnd, inputEvent):
@@ -379,7 +383,7 @@ class SiteHandler(QtCore.QObject):
 		if point is None:
 			return
 		mi = Tc2Win32.MouseInput()
-		mi.leftClick(point, hwnd=hwnd).send(restoreCursor=Tc2Config.settingsValue(Tc2Config.SettingsKeyRestoreMousePosition, False).toBool())
+		mi.leftClick(point, hwnd=hwnd).send(restoreCursor=self.settingsGlobal.restoreMousePosition())
 		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def tableHandleMultiplyBlind(self, hotkey, template, hwnd, inputEvent):
@@ -499,7 +503,7 @@ class SiteHandler(QtCore.QObject):
 		point = QtCore.QPoint(2, 2)
 		mi = Tc2Win32.MouseInput()
 		mi.leftClickDouble(point, hwnd=hwndBetBox)
-		mi.send(restoreCursor=Tc2Config.settingsValue(Tc2Config.SettingsKeyRestoreMousePosition, False).toBool())
+		mi.send(restoreCursor=self.settingsGlobal.restoreMousePosition())
 		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
 
 	def tableClickRestoreFocus(self, hwnd, point, template):
@@ -510,7 +514,7 @@ class SiteHandler(QtCore.QObject):
 		# replayer gains focus, so we have to wait a bit and send another click to reactivate the table.
 		mi = Tc2Win32.MouseInput()
 		mi.leftClickDouble(template.points['EmptySpace'], hwnd=hwnd)
-		mi.send(restoreCursor=Tc2Config.settingsValue(Tc2Config.SettingsKeyRestoreMousePosition, False).toBool())
+		mi.send(restoreCursor=self.settingsGlobal.restoreMousePosition())
 
 	def tableHandleReplayer(self, hotkey, template, hwnd, inputEvent):
 		point = self.tableGetPoint('Replayer', template)

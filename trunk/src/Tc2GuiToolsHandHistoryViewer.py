@@ -95,18 +95,18 @@ class FrameTool(QtGui.QFrame):
 		Tc2Config.globalObject.init.connect(self.onInit)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 		self.webView.urlChanged.connect(self.onUrlChanged)
-		Tc2Config.globalObject.settingToolBarPositionChanged.connect(self.onSettingToolBarPositionChanged)
+		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
 
-	def layout(self):
-		toolBarPositionBottom = Tc2Config.settingsValue(Tc2Config.SettingsKeyToolBarPosition, Tc2Config.ToolBarPositionTop).toString() == Tc2Config.ToolBarPositionBottom
+	def layout(self, toolBarPosition):
 		grid = self.grid
-		if not toolBarPositionBottom:
+		grid.clear()
+		if toolBarPosition == Tc2Config.ToolBarPositionTop:
 			grid.col(self.toolBar)
 			grid.row()
 		grid.col(self.spinBox)
 		grid.row()
 		grid.col(self.splitter)
-		if toolBarPositionBottom:
+		if toolBarPosition == Tc2Config.ToolBarPositionBottom:
 			grid.row()
 			grid.col(self.toolBar)
 
@@ -117,7 +117,6 @@ class FrameTool(QtGui.QFrame):
 		return 'HandHistoryViewer'
 
 	def onInit(self):
-		self.layout()
 		self.webView.setUrl(QtCore.QUrl(''))
 		self.spinBox.valueChanged.connect(self.onSpinBoxValueChanged)
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
@@ -235,9 +234,9 @@ class FrameTool(QtGui.QFrame):
 			if self.spinBox.value() != handNo:
 				self.spinBox.setValue(handNo)
 
-	def onSettingToolBarPositionChanged(self, position):
-		self.grid.clear()
-		self.layout()
+	def onObjectCreatedSettingsGlobal(self, obj):
+		self.layout(obj.toolBarPosition())
+		obj.toolBarPositionChanged.connect(self.layout)
 
 
 

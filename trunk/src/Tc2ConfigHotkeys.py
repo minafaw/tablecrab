@@ -153,6 +153,14 @@ class HotkeyBase(QtGui.QTreeWidgetItem):
 		self._baseValue = self.BaseValueDefault if baseValue is None else baseValue
 		self.setText(0, self.action() )
 		self.setText(1, self.hotkeyName() if self.hotkeyName() else self.key())
+		self.settingsGlobal = None
+
+		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
+
+	#TODO: make global setting roundBets() hotkey specific
+	def onObjectCreatedSettingsGlobal(self, obj):
+		self.settingsGlobal = obj
+
 
 	@classmethod
 	def id(klass):
@@ -325,7 +333,7 @@ class HotkeyMultiplyBlind(HotkeyBase):
 		else:
 			raise ValueError('can not handle base value: %s' % self.baseValue() )
 		#TODO: HotkeyMultiplyBlind: round bet to blinds?
-		return Tc2Config.formatedBet(newBet, blinds=blinds)
+		return Tc2Config.formatedBet(newBet, blinds=blinds, roundTo=self.settingsGlobal.roundBets() )
 Hotkeys.append(HotkeyMultiplyBlind)
 
 class HotkeyMultiplyBet(HotkeyBase):
@@ -354,7 +362,7 @@ class HotkeyMultiplyBet(HotkeyBase):
 		if inputEvent.steps == 0:
 			return None
 		newBet = bet * self.multiplier() * inputEvent.steps
-		return Tc2Config.formatedBet(newBet, blinds=blinds)
+		return Tc2Config.formatedBet(newBet, blinds=blinds, roundTo=self.settingsGlobal.roundBets() )
 Hotkeys.append(HotkeyMultiplyBet)
 
 class HotkeyBetPot(HotkeyBase):
@@ -383,7 +391,7 @@ class HotkeyBetPot(HotkeyBase):
 		if inputEvent.steps == 0:
 			return None
 		newBet = round(bet * self.multiplier(), 2)
-		return Tc2Config.formatedBet(newBet, blinds=blinds)
+		return Tc2Config.formatedBet(newBet, blinds=blinds, roundTo=self.settingsGlobal.roundBets() )
 Hotkeys.append(HotkeyBetPot)
 
 class HotkeyAddToBet(HotkeyBase):
