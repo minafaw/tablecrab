@@ -88,7 +88,7 @@ class SiteHandler(QtCore.QObject):
 		template = self.tableTemplate(hwnd)
 		if template is not None:
 			Tc2Config.globalObject.feedbackMessage.emit(template.name)
-			if self.settingsPokerStars.moveMouseToActivetable():
+			if self.settingsPokerStars.moveMouseToActiveTable():
 				if not Tc2Win32.mouseButtonsDown():
 					point = Tc2Win32.mouseGetPos()
 					rect = Tc2Win32.windowGetRect(hwnd)
