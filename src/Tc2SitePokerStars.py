@@ -32,7 +32,7 @@ class SiteHandler(QtCore.QObject):
 		self.settingsGlobal = None
 		self.settingsPokerStars = None
 		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsGlobal)
-		Tc2Config.globalObject.objectCreatedSettingsGlobal.connect(self.onObjectCreatedSettingsPokerStars)
+		Tc2Config.globalObject.objectCreatedSettingsPokerStars.connect(self.onObjectCreatedSettingsPokerStars)
 
 	def onObjectCreatedSettingsGlobal(self, obj):
 		self.settingsGlobal = obj
