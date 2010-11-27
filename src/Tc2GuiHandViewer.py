@@ -144,6 +144,9 @@ class FrameNashCalculations(QtGui.QFrame):
 		payoutStructure = self.payoutStructure()
 		if not payoutStructure:
 			return
+		if not hand:
+			self.webView.setHtml('<h3>Can not fetch data for hands loaded from disk</h3>This is not yet implemented.')
+			return
 
 		# prep seats/stacks
 		seats = hand.seatsButtonOrdered()
@@ -402,6 +405,8 @@ class FrameHandViewer(QtGui.QFrame):
 		finally:
 			fp.close()
 		self.setHand(data, fileName=fileName)
+		#TODO: we could try to restore that hand from html
+		self.handSet.emit(Tc2HandGrabberPokerStars.Hand())
 
 	def onActionSaveTriggered(self):
 		fileName = Tc2Config.dlgOpenSaveFile(

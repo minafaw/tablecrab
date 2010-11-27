@@ -105,6 +105,9 @@ class Hand(QtCore.QObject):
 		seats = self.seats[self.seatNoButton:] + self.seats[:self.seatNoButton]
 		return [seat for seat in seats if seat is not None]
 
+	def __nonzero__(self):
+		return bool(self.seats)
+
 #********************************************************************************************************
 # hand parser
 #********************************************************************************************************
