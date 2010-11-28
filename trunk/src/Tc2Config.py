@@ -185,6 +185,10 @@ HandViewerMaxPlayerNameDefault = -1
 
 HoldemResourcesHandHistoryViewerRequestDelay = 0.2
 
+DefaultClockSpeed = 1.0
+DefaultClockIncrement = 1
+DefaultClockPrecission = 1
+
 HelpTopics = [
 		('index', 'TableCrab'), [
 			('versionHistory', 'Version History'),
@@ -215,6 +219,7 @@ HelpTopics = [
 				('settingsHandViewer', 'Hand Viewer'),
 				('settingsHandViewerStyleSheet', 'Hand Viewer Style Sheet'),
 				('settingsNashCalculationsStyleSheet', 'Nash Calculations Style Sheet'),
+				('settingsClock', 'Clock'),
 				],
 
 			('tools', 'Tools'), [
@@ -291,6 +296,7 @@ class _GlobalObject(QtCore.QObject):
 	objectCreatedSettingsHandViewer = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsHandViewerStyleSheet = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsNashCalculationsStyleSheet = QtCore.pyqtSignal(QtCore.QObject)
+	objectCreatedSettingsClock = QtCore.pyqtSignal(QtCore.QObject)
 
 	#TODO: overload signal to accept QObject as well
 	feedback = QtCore.pyqtSignal(QtGui.QWidget, QtCore.QString)
@@ -316,6 +322,7 @@ class _GlobalObject(QtCore.QObject):
 		self.settingsHandViewer = self.objectCreatedSettingsHandViewer.connect(lambda obj, self=self: setattr(self, 'settingsHandViewer', obj))
 		self.settingsPHandViewerStyleSheet = self.objectCreatedSettingsHandViewerStyleSheet.connect(lambda obj, self=self: setattr(self, 'settingsHandViewerStyleSheet', obj))
 		self.settingsNashCalculationsStyleSheet = self.objectCreatedSettingsNashCalculationsStyleSheet.connect(lambda obj, self=self: setattr(self, 'settingsNashCalculationsStyleSheet', obj))
+		self.settingsClock = self.objectCreatedSettingsClock.connect(lambda obj, self=self: setattr(self, 'settingsClock', obj))
 
 globalObject = _GlobalObject()
 #***********************************************************************************
@@ -494,11 +501,60 @@ def walkHelpTopics():
 #***********************************************************************************
 # some Qt wrappers to make live easier
 #***********************************************************************************
+class ClockLabel(QtGui.QLabel):
+	SpeedMin = 0.2
+	SpeedMax = 5.0
+	PrecissionMin = 1
+	PrecissionMax = 5
+	IncrementMin = 1
+	IncrementMax = 100
+	def __init__(self, parent=None, precission=PrecissionMin, increment=IncrementMin, speed=SpeedMin):
+		QtGui.QLabel.__init__(self, parent)
+		self._precission = precission
+		self. _increment = increment
+		self._value = 0
+		self.setText(str(self._value).zfill(self._precission))
+		self._timer = QtCore.QTimer(self)
+		self._timer.setInterval(speed * 1000)
+		self._timer.timeout.connect(self.tick)
+		globalObject.initGui.connect(self.onInitGui)
+	def onInitGui(self):
+		settings = globalObject.settingsClock
+		self.setOn(settings.isOn())
+		settings.isOnChanged.connect(self.setOn)
+		self.setIncrement(settings.increment())
+		settings.incrementChanged.connect(self.setIncrement)
+		self.setPrecission(settings.precission())
+		settings.precissionChanged.connect(self.setPrecission)
+		self.setSpeed(settings.speed())
+		settings.speedChanged.connect(self.setSpeed)
+	def setIncrement(self, value):
+		wasOn = self.setOn(False)
+		self._increment = value
+		if wasOn: self.setOn(True)
+	def setPrecission(self, value):
+		wasOn = self.setOn(False)
+		self._precission = value
+		if wasOn: self.setOn(True)
+	def setSpeed(self, value):
+		wasOn = self.setOn(False)
+		self._timer.setInterval(value * 1000)
+		if wasOn: self.setOn(True)
+	def isOn(self):
+		return self._timer.isActive()
+	def setOn(self, flag):
+		wasOn = self._timer.isActive()
+		self._timer.start() if flag else self._timer.stop()
+		return wasOn
+	def tick(self):
+		self._value += self._increment
+		if self._value >= 10**self._precission:
+			self._value= 0
+		self.setText(str(self._value).zfill(self._precission))
+
 class WebViewToolBar(QtGui.QToolBar):
 	ZoomMin = 0.5
 	ZoomMax = 7
-
-
 	zoomFactorChanged = QtCore.pyqtSignal(float)
 
 	def __init__(self, webView, settingsKeyZoomFactor=None):

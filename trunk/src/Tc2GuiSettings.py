@@ -11,6 +11,7 @@ import Tc2GuiSettingsPokerStars
 import Tc2GuiSettingsHandViewer
 import Tc2GuiSettingsHandViewerStyleSheet
 import Tc2GuiSettingsNashCalculationsStyleSheet
+import Tc2GuiSettingsClock
 
 from PyQt4 import QtCore, QtGui
 
@@ -43,6 +44,8 @@ class FrameSettings(QtGui.QFrame):
 		self.settingsHand = self.addSetting('HandViewer', Tc2GuiSettingsHandViewer.FrameSettings(parent=self.stack), 'Shift+H', 'Hand viewer (Shift+H)')
 		self.settingsHandStyleSheet = self.addSetting('HandViewerStyleSheet', Tc2GuiSettingsHandViewerStyleSheet.FrameSettings(parent=self.stack), 'Shift+S', 'Hand viewer style sheet (Shift+S)')
 		self.settingsNashCalculationsStyleSheet = self.addSetting('NashCalculationsStyleSheet', Tc2GuiSettingsNashCalculationsStyleSheet.FrameSettings(parent=self.stack), 'Shift+S', 'Nash calculations style sheet (Shift+C)')
+		self.settingsClock = self.addSetting('Clock', Tc2GuiSettingsClock.FrameSettings(parent=self.stack), 'Shift+C', 'Clock (Shift+C)')
+
 
 		Tc2Config.globalObject.initGui.connect(self.onInitGui)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)

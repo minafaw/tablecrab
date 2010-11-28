@@ -68,6 +68,7 @@ class Gui(QtGui.QMainWindow):
 				}
 
 		# setup status labels
+		self.labelClock = Tc2Config.ClockLabel(parent=self)
 		self.labelStatus = ClickableLabel('Ready: ', self)
 		self.labelStatus.setTextFormat(QtCore.Qt.RichText)
 		self.labelStatus.doubleClicked.connect(self.onLabelFeedbackDoubleClicked)
@@ -77,6 +78,7 @@ class Gui(QtGui.QMainWindow):
 		statusBar = self.statusBar()
 		#BUG: QTBUG-5566 sizegrip is broken on windows
 		statusBar.setSizeGripEnabled(False)
+		statusBar.addWidget(self.labelClock, 0)
 		statusBar.addWidget(self.labelStatus, 0)
 		statusBar.addWidget(self.labelFeedback, 99)
 
