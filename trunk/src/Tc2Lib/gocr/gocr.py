@@ -11,6 +11,10 @@ if DirData is None:
 	DirData = os.path.dirname(os.path.abspath(__file__))
 FileNameGocr = os.path.join(DirData, 'gocr049.exe')
 
+
+def version():
+	return os.path.basename(FileNameGocr)[4:7]
+
 # for testing. creates a pixmap and dumps some chars on it
 def createQPixmap(fontFamily, fontSize, chars):
 	font = QtGui.QFont(fontFamily, fontSize)
