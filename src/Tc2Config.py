@@ -6,7 +6,7 @@
 # project consts
 #************************************************************************************
 ApplicationName = 'TableCrab2'
-Version = '0.6.0'
+Version = '0.6.1'
 ReleaseName = '%s-%s' % (ApplicationName, Version)
 Author = 'JuergenUrner'
 ErrorLogName = ApplicationName + '-Error.log'
@@ -462,8 +462,9 @@ def formatedBet(bet, blinds=None):
 		return '0'
 	bet = round(bet, 2)
 	if blinds is not None:
-		if globalObject.settingsGlobal.roundBets() in (RoundBetsBigBlind, RoundBetsSmallBlind):
-			blind = blinds[1] if roundTo == RoundBetsBigBlind else blinds[0]
+		roundBets = globalObject.settingsGlobal.roundBets()
+		if roundBets in (RoundBetsBigBlind, RoundBetsSmallBlind):
+			blind = blinds[1] if roundBets == RoundBetsBigBlind else blinds[0]
 			bet = bet * 100
 			blind = blind * 100
 			d, r = divmod(bet, blind)
