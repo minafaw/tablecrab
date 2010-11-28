@@ -12,11 +12,13 @@ class FrameSettings(QtGui.QFrame):
 	SettingsKeySpeed = SettingsKeyBase + '/Speed'
 	SettingsKeyPrecission = SettingsKeyBase + '/Precission'
 	SettingsKeyIncrement = SettingsKeyBase + '/Increment'
+	SettingsKeyRandomMode = SettingsKeyBase + '/RandomMode'
 	SettingsKeyIsOn = SettingsKeyBase + '/IsOn'
 
 	speedChanged = QtCore.pyqtSignal(float)
 	precissionChanged = QtCore.pyqtSignal(int)
 	incrementChanged = QtCore.pyqtSignal(int)
+	randomModeChanged = QtCore.pyqtSignal(bool)
 	isOnChanged = QtCore.pyqtSignal(bool)
 
 	def __init__(self, parent=None):
@@ -42,7 +44,8 @@ class FrameSettings(QtGui.QFrame):
 		self.labelIncrement.setBuddy(self.spinIncrement)
 		self.spinIncrement.setRange(Tc2Config.ClockLabel.IncrementMin, Tc2Config.ClockLabel.IncrementMax)
 
-		self.checkIsOn = QtGui.QCheckBox('&On:', self)
+		self.checkRandomMode = QtGui.QCheckBox('&Random mode', self)
+		self.checkIsOn = QtGui.QCheckBox('&On', self)
 
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		self.buttonHelp.setToolTip('Help (F1)')
@@ -63,13 +66,15 @@ class FrameSettings(QtGui.QFrame):
 		grid.row()
 		grid.col(Tc2Config.HLine(self), colspan=3)
 		grid.row()
+		grid.col(self.checkIsOn).col(Tc2Config.HStretch())
+		grid.row()
 		grid.col(self.labelSpeed).col(self.spinSpeed).col(Tc2Config.HStretch())
 		grid.row()
 		grid.col(self.labelPrecission).col(self.spinPrecission).col(Tc2Config.HStretch())
 		grid.row()
 		grid.col(self.labelIncrement).col(self.spinIncrement).col(Tc2Config.HStretch())
 		grid.row()
-		grid.col(self.checkIsOn).col(Tc2Config.HStretch())
+		grid.col(self.checkRandomMode).col(Tc2Config.HStretch())
 		grid.row()
 		grid.col(Tc2Config.VStretch())
 		grid.row()
@@ -98,11 +103,19 @@ class FrameSettings(QtGui.QFrame):
 		self.spinIncrement.setValue(value)
 		self.spinIncrement.valueChanged.connect(self.setIncrement)
 
+		value = QtCore.Qt.Checked if Tc2Config.settingsValue(self.SettingsKeyRandomMode, False).toBool() else QtCore.Qt.Unchecked
+		self.checkRandomMode.setCheckState(value)
+		self.checkRandomMode.stateChanged.connect(
+				lambda value, self=self: self.setRandomMode(self.checkRandomMode.checkState() == QtCore.Qt.Checked)
+				)
+
 		value = QtCore.Qt.Checked if Tc2Config.settingsValue(self.SettingsKeyIsOn, True).toBool() else QtCore.Qt.Unchecked
 		self.checkIsOn.setCheckState(value)
 		self.checkIsOn.stateChanged.connect(
 				lambda value, self=self: self.setIsOn(self.checkIsOn.checkState() == QtCore.Qt.Checked)
 				)
+
+
 
 		Tc2Config.globalObject.objectCreatedSettingsClock.emit(self)
 
@@ -129,6 +142,13 @@ class FrameSettings(QtGui.QFrame):
 	def setIncrement(self, value):
 		Tc2Config.settingsSetValue(self.SettingsKeyIncrement, value)
 		self.incrementChanged.emit(value)
+
+	def randomMode(self):
+		return self.checkRandomMode.checkState() == QtCore.Qt.Checked
+
+	def setRandomMode(self, value):
+		Tc2Config.settingsSetValue(self.SettingsKeyRandomMode, value)
+		self.randomModeChanged.emit(value)
 
 	def isOn(self):
 		return self.checkIsOn.checkState() == QtCore.Qt.Checked
