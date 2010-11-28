@@ -40,9 +40,9 @@ class FrameSettings(QtGui.QFrame):
 		self.settingsGlobal = self.addSetting('Global', Tc2GuiSettingsGlobal.FrameSettings(parent=self.stack), 'Shift+G', 'Global (Shift+G)')
 		self.settingsNetwork = self.addSetting('Network', Tc2GuiSettingsNetwork.FrameSettings(parent=self.stack), 'Shift+G', 'Global (Shift+N)')
 		self.settingsPokerStars = self.addSetting('PokerStars', Tc2GuiSettingsPokerStars.FrameSettings(parent=self.stack), 'Shift+P', 'PokerStars (Shift+P)')
-		self.settingsHand = self.addSetting('Hand viewer', Tc2GuiSettingsHandViewer.FrameSettings(parent=self.stack), 'Shift+H', 'Hand viewer (Shift+H)')
-		self.settingsHandStyleSheet = self.addSetting('Hand viewer style sheet', Tc2GuiSettingsHandViewerStyleSheet.FrameSettings(parent=self.stack), 'Shift+S', 'Hand viewer style sheet (Shift+S)')
-		self.settingsNashCalculationsStyleSheet = self.addSetting('Nash calculations style sheet', Tc2GuiSettingsNashCalculationsStyleSheet.FrameSettings(parent=self.stack), 'Shift+S', 'Nash calculations style sheet (Shift+C)')
+		self.settingsHand = self.addSetting('HandViewer', Tc2GuiSettingsHandViewer.FrameSettings(parent=self.stack), 'Shift+H', 'Hand viewer (Shift+H)')
+		self.settingsHandStyleSheet = self.addSetting('HandViewerStyleSheet', Tc2GuiSettingsHandViewerStyleSheet.FrameSettings(parent=self.stack), 'Shift+S', 'Hand viewer style sheet (Shift+S)')
+		self.settingsNashCalculationsStyleSheet = self.addSetting('NashCalculationsStyleSheet', Tc2GuiSettingsNashCalculationsStyleSheet.FrameSettings(parent=self.stack), 'Shift+S', 'Nash calculations style sheet (Shift+C)')
 
 		Tc2Config.globalObject.initGui.connect(self.onInitGui)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
