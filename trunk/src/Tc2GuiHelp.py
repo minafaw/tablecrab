@@ -70,6 +70,38 @@ class FrameHelp(QtGui.QFrame):
 			grid.row()
 			grid.col(self.toolBar)
 
+	def aboutHtml(self):
+		import sys
+		from PyQt4.QtCore import qVersion, PYQT_VERSION_STR
+		import sipconfig
+		from PyQt4 import QtWebKit
+		from Tc2Lib.gocr import gocr
+
+		p = '<html><head>'
+		p += '<LINK REL=StyleSheet HREF="default.css" TYPE="text/css" MEDIA=screen>'
+		p += '</head><body>'
+
+		p += '<div class="textBox">'
+		p += '<div class="headerBox">About TableCrab</div>'
+		p += '<ul>'
+		p += '<li>%s: %s' % (Tc2Config.ApplicationName, Tc2Config.Version)
+		p += '<li>Author: %s' % Tc2Config.Author
+		p += '<li>Mail: jUrner@arcor.de'
+		p += '</ul>'
+
+		p += '<ul>'
+		p += '<li>Python: %s.%s.%s' % sys.version_info[:3]
+		p += '<li>Sip: %s\n' % sipconfig.Configuration().sip_version_str
+		p += '<li>Qt: %s' % qVersion()
+		p += '<li>PyQt: %s' % PYQT_VERSION_STR
+		p += '<li>WebKit: %s\n' % QtWebKit.qWebKitVersion()
+		p += '<li>Gocr: %s\n' % gocr.version()
+
+		p += '</ul>'
+		p += '</div>'
+		p += '</body></html>'
+		return p
+
 	#------------------------------------------------------------------------------------------------------------------
 	# event handlers
 	#------------------------------------------------------------------------------------------------------------------
@@ -140,12 +172,15 @@ class FrameHelp(QtGui.QFrame):
 			name = str(fileInfo.baseName() )	#NOTE: we need to string it ..getattr() crasches otherwise
 			ext = fileInfo.suffix()
 			if ext == 'html':
-				func = getattr(Tc2Config.HtmlPages, name, None)
 				mimeType = 'text/html; charset=UTF-8'
-				if func is None:
-					data = '<h2>404: File Not Found</h2>'
+				if name == 'About':
+					data = self.aboutHtml()
 				else:
-					data = func()
+					func = getattr(Tc2Config.HtmlPages, name, None)
+					if func is None:
+						data = '<h2>404: File Not Found</h2>'
+					else:
+						data = func()
 				networkReply.setData(data, mimeType)
 			elif ext == 'png':
 				func = getattr(Tc2Config.Pixmaps, name, None)
