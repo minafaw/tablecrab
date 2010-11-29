@@ -55,6 +55,11 @@ class Gui(QtGui.QMainWindow):
 
 		QtGui.QMainWindow.__init__(self)
 
+		#NOTE: have to use our own timer to not have messages cover our clock
+		self._statusMessageTimer = QtCore.QTimer(self)
+		self._statusMessageTimer.setSingleShot(True)
+		self._statusMessageTimer.timeout.connect(self.onStatusBarTimer)
+
 		self.setWindowTitle(Tc2Config.ReleaseName)
 		self.setWindowIcon( QtGui.QIcon(Tc2Config.Pixmaps.tableCrab()) )
 		self.restoreGeometry( Tc2Config.settingsValue(self.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray() )
@@ -165,7 +170,8 @@ class Gui(QtGui.QMainWindow):
 		self.labelStatus.setText(ErrMessage)
 
 	def onFeedbackMessage(self, qString):
-		self.statusBar().showMessage('>>' + qString, Tc2Config.StatusBarMessageTimeout * 1000)
+		self.labelFeedback.setText('>>' + qString)
+		self._statusMessageTimer.start(Tc2Config.StatusBarMessageTimeout * 1000)
 
 	def onInitGui(self):
 		self.tabWidget.setCurrentIndex( Tc2Config.settingsValue(self.SettingsKeyTabCurrent, QtCore.QVariant()).toInt()[0] )
@@ -190,6 +196,11 @@ class Gui(QtGui.QMainWindow):
 		widget = self.tabWidget.widget(index)
 		data = self._feedbackMessages[widget]
 		self.labelFeedback.setText(data)
+
+	def onStatusBarTimer(self):
+		tab = self.tabWidget.currentWidget()
+		lastFeedback = self._feedbackMessages.get(tab, '')
+		self.labelFeedback.setText(lastFeedback)
 
 #************************************************************************************
 #
