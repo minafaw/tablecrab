@@ -32,7 +32,7 @@ class SiteHandler(QtCore.QObject):
 			return True
 
 		elif self.isTourneyRegistrationMessageBox(hwnd):
-			if Tc2Config.settingsValue(self.SettingsKeyAutoCloseTourneyRegistrationBoxes, False).toBool():
+			if Tc2Config.globalObject.settingsPokerStars.autoCloseTourneyRegistrationBoxes():
 				buttons = Tc2Win32.windowGetButtons(hwnd)
 				if len(buttons) != 1: return
 				if not 'OK' in buttons: return

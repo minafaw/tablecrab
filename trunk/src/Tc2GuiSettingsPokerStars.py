@@ -75,7 +75,7 @@ class FrameSettings(QtGui.QFrame):
 		self.autoClosePopupNewsChanged.emit(value)
 
 	def autoCloseTourneyRegistrationBoxes(self):
-		return self.checkAutoTourneyRegistrationBoxes.checkState() == QtCore.Qt.Checked
+		return self.checkAutoCloseTourneyRegistrationBoxes.checkState() == QtCore.Qt.Checked
 
 	def setAutoCloseTourneyRegistrationBoxes(self, value):
 		Tc2Config.settingsSetValue(self.SettingsKeyAutoCloseTourneyRegistrationBoxes, value)
