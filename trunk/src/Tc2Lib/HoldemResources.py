@@ -198,7 +198,7 @@ td{text-align: left;vertical-align: text-top;}
 			seats.append({
 					'seat': tds[0],
 					'stack': tds[1][:-2],
-					'push': ('???', '???'),		# (percentage, range)
+					'push': ('', ''),		# (percentage, range)
 					'call': [],		# list (seat(s)ToCall, percentage, range)
 					})
 
@@ -277,7 +277,7 @@ td{text-align: left;vertical-align: text-top;}
 			p += '<td class="cellPlayerStack" colspan="99">%s</td>' % seat['stack']
 			p += '</tr>'
 
-			if seat['push']:
+			if seat['push'] != ('',''):
 				nRows = len(seat['call']) +1
 
 				p += '<tr>'
