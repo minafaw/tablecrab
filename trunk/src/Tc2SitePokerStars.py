@@ -65,6 +65,9 @@ class SiteHandler(QtCore.QObject):
 		return False
 
 	def handleWindowDestroyed(self, hwnd):
+		if hwnd == self._pokerStarsLoginBox:
+			self._pokerStarsLoginBox = None
+			return True
 		return False
 
 	def handleWindowGainedForeground(self, hwnd):
