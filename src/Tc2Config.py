@@ -229,8 +229,8 @@ HelpTopics = [
 			('developement', 'Developement'), [
 				('ocrEditor', 'Ocr Editor'),
 				],
-			],
 			('About', 'About'),
+			],
 		]
 
 #***********************************************************************************
