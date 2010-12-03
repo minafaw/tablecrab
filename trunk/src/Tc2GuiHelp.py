@@ -11,6 +11,7 @@ class FrameHelp(QtGui.QFrame):
 	SettingsKeyZoomFactor = SettingsKeyBase + '/ZoomFactor'
 	SettingsKeySplitterState = SettingsKeyBase + '/SplitterState'
 	SettingsKeyHelpTopic = SettingsKeyBase + '/Topic'
+	SettingsKeyTopicsCollapsed = SettingsKeyBase + '/TopicsCollapsed'
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -107,6 +108,12 @@ class FrameHelp(QtGui.QFrame):
 	#------------------------------------------------------------------------------------------------------------------
 	def onCloseEvent(self, event):
 		Tc2Config.settingsSetValue(self.SettingsKeySplitterState, self.splitter.saveState() )
+		topicsCollapsed = []
+		for item in Tc2Config.TreeWidgetItemIterator(self.tree):
+			if not item.isExpanded():
+				topic = item.data(0, QtCore.Qt.UserRole).toString()
+				topicsCollapsed.append(topic)
+		Tc2Config.settingsSetValue(self.SettingsKeyTopicsCollapsed, topicsCollapsed)
 
 	def onContextMenuWebView(self, point):
 		menu = QtGui.QMenu(self)
@@ -122,6 +129,7 @@ class FrameHelp(QtGui.QFrame):
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 		#
 		lastTopic = Tc2Config.settingsValue(self.SettingsKeyHelpTopic, '').toString()
+		topicsCollapsed = Tc2Config.settingsValue(self.SettingsKeyTopicsCollapsed, []).toStringList()
 		lastTopicItem = None
 		firstTopicItem = None
 		stack = []
@@ -136,13 +144,26 @@ class FrameHelp(QtGui.QFrame):
 
 			#TODO: for some reason items are never expanded. seems to be a bug in Qt4
 			#item.setChildIndicatorPolicy(item.DontShowIndicator)
-			item.setExpanded(True)
+			item.setExpanded(topic not in topicsCollapsed)
+			##print topic not in topicsCollapsed, topic
 			stack.append(item)
 			if topic == lastTopic:
 				lastTopicItem = item
 			if firstTopicItem is None:
 				firstTopicItem = item
-		if lastTopicItem is not None:
+		if lastTopicItem is None:
+			lastTopicItem = firstTopicItem
+
+		# only select topic when item is visible
+		allParentsExpanded = True
+		parent = lastTopicItem.parent()
+		#print parent
+		while parent is not None:
+			if not parent.isExpanded():
+				allParentsExpanded = False
+				break
+			parent = parent.parent()
+		if allParentsExpanded:
 			self.tree.setCurrentItem(lastTopicItem)
 		else:
 			self.tree.setCurrentItem(firstTopicItem)
