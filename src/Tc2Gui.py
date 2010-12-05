@@ -222,8 +222,6 @@ def main(argv=None, run=True):
 				raise ValueError('No such config file: %s' % fileName)
 
 	application = QtGui.QApplication(argv)
-	#TODO: StatusBar seems to be no way to have first label without frame
-	application.setStyleSheet("QStatusBar::item{ border: 0px solid black }; ")
 	gui = Gui()
 	gui.show()
 	if run:
