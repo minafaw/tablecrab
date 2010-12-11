@@ -51,7 +51,8 @@ class NashFetcher(QtNetwork.QNetworkAccessManager):
 		return QtCore.QUrl.fromEncoded(url)
 
 	def requestHandData(self,
-			url, timeout=-1,
+			url,
+			timeout=-1,
 			proxyHostName=None,
 			proxyPort=80,
 			proxyUserName=None,
