@@ -230,6 +230,16 @@ class FrameHelp(QtGui.QFrame):
 		else:
 			raise ValueError('no topic found for url: %s' % url.path())
 
+	def setTopic(self, topic):
+		for item in Tc2Config.TreeWidgetItemIterator(self.tree):
+			myTopic = item.data(0, QtCore.Qt.UserRole).toString()
+			if myTopic == topic:
+				self.tree.setCurrentItem(item)
+				break
+		else:
+			raise ValueError('no such topic: %s' % topic)
+		Tc2Config.settingsSetValue(self.SettingsKeyHelpTopic, topic)
+
 #************************************************************************************
 #
 #************************************************************************************
@@ -247,13 +257,13 @@ class _DialogHelp(QtGui.QDialog):
 		self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
 		self.buttonBox.accepted.connect(self.accept)
 
-		Tc2Config.settingsSetValue(FrameHelp.SettingsKeyHelpTopic, topic)
 		self.frameHelp = FrameHelp(parent=self)
 		self.layout()
 		self.frameHelp.onInitGui()
 		self.frameHelp.toolBar.onInitGui()
 		self.restoreGeometry( Tc2Config.settingsValue(self.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray() )
 		self.frameHelp.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
+		self.frameHelp.setTopic(topic)
 
 	#------------------------------------------------------------------------------------------------------------------
 	# overwritten methods
