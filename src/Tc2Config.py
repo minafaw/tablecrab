@@ -210,6 +210,11 @@ HelpTopics = [
 				('hotkeyInstantHandHistory', 'Instant Hand History'),
 				('hotkeyScreenshot', 'Screenshot'),
 				('hotkeyTableSizeNext', 'Table Size Next'),
+				('hotkeyClick1', 'Click1'),
+				('hotkeyClick2', 'Click2'),
+				('hotkeyClick3', 'Click3'),
+				('hotkeyClick4', 'Click4'),
+				('hotkeyClick5', 'Click5'),
 				],
 			('handViewer', 'Hand Viewer'),
 			('settings', 'Settings'), [

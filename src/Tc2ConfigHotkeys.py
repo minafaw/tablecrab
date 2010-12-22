@@ -509,4 +509,49 @@ class HotkeyTableSizeNext(HotkeyBase):
 	def shortcut(klass): return QtGui.QKeySequence('Shift+X')
 Hotkeys.append(HotkeyTableSizeNext)
 
+class HotkeyClick1(HotkeyBase):
+	@classmethod
+	def id(klass): return 'Click1'
+	@classmethod
+	def menuName(klass): return 'Click1'
+	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+1')
+Hotkeys.append(HotkeyClick1)
+
+class HotkeyClick2(HotkeyBase):
+	@classmethod
+	def id(klass): return 'Click2'
+	@classmethod
+	def menuName(klass): return 'Click2'
+	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+2')
+Hotkeys.append(HotkeyClick2)
+
+class HotkeyClick3(HotkeyBase):
+	@classmethod
+	def id(klass): return 'Click3'
+	@classmethod
+	def menuName(klass): return 'Click3'
+	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+3')
+Hotkeys.append(HotkeyClick3)
+
+class HotkeyClick4(HotkeyBase):
+	@classmethod
+	def id(klass): return 'Click4'
+	@classmethod
+	def menuName(klass): return 'Click4'
+	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+4')
+Hotkeys.append(HotkeyClick4)
+
+class HotkeyClick5(HotkeyBase):
+	@classmethod
+	def id(klass): return 'Click5'
+	@classmethod
+	def menuName(klass): return 'Click5'
+	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+5')
+Hotkeys.append(HotkeyClick5)
+
 
