@@ -159,6 +159,14 @@ class SiteHandler(QtCore.QObject):
 				handler = self.tableHandleReplayer
 			elif hotkeyID == Tc2ConfigHotkeys.HotkeyInstantHandHistory.id():
 				handler = self.tableHandleInstantHandHistory
+			elif hotkeyID in (
+						Tc2ConfigHotkeys.HotkeyClick1.id(),
+						Tc2ConfigHotkeys.HotkeyClick2.id(),
+						Tc2ConfigHotkeys.HotkeyClick3.id(),
+						Tc2ConfigHotkeys.HotkeyClick4.id(),
+						Tc2ConfigHotkeys.HotkeyClick5.id(),
+						):
+				handler = self.tableHandleHotkeyClick
 
 			if handler is not None:
 				if inputEvent.keyIsDown:
@@ -319,40 +327,31 @@ class SiteHandler(QtCore.QObject):
 	def tableHandleCheck(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
-		if data['hwndBetBox'] and data['betBoxIsVisible']:
-			point = self.tableGetPoint('ButtonCheck', template)
-			if point is None:
-				return
-		# we always allow checkboxcCheckFold ..stars may show this box when we are newly seated at a table without having the
-		# bet amount box created yet
-		else:
-			point = self.tableGetPoint('CheckboxCheckFold', template)
-			if point is None:
-				return
+		point = self.tableGetPoint('ButtonCheck', template)
+		if point is None:
+			return
 		self.tableClickButton(hwnd, point, template, hotkey)
 
 	def tableHandleFold(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
-		if data['hwndBetBox'] and data['betBoxIsVisible']:
-			point = self.tableGetPoint('ButtonFold', template)
-			if point is None:
-				return
-		# we always allow checkboxFold ..stars may show this box when we are newly seated at a table without having the
-		# bet amount box created yet
-		else:
-			point = self.tableGetPoint('CheckboxFold', template)
-			if point is None:
-				return
+		point = self.tableGetPoint('ButtonFold', template)
+		if point is None:
+			return
 		self.tableClickButton(hwnd, point, template, hotkey)
 
 	def tableHandleRaise(self, hotkey, template, hwnd, inputEvent):
 		data = self.tableReadData(hwnd)
 		if not data: return
-		if not data['hwndBetBox']: return
-		#NOTE: BetBox may not be visible when a player is all-in
-		##if not data['betBoxIsVisible']: return
 		point = self.tableGetPoint('ButtonRaise', template)
+		if point is None:
+			return
+		self.tableClickButton(hwnd, point, template, hotkey)
+
+	def tableHandleHotkeyClick(self, hotkey, template, hwnd, inputEvent):
+		data = self.tableReadData(hwnd)
+		if not data: return
+		point = self.tableGetPoint(hotkey.id(), template)
 		if point is None:
 			return
 		self.tableClickButton(hwnd, point, template, hotkey)
