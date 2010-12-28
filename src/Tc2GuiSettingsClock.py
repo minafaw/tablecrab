@@ -25,7 +25,6 @@ class FrameSettings(QtGui.QFrame):
 		QtGui.QFrame.__init__(self, parent)
 
 		self.buttonBox = QtGui.QDialogButtonBox(self)
-		self.label = QtGui.QLabel('Clock settings', self)
 
 		self.labelSpeed = QtGui.QLabel('&Speed:', self)
 		self.spinSpeed = QtGui.QDoubleSpinBox(self)
@@ -60,10 +59,6 @@ class FrameSettings(QtGui.QFrame):
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
-		grid.col(Tc2Config.HLine(self), colspan=3)
-		grid.row()
-		grid.col(self.label, colspan=3)
-		grid.row()
 		grid.col(Tc2Config.HLine(self), colspan=3)
 		grid.row()
 		grid.col(self.checkIsOn).col(Tc2Config.HStretch())
