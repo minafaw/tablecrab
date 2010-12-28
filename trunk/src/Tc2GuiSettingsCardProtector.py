@@ -10,11 +10,11 @@ class FrameSettings(QtGui.QFrame):
 
 	SettingsKeyBase = 'CardProtector'
 	SettingsKeyGeometry = SettingsKeyBase + '/Geomatry'
-	SettingsKeyIsVisible = SettingsKeyBase + '/IsVisible'
+	SettingsKeyshowOnStartUp = SettingsKeyBase + '/ShowOnStartUp'
 	SettingsKeyBackgroundColor = SettingsKeyBase + '/BackgroundColor'
 	SettingsKeyColorDialog = SettingsKeyBase + '/ColorDialog'
 
-	isVisibleChanged = QtCore.pyqtSignal(bool)
+	showOnStartUpChanged = QtCore.pyqtSignal(bool)
 	backgroundColorChanged = QtCore.pyqtSignal(QtGui.QColor)
 
 	ColorButtonStyleSheet = 'background-color: %s;'
@@ -24,7 +24,7 @@ class FrameSettings(QtGui.QFrame):
 
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 
-		self.checkIsVisible = QtGui.QCheckBox('&Visible', self)
+		self.checkshowOnStartUp = QtGui.QCheckBox('&Show on start up', self)
 		self.labelBackgroundColor = QtGui.QLabel('Background color:')
 		self.buttonBackgroundColor = QtGui.QPushButton(self)
 		self._backgroundColor = QtGui.QColor()
@@ -45,7 +45,7 @@ class FrameSettings(QtGui.QFrame):
 		grid = Tc2Config.GridBox(self)
 		grid.col(Tc2Config.HLine(self), colspan=3)
 		grid.row()
-		grid.col(self.checkIsVisible).col(Tc2Config.HStretch())
+		grid.col(self.checkshowOnStartUp).col(Tc2Config.HStretch())
 		grid.row()
 		grid.col(self.labelBackgroundColor).col(self.buttonBackgroundColor).col(self.buttonBackgroundColorReset)
 		grid.row()
@@ -58,10 +58,10 @@ class FrameSettings(QtGui.QFrame):
 	def onInitSettings(self):
 		self.layout()
 
-		value = QtCore.Qt.Checked if Tc2Config.settingsValue(self.SettingsKeyIsVisible, False).toBool() else QtCore.Qt.Unchecked
-		self.checkIsVisible.setCheckState(value)
-		self.checkIsVisible.stateChanged.connect(
-				lambda value, self=self: self.setIsVisible(self.checkIsVisible.checkState() == QtCore.Qt.Checked)
+		value = QtCore.Qt.Checked if Tc2Config.settingsValue(self.SettingsKeyshowOnStartUp, False).toBool() else QtCore.Qt.Unchecked
+		self.checkshowOnStartUp.setCheckState(value)
+		self.checkshowOnStartUp.stateChanged.connect(
+				lambda value, self=self: self.setshowOnStartUp(self.checkshowOnStartUp.checkState() == QtCore.Qt.Checked)
 				)
 
 		value = Tc2Config.settingsValue(self.SettingsKeyBackgroundColor, '').toString()
@@ -78,12 +78,12 @@ class FrameSettings(QtGui.QFrame):
 	def onHelp(self, *args):
 		Tc2GuiHelp.dialogHelp('settingsCardProtector', parent=self)
 
-	def isVisible(self):
-		return self.checkIsVisible.checkState() == QtCore.Qt.Checked
+	def showOnStartUp(self):
+		return self.checkshowOnStartUp.checkState() == QtCore.Qt.Checked
 
-	def setIsVisible(self, value):
-		Tc2Config.settingsSetValue(self.SettingsKeyIsVisible, value)
-		self.isVisibleChanged.emit(value)
+	def setshowOnStartUp(self, value):
+		Tc2Config.settingsSetValue(self.SettingsKeyshowOnStartUp, value)
+		self.showOnStartUpChanged.emit(value)
 
 	def backgroundColor(self):
 		return self._backgroundColor

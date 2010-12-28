@@ -66,7 +66,7 @@ class SiteHandler(QtCore.QObject):
 		self._hwndMain = ( int(hwnd) )
 
 		self._widgetCardProtector = Tc2GuiToolsCardProtector.CardProtector(parent=None)
-		if Tc2Config.globalObject.settingsCardProtector.isVisible():
+		if Tc2Config.globalObject.settingsCardProtector.showOnStartUp():
 			self._widgetCardProtector.setVisible(True)
 
 
