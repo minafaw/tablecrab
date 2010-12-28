@@ -65,10 +65,9 @@ class CardProtector(QtGui.QWidget):
 		else:
 			self.setStyleSheet('')
 
-	def handeInputEvent(self, hwnd, hotkey, inputEvent):
+	def handleInputEvent(self, hwnd, hotkey, inputEvent):
 		if inputEvent.keyIsDown:
-			Tc2Config.widgetScreenshot(hwnd)
-			Tc2Config.globalObject.feedbackMessage.emit(hotkey.action() )
+			self.setVisible(not self.isVisible() )
 		inputEvent.accept = True
 
 
