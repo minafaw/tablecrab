@@ -215,6 +215,8 @@ HelpTopics = [
 				('hotkeyClick3', 'Click3'),
 				('hotkeyClick4', 'Click4'),
 				('hotkeyClick5', 'Click5'),
+				('hotkeyCardProtector', 'Card Protector'),
+
 				],
 			('handViewer', 'Hand Viewer'),
 			('settings', 'Settings'), [
@@ -224,6 +226,7 @@ HelpTopics = [
 				('settingsHandViewer', 'Hand Viewer'),
 				('settingsHandViewerStyleSheet', 'Hand Viewer Style Sheet'),
 				('settingsNashCalculationsStyleSheet', 'Nash Calculations Style Sheet'),
+				('settingsCardProtector', 'Card Protector'),
 				('settingsClock', 'Clock'),
 				],
 
@@ -295,6 +298,7 @@ class _GlobalObject(QtCore.QObject):
 	closeEvent = QtCore.pyqtSignal(QtCore.QEvent)
 
 	# inform listeners about objects created
+	objectCreatedMainWindow = QtCore.pyqtSignal(QtGui.QWidget)
 	objectCreatedSettingsGlobal = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsNetwork = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsPokerStars = QtCore.pyqtSignal(QtCore.QObject)
@@ -302,6 +306,7 @@ class _GlobalObject(QtCore.QObject):
 	objectCreatedSettingsHandViewerStyleSheet = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsNashCalculationsStyleSheet = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsClock = QtCore.pyqtSignal(QtCore.QObject)
+	objectCreatedSettingsCardProtector = QtCore.pyqtSignal(QtCore.QObject)
 
 	#TODO: overload signal to accept QObject as well
 	feedback = QtCore.pyqtSignal(QtGui.QWidget, QtCore.QString)
@@ -320,7 +325,7 @@ class _GlobalObject(QtCore.QObject):
 
 	def __init__(self):
 		QtCore.QObject.__init__(self)
-
+		self.mainWindow = self.objectCreatedMainWindow.connect(lambda obj, self=self: setattr(self, 'mainWindow', obj))
 		self.settingsGlobal = self.objectCreatedSettingsGlobal.connect(lambda obj, self=self: setattr(self, 'settingsGlobal', obj))
 		self.settingsNetwork = self.objectCreatedSettingsNetwork.connect(lambda obj, self=self: setattr(self, 'settingsNetwork', obj))
 		self.settingsPokerStars = self.objectCreatedSettingsPokerStars.connect(lambda obj, self=self: setattr(self, 'settingsPokerStars', obj))
@@ -328,6 +333,7 @@ class _GlobalObject(QtCore.QObject):
 		self.settingsPHandViewerStyleSheet = self.objectCreatedSettingsHandViewerStyleSheet.connect(lambda obj, self=self: setattr(self, 'settingsHandViewerStyleSheet', obj))
 		self.settingsNashCalculationsStyleSheet = self.objectCreatedSettingsNashCalculationsStyleSheet.connect(lambda obj, self=self: setattr(self, 'settingsNashCalculationsStyleSheet', obj))
 		self.settingsClock = self.objectCreatedSettingsClock.connect(lambda obj, self=self: setattr(self, 'settingsClock', obj))
+		self.settingsCardProtector = self.objectCreatedSettingsCardProtector.connect(lambda obj, self=self: setattr(self, 'settingsCardProtector', obj))
 
 globalObject = _GlobalObject()
 #***********************************************************************************

@@ -554,4 +554,13 @@ class HotkeyClick5(HotkeyBase):
 	def shortcut(klass): return QtGui.QKeySequence('Shift+5')
 Hotkeys.append(HotkeyClick5)
 
+class HotkeyCardProtector(HotkeyBase):
+	@classmethod
+	def id(klass): return 'CardProtector'
+	@classmethod
+	def menuName(klass): return 'Card Protector'
+	@classmethod
+	def shortcut(klass): return QtGui.QKeySequence('Shift+A')
+Hotkeys.append(HotkeyCardProtector)
+
 
