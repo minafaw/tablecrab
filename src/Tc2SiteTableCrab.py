@@ -49,6 +49,8 @@ class SiteHandler(QtCore.QObject):
 				Tc2Config.globalObject.feedbackMessage.emit(hotkey.action() )
 			inputEvent.accept = True
 			return True
+		#TODO: implement hide card protector if card protector has focus. we'd have
+		#		to translate Qt keyboard events to input events to do so. too much trouble for now.
 		elif hotkey.id() == Tc2ConfigHotkeys.HotkeyCardProtector.id():
 			self._widgetCardProtector.handleInputEvent(hwnd, hotkey, inputEvent)
 			return True
