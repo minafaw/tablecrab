@@ -4,8 +4,6 @@ import Tc2Config
 import Tc2ConfigHotkeys
 import Tc2Win32
 import Tc2GuiToolsCardProtector
-import Tc2GuiSettingsCardProtector
-
 from PyQt4 import QtCore
 
 #**********************************************************************************************
@@ -46,10 +44,7 @@ class SiteHandler(QtCore.QObject):
 		if Tc2Win32.windowIsSameProcess(hwnd, self._hwndMain):
 			return True
 		if hotkey.id() == Tc2ConfigHotkeys.HotkeyScreenshot.id():
-			if inputEvent.keyIsDown:
-				Tc2Config.widgetScreenshot(hwnd)
-				Tc2Config.globalObject.feedbackMessage.emit(hotkey.action() )
-			inputEvent.accept = True
+			self._widgetCardProtector.handleInputEvent(hwnd, hotkey, inputEvent)
 			return True
 		if hotkey.id() == Tc2ConfigHotkeys.HotkeyCardProtector.id():
 			if inputEvent.keyIsDown:
@@ -66,8 +61,7 @@ class SiteHandler(QtCore.QObject):
 		self._hwndMain = ( int(hwnd) )
 
 		self._widgetCardProtector = Tc2GuiToolsCardProtector.CardProtector(parent=None)
-		if Tc2Config.globalObject.settingsCardProtector.showOnStartUp():
-			self._widgetCardProtector.setVisible(True)
+
 
 
 

@@ -27,11 +27,13 @@ class CardProtector(QtGui.QWidget):
 		flags = self.windowFlags()
 
 		flags |= QtCore.Qt.Tool
-		flags &= ~QtCore.Qt.WindowTitleHint
 		self.setWindowFlags(flags)
 		self._isInited = False
 		Tc2Config.globalObject.closeEvent.connect(self.closeEvent)
 		self.restoreGeometry( Tc2Config.settingsValue(Tc2GuiSettingsCardProtector.FrameSettings.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray() )
+
+		if Tc2Config.globalObject.settingsCardProtector.showOnStartUp():
+			self.setVisible(True)
 
 	def closeEvent(self, event):
 		Tc2Config.settingsSetValue(Tc2GuiSettingsCardProtector.FrameSettings.SettingsKeyGeometry, self.saveGeometry() )
@@ -57,12 +59,17 @@ class CardProtector(QtGui.QWidget):
 		self.setBackgroundColor(Tc2Config.globalObject.settingsCardProtector.backgroundColor() )
 		Tc2Config.globalObject.settingsCardProtector.backgroundColorChanged.connect(self.setBackgroundColor)
 
-
 	def setBackgroundColor(self, color):
 		if color.isValid():
 			self.setStyleSheet(self.StyleSheet % color.name() )
 		else:
 			self.setStyleSheet('')
+
+	def handeInputEvent(self, hwnd, hotkey, inputEvent):
+		if inputEvent.keyIsDown:
+			Tc2Config.widgetScreenshot(hwnd)
+			Tc2Config.globalObject.feedbackMessage.emit(hotkey.action() )
+		inputEvent.accept = True
 
 
 
