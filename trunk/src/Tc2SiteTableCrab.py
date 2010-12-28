@@ -44,15 +44,14 @@ class SiteHandler(QtCore.QObject):
 		if Tc2Win32.windowIsSameProcess(hwnd, self._hwndMain):
 			return True
 		if hotkey.id() == Tc2ConfigHotkeys.HotkeyScreenshot.id():
-			self._widgetCardProtector.handleInputEvent(hwnd, hotkey, inputEvent)
-			return True
-		if hotkey.id() == Tc2ConfigHotkeys.HotkeyCardProtector.id():
 			if inputEvent.keyIsDown:
-				self._widgetCardProtector.setVisible(not self._widgetCardProtector.isVisible())
+				Tc2Config.widgetScreenshot(hwnd)
 				Tc2Config.globalObject.feedbackMessage.emit(hotkey.action() )
 			inputEvent.accept = True
 			return True
-		return False
+		elif hotkey.id() == Tc2ConfigHotkeys.HotkeyCardProtector.id():
+			self._widgetCardProtector.handleInputEvent(hwnd, hotkey, inputEvent)
+			return True
 
 	def onMainWindowCreated(self, window):
 		hwnd = window.effectiveWinId()
