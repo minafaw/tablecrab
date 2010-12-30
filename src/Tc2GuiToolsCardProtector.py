@@ -9,17 +9,9 @@ from PyQt4 import QtGui, QtCore
 #************************************************************************************
 #
 #************************************************************************************
-GWL_EXSTYLE = -20
-HWND_TOPMOST = -1
-WS_EX_TOPMOST	= 8
-SWP_NOSIZE = 0x0001
-SWP_NOMOVE = 0x0002
-SWP_NOACTIVATE = 0x0010
-
 class CardProtector(QtGui.QWidget):
 
 	StyleSheet = 'background-color: %s'
-
 
 	def __init__(self, parent=None):
 		QtGui.QWidget.__init__(self, parent)
@@ -50,14 +42,7 @@ class CardProtector(QtGui.QWidget):
 		if hwnd is None:
 			raise RuntimeError('main window has no valid hwnd')
 		hwnd = int(hwnd)
-
-		style = Tc2Win32.user32.GetWindowLongA(hwnd, GWL_EXSTYLE)
-		style |= WS_EX_TOPMOST
-		Tc2Win32.user32.SetWindowLongA(hwnd, GWL_EXSTYLE, style)
-		# looks like in wine we have to explicitely bring the window to the foreground
-		#see: [ http://cardboxeverywhere.wordpress.com/2007/12/10/programming-note-ws_ex_topmost/ ]
-		Tc2Win32.user32.SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE)
-
+		Tc2Win32.windowSetTopmost(hwnd)
 		self.setBackgroundColor(Tc2Config.globalObject.settingsCardProtector.backgroundColor() )
 		Tc2Config.globalObject.settingsCardProtector.backgroundColorChanged.connect(self.setBackgroundColor)
 
@@ -74,7 +59,7 @@ class CardProtector(QtGui.QWidget):
 
 	def onInputEvent(self, inputEvent):
 		hwnd = int(self.effectiveWinId())
-		if hwnd == Tc2Win32.user32.GetForegroundWindow():
+		if hwnd == Tc2Win32.windowForeground():
 				for hotkey in Tc2Config.hotkeyManager:
 					if not hotkey.key() or hotkey.key() != inputEvent.key:
 						continue
