@@ -1,10 +1,10 @@
 
 import Tc2Config
 import Tc2GuiSettingsCardProtector
+import Tc2Win32
+import Tc2ConfigHotkeys
 
 from PyQt4 import QtGui, QtCore
-from ctypes import windll
-user32 = windll.user32
 
 #************************************************************************************
 #
@@ -28,10 +28,12 @@ class CardProtector(QtGui.QWidget):
 
 		flags |= QtCore.Qt.Tool
 		self.setWindowFlags(flags)
+		self.setFocusPolicy(QtCore.Qt.StrongFocus)
 		self._isInited = False
 		Tc2Config.globalObject.closeEvent.connect(self.closeEvent)
-		self.restoreGeometry( Tc2Config.settingsValue(Tc2GuiSettingsCardProtector.FrameSettings.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray() )
+		Tc2Config.keyboardHook.inputEvent.connect(self.onInputEvent)
 
+		self.restoreGeometry( Tc2Config.settingsValue(Tc2GuiSettingsCardProtector.FrameSettings.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray() )
 		if Tc2Config.globalObject.settingsCardProtector.showOnStartUp():
 			self.setVisible(True)
 
@@ -49,12 +51,12 @@ class CardProtector(QtGui.QWidget):
 			raise RuntimeError('main window has no valid hwnd')
 		hwnd = int(hwnd)
 
-		style = user32.GetWindowLongA(hwnd, GWL_EXSTYLE)
+		style = Tc2Win32.user32.GetWindowLongA(hwnd, GWL_EXSTYLE)
 		style |= WS_EX_TOPMOST
-		user32.SetWindowLongA(hwnd, GWL_EXSTYLE, style)
+		Tc2Win32.user32.SetWindowLongA(hwnd, GWL_EXSTYLE, style)
 		# looks like in wine we have to explicitely bring the window to the foreground
 		#see: [ http://cardboxeverywhere.wordpress.com/2007/12/10/programming-note-ws_ex_topmost/ ]
-		user32.SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE)
+		Tc2Win32.user32.SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE)
 
 		self.setBackgroundColor(Tc2Config.globalObject.settingsCardProtector.backgroundColor() )
 		Tc2Config.globalObject.settingsCardProtector.backgroundColorChanged.connect(self.setBackgroundColor)
@@ -69,6 +71,16 @@ class CardProtector(QtGui.QWidget):
 		if inputEvent.keyIsDown:
 			self.setVisible(not self.isVisible() )
 		inputEvent.accept = True
+
+	def onInputEvent(self, inputEvent):
+		hwnd = int(self.effectiveWinId())
+		if hwnd == Tc2Win32.user32.GetForegroundWindow():
+				for hotkey in Tc2Config.hotkeyManager:
+					if not hotkey.key() or hotkey.key() != inputEvent.key:
+						continue
+					if hotkey.id() == Tc2ConfigHotkeys.HotkeyCardProtector.id():
+						self.handleInputEvent(hwnd, hotkey, inputEvent)
+						break
 
 
 
