@@ -24,7 +24,7 @@ class FrameSettings(QtGui.QFrame):
 
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 
-		self.checkshowOnStartUp = QtGui.QCheckBox('&Show on start up', self)
+		self.checkshowOnStartUp = QtGui.QCheckBox('&Show on startup', self)
 		self.labelBackgroundColor = QtGui.QLabel('Background color:')
 		self.buttonBackgroundColor = QtGui.QPushButton(self)
 		self._backgroundColor = QtGui.QColor()
