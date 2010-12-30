@@ -316,6 +316,9 @@ MY_MAX_CLASS_NAME = 64
 
 BM_CLICK = 245
 
+GWL_EXSTYLE = -20
+HWND_TOPMOST = -1
+WS_EX_TOPMOST	= 8
 #****************************************************************************************************
 #
 #****************************************************************************************************
@@ -638,6 +641,15 @@ def windowFromPoint(point):
 
 def windowForeground():
 	return user32.GetForegroundWindow()
+
+def windowSetTopmost(hwnd):
+	"""sets a window to be always topmost above all other windows"""
+	style = user32.GetWindowLongA(hwnd, GWL_EXSTYLE)
+	style |= WS_EX_TOPMOST
+	user32.SetWindowLongA(hwnd, GWL_EXSTYLE, style)
+	# looks like in wine we have to explicitely bring the window to the foreground
+	#see: [ http://cardboxeverywhere.wordpress.com/2007/12/10/programming-note-ws_ex_topmost/ ]
+	user32.SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE)
 
 def windowGetButtons(hwnd):
 	"""returns a dict containing buttons of a window
