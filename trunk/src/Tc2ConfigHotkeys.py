@@ -36,6 +36,7 @@ class HotkeyEditor(QtGui.QDialog):
 
 		self.labelHotkey = QtGui.QLabel('Hot&key:', self)
 		self.hotkeyBox = Tc2Config.HotkeyBox(key=self.hotkey.key(), parent=self)
+		self.hotkeyBox.onGlobalObjectInitSettingsFinished(Tc2Config.globalObject)
 		self.hotkeyBox.setToolTip('Hotkey (Alt+K)')
 		self.labelHotkey.setBuddy(self.hotkeyBox)
 

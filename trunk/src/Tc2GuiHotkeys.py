@@ -29,7 +29,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		QtGui.QTreeWidget.__init__(self, parent)
 
 		#TODO: find a better way to set hotkey manager as global
-		Tc2Config.hotkeyManager = self
+		Tc2Config.globalObject.objectCreatedHotkeyManager.emit(self)
 
 		# setup treeWidget
 		self.setUniformRowHeights(True)
@@ -82,7 +82,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self._actions.append(self.actionRemove)
 
 		# connect signals
-		Tc2Config.globalObject.initGui.connect(self.onInitGui)
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		self.itemDoubleClicked.connect(self.onHotkeyDoubleClicked)
 		self.itemSelectionChanged.connect(self.adjustActions)
 
@@ -234,7 +234,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 	def onHotkeyDoubleClicked(self, hotkey):
 		self.editHotkey()
 
-	def onInitGui(self):
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		self.setUpdatesEnabled(False)
 		self.clear()
 		hotkey = None
@@ -254,9 +254,8 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self.adjustHotkeys()
 		self.adjustActions()
 
-		settingsGlobal = Tc2Config.globalObject.settingsGlobal
-		self.setAlternatingRowColors(settingsGlobal.alternatingRowColors())
-		settingsGlobal.alternatingRowColorsChanged.connect(self.setAlternatingRowColors)
+		self.setAlternatingRowColors(globalObject.settingsGlobal.alternatingRowColors())
+		globalObject.settingsGlobal.alternatingRowColorsChanged.connect(self.setAlternatingRowColors)
 
 #**********************************************************************************************
 #
@@ -280,7 +279,7 @@ class FrameHotkeys(QtGui.QFrame):
 		self.toolBar.addAction(self.actionHelp)
 
 		# connect global signals
-		Tc2Config.globalObject.initGui.connect(self.onInitGui)
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsfinished)
 
 	#----------------------------------------------------------------------------------------------------------------
 	# methods
@@ -303,10 +302,9 @@ class FrameHotkeys(QtGui.QFrame):
 	def onActionHelpTriggered(self):
 		Tc2GuiHelp.dialogHelp('hotkeys', parent=self)
 
-	def onInitGui(self):
-		settingsGlobal = Tc2Config.globalObject.settingsGlobal
-		self.layout(settingsGlobal.toolBarPosition())
-		settingsGlobal.toolBarPositionChanged.connect(self.layout)
+	def onGlobalObjectInitSettingsfinished(self, globalObject):
+		self.layout(globalObject.settingsGlobal.toolBarPosition())
+		globalObject.settingsGlobal.toolBarPositionChanged.connect(self.layout)
 
 
 

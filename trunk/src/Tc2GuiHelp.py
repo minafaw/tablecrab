@@ -49,7 +49,7 @@ class FrameHelp(QtGui.QFrame):
 		self.addAction(self.actionSelectAll)
 
 		# connect signals
-		Tc2Config.globalObject.initGui.connect(self.onInitGui)
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 		self.tree.itemSelectionChanged.connect(self.onItemSelectionChanged)
 		self.tree.itemActivated.connect(self.onItemSelectionChanged)
@@ -122,7 +122,7 @@ class FrameHelp(QtGui.QFrame):
 		point = self.webView.mapToGlobal(point)
 		menu.exec_(point)
 
-	def onInitGui(self):
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		self.tree.setUpdatesEnabled(False)
 
 		self.webView.setUrl(QtCore.QUrl(''))
@@ -170,11 +170,10 @@ class FrameHelp(QtGui.QFrame):
 
 		self.tree.setUpdatesEnabled(True)
 
-		settingsGlobal = Tc2Config.globalObject.settingsGlobal
-		self.tree.setAlternatingRowColors(settingsGlobal.alternatingRowColors())
-		settingsGlobal.alternatingRowColorsChanged.connect(self.tree.setAlternatingRowColors)
-		self.layout(settingsGlobal.toolBarPosition())
-		settingsGlobal.toolBarPositionChanged.connect(self.layout)
+		self.tree.setAlternatingRowColors(globalObject.settingsGlobal.alternatingRowColors())
+		globalObject.settingsGlobal.alternatingRowColorsChanged.connect(self.tree.setAlternatingRowColors)
+		self.layout(globalObject.settingsGlobal.toolBarPosition())
+		globalObject.settingsGlobal.toolBarPositionChanged.connect(self.layout)
 
 	def onItemSelectionChanged(self):
 		items = self.tree.selectedItems()
@@ -259,8 +258,8 @@ class _DialogHelp(QtGui.QDialog):
 
 		self.frameHelp = FrameHelp(parent=self)
 		self.layout()
-		self.frameHelp.onInitGui()
-		self.frameHelp.toolBar.onInitGui()
+		self.frameHelp.onGlobalObjectInitSettingsFinished(Tc2Config.globalObject)
+		self.frameHelp.toolBar.onGlobalObjectInitSettingsFinished(Tc2Config.globalObject)
 		self.restoreGeometry( Tc2Config.settingsValue(self.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray() )
 		self.frameHelp.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 		self.frameHelp.setTopic(topic)

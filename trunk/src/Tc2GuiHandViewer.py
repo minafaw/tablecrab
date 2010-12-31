@@ -76,7 +76,7 @@ class FrameNashCalculations(QtGui.QFrame):
 		#self.toolBar.addAction(self.actionSave)
 
 		# connect signals
-		Tc2Config.globalObject.initGui.connect(self.onInitGui)
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		parent.handSet.connect(self.setHand)
 
 	def onRequestFailed(self, url, msg):
@@ -185,7 +185,7 @@ class FrameNashCalculations(QtGui.QFrame):
 				userAgent=Tc2Config.ReleaseName,
 				)
 
-	def onInitGui(self):
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		self.layout()
 		self.comboBox.currentIndexChanged.connect(self.onComboBoxCurrentIndexChanged)
 		self.webView.setHtml('')
@@ -324,7 +324,7 @@ class FrameHandViewer(QtGui.QFrame):
 		self.toolBar.addAction(self.actionHelp)
 
 		# connect global signals
-		Tc2Config.globalObject.initGui.connect(self.onInitGui)
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 
 	#----------------------------------------------------------------------------------------------------------------
@@ -436,16 +436,14 @@ class FrameHandViewer(QtGui.QFrame):
 		else:
 			Tc2Config.globalObject.feedbackMessage.emit('Could not grab hand')
 
-	def onInitGui(self):
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		self.webView.setUrl(QtCore.QUrl(''))
 		self.adjustActions()
 
-		settingsGlobal = Tc2Config.globalObject.settingsGlobal
-		self.layout(settingsGlobal.toolBarPosition())
-		settingsGlobal.toolBarPositionChanged.connect(self.layout)
-		settingsHandViewer = Tc2Config.globalObject.settingsHandViewer
-		self.setSideBarPosition(settingsHandViewer.sideBarPosition())
-		settingsHandViewer.sideBarPositionChanged.connect(self.setSideBarPosition)
+		self.layout(globalObject.settingsGlobal.toolBarPosition())
+		globalObject.settingsGlobal.toolBarPositionChanged.connect(self.layout)
+		self.setSideBarPosition(globalObject.settingsHandViewer.sideBarPosition())
+		globalObject.settingsHandViewer.sideBarPositionChanged.connect(self.setSideBarPosition)
 
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 		self.Tc2HandGrabberPokerStars.start()

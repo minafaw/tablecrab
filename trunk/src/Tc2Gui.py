@@ -100,7 +100,7 @@ class Gui(QtGui.QMainWindow):
 
 		# connect global signals
 		g = Tc2Config.globalObject
-		g.initGui.connect(self.onInitGui)
+		g.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		g.feedback.connect(self.onFeedback)
 		g.feedbackException.connect(self.onFeedbackException)
 		g.clearException.connect(self.onClearException)
@@ -112,9 +112,10 @@ class Gui(QtGui.QMainWindow):
 	def closeEvent(self, event):
 		self.singleApplication.close()
 		Tc2Config.globalObject.closeEvent.emit(event)
-		Tc2Config.mouseHook.stop()
-		Tc2Config.keyboardHook.stop()
-		Tc2Config.windowHook.stop()
+		Tc2Config.globalObject.mouseHook.stop()
+		Tc2Config.globalObject.keyboardHook.stop()
+		Tc2Config.globalObject.windowHook.stop()
+
 		Tc2Config.settingsSetValue(self.SettingsKeyTabCurrent, self.tabWidget.currentIndex())
 		Tc2Config.settingsSetValue(self.SettingsKeyGeometry, self.saveGeometry() )
 		return QtGui.QMainWindow.closeEvent(self, event)
@@ -122,11 +123,12 @@ class Gui(QtGui.QMainWindow):
 	def show(self):
 		QtGui.QMainWindow.show(self)
 		Tc2Config.globalObject.initSettings.emit()
-		Tc2Config.globalObject.initGui.emit()
-		Tc2Config.mouseHook.start()
-		Tc2Config.keyboardHook.start()
-		Tc2Config.windowHook.start()
 		Tc2Config.globalObject.objectCreatedMainWindow.emit(self)
+		Tc2Config.globalObject.initSettingsFinished.emit(Tc2Config.globalObject)
+		#
+		Tc2Config.globalObject.mouseHook.start()
+		Tc2Config.globalObject.keyboardHook.start()
+		Tc2Config.globalObject.windowHook.start()
 
 	#--------------------------------------------------------------------------------------------------------------
 	# methods
@@ -170,12 +172,11 @@ class Gui(QtGui.QMainWindow):
 		self.labelFeedback.setText('>>' + qString)
 		self._statusMessageTimer.start(Tc2Config.StatusBarMessageTimeout * 1000)
 
-	def onInitGui(self):
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		self.tabWidget.setCurrentIndex( Tc2Config.settingsValue(self.SettingsKeyTabCurrent, QtCore.QVariant()).toInt()[0] )
-		settingsGlobal = Tc2Config.globalObject.settingsGlobal
-		position = self.tabWidget.South if settingsGlobal.tabPosition() == Tc2Config.TabPositionBottom else self.tabWidget.North
+		position = self.tabWidget.South if globalObject.settingsGlobal.tabPosition() == Tc2Config.TabPositionBottom else self.tabWidget.North
 		self.tabWidget.setTabPosition(position)
-		settingsGlobal.tabPositionChanged.connect(
+		globalObject.settingsGlobal.tabPositionChanged.connect(
 				lambda value, self=self: self.tabWidget.setTabPosition(self.tabWidget.South if value == Tc2Config.TabPositionBottom else self.tabWidget.North)
 				)
 
