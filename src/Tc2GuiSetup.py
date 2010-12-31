@@ -43,7 +43,7 @@ class FrameSetup(QtGui.QFrame):
 		self.actionHelp.triggered.connect(self.onActionHelpTriggered)
 		self.toolBar.addAction(self.actionHelp)
 
-		Tc2Config.globalObject.initGui.connect(self.onInitGui)
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 
 	#--------------------------------------------------------------------------------------------------------------
@@ -69,10 +69,9 @@ class FrameSetup(QtGui.QFrame):
 	def onCloseEvent(self, event):
 		Tc2Config.settingsSetValue(self.SettingsKeySplitterState, self.splitter.saveState())
 
-	def onInitGui(self):
-		settingsGlobal = Tc2Config.globalObject.settingsGlobal
-		self.layout(settingsGlobal.toolBarPosition())
-		settingsGlobal.toolBarPositionChanged.connect(self.layout)
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
+		self.layout(globalObject.settingsGlobal.toolBarPosition())
+		globalObject.settingsGlobal.toolBarPositionChanged.connect(self.layout)
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 
 

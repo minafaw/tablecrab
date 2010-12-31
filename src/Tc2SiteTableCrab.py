@@ -14,8 +14,8 @@ class SiteHandler(QtCore.QObject):
 		QtCore.QObject.__init__(self, parent)
 
 		self._hwndMain = None
-		self._widgetCardProtector = None
-		Tc2Config.globalObject.objectCreatedMainWindow.connect(self.onMainWindowCreated)
+		self._widgetCardProtector = Tc2GuiToolsCardProtector.CardProtector(parent=None)
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 
 	def setHwndMain(self, hwnd):
 		self._hwndMain = hwnd
@@ -55,13 +55,12 @@ class SiteHandler(QtCore.QObject):
 			self._widgetCardProtector.handleInputEvent(hwnd, hotkey, inputEvent)
 			return True
 
-	def onMainWindowCreated(self, window):
-		hwnd = window.effectiveWinId()
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
+		hwnd = globalObject.mainWindow.effectiveWinId()
 		if hwnd is None:
 			raise RuntimeError('main window has no valid hwnd')
 		self._hwndMain = ( int(hwnd) )
 
-		self._widgetCardProtector = Tc2GuiToolsCardProtector.CardProtector(parent=None)
 
 
 

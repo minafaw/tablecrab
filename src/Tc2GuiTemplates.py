@@ -51,7 +51,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		QtGui.QTreeWidget.__init__(self, parent)
 
 		#TODO: find a better way to set template manager as global
-		Tc2Config.templateManager = self
+		Tc2Config.globalObject.objectCreatedTemplateManager.emit(self)
 
 		# setup treeWidget
 		self.setUniformRowHeights(True)
@@ -103,7 +103,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self._actions.append(self.actionRemove)
 
 		# connect signals
-		Tc2Config.globalObject.initGui.connect(self.onInitGui)
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		Tc2Config.globalObject.widgetScreenshotSet.connect(self.onWidgetScreenshotSet)
 		Tc2Config.globalObject.widgetScreenshotDoubleClicked.connect(self.onWidgetScreenshotDoubleClicked)
 
@@ -272,7 +272,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		if item.flags() & QtCore.Qt.ItemIsEditable:
 			self.editItem(item)
 
-	def onInitGui(self):
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		self.setUpdatesEnabled(False)
 		self.clear()
 		template = None
@@ -289,14 +289,11 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self.setUpdatesEnabled(True)
 		self.adjustActions()
 
-		settingsGlobal = Tc2Config.globalObject.settingsGlobal
-		self.setAlternatingRowColors(settingsGlobal.alternatingRowColors())
-		settingsGlobal.alternatingRowColorsChanged.connect(self.setAlternatingRowColors)
-		self.setRootIsDecorated(settingsGlobal.childItemIndicators())
-		settingsGlobal.childItemIndicatorsChanged.connect(self.setRootIsDecorated)
-
-		Tc2Config.globalObject.widgetScreenshotQuery.emit()
-
+		self.setAlternatingRowColors(globalObject.settingsGlobal.alternatingRowColors())
+		globalObject.settingsGlobal.alternatingRowColorsChanged.connect(self.setAlternatingRowColors)
+		self.setRootIsDecorated(globalObject.settingsGlobal.childItemIndicators())
+		globalObject.settingsGlobal.childItemIndicatorsChanged.connect(self.setRootIsDecorated)
+		globalObject.widgetScreenshotQuery.emit()
 
 	def onItemCollapsed(self, item):
 		if not self._templatesRead:

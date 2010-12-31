@@ -548,14 +548,11 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	def __init__(self):
 		self.settingsHandViewer = None
 		self.settingsHandViewerStyleSheet = None
-		Tc2Config.globalObject.objectCreatedSettingsHandViewer.connect(self.onObjectCreatedSettingsHandViewer)
-		Tc2Config.globalObject.objectCreatedSettingsHandViewerStyleSheet.connect(self.onObjectCreatedSettingsHandViewerStyleSheet)
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 
-	def onObjectCreatedSettingsHandViewer(self, obj):
-		self.settingsHandViewer = obj
-
-	def onObjectCreatedSettingsHandViewerStyleSheet(self, obj):
-		self.settingsHandViewerStyleSheet = obj
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
+		self.settingsHandViewer = globalObject.settingsHandViewer
+		self.settingsHandViewerStyleSheet = globalObject.settingsHandViewerStyleSheet
 
 	def formatNum(self, hand, num):
 		if not num:
@@ -755,14 +752,17 @@ if sys.platform == 'win32':
 			self._hwndDialog = None
 			self._hwndEdit = None
 
-			Tc2Config.windowHook.windowCreated.connect(self.onWindowCreated)
-			Tc2Config.windowHook.windowDestroyed.connect(self.onWindowDestroyed)
+			Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 
 		def stop(self):
 			self._timer.stop()
 			pass
 		def start(self):
 			pass
+
+		def onGlobalObjectInitSettingsFinished(self, globalObject):
+			globalObject.windowHook.windowCreated.connect(self.onWindowCreated)
+			globalObject.windowHook.windowDestroyed.connect(self.onWindowDestroyed)
 
 		def onWindowCreated(self, hwnd):
 			if Tc2Win32.windowGetClassName(hwnd) != self.WindowClassName:

@@ -19,13 +19,7 @@ class SiteManager(QtCore.QObject):
 		QtCore.QObject.__init__(self, parent)
 		self._lock = thread.allocate_lock()
 
-		Tc2Config.windowHook.windowCreated.connect(self.onWindowCreated)
-		Tc2Config.windowHook.windowDestroyed.connect(self.onWindowDestroyed)
-		Tc2Config.windowHook.windowGainedForeground.connect(self.onWindowGainedForeground)
-		Tc2Config.windowHook.windowLostForeground.connect(self.onWindowLostForeground)
-		Tc2Config.keyboardHook.inputEvent.connect(self.onInputEvent)
-		Tc2Config.mouseHook.inputEvent.connect(self.onInputEvent)
-
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		self._tableCrabSiteHandler = Tc2SiteTableCrab.SiteHandler(parent=self)
 		self._handlers = (
 				self._tableCrabSiteHandler,	# should always be first item
@@ -34,6 +28,14 @@ class SiteManager(QtCore.QObject):
 
 	def tableCrabSiteHandler(self):
 		return self._tableCrabSiteHandler
+
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
+		globalObject.mouseHook.inputEvent.connect(self.onInputEvent)
+		globalObject.keyboardHook.inputEvent.connect(self.onInputEvent)
+		globalObject.windowHook.windowCreated.connect(self.onWindowCreated)
+		globalObject.windowHook.windowDestroyed.connect(self.onWindowDestroyed)
+		globalObject.windowHook.windowGainedForeground.connect(self.onWindowGainedForeground)
+		globalObject.windowHook.windowLostForeground.connect(self.onWindowLostForeground)
 
 	def onWindowDestroyed(self, hwnd):
 		for handler in self._handlers:
@@ -56,11 +58,11 @@ class SiteManager(QtCore.QObject):
 				return
 
 	def onInputEvent(self, inputEvent):
-		if Tc2Config.hotkeyManager is None or Tc2Config.templateManager is None:
+		if Tc2Config.globalObject.hotkeyManager is None or Tc2Config.globalObject.templateManager is None:
 			return
 		hwnd = Tc2Win32.windowForeground()
 		if hwnd:
-			for hotkey in Tc2Config.hotkeyManager:
+			for hotkey in Tc2Config.globalObject.hotkeyManager:
 				if not hotkey.key() or hotkey.key() != inputEvent.key:
 					continue
 				for handler in self._handlers:

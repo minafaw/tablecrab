@@ -103,7 +103,7 @@ class SiteHandler(QtCore.QObject):
 					templates = []
 					indexCurrent = None
 					i = 0
-					for template in Tc2Config.templateManager:
+					for template in Tc2Config.globalObject.templateManager:
 						if template.id() != Tc2ConfigTemplates.TemplatePokerStarsTable.id():
 							continue
 						if not template.isEnabled():
@@ -248,7 +248,7 @@ class SiteHandler(QtCore.QObject):
 	def tableTemplate(self, hwnd):
 		if self.isTable(hwnd):
 			rect = Tc2Win32.windowGetClientRect(hwnd)
-			for template in Tc2Config.templateManager:
+			for template in Tc2Config.globalObject.templateManager:
 				if template.id() == Tc2ConfigTemplates.TemplatePokerStarsTable.id():
 					if template.size == rect.size():
 						return template

@@ -293,12 +293,19 @@ def settingsRemoveKey(key):
 class _GlobalObject(QtCore.QObject):
 
 	# global signals
+
+	# settings objects should initialize themselves in response to this signal
 	initSettings = QtCore.pyqtSignal()
-	initGui = QtCore.pyqtSignal()
+	# emitted when the gui is up and alive. param is globalObject
+	#NOTE: for dynamically created widgets you may have to call the respective slot
+	initSettingsFinished = QtCore.pyqtSignal(QtCore.QObject)
+	# emitted when the gui is about to close
 	closeEvent = QtCore.pyqtSignal(QtCore.QEvent)
 
 	# inform listeners about objects created
 	objectCreatedMainWindow = QtCore.pyqtSignal(QtGui.QWidget)
+	objectCreatedHotkeyManager = QtCore.pyqtSignal(QtGui.QWidget)
+	objectCreatedTemplateManager = QtCore.pyqtSignal(QtGui.QWidget)
 	objectCreatedSettingsGlobal = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsNetwork = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsPokerStars = QtCore.pyqtSignal(QtCore.QObject)
@@ -326,6 +333,11 @@ class _GlobalObject(QtCore.QObject):
 	def __init__(self):
 		QtCore.QObject.__init__(self)
 		self.mainWindow = self.objectCreatedMainWindow.connect(lambda obj, self=self: setattr(self, 'mainWindow', obj))
+		self.windowHook = Tc2Win32.WindowHook(parent=self, timeout=WindowHookTimeout)
+		self.mouseHook = Tc2Win32.MouseHook(parent=self)
+		self.keyboardHook = Tc2Win32.KeyboardHook(parent=self)
+		self.hotkeyManager = self.objectCreatedHotkeyManager.connect(lambda obj, self=self: setattr(self, 'hotkeyManager', obj))
+		templateManager = self.objectCreatedTemplateManager.connect(lambda obj, self=self: setattr(self, 'templateManager', obj))
 		self.settingsGlobal = self.objectCreatedSettingsGlobal.connect(lambda obj, self=self: setattr(self, 'settingsGlobal', obj))
 		self.settingsNetwork = self.objectCreatedSettingsNetwork.connect(lambda obj, self=self: setattr(self, 'settingsNetwork', obj))
 		self.settingsPokerStars = self.objectCreatedSettingsPokerStars.connect(lambda obj, self=self: setattr(self, 'settingsPokerStars', obj))
@@ -336,17 +348,6 @@ class _GlobalObject(QtCore.QObject):
 		self.settingsCardProtector = self.objectCreatedSettingsCardProtector.connect(lambda obj, self=self: setattr(self, 'settingsCardProtector', obj))
 
 globalObject = _GlobalObject()
-#***********************************************************************************
-# other global objects
-#***********************************************************************************
-windowHook = Tc2Win32.WindowHook(parent=None, timeout=WindowHookTimeout)
-mouseHook = Tc2Win32.MouseHook(parent=None)
-keyboardHook = Tc2Win32.KeyboardHook(parent=None)
-#TODO: how to make hotkeyManager and templateManager globally available?
-# currenly each of them assigns itsself here on init()
-hotkeyManager = None
-templateManager = None
-
 #***********************************************************************************
 # types
 #***********************************************************************************
@@ -529,8 +530,8 @@ class ClockLabel(QtGui.QLabel):
 		self._timer = QtCore.QTimer(self)
 		self._timer.setInterval(speed * 1000)
 		self._timer.timeout.connect(self.tick)
-		globalObject.initGui.connect(self.onInitGui)
-	def onInitGui(self):
+		globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		settings = globalObject.settingsClock
 		self.setOn(settings.isOn())
 		settings.isOnChanged.connect(self.setOn)
@@ -586,7 +587,7 @@ class WebViewToolBar(QtGui.QToolBar):
 		self.settingsKeyZoomFactor = settingsKeyZoomFactor
 		self.settingsGlobal = None
 
-		globalObject.initGui.connect(self.onInitGui)
+		globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 
 		self.actionBack = self.webView.pageAction(QtWebKit.QWebPage.Back)
 		self.actionBack.setShortcut(QtGui.QKeySequence.Back)
@@ -613,7 +614,7 @@ class WebViewToolBar(QtGui.QToolBar):
 		self.actionZoomOut.triggered.connect(self.zoomOut)
 		self.addAction(self.actionZoomOut)
 
-	def onInitGui(self):
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		if self.settingsKeyZoomFactor is not None:
 			factor = settingsValue(self.settingsKeyZoomFactor, 1).toDouble()[0]
 			self.webView.setZoomFactor(factor)
@@ -785,7 +786,11 @@ class HotkeyBox(QtGui.QComboBox):
 		else:
 			if key is not None:
 				self.setItemText(0, key)
-		keyboardHook.inputEvent.connect(self.onInputEvent)
+
+		globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
+
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
+		globalObject.keyboardHook.inputEvent.connect(self.onInputEvent)
 
 	#TODO: open HotkeyBox popup when the user clicks the combo twice. good or not?
 	def focusInEvent(self, event):

@@ -95,7 +95,7 @@ class FrameTool(QtGui.QFrame):
 
 
 		# connect signals
-		Tc2Config.globalObject.initGui.connect(self.onInitGui)
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 		self.webView.urlChanged.connect(self.onUrlChanged)
 
@@ -118,10 +118,9 @@ class FrameTool(QtGui.QFrame):
 	def toolName(self):
 		return 'HandHistoryViewer'
 
-	def onInitGui(self):
-		settingsGlobal = Tc2Config.globalObject.settingsGlobal
-		self.layout(settingsGlobal.toolBarPosition())
-		settingsGlobal.toolBarPositionChanged.connect(self.layout)
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
+		self.layout(globalObject.settingsGlobal.toolBarPosition())
+		globalObject.settingsGlobal.toolBarPositionChanged.connect(self.layout)
 		self.webView.setUrl(QtCore.QUrl(''))
 		self.spinBox.valueChanged.connect(self.onSpinBoxValueChanged)
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )

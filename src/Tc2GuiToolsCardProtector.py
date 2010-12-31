@@ -23,11 +23,8 @@ class CardProtector(QtGui.QWidget):
 		self.setFocusPolicy(QtCore.Qt.StrongFocus)
 		self._isInited = False
 		Tc2Config.globalObject.closeEvent.connect(self.closeEvent)
-		Tc2Config.keyboardHook.inputEvent.connect(self.onInputEvent)
-
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		self.restoreGeometry( Tc2Config.settingsValue(Tc2GuiSettingsCardProtector.FrameSettings.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray() )
-		if Tc2Config.globalObject.settingsCardProtector.showOnStartUp():
-			self.setVisible(True)
 
 	def closeEvent(self, event):
 		Tc2Config.settingsSetValue(Tc2GuiSettingsCardProtector.FrameSettings.SettingsKeyGeometry, self.saveGeometry() )
@@ -36,15 +33,12 @@ class CardProtector(QtGui.QWidget):
 		QtGui.QWidget.setVisible(self, flag)
 		if not flag or self._isInited:
 			return
-
 		self._isInited = True
 		hwnd = self.effectiveWinId()
 		if hwnd is None:
 			raise RuntimeError('main window has no valid hwnd')
 		hwnd = int(hwnd)
 		Tc2Win32.windowSetTopmost(hwnd)
-		self.setBackgroundColor(Tc2Config.globalObject.settingsCardProtector.backgroundColor() )
-		Tc2Config.globalObject.settingsCardProtector.backgroundColorChanged.connect(self.setBackgroundColor)
 
 	def setBackgroundColor(self, color):
 		if color.isValid():
@@ -60,12 +54,20 @@ class CardProtector(QtGui.QWidget):
 	def onInputEvent(self, inputEvent):
 		hwnd = int(self.effectiveWinId())
 		if hwnd == Tc2Win32.windowForeground():
-				for hotkey in Tc2Config.hotkeyManager:
+				for hotkey in Tc2Config.globalObject.hotkeyManager:
 					if not hotkey.key() or hotkey.key() != inputEvent.key:
 						continue
 					if hotkey.id() == Tc2ConfigHotkeys.HotkeyCardProtector.id():
 						self.handleInputEvent(hwnd, hotkey, inputEvent)
 						break
+
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
+		globalObject.keyboardHook.inputEvent.connect(self.onInputEvent)
+		self.setBackgroundColor(globalObject.settingsCardProtector.backgroundColor() )
+		globalObject.settingsCardProtector.backgroundColorChanged.connect(self.setBackgroundColor)
+		if globalObject.settingsCardProtector.showOnStartUp():
+			self.setVisible(True)
+
 
 
 

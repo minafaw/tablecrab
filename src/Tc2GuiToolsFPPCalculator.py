@@ -121,7 +121,7 @@ class FrameTool(QtGui.QFrame):
 		self.addAction(action)
 
 		# connect signals
-		Tc2Config.globalObject.initGui.connect(self.onInitGui)
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 
 	def toolTip(self):
 		return 'FPPCalculator'
@@ -166,7 +166,7 @@ class FrameTool(QtGui.QFrame):
 		grid.row()
 		grid.col(self.buttonBox, colspan=3)
 
-	def onInitGui(self):
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		self.layout()
 
 		vipStatus = Tc2Config.settingsValue(self.SettingsKeyVIPStatus, '').toString()
