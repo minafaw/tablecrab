@@ -132,6 +132,7 @@ class FrameSettings(QtGui.QFrame):
 		if fileName is not None:
 			fileInfo = QtCore.QFileInfo(fileName)
 			imageName = fileInfo.fileName()
+			imageName = Tc2Config.truncateString(imageName, Tc2Config.MaxDisplayFileName)
 			Tc2Config.settingsSetValue(self.SettingsKeyBackgroundImage, fileName)
 			self.buttonBackgroundImage.setText(imageName)
 		else:
