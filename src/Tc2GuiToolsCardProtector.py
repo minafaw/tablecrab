@@ -22,6 +22,17 @@ class CardProtector(QtGui.QWidget):
 		self.setWindowFlags(flags)
 		self.setFocusPolicy(QtCore.Qt.StrongFocus)
 		self._isInited = False
+
+		self.scrollArea = QtGui.QScrollArea(self)
+		#NOTE: kind of don't like the frame here. good idea or not?
+		self.scrollArea.setFrameShape(QtGui.QFrame.NoFrame)
+		layout= QtGui.QHBoxLayout(self)
+		layout.setContentsMargins(0, 0, 0, 0)
+		layout.addWidget(self.scrollArea)
+		self.scrollArea.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+		self.label = QtGui.QLabel(self.scrollArea)
+		self.scrollArea.setWidget(self.label)
+
 		Tc2Config.globalObject.closeEvent.connect(self.closeEvent)
 		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		self.restoreGeometry( Tc2Config.settingsValue(Tc2GuiSettingsCardProtector.FrameSettings.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray() )
@@ -42,9 +53,19 @@ class CardProtector(QtGui.QWidget):
 
 	def setBackgroundColor(self, color):
 		if color.isValid():
-			self.setStyleSheet(self.StyleSheet % color.name() )
+			self.scrollArea.viewport().setStyleSheet(self.StyleSheet % color.name() )
 		else:
-			self.setStyleSheet('')
+			self.scrollArea.viewport().setStyleSheet('')
+
+	def setBackgroundImage(self, pixmap):
+		if pixmap.isNull():
+			self.label.setPixmap(QtGui.QPixmap() )
+			self.label.setScaledContents(True)
+			self.label.resize(self.label.parent().size())
+		else:
+			self.label.setPixmap(pixmap)
+			self.label.setScaledContents(False)
+			self.label.resize(pixmap.size() )
 
 	def handleInputEvent(self, hwnd, hotkey, inputEvent):
 		if inputEvent.keyIsDown:
@@ -65,6 +86,8 @@ class CardProtector(QtGui.QWidget):
 		globalObject.keyboardHook.inputEvent.connect(self.onInputEvent)
 		self.setBackgroundColor(globalObject.settingsCardProtector.backgroundColor() )
 		globalObject.settingsCardProtector.backgroundColorChanged.connect(self.setBackgroundColor)
+		self.setBackgroundImage(globalObject.settingsCardProtector.backgroundImage() )
+		globalObject.settingsCardProtector.backgroundImageChanged.connect(self.setBackgroundImage)
 		if globalObject.settingsCardProtector.showOnStartUp():
 			self.setVisible(True)
 
