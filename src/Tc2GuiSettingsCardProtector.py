@@ -131,7 +131,7 @@ class FrameSettings(QtGui.QFrame):
 	def setBackgroundImage(self, fileName, pixmap):
 		if fileName is not None:
 			fileInfo = QtCore.QFileInfo(fileName)
-			imageName = fileInfo.baseName()
+			imageName = fileInfo.fileName()
 			Tc2Config.settingsSetValue(self.SettingsKeyBackgroundImage, fileName)
 			self.buttonBackgroundImage.setText(imageName)
 		else:
