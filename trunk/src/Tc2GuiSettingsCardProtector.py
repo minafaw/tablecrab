@@ -13,9 +13,12 @@ class FrameSettings(QtGui.QFrame):
 	SettingsKeyshowOnStartUp = SettingsKeyBase + '/ShowOnStartUp'
 	SettingsKeyBackgroundColor = SettingsKeyBase + '/BackgroundColor'
 	SettingsKeyColorDialog = SettingsKeyBase + '/ColorDialog'
+	SettingsKeyBackgroundImage = SettingsKeyBase + '/BackgroundImage'
+	SettingsKeyDialogOpenImageState = SettingsKeyBase + '/DialogOpenImage'
 
 	showOnStartUpChanged = QtCore.pyqtSignal(bool)
 	backgroundColorChanged = QtCore.pyqtSignal(QtGui.QColor)
+	backgroundImageChanged = QtCore.pyqtSignal(QtGui.QPixmap)
 
 	ColorButtonStyleSheet = 'background-color: %s;'
 
@@ -25,10 +28,16 @@ class FrameSettings(QtGui.QFrame):
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 
 		self.checkshowOnStartUp = QtGui.QCheckBox('&Show on startup', self)
+
 		self.labelBackgroundColor = QtGui.QLabel('Background color:')
 		self.buttonBackgroundColor = QtGui.QPushButton(self)
 		self._backgroundColor = QtGui.QColor()
 		self.buttonBackgroundColorReset = QtGui.QPushButton('Reset', self)
+
+		self.labelBackgroundImage = QtGui.QLabel('Background image:')
+		self.buttonBackgroundImage = QtGui.QPushButton(self)
+		self._backgroundImage = QtGui.QPixmap()
+		self.buttonBackgroundImageReset = QtGui.QPushButton('Reset', self)
 
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		self.buttonHelp.setToolTip('Help (F1)')
@@ -48,6 +57,8 @@ class FrameSettings(QtGui.QFrame):
 		grid.col(self.checkshowOnStartUp).col(Tc2Config.HStretch())
 		grid.row()
 		grid.col(self.labelBackgroundColor).col(self.buttonBackgroundColor).col(self.buttonBackgroundColorReset)
+		grid.row()
+		grid.col(self.labelBackgroundImage).col(self.buttonBackgroundImage).col(self.buttonBackgroundImageReset)
 		grid.row()
 		grid.col(Tc2Config.VStretch())
 		grid.row()
@@ -70,8 +81,16 @@ class FrameSettings(QtGui.QFrame):
 			self.buttonBackgroundColor.setStyleSheet(self.ColorButtonStyleSheet % color.name() )
 			self._backgroundColor = color
 		self.buttonBackgroundColor.clicked.connect(self.onButtonBackgroundColorClicked)
-
 		self.buttonBackgroundColorReset.clicked.connect(self.onButtonBackgroundColorResetClicked)
+
+		value = Tc2Config.settingsValue(self.SettingsKeyBackgroundImage, '').toString()
+		if value:
+			fileName, pixmap = self.imageFromFileName(value)
+			self.setBackgroundImage(fileName, pixmap)
+		else:
+			self.setBackgroundImage(None, QtGui.QPixmap() )
+		self.buttonBackgroundImage.clicked.connect(self.onButtonBackgroundImageClicked)
+		self.buttonBackgroundImageReset.clicked.connect(self.onButtonBackgroundImageResetClicked)
 
 		Tc2Config.globalObject.objectCreatedSettingsCardProtector.emit(self)
 
@@ -105,5 +124,48 @@ class FrameSettings(QtGui.QFrame):
 
 	def onButtonBackgroundColorResetClicked(self):
 		self.setBackgroundColor(QtGui.QColor())
+
+	def backgroundImage(self):
+		return self._backgroundImage
+
+	def setBackgroundImage(self, fileName, pixmap):
+		if fileName is not None:
+			fileInfo = QtCore.QFileInfo(fileName)
+			imageName = fileInfo.baseName()
+			Tc2Config.settingsSetValue(self.SettingsKeyBackgroundImage, fileName)
+			self.buttonBackgroundImage.setText(imageName)
+		else:
+			Tc2Config.settingsSetValue(self.SettingsKeyBackgroundImage, '')
+			self.buttonBackgroundImage.setText('...')
+		self._backgroundImage = pixmap
+		self.backgroundImageChanged.emit(pixmap)
+
+	def onButtonBackgroundImageClicked(self):
+		imageFormats = Tc2Config.readWriteImageFormats()
+		fileName = Tc2Config.dlgOpenSaveFile(
+				parent=self,
+				openFile=True,
+				title='Open Background Image..',
+				fileFilters=('Images (%s)' % ' '.join(['*.%s' % i for i in imageFormats]), 'All Files (*)'),
+				settingsKey=self.SettingsKeyDialogOpenImageState,
+				)
+		if fileName is None:
+			return
+		imageName, pixmap = self.imageFromFileName(fileName)
+		if imageName is None:
+			Tc2Config.msgWarning(self, 'Could not open background image')
+			return
+		self.setBackgroundImage(imageName, pixmap)
+
+	def onButtonBackgroundImageResetClicked(self):
+		self.setBackgroundImage(None, QtGui.QPixmap() )
+
+	def imageFromFileName(self, fileName):
+		pixmap = QtGui.QPixmap()
+		if not pixmap.load(fileName):
+			return (None, pixmap)
+		return (fileName, pixmap)
+
+
 
 
