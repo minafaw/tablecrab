@@ -33,6 +33,10 @@ class CardProtector(QtGui.QWidget):
 		self.label = QtGui.QLabel(self.scrollArea)
 		self.scrollArea.setWidget(self.label)
 
+		self.autoToggleTimer = QtCore.QTimer(self)
+		self.autoToggleTimer.setSingleShot(True)
+		self.autoToggleTimer.timeout.connect(self.onAutoToggleTimer)
+
 		Tc2Config.globalObject.closeEvent.connect(self.closeEvent)
 		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		self.restoreGeometry( Tc2Config.settingsValue(Tc2GuiSettingsCardProtector.FrameSettings.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray() )
@@ -69,7 +73,11 @@ class CardProtector(QtGui.QWidget):
 
 	def handleInputEvent(self, hwnd, hotkey, inputEvent):
 		if inputEvent.keyIsDown:
-			self.setVisible(not self.isVisible() )
+			if Tc2Config.globalObject.settingsCardProtector.autoToggle():
+				self.setVisible(False)
+				self.autoToggleTimer.start(Tc2Config.globalObject.settingsCardProtector.autoToggleTimeout() * 1000)
+			else:
+				self.setVisible(not self.isVisible() )
 		inputEvent.accept = True
 
 	def onInputEvent(self, inputEvent):
@@ -90,6 +98,9 @@ class CardProtector(QtGui.QWidget):
 		globalObject.settingsCardProtector.backgroundImageChanged.connect(self.setBackgroundImage)
 		if globalObject.settingsCardProtector.showOnStartUp():
 			self.setVisible(True)
+
+	def onAutoToggleTimer(self):
+		self.setVisible(True)
 
 
 

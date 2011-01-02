@@ -190,6 +190,11 @@ DefaultClockSpeed = 1.0
 DefaultClockIncrement = 1
 DefaultClockPrecission = 1
 
+CardProtectorAutoToggleDefault = False
+CardProtectorAutoToggleTimeoutMin = 0.1
+CardProtectorAutoToggleTimeoutMax = 20.0
+CardProtectorAutoToggleTimeoutDefault = 3.0
+
 HelpTopics = [
 		('index', 'TableCrab'), [
 			('versionHistory', 'Version History'),
