@@ -15,10 +15,14 @@ class FrameSettings(QtGui.QFrame):
 	SettingsKeyColorDialog = SettingsKeyBase + '/ColorDialog'
 	SettingsKeyBackgroundImage = SettingsKeyBase + '/BackgroundImage'
 	SettingsKeyDialogOpenImageState = SettingsKeyBase + '/DialogOpenImage'
+	SettingsKeyAutoToggle = SettingsKeyBase + '/AutoToggle'
+	SettingsKeyAutoToggleTimeout = SettingsKeyBase + '/AutoToggleTimeout'
 
 	showOnStartUpChanged = QtCore.pyqtSignal(bool)
 	backgroundColorChanged = QtCore.pyqtSignal(QtGui.QColor)
 	backgroundImageChanged = QtCore.pyqtSignal(QtGui.QPixmap)
+	autoToggleChanged = QtCore.pyqtSignal(bool)
+	autoToggleTimeoutChanged = QtCore.pyqtSignal(float)
 
 	ColorButtonStyleSheet = 'background-color: %s;'
 
@@ -38,6 +42,15 @@ class FrameSettings(QtGui.QFrame):
 		self.buttonBackgroundImage = QtGui.QPushButton(self)
 		self._backgroundImage = QtGui.QPixmap()
 		self.buttonBackgroundImageReset = QtGui.QPushButton('Reset', self)
+
+		self.checkAutoToggle = QtGui.QCheckBox('AutoToggle', self)
+
+		self.labelAutoToggleTimeout = QtGui.QLabel('Auto &toggle timeout:', self)
+		self.spinAutoToggleTimeout = QtGui.QDoubleSpinBox(self)
+		self.labelAutoToggleTimeout.setBuddy(self.spinAutoToggleTimeout)
+		self.spinAutoToggleTimeout.setRange(Tc2Config.CardProtectorAutoToggleTimeoutMin, Tc2Config.CardProtectorAutoToggleTimeoutMax)
+		self.spinAutoToggleTimeout.setSingleStep(0.1)
+		self.spinAutoToggleTimeout.setDecimals(1)
 
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		self.buttonHelp.setToolTip('Help (F1)')
@@ -59,6 +72,10 @@ class FrameSettings(QtGui.QFrame):
 		grid.col(self.labelBackgroundColor).col(self.buttonBackgroundColor).col(self.buttonBackgroundColorReset)
 		grid.row()
 		grid.col(self.labelBackgroundImage).col(self.buttonBackgroundImage).col(self.buttonBackgroundImageReset)
+		grid.row()
+		grid.col(self.checkAutoToggle).col(Tc2Config.HStretch())
+		grid.row()
+		grid.col(self.labelAutoToggleTimeout).col(self.spinAutoToggleTimeout)
 		grid.row()
 		grid.col(Tc2Config.VStretch())
 		grid.row()
@@ -91,6 +108,19 @@ class FrameSettings(QtGui.QFrame):
 			self.setBackgroundImage(None, QtGui.QPixmap() )
 		self.buttonBackgroundImage.clicked.connect(self.onButtonBackgroundImageClicked)
 		self.buttonBackgroundImageReset.clicked.connect(self.onButtonBackgroundImageResetClicked)
+
+		value = QtCore.Qt.Checked if Tc2Config.settingsValue(self.SettingsKeyAutoToggle, Tc2Config.CardProtectorAutoToggleDefault).toBool() else QtCore.Qt.Unchecked
+		self.checkAutoToggle.setCheckState(value)
+		self.spinAutoToggleTimeout.setEnabled(value)
+		self.checkAutoToggle.stateChanged.connect(
+				lambda value, self=self: self.setAutoToggle(self.checkAutoToggle.checkState() == QtCore.Qt.Checked)
+				)
+
+		value, ok = Tc2Config.settingsValue(self.SettingsKeyAutoToggleTimeout, '').toFloat()
+		if not ok or value > Tc2Config.CardProtectorAutoToggleTimeoutMax or value < Tc2Config.CardProtectorAutoToggleTimeoutMin:
+			value = Tc2Config.CardProtectorAutoToggleTimeoutDefault
+		self.spinAutoToggleTimeout.setValue(value)
+		self.spinAutoToggleTimeout.valueChanged.connect(self.setAutoToggleTimeout)
 
 		Tc2Config.globalObject.objectCreatedSettingsCardProtector.emit(self)
 
@@ -166,6 +196,23 @@ class FrameSettings(QtGui.QFrame):
 		if not pixmap.load(fileName):
 			return (None, pixmap)
 		return (fileName, pixmap)
+
+	def autoToggle(self):
+		return self.checkAutoToggle.checkState() == QtCore.Qt.Checked
+
+	def setAutoToggle(self, value):
+		Tc2Config.settingsSetValue(self.SettingsKeyAutoToggle, value)
+		self.autoToggleChanged.emit(value)
+		self.spinAutoToggleTimeout.setEnabled(value)
+
+	def setAutoToggleTimeout(self, value):
+		Tc2Config.settingsSetValue(self.SettingsKeyAutoToggleTimeout, value)
+		self.autoToggleTimeoutChanged.emit(value)
+
+	def autoToggleTimeout(self):
+		return self.spinAutoToggleTimeout.value()
+
+
 
 
 
