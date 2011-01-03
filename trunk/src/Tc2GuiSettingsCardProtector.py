@@ -204,6 +204,7 @@ class FrameSettings(QtGui.QFrame):
 		Tc2Config.settingsSetValue(self.SettingsKeyAutoToggle, value)
 		self.autoToggleChanged.emit(value)
 		self.spinAutoToggleTimeout.setEnabled(value)
+		self.labelAutoToggleTimeout.setEnabled(value)
 
 	def setAutoToggleTimeout(self, value):
 		Tc2Config.settingsSetValue(self.SettingsKeyAutoToggleTimeout, value)
