@@ -71,6 +71,9 @@ class CardProtector(QtGui.QWidget):
 			self.label.setScaledContents(False)
 			self.label.resize(pixmap.size() )
 
+	#NOTE: this gets called from TableCrabSiteHander. siteHandler blocks input events
+	# in our process, we have to process our own input events in onInputEvent()
+	#TODO: we do not process mose events currently. so mouse wheel does not work.
 	def handleInputEvent(self, hwnd, hotkey, inputEvent):
 		if inputEvent.keyIsDown:
 			if Tc2Config.globalObject.settingsCardProtector.autoToggle():
