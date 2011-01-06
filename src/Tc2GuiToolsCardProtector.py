@@ -84,7 +84,10 @@ class CardProtector(QtGui.QWidget):
 		inputEvent.accept = True
 
 	def onInputEvent(self, inputEvent):
-		hwnd = int(self.effectiveWinId())
+		hwnd = self.effectiveWinId()
+		if hwnd is None:
+			return
+		hwnd = int(hwnd)
 		if hwnd == Tc2Win32.windowForeground():
 				for hotkey in Tc2Config.globalObject.hotkeyManager:
 					if not hotkey.key() or hotkey.key() != inputEvent.key:
