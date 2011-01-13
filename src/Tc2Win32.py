@@ -462,6 +462,8 @@ def postMessage(hwnd,msg,wp,lp,isUnicode=True):
 #****************************************************************************************************
 # window methods
 #****************************************************************************************************
+#NOTE: homebrewn window hook. this thingy is not save. all kinds of race conditions
+# may and will occure!!
 class WindowHook(QtCore.QObject):
 	windowDestroyed = QtCore.pyqtSignal(int)
 	windowCreated = QtCore.pyqtSignal(int)
