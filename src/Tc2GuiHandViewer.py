@@ -280,13 +280,6 @@ class FrameHandViewer(QtGui.QFrame):
 		page.setNetworkAccessManager(self.networkAccessManager)
 		self.networkAccessManager.getData.connect(self.onNetworkGetData)
 
-		self.Tc2HandGrabberPokerStars = Tc2HandGrabberPokerStars.HandGrabber(
-				Tc2HandGrabberPokerStars.HandParser(),
-				Tc2HandGrabberPokerStars.HandFormatterHtmlTabular(),
-				parent=self,
-				)
-		self.Tc2HandGrabberPokerStars.handGrabbed.connect(self.onHandGrabberGrabbedHand)
-
 		self.toolBar = Tc2Config.WebViewToolBar(self.webView,
 				settingsKeyZoomFactor=self.SettingsKeyZoomFactor
 				)
@@ -419,7 +412,6 @@ class FrameHandViewer(QtGui.QFrame):
 		#TODO: can we rename hand in cache? i font think so. no way to inform WebKit
 
 	def onCloseEvent(self, event):
-		self.Tc2HandGrabberPokerStars.stop()
 		Tc2Config.settingsSetValue(self.SettingsKeySplitterState, self.splitter.saveState())
 
 	def onContextMenuWebView(self, point):
@@ -444,9 +436,9 @@ class FrameHandViewer(QtGui.QFrame):
 		globalObject.settingsGlobal.toolBarPositionChanged.connect(self.layout)
 		self.setSideBarPosition(globalObject.settingsHandViewer.sideBarPosition())
 		globalObject.settingsHandViewer.sideBarPositionChanged.connect(self.setSideBarPosition)
+		globalObject.siteHandlerPokerStars.handGrabbed.connect(self.onHandGrabberGrabbedHand)
 
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
-		self.Tc2HandGrabberPokerStars.start()
 
 	def onNetworkGetData(self, networkReply):
 		url = networkReply.url()

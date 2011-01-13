@@ -8,6 +8,7 @@ import Tc2Config
 import Tc2Win32
 import Tc2ConfigHotkeys
 import Tc2ConfigTemplates
+import Tc2HandGrabberPokerStars
 from Tc2Lib.gocr import gocr
 
 import re, time, base64
@@ -42,9 +43,10 @@ class PokerStarsWindow(object):
 			hwnd = Tc2Win32.windowGetParent(hwnd)
 		return False
 	@classmethod
-	def fromHwnd(klass, hwnd):
+	def fromHwnd(klass, siteHandler, hwnd):
 		return None
-	def __init__(self, hwnd):
+	def __init__(self, siteHandler, hwnd):
+		self.siteHandler = siteHandler
 		self.hwnd = hwnd
 	def handleCreated(self):
 		pass
@@ -76,9 +78,9 @@ class Table(PokerStarsWindow):
 		if not Tc2Win32.windowGetClassName(hwnd) == klass.WindowClassName: return False
 		return True
 	@classmethod
-	def fromHwnd(klass, hwnd):
+	def fromHwnd(klass, siteHandler, hwnd):
 		if klass.matchesHwnd(hwnd):
-			return klass(hwnd)
+			return klass(siteHandler, hwnd)
 		return None
 
 	def handleGainedForeground(self):
@@ -464,9 +466,9 @@ class LogInBox(PokerStarsWindow):
 		if not PokerStarsWindow.matchesHwnd(hwnd): return False
 		return True
 	@classmethod
-	def fromHwnd(klass, hwnd):
+	def fromHwnd(klass, siteHandler, hwnd):
 		if klass.matchesHwnd(hwnd):
-			return klass(hwnd)
+			return klass(siteHandler, hwnd)
 		return None
 	def handleCreated(self):
 		if Tc2Config.globalObject.settingsPokerStars.autoCloseLogin():
@@ -489,9 +491,9 @@ class TableMessageBox(PokerStarsWindow):
 		if not Table.matchesHwnd(hwndParent): return False
 		return True
 	@classmethod
-	def fromHwnd(klass, hwnd):
+	def fromHwnd(klass, siteHandler, hwnd):
 		if klass.matchesHwnd(hwnd):
-			return klass(hwnd)
+			return klass(siteHandler, hwnd)
 		return None
 	def handleCreated(self):
 		if Tc2Config.globalObject.settingsPokerStars.autoCloseTableMessageBoxes():
@@ -512,9 +514,9 @@ class TourneyRegistrationMessageBox(PokerStarsWindow):
 		if not PokerStarsWindow.matchesHwnd(hwnd): return False
 		return True
 	@classmethod
-	def fromHwnd(klass, hwnd):
+	def fromHwnd(klass, siteHandler, hwnd):
 		if klass.matchesHwnd(hwnd):
-			return klass(hwnd)
+			return klass(siteHandler, hwnd)
 		return None
 	def handleCreated(self):
 		if Tc2Config.globalObject.settingsPokerStars.autoCloseTourneyRegistrationBoxes():
@@ -536,9 +538,9 @@ class PopUpNews(PokerStarsWindow):
 		if not PokerStarsWindow.matchesHwnd(hwnd): return False
 		return True
 	@classmethod
-	def fromHwnd(klass, hwnd):
+	def fromHwnd(klass, siteHandler, hwnd):
 		if klass.matchesHwnd(hwnd):
-			return klass(hwnd)
+			return klass(siteHandler, hwnd)
 		return None
 	def handleCreated(self):
 		if Tc2Config.globalObject.settingsPokerStars.autoClosePopupNews():
@@ -549,26 +551,82 @@ class PopUpNews(PokerStarsWindow):
 class InstantHandHistory(PokerStarsWindow):
 	WindowTitle = 'Instant Hand History'
 	WindowClassName = '#32770'
+	WidgetClassName = 'PokerStarsViewClass'
 	@classmethod
 	def matchesHwnd(klass, hwnd):
 		if Tc2Win32.windowGetClassName(hwnd) != klass.WindowClassName: return False
 		if Tc2Win32.windowGetText(hwnd, maxSize=len(klass.WindowTitle)) != klass.WindowTitle: return False
 		if not PokerStarsWindow.matchesHwnd(hwnd): return False
 		return True
+	@classmethod
+	def fromHwnd(klass, siteHandler, hwnd):
+		if klass.matchesHwnd(hwnd):
+			return klass(siteHandler, hwnd)
+		return None
+	def __init__(self, *args, **kws):
+		PokerStarsWindow.__init__(self, *args, **kws)
+		self._timer = QtCore.QTimer(self.siteHandler)
+		self._timer.setInterval(Tc2Config.HandGrabberTimeout * 1000)
+		self._timer.timeout.connect(self.grabHand)
+		#self._timer.setSingleShot(True)
+
+		self._handParser = Tc2HandGrabberPokerStars.HandParser()
+		self._handFormatter = Tc2HandGrabberPokerStars.HandFormatterHtmlTabular()
+		self._handFormatter.onGlobalObjectInitSettingsFinished(Tc2Config.globalObject)	#NOTE: have to init here
+		self._data = ''
+		self._hwndEdit = None
+		for hwnd in Tc2Win32.windowChildren(self.hwnd):
+			if Tc2Win32.windowGetClassName(hwnd) == self.WidgetClassName:
+				self._hwndEdit = hwnd
+				break
+		if self._hwndEdit is None:
+			#TODO: give feedback
+			pass
+		else:
+			self._timer.start()
+
+	def grabHand(self):
+		#NOTE: we could be faced with an arbitrary windowat this point or an inavlid handle
+		if Tc2Win32.windowGetTextLength(self._hwndEdit) > Tc2Config.MaxHandHistoryText:
+			#TODO: have to find a better way to give feedback on what hapens on hand grabbing
+			Tc2Config.globalObject.feedbackMessage.emit(self.parent(), 'Hand text too long')
+			return
+		data = Tc2Win32.windowGetText(self._hwndEdit, maxSize=Tc2Config.MaxHandHistoryText)
+		if data and data != self._data:
+			self._data = data
+			handData = ''
+			hand = Tc2HandGrabberPokerStars.Hand()
+			#TODO: very sloppy test to minimize risk we are grabbing 'show summary only' in instant hand history
+			if not '*** HOLE CARDS ***' in data:
+				pass
+			else:
+				#NOTE: we are let Tc2Config handle errors because we are maybe working with arbitrary data
+				# from an unknown window
+				try:
+					hand = self._handParser.parse(data)
+				except:
+					Tc2Config.handleException('\n' + data)
+				else:
+					handData = self._handFormatter.dump(hand)
+			self.siteHandler.handGrabbed.emit(hand, handData)
 
 #************************************************************************************
 #
 #************************************************************************************
 class SiteHandler(QtCore.QObject):
 
+	handGrabbed = QtCore.pyqtSignal(QtCore.QObject, QtCore.QString)
+
 	def __init__(self, parent=None):
 		QtCore.QObject.__init__(self, parent)
 
 		self._windows ={}		# hwnd --> window
 
+		Tc2Config.globalObject.objectCreatedSiteHandlerPokerStars.emit(self)
+
 	def handleWindowCreated(self, hwnd):
 		for windowClass in WindowClasses:
-			window = windowClass.fromHwnd(hwnd)
+			window = windowClass.fromHwnd(self, hwnd)
 			if window is not None:
 				self._windows[hwnd] = window
 				window.handleCreated()
