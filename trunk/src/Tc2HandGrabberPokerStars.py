@@ -6,12 +6,6 @@ import re, time, sys, cStringIO, thread
 from PyQt4 import QtCore
 
 import Tc2Config
-import Tc2Win32
-
-from ctypes import windll, sizeof, byref, WinError, GetLastError, WINFUNCTYPE, create_unicode_buffer
-from ctypes.wintypes import INT, HANDLE, LPARAM, DWORD
-
-user32 = windll.user32
 
 from cStringIO import StringIO
 
@@ -727,91 +721,6 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		p << '</html>'
 
 		return p.data.encode('utf-8')
-
-#**********************************************************************************************************
-# hand grabber (only available on win32 platforms)
-#**********************************************************************************************************
-InstantHandHistoryGrabber = None
-if sys.platform == 'win32':
-
-	class HandGrabber(QtCore.QObject):
-
-		handGrabbed = QtCore.pyqtSignal(QtCore.QObject, QtCore.QString)
-
-		WindowClassName = '#32770'
-		WindowTitle = 'Instant Hand History'
-		WidgetClassName = 'PokerStarsViewClass'
-		def __init__(self, handParser, handFormatter, parent=None):
-			QtCore.QObject.__init__(self, parent)
-			self.handParser = handParser
-			self.handFormatter = handFormatter
-			self._data = None
-			self._timer = QtCore.QTimer(self)
-			self._timer.setInterval(Tc2Config.HandGrabberTimeout * 1000)
-			self._timer.timeout.connect(self.grabHand)
-			self._hwndDialog = None
-			self._hwndEdit = None
-
-			Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
-
-		def stop(self):
-			self._timer.stop()
-			pass
-		def start(self):
-			pass
-
-		def onGlobalObjectInitSettingsFinished(self, globalObject):
-			globalObject.windowHook.windowCreated.connect(self.onWindowCreated)
-			globalObject.windowHook.windowDestroyed.connect(self.onWindowDestroyed)
-
-		def onWindowCreated(self, hwnd):
-			if Tc2Win32.windowGetClassName(hwnd) != self.WindowClassName:
-				return
-			if Tc2Win32.windowGetText(hwnd, maxSize=len(self.WindowTitle)) != self.WindowTitle:
-				return
-			self._hwndDialog = hwnd
-			self._hwndEdit = None
-			for hwnd in Tc2Win32.windowChildren(hwnd):
-				if Tc2Win32.windowGetClassName(hwnd) == self.WidgetClassName:
-					self._hwndEdit = hwnd
-					break
-			if self._hwndEdit is None:
-				self._hwndDialog = None
-			else:
-				self._timer.start()
-
-		def onWindowDestroyed(self, hwnd):
-			if hwnd == self._hwndDialog:
-				self._hwndDialog = None
-				self._hwndEdit = None
-				self._timer.stop()
-
-		def grabHand(self):
-			if self._hwndEdit is None: return
-
-			#NOTE: we could be faced with an arbitrary windowat this point or an inavlid handle
-			if Tc2Win32.windowGetTextLength(self._hwndEdit) > Tc2Config.MaxHandHistoryText:
-				#TODO: have to find a better way to give feedback on what hapens on hand grabbing
-				Tc2Config.globalObject.feedbackMessage.emit(self.parent(), 'Hand text too long')
-				return
-			data = Tc2Win32.windowGetText(self._hwndEdit, maxSize=Tc2Config.MaxHandHistoryText)
-			if data and data != self._data:
-				self._data = data
-				handData = ''
-				hand = Hand()
-				#TODO: very sloppy test to minimize risk we are grabbing 'show summary only' in instant hand history
-				if not '*** HOLE CARDS ***' in data:
-					pass
-				else:
-					#NOTE: we are let Tc2Config handle errors because we are maybe working with arbitrary data
-					# from an unknown window
-					try:
-						hand = self.handParser.parse(data)
-					except:
-						Tc2Config.handleException('\n' + data)
-					else:
-						handData = self.handFormatter.dump(hand)
-				self.handGrabbed.emit(hand, handData)
 
 #************************************************************************************
 #
