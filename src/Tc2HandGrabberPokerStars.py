@@ -564,7 +564,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		string = string.replace('&', '&#38;').replace('"', '&#34;').replace("'", '&#39;').replace('<', '&#60;').replace('>', '&#62;')
 		if spaces:
 			string = string.replace(' ', '&nbsp;')
-		return string
+		return string.decode('utf-8')
 
 	def htmlFormatCards(self, p, cardsType, *cards):
 		if cardsType == 'playerCards':
