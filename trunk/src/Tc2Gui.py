@@ -129,6 +129,8 @@ class Gui(QtGui.QMainWindow):
 		Tc2Config.globalObject.mouseHook.start()
 		Tc2Config.globalObject.keyboardHook.start()
 		Tc2Config.globalObject.windowHook.start()
+		#
+		Tc2Config.globalObject.initGuiFinished.emit(Tc2Config.globalObject)
 
 	#--------------------------------------------------------------------------------------------------------------
 	# methods
