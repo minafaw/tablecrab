@@ -27,23 +27,21 @@ class FrameTool(QtGui.QFrame):
 		self.handParser = Tc2HandGrabberPokerStars.HandParser()
 		self.handFormatter = Tc2HandGrabberPokerStars.HandFormatterHtmlTabular()
 
-		self.grid = Tc2Config.GridBox(self)
-
 		self.spinBox = QtGui.QSpinBox(self)
 		self.spinBox.setPrefix('Hand# ')
 		self.spinBox.setRange(0, 0)
 		self.spinBox.setSuffix(' /0')
 
-
 		self.splitter = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
 
-		self.browser = Browser.RawBrowser(self)
-		self.splitter.addWidget(self.browser)
+		self.browserFrame = Browser.RawBrowserFrame(self)
+		self.browser = self.browserFrame.browser()
+		self.splitter.addWidget(self.browserFrame)
 		self.browser.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		self.browser.customContextMenuRequested.connect(self.onContextMenuWebView)
 		self.browser.networkAccessManager().getData.connect(self.onNetworkGetData)
 
-		self.toolBar = Browser.BrowserToolBar(self.browser)
+		self.toolBar = self.browserFrame.toolBar()
 		self.toolBar.actionZoomIn.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierPlus() ) )
 		self.toolBar.actionZoomOut.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierMinus() ) )
 		self.toolBar.zoomFactorChanged.connect(self.onToolBarZoomFactorChanged)
@@ -96,18 +94,11 @@ class FrameTool(QtGui.QFrame):
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 		self.browser.urlChanged.connect(self.onUrlChanged)
 
-	def layout(self, toolBarPosition):
-		grid = self.grid
-		grid.clear()
-		if toolBarPosition == Tc2Config.ToolBarPositionTop:
-			grid.col(self.toolBar)
-			grid.row()
-		grid.col(self.spinBox)
-		grid.row()
+	def layout(self):
+		grid = Tc2Config.GridBox(self)
 		grid.col(self.splitter)
-		if toolBarPosition == Tc2Config.ToolBarPositionBottom:
-			grid.row()
-			grid.col(self.toolBar)
+		grid.row()
+		grid.col(self.spinBox)
 
 	def toolTip(self):
 		return 'HandHistoryViewer'
@@ -116,12 +107,16 @@ class FrameTool(QtGui.QFrame):
 		return 'HandHistoryViewer'
 
 	def onGlobalObjectInitSettingsFinished(self, globalObject):
-		self.layout(globalObject.settingsGlobal.toolBarPosition())
-		globalObject.settingsGlobal.toolBarPositionChanged.connect(self.layout)
 		self.browser.setUrl(QtCore.QUrl(''))
 		self.spinBox.valueChanged.connect(self.onSpinBoxValueChanged)
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 		self.adjustActions()
+
+		self.browserFrame.layout(globalObject.settingsGlobal.toolBarPosition() == Tc2Config.ToolBarPositionTop)
+		self.layout()
+		globalObject.settingsGlobal.toolBarPositionChanged.connect(
+				lambda position, frame=self.browserFrame: frame.layout(toolBarTop=position == Tc2Config.ToolBarPositionTop)
+				)
 
 		zoomFactor = Tc2Config.settingsValue(self.SettingsKeyZoomFactor, Browser.BrowserToolBar.ZoomFactorDefault).toDouble()[0]
 		self.toolBar.setZoomFactor(zoomFactor)

@@ -263,20 +263,19 @@ class FrameHandViewer(QtGui.QFrame):
 
 		self._handCache = []
 
-		self.grid = Tc2Config.GridBox(self)
-
 		self.splitter = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
 
 		#NOTE: we use a custom network manager to handle hands grabbed AND loaded from disk
 		# default cache size of WebKit is 100 (self.browser.page().history().maximumItemCount() )
 		# ok or not?
-		self.browser = Browser.RawBrowser(self)
-		self.splitter.addWidget(self.browser)
+		self.browserFrame = Browser.RawBrowserFrame(self)
+		self.browser = self.browserFrame.browser()
+		self.splitter.addWidget(self.browserFrame)
 		self.browser.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		self.browser.customContextMenuRequested.connect(self.onContextMenuWebView)
 		self.browser.networkAccessManager().getData.connect(self.onNetworkGetData)
 
-		self.toolBar = Browser.BrowserToolBar(self.browser)
+		self.toolBar = self.browserFrame.toolBar()
 		self.toolBar.actionZoomIn.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierPlus() ) )
 		self.toolBar.actionZoomOut.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierMinus() ) )
 		self.toolBar.zoomFactorChanged.connect(self.onToolBarZoomFactorChanged)
@@ -325,16 +324,9 @@ class FrameHandViewer(QtGui.QFrame):
 		self.toolBar.actionZoomOut.setEnabled(bool(self._handCache))
 		self.actionSave.setEnabled(bool(self._handCache))
 
-	def layout(self, toolBarPosition):
-		grid = self.grid
-		grid.clear()
-		if toolBarPosition == Tc2Config.ToolBarPositionTop:
-			grid.col(self.toolBar)
-			grid.row()
+	def layout(self):
+		grid = Tc2Config.GridBox(self)
 		grid.col(self.splitter)
-		if toolBarPosition == Tc2Config.ToolBarPositionBottom:
-			grid.row()
-			grid.col(self.toolBar)
 
 	def setHand(self, data, fileName=None):
 		if data and fileName is None:
@@ -429,14 +421,16 @@ class FrameHandViewer(QtGui.QFrame):
 		self.browser.setUrl(QtCore.QUrl(''))
 		self.adjustActions()
 
-		self.layout(globalObject.settingsGlobal.toolBarPosition())
-		globalObject.settingsGlobal.toolBarPositionChanged.connect(self.layout)
 		self.setSideBarPosition(globalObject.settingsHandViewer.sideBarPosition())
 		globalObject.settingsHandViewer.sideBarPositionChanged.connect(self.setSideBarPosition)
 		globalObject.siteHandlerPokerStars.handGrabbed.connect(self.onHandGrabberGrabbedHand)
 
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
-
+		self.browserFrame.layout(globalObject.settingsGlobal.toolBarPosition() == Tc2Config.ToolBarPositionTop)
+		self.layout()
+		globalObject.settingsGlobal.toolBarPositionChanged.connect(
+				lambda position, frame=self.browserFrame: frame.layout(toolBarTop=position == Tc2Config.ToolBarPositionTop)
+				)
 		zoomFactor = Tc2Config.settingsValue(self.SettingsKeyZoomFactor, Browser.BrowserToolBar.ZoomFactorDefault).toDouble()[0]
 		self.toolBar.setZoomFactor(zoomFactor)
 
@@ -465,20 +459,20 @@ class FrameHandViewer(QtGui.QFrame):
 	def setSideBarPosition(self, position):
 		if position == Tc2Config.HandViewerSideBarPositionTop:
 			self.splitter.setOrientation(QtCore.Qt.Vertical)
-			if self.splitter.widget(0) == self.browser:
-				self.splitter.insertWidget(1, self.browser)
+			if self.splitter.widget(0) == self.browserFrame:
+				self.splitter.insertWidget(1, self.browserFrame)
 		elif position == Tc2Config.HandViewerSideBarPositionBottom:
 			self.splitter.setOrientation(QtCore.Qt.Vertical)
-			if self.splitter.widget(1) == self.browser:
-				self.splitter.insertWidget(0, self.browser)
+			if self.splitter.widget(1) == self.browserFrame:
+				self.splitter.insertWidget(0, self.browserFrame)
 		elif position == Tc2Config.HandViewerSideBarPositionLeft:
 			self.splitter.setOrientation(QtCore.Qt.Horizontal)
-			if self.splitter.widget(0) == self.browser:
-				self.splitter.insertWidget(1, self.browser)
+			if self.splitter.widget(0) == self.browserFrame:
+				self.splitter.insertWidget(1, self.browserFrame)
 		elif position == Tc2Config.HandViewerSideBarPositionRight:
 			self.splitter.setOrientation(QtCore.Qt.Horizontal)
-			if self.splitter.widget(1) == self.browser:
-				self.splitter.insertWidget(0, self.browser)
+			if self.splitter.widget(1) == self.browserFrame:
+				self.splitter.insertWidget(0, self.browserFrame)
 
 
 

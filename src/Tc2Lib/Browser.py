@@ -173,5 +173,116 @@ class BrowserToolBar(QtGui.QToolBar):
 		return self._zoomSteps
 
 
+class BrowserSearchBar(QtGui.QToolBar):
+
+	def __init__(self, browser):
+		QtGui.QToolBar.__init__(self, browser)
+
+		self.label = QtGui.QLabel('Search:', self)
+		self.addWidget(self.label)
+
+		self.browser = browser
+		self.edit = QtGui.QLineEdit(self)
+		self.addWidget(self.edit)
+		self.edit.textChanged.connect(self.onEditTextChanged)
+
+		self.actionSearchUpwards = QtGui.QAction(self)
+		self.actionSearchUpwards.setText('Upwards')
+		self.actionSearchUpwards.setToolTip('Search upwards (Alt+Up)')
+		self.actionSearchUpwards.setShortcut(QtGui.QKeySequence('Alt+Up') )
+		self.actionSearchUpwards.triggered.connect(self.onActionSearchUpwardsTriggered)
+		self.addAction(self.actionSearchUpwards)
+
+		self.actionSearchDownwards = QtGui.QAction(self)
+		self.actionSearchDownwards.setText('Downwards')
+		self.actionSearchDownwards.setToolTip('Search downwards (Alt+Down)')
+		self.actionSearchDownwards.setShortcut(QtGui.QKeySequence('Alt+Down') )
+		self.actionSearchDownwards.triggered.connect(self.onActionSearchDownwardsTriggered)
+		self.addAction(self.actionSearchDownwards)
+
+		self.checkCaseSensitive = QtGui.QCheckBox('Case sensitive', self)
+		self.addWidget(self.checkCaseSensitive)
+
+	def onEditTextChanged(self, text):
+		hasText = bool(text)
+		self.actionSearchUpwards.setEnabled(hasText)
+		self.actionSearchDownwards.setEnabled(hasText)
+
+	def onActionSearchUpwardsTriggered(self):
+		text = self.edit.text()
+		flags = QtWebKit.QWebPage.FindWrapsAroundDocument | QtWebKit.QWebPage.FindBackward
+		if self.checkCaseSensitive.checkState() == QtCore.Qt.Checked:
+			flags |= QtWebKit.QWebPage.FindCaseSensitively
+		self.browser.findText(text, flags)
+
+	def onActionSearchDownwardsTriggered(self):
+		text = self.edit.text()
+		flags = QtWebKit.QWebPage.FindWrapsAroundDocument
+		if self.checkCaseSensitive.checkState() == QtCore.Qt.Checked:
+			flags |= QtWebKit.QWebPage.FindCaseSensitively
+		self.browser.findText(text, flags)
+
+	def setFocus(self):
+		self.edit.setFocus(QtCore.Qt.OtherFocusReason)
+		self.edit.selectAll()
+
+
+class RawBrowserFrame(QtGui.QFrame):
+
+	def __init__(self, parent=None):
+		QtGui.QFrame.__init__(self, parent)
+
+		self._browser = RawBrowser(self)
+		self._toolBar = BrowserToolBar(self._browser)
+		self._searchBar = BrowserSearchBar(self._browser)
+		self._searchBar.setVisible(False)
+		self._layout = QtGui.QBoxLayout(QtGui.QBoxLayout.TopToBottom, self)
+		self._layout.setSpacing(0)
+		self._layout.setContentsMargins(0, 0, 0, 0)
+
+		self.actionSearch = QtGui.QAction(self)
+		self.actionSearch.setText('Search text')
+		self.actionSearch.setToolTip('Search text (Ctrl+F)')
+		self.actionSearch.setShortcut(QtGui.QKeySequence('Ctrl+F') )
+		self.actionSearch.triggered.connect(self.onActionSearchTriggered)
+		self.addAction(self.actionSearch)
+
+	def browser(self):
+		return self._browser
+
+	def toolBar(self):
+		return self._toolBar
+
+	def searchBar(self):
+		return self._searchbar
+
+	def layout(self, toolBarTop=True):
+		# clear layout
+		while self._layout.takeAt(0) is not None: pass
+		if toolBarTop:
+			self._layout.addWidget(self._toolBar)
+		self._layout.addWidget(self._browser)
+		self._layout.addWidget(self._searchBar)
+		if not toolBarTop:
+			self._layout.addWidget(self._toolBar)
+
+	def onActionSearchTriggered(self):
+		if self._searchBar.isVisible():
+			self._searchBar.setVisible(False)
+		else:
+			self._searchBar.setVisible(True)
+			self._searchBar.setFocus()
+
+
+
+
+
+
+
+
+
+
+
+
 
 
