@@ -27,16 +27,17 @@ class FrameTool(QtGui.QFrame):
 		self.handParser = Tc2HandGrabberPokerStars.HandParser()
 		self.handFormatter = Tc2HandGrabberPokerStars.HandFormatterHtmlTabular()
 
-		self.spinBox = QtGui.QSpinBox(self)
+		self.frame = QtGui.QFrame(self)
+		self.splitter = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
+		self.splitter.addWidget(self.frame)
+
+		self.spinBox = QtGui.QSpinBox(self.frame)
 		self.spinBox.setPrefix('Hand# ')
 		self.spinBox.setRange(0, 0)
 		self.spinBox.setSuffix(' /0')
 
-		self.splitter = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
-
-		self.browserFrame = Browser.RawBrowserFrame(self)
+		self.browserFrame = Browser.RawBrowserFrame(self.frame)
 		self.browser = self.browserFrame.browser()
-		self.splitter.addWidget(self.browserFrame)
 		self.browser.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		self.browser.customContextMenuRequested.connect(self.onContextMenuWebView)
 		self.browser.networkAccessManager().getData.connect(self.onNetworkGetData)
@@ -88,17 +89,20 @@ class FrameTool(QtGui.QFrame):
 		self.actionHelp.triggered.connect(self.onActionHelpTriggered)
 		self.toolBar.addAction(self.actionHelp)
 
-
 		# connect signals
 		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 		self.browser.urlChanged.connect(self.onUrlChanged)
 
 	def layout(self):
+		grid = Tc2Config.GridBox(self.frame)
+		grid.setContentsMargins(0, 0, 0, 0)
+		grid.col(self.spinBox)
+		grid.row()
+		grid.col(self.browserFrame)
+
 		grid = Tc2Config.GridBox(self)
 		grid.col(self.splitter)
-		grid.row()
-		grid.col(self.spinBox)
 
 	def toolTip(self):
 		return 'HandHistoryViewer'
