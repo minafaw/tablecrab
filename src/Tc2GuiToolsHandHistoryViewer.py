@@ -43,9 +43,10 @@ class FrameTool(QtGui.QFrame):
 		self.browser.customContextMenuRequested.connect(self.onContextMenuWebView)
 		self.browser.networkAccessManager().getData.connect(self.onNetworkGetData)
 
-		self.toolBar = Tc2Config.WebViewToolBar(self.browser,
-				settingsKeyZoomFactor=self.SettingsKeyZoomFactor
-				)
+		self.toolBar = Browser.BrowserToolBar(self.browser)
+		self.toolBar.actionZoomIn.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierPlus() ) )
+		self.toolBar.actionZoomOut.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierMinus() ) )
+		self.toolBar.zoomFactorChanged.connect(self.onToolBarZoomFactorChanged)
 
 		self.frameNashCalculations = Tc2GuiHandViewer.FrameNashCalculations(self,
 				toolBar=self.toolBar,
@@ -121,6 +122,9 @@ class FrameTool(QtGui.QFrame):
 		self.spinBox.valueChanged.connect(self.onSpinBoxValueChanged)
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 		self.adjustActions()
+
+		zoomFactor = Tc2Config.settingsValue(self.SettingsKeyZoomFactor, Browser.BrowserToolBar.ZoomFactorDefault).toDouble()[0]
+		self.toolBar.setZoomFactor(zoomFactor)
 
 	def adjustActions(self):
 		self.toolBar.actionZoomIn.setEnabled(bool(self.handHistoryFile))
@@ -226,6 +230,9 @@ class FrameTool(QtGui.QFrame):
 
 	def onSpinBoxValueChanged(self, handNo):
 		self.browser.setUrl(QtCore.QUrl('hand:///%s' % handNo))
+
+	def onToolBarZoomFactorChanged(self, value):
+		Tc2Config.settingsSetValue(self.SettingsKeyZoomFactor, value)
 
 	def onUrlChanged(self, url):
 		if url.scheme() == 'hand':

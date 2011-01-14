@@ -24,7 +24,10 @@ class FrameHelp(QtGui.QFrame):
 		self.browser.customContextMenuRequested.connect(self.onContextMenuWebView)
 
 		# setup tool bar
-		self.toolBar = Tc2Config.WebViewToolBar(self.browser, settingsKeyZoomFactor=self.SettingsKeyZoomFactor)
+		self.toolBar = Browser.BrowserToolBar(self.browser)
+		self.toolBar.actionZoomIn.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierPlus() ) )
+		self.toolBar.actionZoomOut.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierMinus() ) )
+		self.toolBar.zoomFactorChanged.connect(self.onToolBarZoomFactorChanged)
 
 		self.tree = QtGui.QTreeWidget(self)
 		self.tree.setUniformRowHeights(True)
@@ -171,6 +174,9 @@ class FrameHelp(QtGui.QFrame):
 		self.layout(globalObject.settingsGlobal.toolBarPosition())
 		globalObject.settingsGlobal.toolBarPositionChanged.connect(self.layout)
 
+		zoomFactor = Tc2Config.settingsValue(self.SettingsKeyZoomFactor, Browser.BrowserToolBar.ZoomFactorDefault).toDouble()[0]
+		self.toolBar.setZoomFactor(zoomFactor)
+
 	def onItemSelectionChanged(self):
 		items = self.tree.selectedItems()
 		if not items: return
@@ -225,6 +231,9 @@ class FrameHelp(QtGui.QFrame):
 		else:
 			raise ValueError('no topic found for url: %s' % url.path())
 
+	def onToolBarZoomFactorChanged(self, value):
+		Tc2Config.settingsSetValue(self.SettingsKeyZoomFactor, value)
+
 	def setTopic(self, topic):
 		for item in Tc2Config.TreeWidgetItemIterator(self.tree):
 			myTopic = item.data(0, QtCore.Qt.UserRole).toString()
@@ -234,6 +243,9 @@ class FrameHelp(QtGui.QFrame):
 		else:
 			raise ValueError('no such topic: %s' % topic)
 		Tc2Config.settingsSetValue(self.SettingsKeyHelpTopic, topic)
+
+	def setSettingsTemporary(self):
+		self.toolBar.zoomFactorChanged.disconnect(self.onToolBarZoomFactorChanged)
 
 #************************************************************************************
 #
@@ -255,7 +267,8 @@ class _DialogHelp(QtGui.QDialog):
 		self.frameHelp = FrameHelp(parent=self)
 		self.layout()
 		self.frameHelp.onGlobalObjectInitSettingsFinished(Tc2Config.globalObject)
-		self.frameHelp.toolBar.onGlobalObjectInitSettingsFinished(Tc2Config.globalObject)
+		#NOTE: we do not save zoom factor on instant help. instant help settings are temporary
+		self.frameHelp.setSettingsTemporary()
 		self.restoreGeometry( Tc2Config.settingsValue(self.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray() )
 		self.frameHelp.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 		self.frameHelp.setTopic(topic)

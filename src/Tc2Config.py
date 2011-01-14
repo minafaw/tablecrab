@@ -90,7 +90,7 @@ def handleException(data=None):
 #
 #************************************************************************************
 import posixpath, thread, inspect, random
-from PyQt4 import QtCore, QtGui, QtWebKit
+from PyQt4 import QtCore, QtGui
 
 import Tc2Win32
 from Tc2Res import Pixmaps, HtmlPages, StyleSheets
@@ -584,88 +584,6 @@ class ClockLabel(QtGui.QLabel):
 		if self._value >= maxValue:
 			self._value = 0
 		self.setText(str(self._value).zfill(self._precission))
-
-
-class WebViewToolBar(QtGui.QToolBar):
-	ZoomMin = 0.5
-	ZoomMax = 7
-	zoomFactorChanged = QtCore.pyqtSignal(float)
-
-	def __init__(self, webView, settingsKeyZoomFactor=None):
-		QtGui.QToolBar.__init__(self, webView)
-		self.webView = webView
-		self.settingsKeyZoomFactor = settingsKeyZoomFactor
-		self.settingsGlobal = None
-
-		globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
-
-		self.actionBack = self.webView.pageAction(QtWebKit.QWebPage.Back)
-		self.actionBack.setShortcut(QtGui.QKeySequence.Back)
-		self.actionBack.setToolTip('Back (Alt+-)')
-		self.addAction(self.actionBack)
-		self.actionForward = self.webView.pageAction(QtWebKit.QWebPage.Forward)
-		self.actionForward.setToolTip('Forward (Alt++)')
-		self.actionForward.setShortcut(QtGui.QKeySequence.Forward)
-		self.addAction(self.actionForward)
-
-		self.actionZoomIn = QtGui.QAction(self)
-		self.actionZoomIn.setText('ZoomIn (Ctrl++)')
-		self.actionZoomIn.setIcon(QtGui.QIcon(Pixmaps.magnifierPlus() ) )
-		self.actionZoomIn.setShortcut(QtGui.QKeySequence.ZoomIn)
-		self.actionZoomIn.setAutoRepeat(True)
-		self.actionZoomIn.triggered.connect(self.zoomIn)
-		self.addAction(self.actionZoomIn)
-
-		self.actionZoomOut = QtGui.QAction(self)
-		self.actionZoomOut.setText('ZoomIn (Ctrl+-)')
-		self.actionZoomOut.setIcon(QtGui.QIcon(Pixmaps.magnifierMinus() ) )
-		self.actionZoomOut.setShortcut(QtGui.QKeySequence.ZoomOut)
-		self.actionZoomOut.setAutoRepeat(True)
-		self.actionZoomOut.triggered.connect(self.zoomOut)
-		self.addAction(self.actionZoomOut)
-
-	def onGlobalObjectInitSettingsFinished(self, globalObject):
-		if self.settingsKeyZoomFactor is not None:
-			factor = settingsValue(self.settingsKeyZoomFactor, 1).toDouble()[0]
-			self.webView.setZoomFactor(factor)
-			self.zoomFactorChanged.emit(factor)
-		self.adjustActions()
-
-	def _zoomSteps(self):
-		if self.settingsKeyZoomSteps is not None:
-			steps = settingsValue(self.settingsKeyZoomSteps, self.ZoomStepsDefault).toInt()[0]
-			if steps > self.ZoomStepsMax:
-				steps = self.ZoomStepsDefault
-			elif steps < 1:
-				stape = 1
-		else:
-			steps = self.ZoomSteps
-		return steps
-
-	def _nextZoom(self, zoomIn=True):
-		factor = self.webView.zoomFactor()
-		steps = globalObject.settingsGlobal.webViewZoomSteps()
-		if zoomIn:
-			factor += self.ZoomMax / float(steps)
-			factor = min(factor, self.ZoomMax)
-		else:
-			factor -= self.ZoomMax / float(steps)
-			factor = max(factor, self.ZoomMin)
-		self.webView.setZoomFactor(factor)
-		self.zoomFactorChanged.emit(factor)
-		if self.settingsKeyZoomFactor is not None:
-			settingsSetValue(self.settingsKeyZoomFactor, factor)
-		self.adjustActions()
-
-	def zoomIn(self):
-		self._nextZoom(zoomIn=True)
-
-	def zoomOut(self):
-		self._nextZoom(zoomIn=False)
-
-	def adjustActions(self):
-		self.actionZoomIn.setEnabled(self.webView.zoomFactor() < self.ZoomMax)
-		self.actionZoomOut.setEnabled( self.webView.zoomFactor() > self.ZoomMin)
 
 
 contentsMargins = QtCore.QMargins(2, 2, 2, 2)
