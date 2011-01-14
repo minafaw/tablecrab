@@ -3,6 +3,7 @@ import Tc2Config
 import Tc2HandGrabberPokerStars
 import Tc2GuiHandViewer
 import Tc2GuiHelp
+from Tc2Lib import Browser
 from PyQt4 import QtCore, QtGui, QtWebKit
 import codecs
 #************************************************************************************
@@ -36,18 +37,13 @@ class FrameTool(QtGui.QFrame):
 
 		self.splitter = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
 
-		self.webView = QtWebKit.QWebView(self)
-		self.splitter.addWidget(self.webView)
-		self.webView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-		self.webView.customContextMenuRequested.connect(self.onContextMenuWebView)
+		self.browser = Browser.RawBrowser(self)
+		self.splitter.addWidget(self.browser)
+		self.browser.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+		self.browser.customContextMenuRequested.connect(self.onContextMenuWebView)
+		self.browser.networkAccessManager().getData.connect(self.onNetworkGetData)
 
-		oldManager = self.webView.page().networkAccessManager()
-		self.networkAccessManager = Tc2Config.RawNetworkAccessManager(oldManager, parent=self)
-		page = self.webView.page()
-		page.setNetworkAccessManager(self.networkAccessManager)
-		self.networkAccessManager.getData.connect(self.onNetworkGetData)
-
-		self.toolBar = Tc2Config.WebViewToolBar(self.webView,
+		self.toolBar = Tc2Config.WebViewToolBar(self.browser,
 				settingsKeyZoomFactor=self.SettingsKeyZoomFactor
 				)
 
@@ -58,11 +54,11 @@ class FrameTool(QtGui.QFrame):
 		self.splitter.addWidget(self.frameNashCalculations)
 
 		# set up actions
-		self.actionCopy = self.webView.pageAction(QtWebKit.QWebPage.Copy)
+		self.actionCopy = self.browser.pageAction(QtWebKit.QWebPage.Copy)
 		self.actionCopy.setShortcut(QtGui.QKeySequence(QtGui.QKeySequence.Copy))
 		self.addAction(self.actionCopy)
 
-		self.actionSelectAll = self.webView.pageAction(QtWebKit.QWebPage.SelectAll)
+		self.actionSelectAll = self.browser.pageAction(QtWebKit.QWebPage.SelectAll)
 		self.actionSelectAll.setShortcut(QtGui.QKeySequence(QtGui.QKeySequence.SelectAll))
 		self.addAction(self.actionSelectAll)
 
@@ -97,7 +93,7 @@ class FrameTool(QtGui.QFrame):
 		# connect signals
 		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
-		self.webView.urlChanged.connect(self.onUrlChanged)
+		self.browser.urlChanged.connect(self.onUrlChanged)
 
 	def layout(self, toolBarPosition):
 		grid = self.grid
@@ -121,7 +117,7 @@ class FrameTool(QtGui.QFrame):
 	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		self.layout(globalObject.settingsGlobal.toolBarPosition())
 		globalObject.settingsGlobal.toolBarPositionChanged.connect(self.layout)
-		self.webView.setUrl(QtCore.QUrl(''))
+		self.browser.setUrl(QtCore.QUrl(''))
 		self.spinBox.valueChanged.connect(self.onSpinBoxValueChanged)
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 		self.adjustActions()
@@ -199,7 +195,7 @@ class FrameTool(QtGui.QFrame):
 		fp = None
 		try:
 			fp = codecs.open(fileName, 'w', encoding='utf-8')
-			fp.write( unicode(self.webView.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
+			fp.write( unicode(self.browser.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
 		except Exception, d:
 			Tc2Config.msgWarning(self, 'Could Not Save Hand\n\n%s' % d)
 		finally:
@@ -209,7 +205,7 @@ class FrameTool(QtGui.QFrame):
 		menu = QtGui.QMenu(self)
 		menu.addAction(self.actionCopy)
 		menu.addAction(self.actionSelectAll)
-		point = self.webView.mapToGlobal(point)
+		point = self.browser.mapToGlobal(point)
 		menu.exec_(point)
 
 	def onNetworkGetData(self, networkReply):
@@ -229,7 +225,7 @@ class FrameTool(QtGui.QFrame):
 				networkReply.setData(data, 'text/html; charset=UTF-8')
 
 	def onSpinBoxValueChanged(self, handNo):
-		self.webView.setUrl(QtCore.QUrl('hand:///%s' % handNo))
+		self.browser.setUrl(QtCore.QUrl('hand:///%s' % handNo))
 
 	def onUrlChanged(self, url):
 		if url.scheme() == 'hand':
