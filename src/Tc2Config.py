@@ -302,9 +302,11 @@ class _GlobalObject(QtCore.QObject):
 
 	# settings objects should initialize themselves in response to this signal
 	initSettings = QtCore.pyqtSignal()
-	# emitted when the gui is up and alive. param is globalObject
+	# emitted when the all settings are up and alive. param is globalObject
 	#NOTE: for dynamically created widgets you may have to call the respective slot
 	initSettingsFinished = QtCore.pyqtSignal(QtCore.QObject)
+	# emitted when the gui is up and alive. param is globalObject
+	initGuiFinished = QtCore.pyqtSignal(QtCore.QObject)
 	# emitted when the gui is about to close
 	closeEvent = QtCore.pyqtSignal(QtCore.QEvent)
 
