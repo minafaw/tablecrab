@@ -580,8 +580,10 @@ class InstantHandHistory(PokerStarsWindow):
 				self._hwndEdit = hwnd
 				break
 		if self._hwndEdit is None:
-			#TODO: give feedback
-			pass
+			try:
+				raise ValueError('Instant hand history edit box not found')
+			except:
+				Tc2Config.handleException()
 		else:
 			self._timer.start()
 
