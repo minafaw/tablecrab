@@ -1,5 +1,6 @@
 
 import Tc2Config
+from Tc2Lib import Browser
 from PyQt4 import QtCore, QtGui, QtWebKit
 
 #************************************************************************************
@@ -18,16 +19,12 @@ class FrameHelp(QtGui.QFrame):
 
 		self.grid = Tc2Config.GridBox(self)
 
-		self.webView = QtWebKit.QWebView(self)
-		self.webView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)		#
-		self.webView.customContextMenuRequested.connect(self.onContextMenuWebView)
-		oldManager = self.webView.page().networkAccessManager()
-		self.networkAccessManager = Tc2Config.RawNetworkAccessManager(oldManager, parent=self)
-		page = self.webView.page()
-		page.setNetworkAccessManager(self.networkAccessManager)
+		self.browser = Browser.RawBrowser(self)
+		self.browser.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)		#
+		self.browser.customContextMenuRequested.connect(self.onContextMenuWebView)
 
 		# setup tool bar
-		self.toolBar = Tc2Config.WebViewToolBar(self.webView, settingsKeyZoomFactor=self.SettingsKeyZoomFactor)
+		self.toolBar = Tc2Config.WebViewToolBar(self.browser, settingsKeyZoomFactor=self.SettingsKeyZoomFactor)
 
 		self.tree = QtGui.QTreeWidget(self)
 		self.tree.setUniformRowHeights(True)
@@ -37,14 +34,14 @@ class FrameHelp(QtGui.QFrame):
 
 		self.splitter = QtGui.QSplitter(self)
 		self.splitter.addWidget(self.tree)
-		self.splitter.addWidget(self.webView)
+		self.splitter.addWidget(self.browser)
 
 		# set up actions
-		self.actionCopy = self.webView.pageAction(QtWebKit.QWebPage.Copy)
+		self.actionCopy = self.browser.pageAction(QtWebKit.QWebPage.Copy)
 		self.actionCopy.setShortcut(QtGui.QKeySequence(QtGui.QKeySequence.Copy))
 		self.addAction(self.actionCopy)
 
-		self.actionSelectAll = self.webView.pageAction(QtWebKit.QWebPage.SelectAll)
+		self.actionSelectAll = self.browser.pageAction(QtWebKit.QWebPage.SelectAll)
 		self.actionSelectAll.setShortcut(QtGui.QKeySequence(QtGui.QKeySequence.SelectAll))
 		self.addAction(self.actionSelectAll)
 
@@ -53,9 +50,8 @@ class FrameHelp(QtGui.QFrame):
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 		self.tree.itemSelectionChanged.connect(self.onItemSelectionChanged)
 		self.tree.itemActivated.connect(self.onItemSelectionChanged)
-		self.webView.urlChanged.connect(self.onUrlChanged)
-		self.networkAccessManager.getData.connect(self.onNetworkGetData)
-
+		self.browser.urlChanged.connect(self.onUrlChanged)
+		self.browser.networkAccessManager().getData.connect(self.onNetworkGetData)
 
 	#------------------------------------------------------------------------------------------------------------------
 	# methods
@@ -119,13 +115,13 @@ class FrameHelp(QtGui.QFrame):
 		menu = QtGui.QMenu(self)
 		menu.addAction(self.actionCopy)
 		menu.addAction(self.actionSelectAll)
-		point = self.webView.mapToGlobal(point)
+		point = self.browser.mapToGlobal(point)
 		menu.exec_(point)
 
 	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		self.tree.setUpdatesEnabled(False)
 
-		self.webView.setUrl(QtCore.QUrl(''))
+		self.browser.setUrl(QtCore.QUrl(''))
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 		#
 		lastTopic = Tc2Config.settingsValue(self.SettingsKeyHelpTopic, '').toString()
@@ -181,7 +177,7 @@ class FrameHelp(QtGui.QFrame):
 		item = items[0]
 		topic = item.data(0, QtCore.Qt.UserRole).toString()
 		url = QtCore.QUrl('%s.html' % topic)
-		self.webView.setUrl(url)
+		self.browser.setUrl(url)
 		Tc2Config.settingsSetValue(self.SettingsKeyHelpTopic, topic)
 
 	def onNetworkGetData(self, networkReply):

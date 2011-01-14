@@ -2,6 +2,7 @@
 import Tc2Config
 import Tc2HandGrabberPokerStars
 import Tc2GuiHelp
+from Tc2Lib import Browser
 from Tc2Lib import HoldemResources
 
 from PyQt4 import QtCore, QtGui, QtWebKit
@@ -51,10 +52,10 @@ class FrameNashCalculations(QtGui.QFrame):
 
 		self.formatter = HoldemResources.NashFormatter()
 
-		self.webView = QtWebKit.QWebView(self)
-		self.webView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-		self.webView.customContextMenuRequested.connect(self.onContextMenuWebView)
-		settings = self.webView.page().settings()
+		self.browser = QtWebKit.QWebView(self)
+		self.browser.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+		self.browser.customContextMenuRequested.connect(self.onContextMenuWebView)
+		settings = self.browser.page().settings()
 		settings.setAttribute(settings.AutoLoadImages, False)
 		settings.setAttribute(settings.JavascriptEnabled, False)
 		settings.setAttribute(settings.JavaEnabled, False)
@@ -82,7 +83,7 @@ class FrameNashCalculations(QtGui.QFrame):
 	def onRequestFailed(self, url, msg):
 		if url != self.lastUrl:
 			return
-		self.webView.setHtml('<h3>Request failed: %s</h3>%s' % (msg, url.toString()))
+		self.browser.setHtml('<h3>Request failed: %s</h3>%s' % (msg, url.toString()))
 
 	def onRequestCompleted(self, url, qString):
 		if url != self.lastUrl:
@@ -100,7 +101,7 @@ class FrameNashCalculations(QtGui.QFrame):
 		try:
 			self.formatter.parse(qString, len(seats))
 		except HoldemResources.ParseError, details:
-			self.webView.setHtml(unicode(details))
+			self.browser.setHtml(unicode(details))
 			return
 
 		def sortf(seats, mySeats=self.lastHand.seats, mySeatsButtonOrder=seats):
@@ -119,7 +120,7 @@ class FrameNashCalculations(QtGui.QFrame):
 				styleSheet=Tc2Config.globalObject.settingsNashCalculationsStyleSheet.styleSheet(),
 				url=url,
 				)
-		self.webView.setHtml(html)
+		self.browser.setHtml(html)
 
 	def payoutStructure(self):
 		return [round( int(i) / 100.0, 2) for i in str(self.editPayoutStructure.text()).split('/') if i]
@@ -132,7 +133,7 @@ class FrameNashCalculations(QtGui.QFrame):
 		grid.col(self.editPayoutStructure)
 		iRow = grid.row()
 		grid.setRowStretch(iRow, 99)
-		grid.col(self.webView, colspan=2)
+		grid.col(self.browser, colspan=2)
 
 	def setHand(self, hand):
 		self.lastHand = hand
@@ -142,7 +143,7 @@ class FrameNashCalculations(QtGui.QFrame):
 		if not payoutStructure:
 			return
 		if not hand:
-			self.webView.setHtml('<h3>Can not fetch data for hands loaded from disk</h3>This feature is not yet implemented.')
+			self.browser.setHtml('<h3>Can not fetch data for hands loaded from disk</h3>This feature is not yet implemented.')
 			return
 
 		# prep seats/stacks
@@ -188,7 +189,7 @@ class FrameNashCalculations(QtGui.QFrame):
 	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		self.layout()
 		self.comboBox.currentIndexChanged.connect(self.onComboBoxCurrentIndexChanged)
-		self.webView.setHtml('')
+		self.browser.setHtml('')
 
 		#NOTE: editingFinished() is only emitted when the whole mask is filled in so we need to connect to textChanged()
 		self.editPayoutStructure.textChanged.connect(self.onEditPayoutStructureTextChanged)
@@ -205,7 +206,7 @@ class FrameNashCalculations(QtGui.QFrame):
 		self.setHand(self.lastHand)
 
 	def onZoomFactorChanged(self, factor):
-		self.webView.setZoomFactor(factor)
+		self.browser.setZoomFactor(factor)
 
 	def onEditPayoutStructureTextChanged(self, text):
 		if self.comboBox.currentIndex() == len(self.PayoutStructures) -1:
@@ -214,10 +215,10 @@ class FrameNashCalculations(QtGui.QFrame):
 
 	def onContextMenuWebView(self, point):
 		menu = QtGui.QMenu(self)
-		menu.addAction(self.webView.pageAction(QtWebKit.QWebPage.Copy))
-		menu.addAction(self.webView.pageAction(QtWebKit.QWebPage.SelectAll))
+		menu.addAction(self.browser.pageAction(QtWebKit.QWebPage.Copy))
+		menu.addAction(self.browser.pageAction(QtWebKit.QWebPage.SelectAll))
 		menu.addAction(self.actionSave)
-		point = self.webView.mapToGlobal(point)
+		point = self.browser.mapToGlobal(point)
 		menu.exec_(point)
 
 	def onActionSaveTriggered(self):
@@ -235,7 +236,7 @@ class FrameNashCalculations(QtGui.QFrame):
 		fp = None
 		try:
 			fp = codecs.open(fileName, 'w', encoding='utf-8')
-			fp.write( unicode(self.webView.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
+			fp.write( unicode(self.browser.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
 		except Exception, d:
 			Tc2Config.msgWarning(self, 'Could Not Save Nash Calculations\n\n%s' % d)
 		finally:
@@ -266,21 +267,16 @@ class FrameHandViewer(QtGui.QFrame):
 
 		self.splitter = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
 
-		self.webView = QtWebKit.QWebView(self)
-		self.splitter.addWidget(self.webView)
-		self.webView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-		self.webView.customContextMenuRequested.connect(self.onContextMenuWebView)
-
 		#NOTE: we use a custom network manager to handle hands grabbed AND loaded from disk
-		# default cache size of WebKit is 100 (self.webView.page().history().maximumItemCount() )
+		# default cache size of WebKit is 100 (self.browser.page().history().maximumItemCount() )
 		# ok or not?
-		oldManager = self.webView.page().networkAccessManager()
-		self.networkAccessManager = Tc2Config.RawNetworkAccessManager(oldManager, parent=self)
-		page = self.webView.page()
-		page.setNetworkAccessManager(self.networkAccessManager)
-		self.networkAccessManager.getData.connect(self.onNetworkGetData)
+		self.browser = Browser.RawBrowser(self)
+		self.splitter.addWidget(self.browser)
+		self.browser.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+		self.browser.customContextMenuRequested.connect(self.onContextMenuWebView)
+		self.browser.networkAccessManager().getData.connect(self.onNetworkGetData)
 
-		self.toolBar = Tc2Config.WebViewToolBar(self.webView,
+		self.toolBar = Tc2Config.WebViewToolBar(self.browser,
 				settingsKeyZoomFactor=self.SettingsKeyZoomFactor
 				)
 
@@ -288,11 +284,11 @@ class FrameHandViewer(QtGui.QFrame):
 		self.splitter.addWidget(self.frameNashCalculations)
 
 		# set up actions
-		self.actionCopy = self.webView.pageAction(QtWebKit.QWebPage.Copy)
+		self.actionCopy = self.browser.pageAction(QtWebKit.QWebPage.Copy)
 		self.actionCopy.setShortcut(QtGui.QKeySequence(QtGui.QKeySequence.Copy))
 		self.addAction(self.actionCopy)
 
-		self.actionSelectAll = self.webView.pageAction(QtWebKit.QWebPage.SelectAll)
+		self.actionSelectAll = self.browser.pageAction(QtWebKit.QWebPage.SelectAll)
 		self.actionSelectAll.setShortcut(QtGui.QKeySequence(QtGui.QKeySequence.SelectAll))
 		self.addAction(self.actionSelectAll)
 
@@ -358,9 +354,9 @@ class FrameHandViewer(QtGui.QFrame):
 					break
 			else:
 				self._handCache.append( (myUrl, data) )
-			if len(self._handCache) > self.webView.page().history().maximumItemCount():
+			if len(self._handCache) > self.browser.page().history().maximumItemCount():
 				self._handCache.pop(0)
-		self.webView.setUrl(myUrl)
+		self.browser.setUrl(myUrl)
 		self.adjustActions()
 
 	#--------------------------------------------------------------------------------------------------------------
@@ -404,7 +400,7 @@ class FrameHandViewer(QtGui.QFrame):
 		fp = None
 		try:
 			fp = codecs.open(fileName, 'w', encoding='utf-8')
-			fp.write( unicode(self.webView.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
+			fp.write( unicode(self.browser.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
 		except Exception, d:
 			Tc2Config.msgWarning(self, 'Could Not Save Hand\n\n%s' % d)
 		finally:
@@ -418,7 +414,7 @@ class FrameHandViewer(QtGui.QFrame):
 		menu = QtGui.QMenu(self)
 		menu.addAction(self.actionCopy)
 		menu.addAction(self.actionSelectAll)
-		point = self.webView.mapToGlobal(point)
+		point = self.browser.mapToGlobal(point)
 		menu.exec_(point)
 
 	def onHandGrabberGrabbedHand(self, hand, data):
@@ -429,7 +425,7 @@ class FrameHandViewer(QtGui.QFrame):
 			Tc2Config.globalObject.feedbackMessage.emit('Could not grab hand')
 
 	def onGlobalObjectInitSettingsFinished(self, globalObject):
-		self.webView.setUrl(QtCore.QUrl(''))
+		self.browser.setUrl(QtCore.QUrl(''))
 		self.adjustActions()
 
 		self.layout(globalObject.settingsGlobal.toolBarPosition())
@@ -462,20 +458,20 @@ class FrameHandViewer(QtGui.QFrame):
 	def setSideBarPosition(self, position):
 		if position == Tc2Config.HandViewerSideBarPositionTop:
 			self.splitter.setOrientation(QtCore.Qt.Vertical)
-			if self.splitter.widget(0) == self.webView:
-				self.splitter.insertWidget(1, self.webView)
+			if self.splitter.widget(0) == self.browser:
+				self.splitter.insertWidget(1, self.browser)
 		elif position == Tc2Config.HandViewerSideBarPositionBottom:
 			self.splitter.setOrientation(QtCore.Qt.Vertical)
-			if self.splitter.widget(1) == self.webView:
-				self.splitter.insertWidget(0, self.webView)
+			if self.splitter.widget(1) == self.browser:
+				self.splitter.insertWidget(0, self.browser)
 		elif position == Tc2Config.HandViewerSideBarPositionLeft:
 			self.splitter.setOrientation(QtCore.Qt.Horizontal)
-			if self.splitter.widget(0) == self.webView:
-				self.splitter.insertWidget(1, self.webView)
+			if self.splitter.widget(0) == self.browser:
+				self.splitter.insertWidget(1, self.browser)
 		elif position == Tc2Config.HandViewerSideBarPositionRight:
 			self.splitter.setOrientation(QtCore.Qt.Horizontal)
-			if self.splitter.widget(1) == self.webView:
-				self.splitter.insertWidget(0, self.webView)
+			if self.splitter.widget(1) == self.browser:
+				self.splitter.insertWidget(0, self.browser)
 
 
 
