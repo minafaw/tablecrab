@@ -225,6 +225,7 @@ HelpTopics = [
 
 				],
 			('handViewer', 'Hand Viewer'),
+			('help', 'Help'),
 			('settings', 'Settings'), [
 				('settingsGlobal', 'Global'),
 				('settingsNetwork', 'Network'),

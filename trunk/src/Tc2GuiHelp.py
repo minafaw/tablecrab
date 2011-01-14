@@ -17,14 +17,13 @@ class FrameHelp(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
-		self.grid = Tc2Config.GridBox(self)
-
-		self.browser = Browser.RawBrowser(self)
+		self.browserFrame = Browser.RawBrowserFrame(self)
+		self.browser = self.browserFrame.browser()
 		self.browser.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)		#
 		self.browser.customContextMenuRequested.connect(self.onContextMenuWebView)
 
 		# setup tool bar
-		self.toolBar = Browser.BrowserToolBar(self.browser)
+		self.toolBar = self.browserFrame.toolBar()
 		self.toolBar.actionZoomIn.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierPlus() ) )
 		self.toolBar.actionZoomOut.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierMinus() ) )
 		self.toolBar.zoomFactorChanged.connect(self.onToolBarZoomFactorChanged)
@@ -37,7 +36,7 @@ class FrameHelp(QtGui.QFrame):
 
 		self.splitter = QtGui.QSplitter(self)
 		self.splitter.addWidget(self.tree)
-		self.splitter.addWidget(self.browser)
+		self.splitter.addWidget(self.browserFrame)
 
 		# set up actions
 		self.actionCopy = self.browser.pageAction(QtWebKit.QWebPage.Copy)
@@ -59,16 +58,9 @@ class FrameHelp(QtGui.QFrame):
 	#------------------------------------------------------------------------------------------------------------------
 	# methods
 	#------------------------------------------------------------------------------------------------------------------
-	def layout(self, toolBarPosition):
-		grid = self.grid
-		grid.clear()
-		if toolBarPosition == Tc2Config.ToolBarPositionTop:
-			grid.col(self.toolBar)
-			grid.row()
+	def layout(self):
+		grid = Tc2Config.GridBox(self)
 		grid.col(self.splitter)
-		if toolBarPosition == Tc2Config.ToolBarPositionBottom:
-			grid.row()
-			grid.col(self.toolBar)
 
 	def aboutHtml(self):
 		import sys
@@ -171,8 +163,11 @@ class FrameHelp(QtGui.QFrame):
 
 		self.tree.setAlternatingRowColors(globalObject.settingsGlobal.alternatingRowColors())
 		globalObject.settingsGlobal.alternatingRowColorsChanged.connect(self.tree.setAlternatingRowColors)
-		self.layout(globalObject.settingsGlobal.toolBarPosition())
-		globalObject.settingsGlobal.toolBarPositionChanged.connect(self.layout)
+		self.browserFrame.layout(globalObject.settingsGlobal.toolBarPosition() == Tc2Config.ToolBarPositionTop)
+		self.layout()
+		globalObject.settingsGlobal.toolBarPositionChanged.connect(
+				lambda position, frame=self.browserFrame: frame.layout(toolBarTop=position == Tc2Config.ToolBarPositionTop)
+				)
 
 		zoomFactor = Tc2Config.settingsValue(self.SettingsKeyZoomFactor, Browser.BrowserToolBar.ZoomFactorDefault).toDouble()[0]
 		self.toolBar.setZoomFactor(zoomFactor)
