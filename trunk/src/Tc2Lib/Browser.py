@@ -1,5 +1,5 @@
 
-from PyQt4 import QtCore, QtNetwork, QtWebKit
+from PyQt4 import QtCore, QtGui, QtNetwork, QtWebKit
 
 
 #************************************************************************************
@@ -89,6 +89,88 @@ class RawBrowser(QtWebKit.QWebView):
 	def networkAccessManager(self):
 		return self._networkAccessManager
 
+
+class BrowserToolBar(QtGui.QToolBar):
+	ZoomFactorMin = 0.5
+	ZoomFactorMax = 7
+	ZoomFactorDefault = 1
+	zoomFactorChanged = QtCore.pyqtSignal(float)
+	ZoomStepsMin = 1
+	ZoomStepsMax = 40
+	ZoomStepsDefault = 40
+	def __init__(self, webView):
+		QtGui.QToolBar.__init__(self, webView)
+		self.webView = webView
+		self._zoomSteps = self.ZoomStepsDefault
+
+		self.actionBack = self.webView.pageAction(QtWebKit.QWebPage.Back)
+		self.actionBack.setShortcut(QtGui.QKeySequence.Back)
+		self.actionBack.setToolTip('Back (Alt+-)')
+		self.addAction(self.actionBack)
+		self.actionForward = self.webView.pageAction(QtWebKit.QWebPage.Forward)
+		self.actionForward.setToolTip('Forward (Alt++)')
+		self.actionForward.setShortcut(QtGui.QKeySequence.Forward)
+		self.addAction(self.actionForward)
+
+		self.actionZoomIn = QtGui.QAction(self)
+		self.actionZoomIn.setText('ZoomIn')
+		self.actionZoomIn.setToolTip('ZoomIn (Ctrl++)')
+		#TODO: find a way to set icon
+		#self.actionZoomIn.setIcon(QtGui.QIcon(Pixmaps.magnifierPlus() ) )
+		self.actionZoomIn.setShortcut(QtGui.QKeySequence.ZoomIn)
+		self.actionZoomIn.setAutoRepeat(True)
+		self.actionZoomIn.triggered.connect(self.zoomIn)
+		self.addAction(self.actionZoomIn)
+
+		self.actionZoomOut = QtGui.QAction(self)
+		self.actionZoomOut.setText('ZoomOut')
+		self.actionZoomOut.setToolTip('ZoomOut (Ctrl+-)')
+		#TODO: find a way to set icon
+		#self.actionZoomOut.setIcon(QtGui.QIcon(Pixmaps.magnifierMinus() ) )
+		self.actionZoomOut.setShortcut(QtGui.QKeySequence.ZoomOut)
+		self.actionZoomOut.setAutoRepeat(True)
+		self.actionZoomOut.triggered.connect(self.zoomOut)
+		self.addAction(self.actionZoomOut)
+
+	def _nextZoom(self, zoomIn=True):
+		factor = self.webView.zoomFactor()
+		if zoomIn:
+			factor += self.ZoomFactorMax / float(self.zoomSteps() )
+			factor = min(factor, self.ZoomFactorMax)
+		else:
+			factor -= self.ZoomFactorMax / float(self.zoomSteps() )
+			factor = max(factor, self.ZoomFactorMin)
+		self.webView.setZoomFactor(factor)
+		self.zoomFactorChanged.emit(factor)
+		self.adjustActions()
+
+	def zoomIn(self):
+		self._nextZoom(zoomIn=True)
+
+	def zoomOut(self):
+		self._nextZoom(zoomIn=False)
+
+	def adjustActions(self):
+		self.actionZoomIn.setEnabled(self.webView.zoomFactor() < self.ZoomFactorMax)
+		self.actionZoomOut.setEnabled( self.webView.zoomFactor() > self.ZoomFactorMin)
+
+	def setZoomFactor(self, value):
+		if value > self.ZoomFactorMax or value < self.ZoomFactorMin:
+			value = self.ZoomFactorDefault
+		self.webView.setZoomFactor(value)
+		self.zoomFactorChanged.emit(value)
+		self.adjustActions()
+
+	def zoomFactor(self):
+		return self.webView.zoomFactor()
+
+	def setZoomSteps(self, value):
+		if value > self.ZoomStepsMax or value < self.ZoomStepsMin:
+			value = self.ZoomStepsDefault
+		self._zoomSteps = value
+
+	def zoomSteps(self):
+		return self._zoomSteps
 
 
 

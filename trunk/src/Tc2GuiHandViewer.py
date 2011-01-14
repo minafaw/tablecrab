@@ -276,9 +276,10 @@ class FrameHandViewer(QtGui.QFrame):
 		self.browser.customContextMenuRequested.connect(self.onContextMenuWebView)
 		self.browser.networkAccessManager().getData.connect(self.onNetworkGetData)
 
-		self.toolBar = Tc2Config.WebViewToolBar(self.browser,
-				settingsKeyZoomFactor=self.SettingsKeyZoomFactor
-				)
+		self.toolBar = Browser.BrowserToolBar(self.browser)
+		self.toolBar.actionZoomIn.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierPlus() ) )
+		self.toolBar.actionZoomOut.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierMinus() ) )
+		self.toolBar.zoomFactorChanged.connect(self.onToolBarZoomFactorChanged)
 
 		self.frameNashCalculations = FrameNashCalculations(self, toolBar=self.toolBar)
 		self.splitter.addWidget(self.frameNashCalculations)
@@ -436,6 +437,9 @@ class FrameHandViewer(QtGui.QFrame):
 
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 
+		zoomFactor = Tc2Config.settingsValue(self.SettingsKeyZoomFactor, Browser.BrowserToolBar.ZoomFactorDefault).toDouble()[0]
+		self.toolBar.setZoomFactor(zoomFactor)
+
 	def onNetworkGetData(self, networkReply):
 		url = networkReply.url()
 		for myUrl, data in self._handCache:
@@ -454,6 +458,9 @@ class FrameHandViewer(QtGui.QFrame):
 		else:
 			#NOTE: we assert only an invalid or no-hand gets here
 			pass
+
+	def onToolBarZoomFactorChanged(self, value):
+		Tc2Config.settingsSetValue(self.SettingsKeyZoomFactor, value)
 
 	def setSideBarPosition(self, position):
 		if position == Tc2Config.HandViewerSideBarPositionTop:
