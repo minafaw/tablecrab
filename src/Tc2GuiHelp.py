@@ -119,7 +119,6 @@ class FrameHelp(QtGui.QFrame):
 		self.tree.setUpdatesEnabled(False)
 
 		self.browser.setUrl(QtCore.QUrl(''))
-		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 		#
 		lastTopic = Tc2Config.settingsValue(self.SettingsKeyHelpTopic, '').toString()
 		topicsCollapsed = Tc2Config.settingsValue(self.SettingsKeyTopicsCollapsed, []).toStringList()
@@ -167,6 +166,7 @@ class FrameHelp(QtGui.QFrame):
 		globalObject.settingsGlobal.alternatingRowColorsChanged.connect(self.tree.setAlternatingRowColors)
 		self.browserFrame.layout(globalObject.settingsGlobal.toolBarPosition() == Tc2Config.ToolBarPositionTop)
 		self.layout()
+		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 		globalObject.settingsGlobal.toolBarPositionChanged.connect(
 				lambda position, frame=self.browserFrame: frame.layout(toolBarTop=position == Tc2Config.ToolBarPositionTop)
 				)
