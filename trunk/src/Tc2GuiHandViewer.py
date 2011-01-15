@@ -76,9 +76,51 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 		# connect signals
 		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 
+	#-----------------------------------------------------------------------------------------
+	# sideBar methods
+	#-----------------------------------------------------------------------------------------
 	def displayName(self):
 		return 'Fetch nash calculations'
 
+	def handleHandSet(self, hand):
+		if hand is self.lastHand:
+			return
+		self.lastHand = hand
+		if hand is None:
+			return
+		payoutStructure = self.payoutStructure()
+		if not payoutStructure:
+			return
+		if not hand:
+			self._browser.setHtml('<h3>Can not fetch data for hands loaded from disk</h3>This feature is not yet implemented.')
+			return
+
+		# prep seats/stacks
+		seats = hand.seatsButtonOrdered()
+		if len(seats) == 1:
+			return
+		elif len(seats) > 3:
+			seats.append(seats.pop(0))
+			seats.append(seats.pop(0))
+			seats.append(seats.pop(0))
+		stacks = [seat.stack for seat in seats]
+
+		#TODO: should we clear out webView here?
+		url = self.fetcher.createRequestUrl(
+				bigBlind=hand.blindBig,
+				smallBlind=hand.blindSmall,
+				ante=hand.blindAnte,
+				payouts=payoutStructure,
+				stacks=stacks,
+				)
+		self.lastUrl = url
+		self.fetcher.abortRequest()
+		timer = self.RequestDelayTimer(self, self.fetchHandData, url)
+		timer.start()
+
+	#-----------------------------------------------------------------------------------------
+	#
+	#-----------------------------------------------------------------------------------------
 	def onRequestFailed(self, url, msg):
 		if url != self.lastUrl:
 			return
@@ -132,42 +174,6 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 		iRow = grid.row()
 		grid.setRowStretch(iRow, 99)
 		grid.col(self._browser, colspan=2)
-
-	def handleHandSet(self, hand):
-		if hand is self.lastHand:
-			return
-		self.lastHand = hand
-		if hand is None:
-			return
-		payoutStructure = self.payoutStructure()
-		if not payoutStructure:
-			return
-		if not hand:
-			self._browser.setHtml('<h3>Can not fetch data for hands loaded from disk</h3>This feature is not yet implemented.')
-			return
-
-		# prep seats/stacks
-		seats = hand.seatsButtonOrdered()
-		if len(seats) == 1:
-			return
-		elif len(seats) > 3:
-			seats.append(seats.pop(0))
-			seats.append(seats.pop(0))
-			seats.append(seats.pop(0))
-		stacks = [seat.stack for seat in seats]
-
-		#TODO: should we clear out webView here?
-		url = self.fetcher.createRequestUrl(
-				bigBlind=hand.blindBig,
-				smallBlind=hand.blindSmall,
-				ante=hand.blindAnte,
-				payouts=payoutStructure,
-				stacks=stacks,
-				)
-		self.lastUrl = url
-		self.fetcher.abortRequest()
-		timer = self.RequestDelayTimer(self, self.fetchHandData, url)
-		timer.start()
 
 	def fetchHandData(self, url):
 			if url != self.lastUrl:
