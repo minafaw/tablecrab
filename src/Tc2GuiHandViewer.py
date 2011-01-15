@@ -272,6 +272,7 @@ class BrowserSideBarContainer(QtGui.QFrame):
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
+		grid.setContentsMargins(0, 0, 0, 0)
 		grid.col(self.combo)
 		grid.row()
 		grid.col(self.stack)
