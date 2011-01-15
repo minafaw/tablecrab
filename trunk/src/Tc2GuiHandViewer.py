@@ -244,7 +244,6 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 #************************************************************************************
 #
 #************************************************************************************
-#TODO: save / restore last selected sideBar
 class BrowserSideBarContainer(QtGui.QFrame):
 	SideBarsDefault = (
 			BrowserSideBarNashCalculations,
