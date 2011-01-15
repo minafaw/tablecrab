@@ -239,6 +239,10 @@ class FrameTool(QtGui.QFrame):
 
 	def onToolBarZoomFactorChanged(self, value):
 		Tc2Config.settingsSetValue(self.SettingsKeyZoomFactor, value)
+		self.sideBarContainer.handleZoomFactorChanged(value)
+
+	def zoomFactor(self):
+		return self._toolBar.zoomFactor()
 
 	def onUrlChanged(self, url):
 		if url.scheme() == 'hand':

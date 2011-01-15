@@ -36,13 +36,11 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 		def onTimeout(self):
 			self.requestFetcher(self.url)
 
-	def __init__(self, parent, toolBar=None):
+	def __init__(self, parent, zoomFactor=None):
 		QtGui.QFrame.__init__(self, parent)
 
 		self.lastHand = None
 		self.lastUrl = None
-		if toolBar is not None:
-			toolBar.zoomFactorChanged.connect(self.onZoomFactorChanged)
 
 		self.fetcher = HoldemResources.NashFetcher()
 		self.fetcher.requestFailed.connect(self.onRequestFailed)
@@ -57,6 +55,8 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 		settings.setAttribute(settings.AutoLoadImages, False)
 		settings.setAttribute(settings.JavascriptEnabled, False)
 		settings.setAttribute(settings.JavaEnabled, False)
+		if zoomFactor is not None:
+			self._browser.setZoomFactor(zoomFactor)
 
 		self.comboBox = QtGui.QComboBox(self)
 		for i, (text, _, _) in enumerate(self.PayoutStructures):
@@ -81,6 +81,9 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 	#-----------------------------------------------------------------------------------------
 	def displayName(self):
 		return 'Fetch nash calculations'
+
+	def handleZoomFactorChanged(self, value):
+		self._browser.setZoomFactor(value)
 
 	def handleHandSet(self, hand):
 		if hand is self.lastHand:
@@ -282,8 +285,13 @@ class BrowserSideBarContainer(QtGui.QFrame):
 		sideBar = self.stack.currentWidget()
 		sideBar.handleHandSet(hand)
 
+	def handleZoomFactorChanged(self, value):
+		for i in xrange(self.stack.count()):
+			sideBar = self.stack.widget(i)
+			sideBar.handleZoomFactorChanged(value)
+
 	def addSideBar(self, sideBarClass):
-		sideBar = sideBarClass(self, toolBar=self.parent().toolBar() )
+		sideBar = sideBarClass(self, zoomFactor=self.parent().zoomFactor() )
 		self.stack.addWidget(sideBar)
 		self.combo.addItem(sideBar.displayName(), QtCore.QVariant(self.stack.count() -1 ) )
 
@@ -517,6 +525,10 @@ class FrameHandViewer(QtGui.QFrame):
 
 	def onToolBarZoomFactorChanged(self, value):
 		Tc2Config.settingsSetValue(self.SettingsKeyZoomFactor, value)
+		self.sideBarContainer.handleZoomFactorChanged(value)
+
+	def zoomFactor(self):
+		return self._toolBar.zoomFactor()
 
 	def setSideBarPosition(self, position):
 		if position == Tc2Config.HandViewerSideBarPositionTop:
