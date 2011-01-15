@@ -490,10 +490,10 @@ class FrameHandViewer(QtGui.QFrame):
 		self.setSideBarPosition(globalObject.settingsHandViewer.sideBarPosition())
 		globalObject.settingsHandViewer.sideBarPositionChanged.connect(self.setSideBarPosition)
 		globalObject.siteHandlerPokerStars.handGrabbed.connect(self.onHandGrabberGrabbedHand)
-
-		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 		self._browserFrame.layout(globalObject.settingsGlobal.toolBarPosition() == Tc2Config.ToolBarPositionTop)
 		self.layout()
+		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
+
 		globalObject.settingsGlobal.toolBarPositionChanged.connect(
 				lambda position, frame=self._browserFrame: frame.layout(toolBarTop=position == Tc2Config.ToolBarPositionTop)
 				)
