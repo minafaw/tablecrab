@@ -26,16 +26,16 @@ class FrameTool(QtGui.QFrame):
 		self.handParser = Tc2HandGrabberPokerStars.HandParser()
 		self.handFormatter = Tc2HandGrabberPokerStars.HandFormatterHtmlTabular()
 
-		self.frame = QtGui.QFrame(self)
-		self.splitter = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
-		self.splitter.addWidget(self.frame)
+		self._frame = QtGui.QFrame(self)
+		self._splitter = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
+		self._splitter.addWidget(self._frame)
 
-		self.spinBox = QtGui.QSpinBox(self.frame)
-		self.spinBox.setPrefix('Hand# ')
-		self.spinBox.setRange(0, 0)
-		self.spinBox.setSuffix(' /0')
+		self._spinBox = QtGui.QSpinBox(self._frame)
+		self._spinBox.setPrefix('Hand# ')
+		self._spinBox.setRange(0, 0)
+		self._spinBox.setSuffix(' /0')
 
-		self._browserFrame = Browser.RawBrowserFrame(self.frame)
+		self._browserFrame = Browser.RawBrowserFrame(self._frame)
 		self._browser = self._browserFrame.browser()
 		self._browser.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		self._browser.customContextMenuRequested.connect(self.onContextMenuWebView)
@@ -47,7 +47,7 @@ class FrameTool(QtGui.QFrame):
 		self._toolBar.zoomFactorChanged.connect(self.onToolBarZoomFactorChanged)
 
 		self.sideBarContainer = Tc2GuiHandViewer.BrowserSideBarContainer(self)
-		self.splitter.addWidget(self.sideBarContainer)
+		self._splitter.addWidget(self.sideBarContainer)
 
 		# set up actions
 		self.actionCopy = self._browser.pageAction(QtWebKit.QWebPage.Copy)
@@ -91,15 +91,15 @@ class FrameTool(QtGui.QFrame):
 		self._browser.urlChanged.connect(self.onUrlChanged)
 
 	def layout(self):
-		grid = Tc2Config.GridBox(self.frame)
+		grid = Tc2Config.GridBox(self._frame)
 		grid.setContentsMargins(0, 0, 0, 0)
-		grid.col(self.spinBox)
+		grid.col(self._spinBox)
 		grid.row()
 		grid.col(self._browserFrame)
 		self.sideBarContainer.layout()
 
 		grid = Tc2Config.GridBox(self)
-		grid.col(self.splitter)
+		grid.col(self._splitter)
 
 	def toolBar(self):
 		return self._toolBar
@@ -112,12 +112,14 @@ class FrameTool(QtGui.QFrame):
 
 	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		self._browser.setUrl(QtCore.QUrl(''))
-		self.spinBox.valueChanged.connect(self.onSpinBoxValueChanged)
-		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
+		self._spinBox.valueChanged.connect(self.onSpinBoxValueChanged)
+		self._splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
+		self.setSideBarPosition(globalObject.settingsHandViewer.sideBarPosition())
+		globalObject.settingsHandViewer.sideBarPositionChanged.connect(self.setSideBarPosition)
 		self.adjustActions()
+		self.layout()
 
 		self._browserFrame.layout(globalObject.settingsGlobal.toolBarPosition() == Tc2Config.ToolBarPositionTop)
-		self.layout()
 		globalObject.settingsGlobal.toolBarPositionChanged.connect(
 				lambda position, frame=self._browserFrame: frame.layout(toolBarTop=position == Tc2Config.ToolBarPositionTop)
 				)
@@ -155,16 +157,16 @@ class FrameTool(QtGui.QFrame):
 			Tc2Config.msgWarning(self, 'Could Not Open Hand history\n\n%s' % d)
 
 		if self.handHistoryFile:
-			self.spinBox.setRange(1, len(self.handHistoryFile))
-			self.spinBox.setValue(1)
-			self.spinBox.setSuffix(' /%s' % len(self.handHistoryFile))
+			self._spinBox.setRange(1, len(self.handHistoryFile))
+			self._spinBox.setValue(1)
+			self._spinBox.setSuffix(' /%s' % len(self.handHistoryFile))
 		else:
-			self.spinBox.setRange(0, 0)
-			self.spinBox.setSuffix(' /0' )
+			self._spinBox.setRange(0, 0)
+			self._spinBox.setSuffix(' /0' )
 		self.adjustActions()
 
 	def onCloseEvent(self, event):
-		Tc2Config.settingsSetValue(self.SettingsKeySplitterState, self.splitter.saveState())
+		Tc2Config.settingsSetValue(self.SettingsKeySplitterState, self._splitter.saveState())
 		Tc2Config.settingsSetValue(self.SettingsKeySideBarCurrent, self.sideBarContainer.currentIndex())
 
 	def onActionSaveTriggered(self):
@@ -241,8 +243,26 @@ class FrameTool(QtGui.QFrame):
 	def onUrlChanged(self, url):
 		if url.scheme() == 'hand':
 			handNo = int(url.path()[1:])
-			if self.spinBox.value() != handNo:
-				self.spinBox.setValue(handNo)
+			if self._spinBox.value() != handNo:
+				self._spinBox.setValue(handNo)
+
+	def setSideBarPosition(self, position):
+		if position == Tc2Config.HandViewerSideBarPositionTop:
+			self._splitter.setOrientation(QtCore.Qt.Vertical)
+			if self._splitter.widget(0) == self._frame:
+				self._splitter.insertWidget(1, self._frame)
+		elif position == Tc2Config.HandViewerSideBarPositionBottom:
+			self._splitter.setOrientation(QtCore.Qt.Vertical)
+			if self._splitter.widget(1) == self._frame:
+				self._splitter.insertWidget(0, self._frame)
+		elif position == Tc2Config.HandViewerSideBarPositionLeft:
+			self._splitter.setOrientation(QtCore.Qt.Horizontal)
+			if self._splitter.widget(0) == self._frame:
+				self._splitter.insertWidget(1, self._frame)
+		elif position == Tc2Config.HandViewerSideBarPositionRight:
+			self._splitter.setOrientation(QtCore.Qt.Horizontal)
+			if self._splitter.widget(1) == self._frame:
+				self._splitter.insertWidget(0, self._frame)
 
 
 
