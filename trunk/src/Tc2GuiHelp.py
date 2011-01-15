@@ -17,6 +17,8 @@ class FrameHelp(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
+		self._settingsPersistent = True
+
 		self.browserFrame = Browser.RawBrowserFrame(self)
 		self.browser = self.browserFrame.browser()
 		self.browser.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)		#
@@ -179,7 +181,8 @@ class FrameHelp(QtGui.QFrame):
 		topic = item.data(0, QtCore.Qt.UserRole).toString()
 		url = QtCore.QUrl('%s.html' % topic)
 		self.browser.setUrl(url)
-		Tc2Config.settingsSetValue(self.SettingsKeyHelpTopic, topic)
+		if self._settingsPersistent:
+			Tc2Config.settingsSetValue(self.SettingsKeyHelpTopic, topic)
 
 	def onNetworkGetData(self, networkReply):
 		# serve pages from our resource modules
@@ -227,7 +230,8 @@ class FrameHelp(QtGui.QFrame):
 			raise ValueError('no topic found for url: %s' % url.path())
 
 	def onToolBarZoomFactorChanged(self, value):
-		Tc2Config.settingsSetValue(self.SettingsKeyZoomFactor, value)
+		if self._settingsPersistent:
+			Tc2Config.settingsSetValue(self.SettingsKeyZoomFactor, value)
 
 	def setTopic(self, topic):
 		for item in Tc2Config.TreeWidgetItemIterator(self.tree):
@@ -237,10 +241,11 @@ class FrameHelp(QtGui.QFrame):
 				break
 		else:
 			raise ValueError('no such topic: %s' % topic)
-		Tc2Config.settingsSetValue(self.SettingsKeyHelpTopic, topic)
+		if not self._settingsPersistent:
+			Tc2Config.settingsSetValue(self.SettingsKeyHelpTopic, topic)
 
-	def setSettingsTemporary(self):
-		self.toolBar.zoomFactorChanged.disconnect(self.onToolBarZoomFactorChanged)
+	def setSettingsPersistent(self, flag):
+		self._settingsPersistent = flag
 
 #************************************************************************************
 #
@@ -263,7 +268,7 @@ class _DialogHelp(QtGui.QDialog):
 		self.layout()
 		self.frameHelp.onGlobalObjectInitSettingsFinished(Tc2Config.globalObject)
 		#NOTE: we do not save zoom factor on instant help. instant help settings are temporary
-		self.frameHelp.setSettingsTemporary()
+		self.frameHelp.setSettingsPersistent(False)
 		self.restoreGeometry( Tc2Config.settingsValue(self.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray() )
 		self.frameHelp.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 		self.frameHelp.setTopic(topic)
