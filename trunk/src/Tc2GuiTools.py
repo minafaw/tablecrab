@@ -4,6 +4,8 @@ import Tc2GuiHelp
 
 import Tc2GuiToolsFPPCalculator
 import Tc2GuiToolsHandHistoryViewer
+import Tc2GuiToolsPoker
+
 
 from PyQt4 import QtCore, QtGui
 
@@ -31,6 +33,7 @@ class FrameTools(QtGui.QFrame):
 
 		self.addTool(Tc2GuiToolsFPPCalculator.FrameTool(parent=self.stack), self.listWidget)
 		self.addTool(Tc2GuiToolsHandHistoryViewer.FrameTool(parent=self.stack), self.listWidget)
+		self.addTool(Tc2GuiToolsPoker.FrameTool(parent=self.stack), self.listWidget)
 
 
 		#
