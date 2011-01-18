@@ -64,7 +64,7 @@ class Gui(QtGui.QMainWindow):
 		self.setWindowIcon( QtGui.QIcon(Tc2Config.Pixmaps.tableCrab()) )
 		self.restoreGeometry( Tc2Config.settingsValue(self.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray() )
 
-		self.siteManager = Tc2SiteManager.SiteManager(parent=self)
+		self._siteManager = Tc2SiteManager.SiteManager(parent=self)
 
 		# need to store some state data for the statusBar so we can restore on tab changes
 		# error messages are displayed as longs as there is no new feedback from the current tab
@@ -73,30 +73,30 @@ class Gui(QtGui.QMainWindow):
 				}
 
 		# setup status labels
-		self.labelClock = Tc2Config.ClockLabel(parent=self)
-		self.labelStatus = ClickableLabel('Ready: ', self)
-		self.labelStatus.setTextFormat(QtCore.Qt.RichText)
-		self.labelStatus.doubleClicked.connect(self.onLabelFeedbackDoubleClicked)
+		self._labelClock = Tc2Config.ClockLabel(parent=self)
+		self._labelStatus = ClickableLabel('Ready: ', self)
+		self._labelStatus.setTextFormat(QtCore.Qt.RichText)
+		self._labelStatus.doubleClicked.connect(self.onLabelFeedbackDoubleClicked)
 		self.labelFeedback = QtGui.QLabel('', self)
 
 		# setup StatusBar
 		statusBar = self.statusBar()
 		#BUG: QTBUG-5566 sizegrip is broken on windows
 		statusBar.setSizeGripEnabled(False)
-		statusBar.addWidget(self.labelClock, 0)
-		statusBar.addWidget(self.labelStatus, 0)
+		statusBar.addWidget(self._labelClock, 0)
+		statusBar.addWidget(self._labelStatus, 0)
 		statusBar.addWidget(self.labelFeedback, 99)
 
 		# setup tabs
-		self.tabWidget = QtGui.QTabWidget(self)
-		self.setCentralWidget(self.tabWidget)
-		self.tabSetup = self._addTab(Tc2GuiSetup.FrameSetup, 'Se&tup')
-		self.tabHotkeys = self._addTab(Tc2GuiHotkeys.FrameHotkeys, 'Hot&keys')
-		self.tabHand = self._addTab(Tc2GuiHandViewer.FrameHandViewer, 'H&and')
-		self.tabTools = self._addTab(Tc2GuiTools.FrameTools, 'Too&ls')
-		self.tabSettings = self._addTab(Tc2GuiSettings.FrameSettings, 'Settin&gs')
-		self.tabHelp = self._addTab(Tc2GuiHelp.FrameHelp, '&Help')
-		self.tabWidget.currentChanged.connect(self.onTabCurrentChanged)
+		self._tabWidget = QtGui.QTabWidget(self)
+		self.setCentralWidget(self._tabWidget)
+		self._tabSetup = self._addTab(Tc2GuiSetup.FrameSetup, 'Se&tup')
+		self._tabHotkeys = self._addTab(Tc2GuiHotkeys.FrameHotkeys, 'Hot&keys')
+		self._tabHand = self._addTab(Tc2GuiHandViewer.FrameHandViewer, 'H&and')
+		self._tabTools = self._addTab(Tc2GuiTools.FrameTools, 'Too&ls')
+		self._tabSettings = self._addTab(Tc2GuiSettings.FrameSettings, 'Settin&gs')
+		self._tabHelp = self._addTab(Tc2GuiHelp.FrameHelp, '&Help')
+		self._tabWidget.currentChanged.connect(self.onTabCurrentChanged)
 
 		# connect global signals
 		g = Tc2Config.globalObject
@@ -116,7 +116,7 @@ class Gui(QtGui.QMainWindow):
 		Tc2Config.globalObject.keyboardHook.stop()
 		Tc2Config.globalObject.windowHook.stop()
 
-		Tc2Config.settingsSetValue(self.SettingsKeyTabCurrent, self.tabWidget.currentIndex())
+		Tc2Config.settingsSetValue(self.SettingsKeyTabCurrent, self._tabWidget.currentIndex())
 		Tc2Config.settingsSetValue(self.SettingsKeyGeometry, self.saveGeometry() )
 		return QtGui.QMainWindow.closeEvent(self, event)
 
@@ -137,22 +137,28 @@ class Gui(QtGui.QMainWindow):
 	#--------------------------------------------------------------------------------------------------------------
 	def _addTab(self, widgetProto, name):
 		widget = widgetProto(parent=self)
-		self.tabWidget.addTab(widget, name)
+		self._tabWidget.addTab(widget, name)
 		self._feedbackMessages[widget] = ''
 		return widget
+
+	def siteManager(self):
+		return self._siteManager
+
+	def tabSettings(self):
+		return self._tabSettings
 
 	#--------------------------------------------------------------------------------------------------------------
 	# event handlers
 	#--------------------------------------------------------------------------------------------------------------
 	def onClearException(self):
 		self._feedbackMessages[None] = ''
-		self.labelStatus.setText('Ready: ')
+		self._labelStatus.setText('Ready: ')
 
 	def onFeedback(self, widget, string):
 		#find tab widget
 		tab = None
 		while True:
-			if self.tabWidget.indexOf(widget) > -1:
+			if self._tabWidget.indexOf(widget) > -1:
 				tab = widget
 				break
 			widget = widget.parent()
@@ -161,25 +167,25 @@ class Gui(QtGui.QMainWindow):
 			raise ValueError('widget is not on one of our tabs')
 		# store data for tab changes
 		self._feedbackMessages[tab] = string
-		if tab is self.tabWidget.currentWidget():
+		if tab is self._tabWidget.currentWidget():
 			# set message to statusBar
 			self.labelFeedback.setText(string)
 
 	def onFeedbackException(self, exception):
 		#NOTE: we assume "exception" is never empty string
 		self._feedbackMessages[None] = Tc2Config.cleanException(exception)
-		self.labelStatus.setText(ErrMessage)
+		self._labelStatus.setText(ErrMessage)
 
 	def onFeedbackMessage(self, qString):
 		self.labelFeedback.setText('>>' + qString)
 		self._statusMessageTimer.start(Tc2Config.StatusBarMessageTimeout * 1000)
 
 	def onGlobalObjectInitSettingsFinished(self, globalObject):
-		self.tabWidget.setCurrentIndex( Tc2Config.settingsValue(self.SettingsKeyTabCurrent, QtCore.QVariant()).toInt()[0] )
-		position = self.tabWidget.South if globalObject.settingsGlobal.tabPosition() == Tc2Config.TabPositionBottom else self.tabWidget.North
-		self.tabWidget.setTabPosition(position)
+		self._tabWidget.setCurrentIndex( Tc2Config.settingsValue(self.SettingsKeyTabCurrent, QtCore.QVariant()).toInt()[0] )
+		position = self._tabWidget.South if globalObject.settingsGlobal.tabPosition() == Tc2Config.TabPositionBottom else self._tabWidget.North
+		self._tabWidget.setTabPosition(position)
 		globalObject.settingsGlobal.tabPositionChanged.connect(
-				lambda value, self=self: self.tabWidget.setTabPosition(self.tabWidget.South if value == Tc2Config.TabPositionBottom else self.tabWidget.North)
+				lambda value, self=self: self._tabWidget.setTabPosition(self._tabWidget.South if value == Tc2Config.TabPositionBottom else self._tabWidget.North)
 				)
 
 	def onLabelFeedbackDoubleClicked(self):
@@ -193,12 +199,12 @@ class Gui(QtGui.QMainWindow):
 	def onTabCurrentChanged(self, index):
 		if index < 0:
 			return
-		widget = self.tabWidget.widget(index)
+		widget = self._tabWidget.widget(index)
 		data = self._feedbackMessages[widget]
 		self.labelFeedback.setText(data)
 
 	def onStatusBarTimer(self):
-		tab = self.tabWidget.currentWidget()
+		tab = self._tabWidget.currentWidget()
 		lastFeedback = self._feedbackMessages.get(tab, '')
 		self.labelFeedback.setText(lastFeedback)
 
