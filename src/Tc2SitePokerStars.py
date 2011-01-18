@@ -186,8 +186,8 @@ class Table(PokerStarsWindow):
 		for template in Tc2Config.globalObject.templateManager:
 			if not template.isEnabled(): continue
 			if template.id() != Tc2ConfigTemplates.TemplatePokerStarsTable.id(): continue
-			if template.size == rect.size():
-				return template
+			if template.size != rect.size(): continue
+			return template
 		return None
 
 	#TODO: for some reason hotkeys are still enabled when mouse is over notes editor with editor not having focus.
