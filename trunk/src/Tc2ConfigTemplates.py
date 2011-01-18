@@ -19,7 +19,12 @@ def newPoint(point=None, x=None, y=None):
 	return point
 
 
-class ItemBase(QtGui.QTreeWidgetItem):
+class TemplateBase(QtGui.QTreeWidgetItem):
+	IsTopLevel = False
+
+	def isEnabled(self):
+		return not self.name().startsWith('disabled', QtCore.Qt.CaseInsensitive)
+
 	def topLevel(self):
 		parent = self
 		while True:
@@ -29,10 +34,13 @@ class ItemBase(QtGui.QTreeWidgetItem):
 			if parent is None:
 				raise ValueError('no top level item found')
 
-class PointItem(ItemBase):
+#************************************************************************************
+#
+#************************************************************************************
+class PointItem(TemplateBase):
 	IsTopLevel = False
 	def __init__(self, pointName, point, parent=None):
-		ItemBase.__init__(self, parent)
+		TemplateBase.__init__(self, parent)
 		self.point = None
 		self.pointName = pointName
 		self.setText(0, self.pointName)
@@ -45,7 +53,7 @@ class PointItem(ItemBase):
 		self.point = point
 		self.setText(1, Tc2Config.pointToString(self.point) )
 
-class TemplatePokerStarsTable(ItemBase):
+class TemplatePokerStarsTable(TemplateBase):
 	IsTopLevel = True
 	PointNames = (
 		'EmptySpace',
@@ -70,8 +78,7 @@ class TemplatePokerStarsTable(ItemBase):
 			itemIsExpanded=False,
 			**kws
 			):
-		ItemBase.__init__(self, parent)
-		self.name = name if name else self.menuName()
+		TemplateBase.__init__(self, parent)
 		self.size = newValidSize(size)
 		self.itemIsExpanded = itemIsExpanded
 
@@ -82,7 +89,7 @@ class TemplatePokerStarsTable(ItemBase):
 		font.setBold(True)
 		self.setFont(0, font)
 		self.setExpanded( self.itemIsExpanded)
-		self.setText(0, self.name)
+		self.setText(0, name if name else self.menuName() )
 
 		self.itemType = QtGui.QTreeWidgetItem(self, ['Type:',  self.menuName()])
 		self.itemType.setDisabled(True)
@@ -101,9 +108,7 @@ class TemplatePokerStarsTable(ItemBase):
 
 	def handleEditInPlaceFinished(self, item):
 		if item is self:
-			if self.text(0) != self.name:
-				self.name = self.text(0)
-				return True
+			return True
 		return False
 
 	def handleItemExpanded(self, item):
@@ -174,16 +179,15 @@ class TemplatePokerStarsTable(ItemBase):
 
 	def toConfig(self, key):
 		Tc2Config.settingsSetValue( (key, 'ID'), self.id() )
-		Tc2Config.settingsSetValue( (key, 'Name'), self.name)
+		Tc2Config.settingsSetValue( (key, 'Name'), self.name() )
 		Tc2Config.settingsSetValue( (key, 'Size'), self.size)
 		Tc2Config.settingsSetValue( (key, 'ItemIsExpanded'), self.itemIsExpanded)
 		for pointName, point in self.points.items():
 			Tc2Config.settingsSetValue( (key, pointName), point)
 		return True
 
-	def isEnabled(self):
-		return not self.name.startsWith('disabled', QtCore.Qt.CaseInsensitive)
-
+	def name(self):
+		return self.text(0)
 
 Templates.append(TemplatePokerStarsTable)
 
