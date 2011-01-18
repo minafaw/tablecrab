@@ -216,7 +216,7 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		return False
 
 	def createTemplate(self, templateProto):
-		names = [i.name for i in self]
+		names = [i.name() for i in self]
 		name = templateProto.menuName()
 		name = Tc2Config.uniqueName(name, names)
 		template = templateProto(parent=self, name=name)
