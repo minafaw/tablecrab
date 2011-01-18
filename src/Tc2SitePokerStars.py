@@ -86,7 +86,7 @@ class Table(PokerStarsWindow):
 	def handleGainedForeground(self):
 		template = self.template()
 		if template is not None:
-			Tc2Config.globalObject.feedbackMessage.emit(template.name)
+			Tc2Config.globalObject.feedbackMessage.emit(template.name() )
 			if Tc2Config.globalObject.settingsPokerStars.moveMouseToActiveTable():
 				if not Tc2Win32.mouseButtonsDown():
 					point = Tc2Win32.mouseGetPos()
@@ -133,7 +133,7 @@ class Table(PokerStarsWindow):
 					# 	for some reson sending F5 via KeyboardInput has no effect whatsoever, so we tell Tc2Win32
 					# to wrap resizing into enter- exitsizemove messages. tested on winXP as well - works nicely
 					Tc2Win32.windowSetClientSize(self.hwnd, template.size, sendSizeMove=True)
-					Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (hotkey.menuName(), template.name) )
+					Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (hotkey.menuName(), template.name() ) )
 			inputEvent.accept = True
 			return True
 
@@ -184,9 +184,10 @@ class Table(PokerStarsWindow):
 	def template(self):
 		rect = Tc2Win32.windowGetClientRect(self.hwnd)
 		for template in Tc2Config.globalObject.templateManager:
-			if template.id() == Tc2ConfigTemplates.TemplatePokerStarsTable.id():
-				if template.size == rect.size():
-					return template
+			if not template.isEnabled(): continue
+			if template.id() != Tc2ConfigTemplates.TemplatePokerStarsTable.id(): continue
+			if template.size == rect.size():
+				return template
 		return None
 
 	#TODO: for some reason hotkeys are still enabled when mouse is over notes editor with editor not having focus.
@@ -235,7 +236,7 @@ class Table(PokerStarsWindow):
 	def point(self,pointName, template):
 		point = template.points[pointName]
 		if point == Tc2Config.PointNone:
-			Tc2Config.globalObject.feedbackMessage.emit('%s: -- Point %s Not Set -' % (template.name,pointName) )
+			Tc2Config.globalObject.feedbackMessage.emit('%s: -- Point %s Not Set -' % (template.name() ,pointName) )
 			return None
 		return point
 
@@ -257,7 +258,7 @@ class Table(PokerStarsWindow):
 		##hwnd2 = Tc2Win32.windowForeground()
 		##if hwnd == hwnd2:
 		##	mi.leftClick(point, hwnd=hwnd).send(restoreCursor=self.settingsGlobal.Tc2Config.globalObject.settingsGlobal.())
-		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name() , hotkey.action() ))
 
 	def handleCheck(self, hotkey, template, inputEvent):
 		data = self.readData()
@@ -309,7 +310,7 @@ class Table(PokerStarsWindow):
 			return
 		mi = Tc2Win32.MouseInput()
 		mi.leftClick(point, hwnd=self.hwnd).send(restoreCursor=Tc2Config.globalObject.settingsGlobal.restoreMousePosition())
-		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name() , hotkey.action() ))
 
 	def handleMultiplyBlind(self, hotkey, template, inputEvent):
 		data = self.readData()
@@ -322,7 +323,7 @@ class Table(PokerStarsWindow):
 			return
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
-		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
+		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name() , hotkey.action(), newBet))
 
 	def handleAddToBet(self, hotkey, template, inputEvent):
 		data = self.readData()
@@ -335,7 +336,7 @@ class Table(PokerStarsWindow):
 			return
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
-		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
+		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name() , hotkey.action(), newBet))
 
 	def handleSubtractFromBet(self, hotkey, template, inputEvent):
 		data = self.readData()
@@ -348,7 +349,7 @@ class Table(PokerStarsWindow):
 			return
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
-		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
+		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name() , hotkey.action(), newBet))
 
 	def handleMultiplyBet(self, hotkey, template, inputEvent):
 		data = self.readData()
@@ -361,7 +362,7 @@ class Table(PokerStarsWindow):
 			return
 		#NOTE: the box gets mesed up when unicode is thrown at it
 		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
-		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet))
+		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name() , hotkey.action(), newBet))
 
 	PatPot = re.compile(r'[_\s]*_0_\s*_?(?P<output>[0-9,\.]+)[_\s]*', re.X|re.U)
 	def handleBetPot(self, hotkey, template, inputEvent):
@@ -373,10 +374,10 @@ class Table(PokerStarsWindow):
 		pointTopLeft = template.points['PotTopLeft']
 		pointBottomRight = template.points['PotBottomRight']
 		if pointTopLeft == Tc2Config.PointNone:
-			Tc2Config.globalObject.feedbackMessage.emit('%s: -- Point Pot Top Left Not Set -' % template.name)
+			Tc2Config.globalObject.feedbackMessage.emit('%s: -- Point Pot Top Left Not Set -' % template.name() )
 			return
 		if pointBottomRight == Tc2Config.PointNone:
-			Tc2Config.globalObject.feedbackMessage.emit('%s: -- Point Pot Bottom Right Not Set -' % template.name)
+			Tc2Config.globalObject.feedbackMessage.emit('%s: -- Point Pot Bottom Right Not Set -' % template.name() )
 			return
 
 		# grab pot rect
@@ -417,7 +418,7 @@ class Table(PokerStarsWindow):
 		if newBet is None:
 			return
 		Tc2Win32.windowSetText(data['hwndBetBox'], text=newBet, isUnicode=False)
-		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name, hotkey.action(), newBet) )
+		Tc2Config.globalObject.feedbackMessage.emit('%s - %s -- %s' % (template.name() , hotkey.action(), newBet) )
 
 	def handleHilightBet(self, hotkey, template, inputEvent):
 		data = self.readData()
@@ -429,7 +430,7 @@ class Table(PokerStarsWindow):
 		mi = Tc2Win32.MouseInput()
 		mi.leftClickDouble(point, hwnd=hwndBetBox)
 		mi.send(restoreCursor=Tc2Config.globalObject.settingsGlobal.restoreMousePosition())
-		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name() , hotkey.action() ))
 
 	def clickRestoreFocus(self, point, template):
 		#NOTE: we always double click. not realy necessary here
@@ -446,14 +447,14 @@ class Table(PokerStarsWindow):
 		if point is None:
 			return
 		self.clickRestoreFocus(point, template)
-		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name() , hotkey.action() ))
 
 	def handleInstantHandHistory(self, hotkey, template, inputEvent):
 		point = self.point('InstantHandHistory', template)
 		if point is None:
 			return
 		self.clickRestoreFocus(point, template)
-		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name, hotkey.action() ))
+		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name() , hotkey.action() ))
 
 
 class LogInBox(PokerStarsWindow):
