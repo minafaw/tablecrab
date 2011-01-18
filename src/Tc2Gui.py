@@ -6,6 +6,7 @@ import Tc2GuiSetup
 import Tc2GuiHotkeys
 import Tc2GuiHandViewer
 import Tc2GuiTools
+import Tc2GuiToolsClock
 import Tc2GuiHelp
 import Tc2SiteManager
 import Tc2DialogException
@@ -73,7 +74,7 @@ class Gui(QtGui.QMainWindow):
 				}
 
 		# setup status labels
-		self._labelClock = Tc2Config.ClockLabel(parent=self)
+		self._labelClock = Tc2GuiToolsClock.ClockLabel(parent=self)
 		self._labelStatus = ClickableLabel('Ready: ', self)
 		self._labelStatus.setTextFormat(QtCore.Qt.RichText)
 		self._labelStatus.doubleClicked.connect(self.onLabelFeedbackDoubleClicked)

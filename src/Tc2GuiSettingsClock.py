@@ -1,5 +1,6 @@
 
 import Tc2Config
+import Tc2GuiToolsClock
 import Tc2GuiHelp
 from PyQt4 import QtCore, QtGui
 
@@ -29,19 +30,19 @@ class FrameSettings(QtGui.QFrame):
 		self.labelSpeed = QtGui.QLabel('&Speed:', self)
 		self.spinSpeed = QtGui.QDoubleSpinBox(self)
 		self.labelSpeed.setBuddy(self.spinSpeed)
-		self.spinSpeed.setRange(Tc2Config.ClockLabel.SpeedMin, Tc2Config.ClockLabel.SpeedMax)
+		self.spinSpeed.setRange(Tc2GuiToolsClock.ClockLabel.SpeedMin, Tc2GuiToolsClock.ClockLabel.SpeedMax)
 		self.spinSpeed.setSingleStep(0.1)
 		self.spinSpeed.setDecimals(1)
 
 		self.labelPrecission = QtGui.QLabel('&Precission:', self)
 		self.spinPrecission = QtGui.QSpinBox(self)
 		self.labelPrecission.setBuddy(self.spinPrecission)
-		self.spinPrecission.setRange(Tc2Config.ClockLabel.PrecissionMin, Tc2Config.ClockLabel.PrecissionMax)
+		self.spinPrecission.setRange(Tc2GuiToolsClock.ClockLabel.PrecissionMin, Tc2GuiToolsClock.ClockLabel.PrecissionMax)
 
 		self.labelIncrement = QtGui.QLabel('&Increment:', self)
 		self.spinIncrement = QtGui.QSpinBox(self)
 		self.labelIncrement.setBuddy(self.spinIncrement)
-		self.spinIncrement.setRange(Tc2Config.ClockLabel.IncrementMin, Tc2Config.ClockLabel.IncrementMax)
+		self.spinIncrement.setRange(Tc2GuiToolsClock.ClockLabel.IncrementMin, Tc2GuiToolsClock.ClockLabel.IncrementMax)
 
 		self.checkRandomMode = QtGui.QCheckBox('&Random mode', self)
 		self.checkIsOn = QtGui.QCheckBox('&On', self)
@@ -81,19 +82,19 @@ class FrameSettings(QtGui.QFrame):
 		self.layout()
 
 		value, ok = Tc2Config.settingsValue(self.SettingsKeySpeed, '').toFloat()
-		if not ok or value > Tc2Config.ClockLabel.SpeedMax or value < Tc2Config.ClockLabel.SpeedMin:
+		if not ok or value > Tc2GuiToolsClock.ClockLabel.SpeedMax or value < Tc2GuiToolsClock.ClockLabel.SpeedMin:
 			value = Tc2Config.DefaultClockSpeed
 		self.spinSpeed.setValue(value)
 		self.spinSpeed.valueChanged.connect(self.setSpeed)
 
 		value, ok = Tc2Config.settingsValue(self.SettingsKeyPrecission, '').toInt()
-		if not ok or value > Tc2Config.ClockLabel.PrecissionMax or value < Tc2Config.ClockLabel.PrecissionMin:
+		if not ok or value > Tc2GuiToolsClock.ClockLabel.PrecissionMax or value < Tc2GuiToolsClock.ClockLabel.PrecissionMin:
 			value = Tc2Config.DefaultClockPrecission
 		self.spinPrecission.setValue(value)
 		self.spinPrecission.valueChanged.connect(self.setPrecission)
 
 		value, ok = Tc2Config.settingsValue(self.SettingsKeyIncrement, '').toInt()
-		if not ok or value > Tc2Config.ClockLabel.IncrementMax or value < Tc2Config.ClockLabel.IncrementMin:
+		if not ok or value > Tc2GuiToolsClock.ClockLabel.IncrementMax or value < Tc2GuiToolsClock.ClockLabel.IncrementMin:
 			value = Tc2Config.DefaultClockIncrement
 		self.spinIncrement.setValue(value)
 		self.spinIncrement.valueChanged.connect(self.setIncrement)
