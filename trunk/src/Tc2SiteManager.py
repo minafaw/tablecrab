@@ -27,10 +27,10 @@ class SiteManager(QtCore.QObject):
 
 	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		self._tableCrabSiteHandler = Tc2SiteTableCrab.SiteHandler(parent=self)
-		self._handlers = (
+		self._siteHandlers = [
 				self._tableCrabSiteHandler,	# should always be first item
 				Tc2SitePokerStars.SiteHandler(parent=self),
-				)
+				]
 		globalObject.mouseHook.inputEvent.connect(self.onInputEvent)
 		globalObject.keyboardHook.inputEvent.connect(self.onInputEvent)
 		globalObject.windowHook.windowCreated.connect(self.onWindowCreated)
@@ -38,23 +38,26 @@ class SiteManager(QtCore.QObject):
 		globalObject.windowHook.windowGainedForeground.connect(self.onWindowGainedForeground)
 		globalObject.windowHook.windowLostForeground.connect(self.onWindowLostForeground)
 
+	def addSiteHander(self, siteHandler):
+		self._siteHandlers.append(siteHandler)
+
 	def onWindowDestroyed(self, hwnd):
-		for handler in self._handlers:
+		for handler in self._siteHandlers:
 			if handler.handleWindowDestroyed(hwnd):
 				return
 
 	def onWindowCreated(self, hwnd):
-		for handler in self._handlers:
+		for handler in self._siteHandlers:
 			if handler.handleWindowCreated(hwnd):
 				return
 
 	def onWindowGainedForeground(self, hwnd):
-		for handler in self._handlers:
+		for handler in self._siteHandlers:
 			if handler.handleWindowGainedForeground(hwnd):
 				return
 
 	def onWindowLostForeground(self, hwnd):
-		for handler in self._handlers:
+		for handler in self._siteHandlers:
 			if handler.handleWindowLostForeground(hwnd):
 				return
 
@@ -66,7 +69,7 @@ class SiteManager(QtCore.QObject):
 			for hotkey in Tc2Config.globalObject.hotkeyManager:
 				if not hotkey.key() or hotkey.key() != inputEvent.key:
 					continue
-				for handler in self._handlers:
+				for handler in self._siteHandlers:
 					if handler.handleInputEvent(hwnd, hotkey, inputEvent):
 						return
 
