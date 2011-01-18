@@ -8,7 +8,7 @@ import Tc2Config
 import Tc2Win32
 import Tc2ConfigHotkeys
 import Tc2ConfigTemplates
-import Tc2HandGrabberPokerStars
+import Tc2SitePokerStarsHandGrabber
 from Tc2Lib.gocr import gocr
 
 import re, time, base64
@@ -571,8 +571,8 @@ class InstantHandHistory(PokerStarsWindow):
 		self._timer.timeout.connect(self.grabHand)
 		#self._timer.setSingleShot(True)
 
-		self._handParser = Tc2HandGrabberPokerStars.HandParser()
-		self._handFormatter = Tc2HandGrabberPokerStars.HandFormatterHtmlTabular()
+		self._handParser = Tc2SitePokerStarsHandGrabber.HandParser()
+		self._handFormatter = Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular()
 		self._handFormatter.onGlobalObjectInitSettingsFinished(Tc2Config.globalObject)	#NOTE: have to init here
 		self._data = ''
 		self._hwndEdit = None
@@ -598,7 +598,7 @@ class InstantHandHistory(PokerStarsWindow):
 		if data and data != self._data:
 			self._data = data
 			handData = ''
-			hand = Tc2HandGrabberPokerStars.Hand()
+			hand = Tc2SitePokerStarsHandGrabber.Hand()
 			#TODO: very sloppy test to minimize risk we are grabbing 'show summary only' in instant hand history
 			if not '*** HOLE CARDS ***' in data:
 				pass

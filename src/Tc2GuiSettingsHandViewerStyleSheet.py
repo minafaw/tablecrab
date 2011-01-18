@@ -1,7 +1,7 @@
 
 import Tc2Config
 import Tc2GuiHelp
-import Tc2HandGrabberPokerStars
+import Tc2SitePokerStarsHandGrabber
 from PyQt4 import QtCore, QtGui
 
 #************************************************************************************
@@ -91,7 +91,7 @@ class FrameSettings(QtGui.QFrame):
 		#NOTE: have to connect before setText so we can catch MaxCharsExceeded
 		value = Tc2Config.settingsValue(self.SettingsKeyStyleSheet, '').toString()
 		if not value:
-			value = Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.StyleSheet
+			value = Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.StyleSheet
 		self.edit.setPlainText(value)
 		self.edit.textChanged.connect(
 				lambda self=self: self.setStyleSheet(self.edit.toPlainText())
@@ -145,5 +145,5 @@ class FrameSettings(QtGui.QFrame):
 
 	#TODO: resetting document jumps to top of widget. store/restore position would be nice
 	def onRestoreDefault(self):
-		self.edit.setPlainText(Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.StyleSheet)
+		self.edit.setPlainText(Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.StyleSheet)
 
