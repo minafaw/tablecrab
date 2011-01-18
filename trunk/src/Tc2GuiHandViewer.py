@@ -263,10 +263,10 @@ class BrowserSideBarContainer(QtGui.QFrame):
 
 		self.lastHand = None
 		self.combo = QtGui.QComboBox(self)
-		self.combo.currentIndexChanged.connect(self.onComboCurrentIndexChanged)
 		self.stack = QtGui.QStackedWidget(self)
 		for sideBarClass in self.SideBarsDefault:
 			self.addSideBar(sideBarClass)
+		self.combo.currentIndexChanged.connect(self.onComboCurrentIndexChanged)
 
 	def onComboCurrentIndexChanged(self, i):
 		self.stack.setCurrentIndex(i)
