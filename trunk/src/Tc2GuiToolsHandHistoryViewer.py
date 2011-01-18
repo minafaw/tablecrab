@@ -1,6 +1,6 @@
 
 import Tc2Config
-import Tc2HandGrabberPokerStars
+import Tc2SitePokerStarsHandGrabber
 import Tc2GuiHandViewer
 import Tc2GuiHelp
 from Tc2Lib import Browser
@@ -23,8 +23,8 @@ class FrameTool(QtGui.QFrame):
 		QtGui.QFrame.__init__(self, parent)
 
 		self.handHistoryFile = None
-		self.handParser = Tc2HandGrabberPokerStars.HandParser()
-		self.handFormatter = Tc2HandGrabberPokerStars.HandFormatterHtmlTabular()
+		self.handParser = Tc2SitePokerStarsHandGrabber.HandParser()
+		self.handFormatter = Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular()
 
 		self._frame = QtGui.QFrame(self)
 		self._splitter = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
@@ -153,7 +153,7 @@ class FrameTool(QtGui.QFrame):
 			return
 		#TODO: make failsave
 		try:
-			self.handHistoryFile = Tc2HandGrabberPokerStars.HandHistoryFile(fileName)
+			self.handHistoryFile = Tc2SitePokerStarsHandGrabber.HandHistoryFile(fileName)
 		except Exception, d:
 			Tc2Config.msgWarning(self, 'Could Not Open Hand history\n\n%s' % d)
 

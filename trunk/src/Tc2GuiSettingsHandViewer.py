@@ -1,7 +1,7 @@
 
 import Tc2Config
 import Tc2GuiHelp
-import Tc2HandGrabberPokerStars
+import Tc2SitePokerStarsHandGrabber
 from PyQt4 import QtCore, QtGui
 import operator
 
@@ -39,14 +39,14 @@ class FrameSettings(QtGui.QFrame):
 	sideBarPositionChanged = QtCore.pyqtSignal(QtCore.QString)
 
 	ActionPrefixes = (
-			('Bet', SettingsKeyPrefixBet, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PrefixBet, SettingsKeyPostfixBet, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PostfixBet),
-			('Call', SettingsKeyPrefixCall, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PrefixCall, SettingsKeyPostfixCall, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PostfixCall),
-			('Check', SettingsKeyPrefixCheck, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PrefixCheck, None, None),
-			('Fold', SettingsKeyPrefixFold, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PrefixFold, None, None),
-			('Raise', SettingsKeyPrefixRaise, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PrefixRaise, SettingsKeyPostfixRaise, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PostfixRaise),
-			('Ante', SettingsKeyPrefixAnte, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PrefixAnte, SettingsKeyPostfixAnte, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PostfixAnte),
-			('BigBlind', SettingsKeyPrefixBigBlind, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PrefixBigBlind, SettingsKeyPostfixBigBlind, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PostfixBigBlind),
-			('SmallBlind', SettingsKeyPrefixSmallBlind, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PrefixSmallBlind, SettingsKeyPostfixSmallBlind, Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.PostfixSmallBlind),
+			('Bet', SettingsKeyPrefixBet, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixBet, SettingsKeyPostfixBet, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PostfixBet),
+			('Call', SettingsKeyPrefixCall, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixCall, SettingsKeyPostfixCall, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PostfixCall),
+			('Check', SettingsKeyPrefixCheck, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixCheck, None, None),
+			('Fold', SettingsKeyPrefixFold, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixFold, None, None),
+			('Raise', SettingsKeyPrefixRaise, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixRaise, SettingsKeyPostfixRaise, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PostfixRaise),
+			('Ante', SettingsKeyPrefixAnte, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixAnte, SettingsKeyPostfixAnte, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PostfixAnte),
+			('BigBlind', SettingsKeyPrefixBigBlind, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixBigBlind, SettingsKeyPostfixBigBlind, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PostfixBigBlind),
+			('SmallBlind', SettingsKeyPrefixSmallBlind, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixSmallBlind, SettingsKeyPostfixSmallBlind, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PostfixSmallBlind),
 			)
 
 	class ActionLineEdit(QtGui.QLineEdit):
@@ -176,7 +176,7 @@ class FrameSettings(QtGui.QFrame):
 		return self.spinMaxPlayerName.value()
 
 	def setMaxPlayerName(self, value):
-		Tc2Config.settingsSetValue(Tc2HandGrabberPokerStars.HandFormatterHtmlTabular.SettingsKeyMaxPlayerName, value)
+		Tc2Config.settingsSetValue(Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.SettingsKeyMaxPlayerName, value)
 		self.maxPlayerNameChanged.emit(value)
 
 	def noFloatingPoint(self):

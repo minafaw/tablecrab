@@ -1,6 +1,6 @@
 
 import Tc2Config
-import Tc2HandGrabberPokerStars
+import Tc2SitePokerStarsHandGrabber
 import Tc2GuiHelp
 from Tc2Lib import Browser
 from Tc2Lib import HoldemResources
@@ -441,7 +441,7 @@ class FrameHandViewer(QtGui.QFrame):
 			fp.close()
 		self.setHand(data, fileName=fileName)
 		#TODO: we could try to restore that hand from html
-		self.sideBarContainer.handleHandSet(Tc2HandGrabberPokerStars.Hand() )
+		self.sideBarContainer.handleHandSet(Tc2SitePokerStarsHandGrabber.Hand() )
 
 	def onActionSaveTriggered(self):
 		fileName = Tc2Config.dlgOpenSaveFile(
