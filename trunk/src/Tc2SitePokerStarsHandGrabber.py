@@ -2,12 +2,9 @@
 
 #TODO: rename (rework) this module to TableCrabHandGrabber.py
 
-import re, time, sys, cStringIO, thread
-from PyQt4 import QtCore
-
 import Tc2Config
-
-from cStringIO import StringIO
+from PyQt4 import QtCore
+import re
 
 #***********************************************************************************************
 #
@@ -564,7 +561,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		string = string.replace('&', '&#38;').replace('"', '&#34;').replace("'", '&#39;').replace('<', '&#60;').replace('>', '&#62;')
 		if spaces:
 			string = string.replace(' ', '&nbsp;')
-		return string.decode('utf-8')
+		return string
 
 	def htmlFormatCards(self, p, cardsType, *cards):
 		if cardsType == 'playerCards':
@@ -730,14 +727,15 @@ class HandHistoryFile(object):
 	def __init__(self, filePath):
 		self.filePath = filePath
 		self._handHistories = []
-		self._io = None
+		self._data = None
 		self._parse()
 
 	def _parse(self):
 		with open(self.filePath, 'r') as fp:
-			self._io = StringIO(fp.read())
+			#NOTE: would love to use StringIO here, but we run into nasty unicode problems
+			self._data = fp.read()
 		handHistory = None
-		for line in self._io:
+		for line in self._data.split('\n'):
 			line = line.strip().strip('\xef\xbb\xbf')
 			if line.startswith('PokerStars Game #'):
 				handHistory = [line, ]
@@ -745,13 +743,16 @@ class HandHistoryFile(object):
 			elif handHistory and line:
 				handHistory.append(line)
 			elif handHistory and not line:
-				self._handHistories.append('\n'.join(handHistory))
+				#NOTE: have to decode to unicode here to not break our formatter
+				self._handHistories.append('\n'.join(handHistory).decode('utf-8'))
 				handHistory = None
+		if handHistory:
+			self._handHistories.append('\n'.join(handHistory).decode('utf-8'))
 
 	def __len__(self): return len(self._handHistories)
 	def __getitem__(self, i): return self._handHistories[i]
 	def __iter__(self): return iter(self._handHistories)
-	def raw(self): return self._io.getvalue()
+	def raw(self): return self._data
 
 
 
