@@ -51,7 +51,7 @@ class Card(int):
 		return int.__new__(klass, no)
 
 	def __repr__(self):
-		return '<%s.%s object %r at 0x%x>' % (__name__, self.__class__.__name__, self.toString(), id(self))
+		return '<%s.%s object %r at 0x%x>' % (__name__, self.__class__.__name__, self.name(), id(self))
 	def __str__(self): return self.__repr__()
 	def __unicode__(self): return self.__repr__()
 
@@ -71,7 +71,7 @@ class Card(int):
 		"""returns the string representation of the card, i.e. 'Ah'
 		@return: (str) card
 		"""
-		return self.rankToString() + self.suitToString()
+		return self.rankName() + self.suitName()
 
 	def rankName(self):
 		"""returns the string representation of the rank of the the card, i.e. 'A'
