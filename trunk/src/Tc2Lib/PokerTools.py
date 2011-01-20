@@ -1,6 +1,8 @@
 
-def probToPct(probability, round_=2):
-	return round(probability * 100, round_)
+import random
+#************************************************************************************
+#
+#************************************************************************************
 
 # la place experiment
 def prob(a, b):
@@ -22,17 +24,30 @@ def maxBit(value):
 	while (1 << n) <= value: n += 1
 	return n
 
+
+def probToPct(probability, round_=2):
+	return round(probability * 100, round_)
+
+def pct(value, base=100):
+	return 100*float(value)/base
+
+def pctValue(percent, base=100):
+	return float(base) / 100 * percent
+
+def pctBase(value, percent):
+	return 100*float(value) / percent
+
 #************************************************************************************
 #
 #************************************************************************************
 class Card(int):
+	"""card object"""
 	RankNames = '23456789TJQKA'
 	SuitNames = 'hdcs'
-
 	MinCard = 0
 	MaxCard = len(RankNames) * len(SuitNames) -1
 	BitsMax = maxBit(MaxCard)
-	BitMask = 2**BitsMax -1
+	BitMask = 2 ** BitsMax -1
 
 	def __new__(klass, no):
 		"""creates a new card
@@ -55,23 +70,17 @@ class Card(int):
 	def __str__(self): return self.__repr__()
 	def __unicode__(self): return self.__repr__()
 
-	def rank(self):
-		"""returns the rank of the card
-		@return: (int) rank
-		"""
-		return self % len(self.RankNames)
-
-	def suit(self):
-		"""returns the suite of the card
-		@return: (int) suit
-		"""
-		return int(self / len(self.RankNames))
-
 	def name(self):
 		"""returns the string representation of the card, i.e. 'Ah'
 		@return: (str) card
 		"""
 		return self.rankName() + self.suitName()
+
+	def rank(self):
+		"""returns the rank of the card
+		@return: (int) rank
+		"""
+		return self % len(self.RankNames)
 
 	def rankName(self):
 		"""returns the string representation of the rank of the the card, i.e. 'A'
@@ -79,11 +88,79 @@ class Card(int):
 		"""
 		return self.RankNames[self.rank()]
 
+	def suit(self):
+		"""returns the suite of the card
+		@return: (int) suit
+		"""
+		return int(self / len(self.RankNames))
+
 	def suitName(self):
 		"""returns the string representation of the suit of the the card, i.e. 'h'
 		@return: (str) shape
 		"""
 		return self.SuitNames[self.suit()]
+
+	def value(self):
+		"""returns the value of the card
+		@return: (int) value
+		"""
+		return int(self)
+
+class CardDeck(object):
+	"""poker card deck object"""
+	__fields__ = ('_cards', )
+	Cards = [Card(no) for no in xrange(Card.MinCard, Card.MaxCard +1)]
+
+	def __init__(self):
+		"""creates a new odered 52 card deck"""
+		self._cards = None
+		self.reset()
+
+	def reset(self):
+		"""resets the deck to an ordered set of 52 cards"""
+		self._cards = self.Cards[:]
+
+	def __iter__(self):
+		return iter(self._cards)
+
+	def __len__(self): return len(self._cards)
+
+	def shuffle(self, shuffle=random.shuffle):
+		'''shuffles the deck in place
+		@param shuffle: (func) function to shuffle the decs list of cards in-place
+		'''
+		shuffle(self._cards)
+
+	def nextCard(self):
+		"""pops and returns the next card in the deck
+		@return: (L{Card})
+		"""
+		return self._cards.pop(0)
+
+#************************************************************************************
+#
+#************************************************************************************
+class Seats(object):
+	Names = {		# nPlayers --> seat names
+			2: ('SB', 'BB'),
+			3: ('BTN', 'SB', 'BB'),
+			4: ('UTG', 'BTN', 'SB', 'BB'),
+			5: ('UTG', 'MP, BTN', 'SB', 'BB'),
+			6: ('UTG', 'MP', 'CO', 'BTN', 'SB', 'BB'),
+			7: ('UTG', 'UTG+1', 'MP', 'CO', 'BTN', 'SB', 'BB'),
+			8: ('UTG', 'UTG+1', 'MP1', 'MP2', 'CO', 'BTN', 'SB', 'BB'),
+			9: ('UTG', 'UTG+1', 'UTG+2', 'MP1', 'MP2', 'CO', 'BTN', 'SB', 'BB'),
+			10: ('UTG', 'UTG+1', 'UTG+2', 'MP1', 'MP2', 'MP3', 'CO', 'BTN', 'SB', 'BB'),
+			}
+	@classmethod
+	def seatName(klass, nSeats, seatNo):
+		"""
+		@param nSeats: (int) number of seats total
+		@param seatNo: (int) index of the seat to retrieve name for. 0 == player first to act preflop
+		@return: (str) seat name
+		"""
+		seatNames = klass.Names[nSeats]
+		return seatNames[seatNo]
 
 #************************************************************************************
 # holdem trivia
