@@ -735,6 +735,7 @@ class HandHistoryFile(object):
 			#NOTE: would love to use StringIO here, but we run into nasty unicode problems
 			self._data = fp.read()
 		handHistory = None
+		#TODO: we could do a replace('\r', '\n') here
 		for line in self._data.split('\n'):
 			line = line.strip().strip('\xef\xbb\xbf')
 			if line.startswith('PokerStars Game #'):
