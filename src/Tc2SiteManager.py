@@ -18,19 +18,18 @@ class SiteManager(QtCore.QObject):
 	def __init__(self, parent=None):
 		QtCore.QObject.__init__(self, parent)
 		self._lock = thread.allocate_lock()
-
-		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
-
-
-	def tableCrabSiteHandler(self):
-		return self._tableCrabSiteHandler
-
-	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		self._tableCrabSiteHandler = Tc2SiteTableCrab.SiteHandler(parent=self)
 		self._siteHandlers = [
 				self._tableCrabSiteHandler,	# should always be first item
 				Tc2SitePokerStars.SiteHandler(parent=self),
 				]
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
+
+	def tableCrabSiteHandler(self):
+		return self._tableCrabSiteHandler
+
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
+
 		globalObject.mouseHook.inputEvent.connect(self.onInputEvent)
 		globalObject.keyboardHook.inputEvent.connect(self.onInputEvent)
 		globalObject.windowHook.windowCreated.connect(self.onWindowCreated)
