@@ -192,7 +192,7 @@ class HoldemCalculations(object):
 
 		self._nFlopCombinations = None
 		self._nFlopIsStraighFlush = None
-		self._pFlopIsStraighFlush= None
+		self._pFlopIsStraightFlush= None
 		self._nFlopIsThreeOfKind = None
 		self._pFlopIsThreeOfKind = None
 		self._nFlopIsStraight = None
@@ -226,6 +226,7 @@ class HoldemCalculations(object):
 		self._nCombinationsPocketsOffsuit = None
 
 		self._pPocketPairFlopOvercards = None
+		self._pAcesHigher = None
 		self._pFlopPair = None
 		self._pFlopSet = None
 
@@ -473,7 +474,7 @@ class HoldemCalculations(object):
 		return self._nFlopCombinations
 
 	#--> see: Brian Alspach --> http://www.math.sfu.ca/~alspach/comp16/
-	def nFlopIsStraighFlush(self):
+	def nFlopIsStraightFlush(self):
 		"""returns the number of flops being a straight flush"""
 		if self._nFlopIsStraighFlush is None:
 			self._nFlopIsStraighFlush = 48
@@ -481,9 +482,9 @@ class HoldemCalculations(object):
 
 	def pFlopIsStraighFlush(self):
 		"""returns the probability of the flop being a straight flush"""
-		if self._pFlopIsStraighFlush is None:
-			self._pFlopIsStraighFlush = self.nFlopIsStraighFlush() / self.nFlopCombinations()
-		return self._pFlopIsStraighFlush
+		if self._pFlopIsStraightFlush is None:
+			self._pFlopIsStraightFlush = self.nFlopIsStraightFlush() / self.nFlopCombinations()
+		return self._pFlopIsStraightFlush
 
 	def pctFlopIsStraightFlush(self, round_=None):
 		"""returns the percent chance of the flop being a straight flush"""
@@ -514,7 +515,7 @@ class HoldemCalculations(object):
 	def nFlopIsStraight(self):
 		"""returns the number of flops being a straight"""
 		if self._nFlopIsStraight is None:
-			self._nFlopIsStraight = 4**3*12 - self.nFlopIsStraighFlush()
+			self._nFlopIsStraight = 4**3*12 - self.nFlopIsStraightFlush()
 		return self._nFlopIsStraight
 
 	def pFlopIsStraight(self):
@@ -533,7 +534,7 @@ class HoldemCalculations(object):
 	def nFlopIsFlush(self):
 		"""returns the number of flops being a flush"""
 		if self._nFlopIsFlush is None:
-			self._nFlopIsFlush = binom(13, 3) * 4 - self.nFlopIsStraighFlush()
+			self._nFlopIsFlush = binom(13, 3) * 4 - self.nFlopIsStraightFlush()
 		return self._nFlopIsFlush
 
 	def pFlopIsFlush(self):
@@ -707,13 +708,13 @@ class HoldemCalculations(object):
 	def nCombinationsPocketsSuited(self):
 		"""returns the number of ways to form a suited starting hand"""
 		if self._nCombinationsPocketsSuited is None:
-			self._nCombinationsPocketsSuited = 4
+			self._nCombinationsPocketsSuited = binom(4, 1)
 		return self._nCombinationsPocketsSuited
 
 	def nCombinationsPocketsOffsuit(self):
 		"""returns the number of ways to form an unpaired offsuit starting hand"""
 		if self._nCombinationsPocketsOffsuit is None:
-			self._nCombinationsPocketsOffsuit = 12
+			self._nCombinationsPocketsOffsuit = binom(4, 1) * binom(3, 1)
 		return self._nCombinationsPocketsOffsuit
 
 	def pPocketPair(self):
@@ -721,6 +722,8 @@ class HoldemCalculations(object):
 		if self._pPocketPair is None:
 			self._pPocketPair = self.nCombinationsPocketsPair() / self.nStartingHands()
 		return self._pPocketPair
+
+	#-->wikipedia: http://en.wikipedia.org/wiki/Poker_probability_%28Texas_hold_%27em%29
 
 	def pctPocketPair(self, round_=None):
 		"""returns percent chance of getting dealt a specific pocket pair"""
@@ -791,6 +794,34 @@ class HoldemCalculations(object):
 			self._pPocketPairFlopOvercards = tuple(result)
 
 		return self._pPocketPairFlopOvercards
+
+	def pAceHigher(self, cardRank):
+		"""returns the probability that an opponent has an ace with a better kicker
+		@param cardRank: rank of the kicker to the ace
+		"""
+		rank = cardRank +2
+		return (159 - (12 * rank) ) / 1225.0
+
+	def pAcesHigher(self):
+		"""returns the probability of (1-9) opponents holding an ace wih a beter kicker
+		@return: (tuple) ('Ax', (pVillains1, percentChanceVillains1), (pVilainsN, percentChanceVillainsN) )
+		for each Ax
+		"""
+		if self._pAcesHigher is None:
+			result = []
+			for cardRank in xrange(11, -1, -1):
+				ace = ['A' + Card.RankNames[cardRank], ]
+				p = self.pAceHigher(cardRank)
+				players = []
+				for nPlayers in xrange(1, 10):
+					pp =  (1- (1 - p) ** nPlayers)
+					players.append( (pp, probToPct(pp)) )
+				ace.append(tuple(players))
+				result.append(tuple(ace))
+			self._pAcesHigher = tuple(result)
+		return self._pAcesHigher
+
+	# <-- wikipedia
 
 	def pFlopPair(self):
 		"""returns the probability of flopping a pair"""
