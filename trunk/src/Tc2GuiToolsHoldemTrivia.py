@@ -62,13 +62,13 @@ class FrameTool(QtGui.QFrame):
 		p += '<h4>Flop</h4>'
 		p += 'there are %s possible 3 card cobinations on the flop' % fmtInt(holdemCalculations.nFlopCombinations() )
 		p += '<ul>'
-		p += '<li>flop is a straight flush: %s%%' % holdemCalculations.pctFlopIsStraightFlush(round_=2)
-		p += '<li>flop is three of a kind: %s%%' % holdemCalculations.pctFlopIsThreeOfKind(round_=2)
-		p += '<li>flop is a straight: %s%%' % holdemCalculations.pctFlopIsStraight(round_=2)
-		p += '<li>flop is a flush: %s%%' % holdemCalculations.pctFlopIsFlush(round_=2)
-		p += '<li>flop is a pair: %s%%' % holdemCalculations.pctFlopIsPair(round_=2)
-		p += '<li>flop contains two suited cards: %s%%' % holdemCalculations.pctFlopIsTwoSuited(round_=2)
-		p += '<li>flop contains two connected cards: %s%%' % holdemCalculations.pctFlopIsTwoConnected(round_=2)
+		p += '<li>%i straight flushed == %s%%' % (holdemCalculations.nFlopIsStraightFlush(), holdemCalculations.pctFlopIsStraightFlush(round_=2) )
+		p += '<li>%i three of a kind == %s%%' % (holdemCalculations.nFlopIsThreeOfKind(), holdemCalculations.pctFlopIsThreeOfKind(round_=2) )
+		p += '<li>%i straighted == %s%%' % (holdemCalculations.nFlopIsStraight(), holdemCalculations.pctFlopIsStraight(round_=2) )
+		p += '<li>%i  flushed == %s%%' % (holdemCalculations.nFlopIsFlush(), holdemCalculations.pctFlopIsFlush(round_=2) )
+		p += '<li>%i paired == %s%%' % (holdemCalculations.nFlopIsPair(), holdemCalculations.pctFlopIsPair(round_=2) )
+		p += '<li>%i two suited == %s%%' % (holdemCalculations.nFlopIsTwoSuited(), holdemCalculations.pctFlopIsTwoSuited(round_=2) )
+		p += '<li>%i two connected == %s%%' % (holdemCalculations.nFlopIsTwoConnected(), holdemCalculations.pctFlopIsTwoConnected(round_=2) )
 		p += '</ul>'
 
 		propFlopPair = holdemCalculations.pFlopPair()
@@ -86,23 +86,30 @@ class FrameTool(QtGui.QFrame):
 		p += '<h4>River</h4>'
 		p += '<li>there are %s possible 5 card combinations on the river' % fmtInt(holdemCalculations.nRiverCombinations() )
 
+		p += '<h4>Starting hand combinations</h4>'
+		p += '<ul>'
+		p += '<li>there are %i ways to form a pocket pair' % holdemCalculations.nCombinationsPocketsPair()
+		p += '<li>there are %i ways to form a suited hand' % holdemCalculations.nCombinationsPocketsSuited()
+		p += '<li>there are %i ways to form an offsuit hand' % holdemCalculations.nCombinationsPocketsOffsuit()
+		p += '</ul>'
+
 		p += '<h4>Starting hands</h4>'
 		p += 'there are %s starting hands in holdem' % fmtInt(holdemCalculations.nStartingHands() )
 		p += '<ul>'
-		p += '<li>pocket pairs: %i (%.02f%%)' % (holdemCalculations.nPocketPairs(), holdemCalculations.pctPocketPairs(round_=2) )
-		p += '<li>suited hands: %i (%.02f%%)' % (holdemCalculations.nPocketsSuited(),  holdemCalculations.pctPocketsSuited(round_=2) )
-		p += '<li>unsuited hands: %i (%.02f%%)' % (holdemCalculations.nPocketsOffsuit(),  holdemCalculations.pctPocketsOffsuit(round_=2) )
+		p += '<li>%i pocket pairs == %.02f%%' % (holdemCalculations.nPocketPairs(), holdemCalculations.pctPocketPairs(round_=2) )
+		p += '<li>%i suited hands == %.02f%%' % (holdemCalculations.nPocketsSuited(),  holdemCalculations.pctPocketsSuited(round_=2) )
+		p += '<li>%i unsuited hands == %.02f%%' % (holdemCalculations.nPocketsOffsuit(),  holdemCalculations.pctPocketsOffsuit(round_=2) )
 		p += '<li>chance of being dealt a specific hand: %s%%' % holdemCalculations.pctStartingHand(round_=3)
 		p += '</ul>'
 
 		p +=  '<h4>Pocket pairs</h4>'
 		p += '<ul>'
-		p += '<li>there are %i ways to form a pocket pair' % holdemCalculations.nCombinationsPocketsPair()
-		p += '<li>being dealt a specific pocket pair: %s%%' % holdemCalculations.pctPocketPair(round_=2)
-		p += '<li>being dealt any pocket pair: %s%%' % holdemCalculations.pctPocketPairs(round_=2)
-		p += '<li>flopping a set or better: %0.2f%%' % holdemCalculations.pctFlopSet()
+		p += '<li>being dealt a specific pocket pair == %s%%' % holdemCalculations.pctPocketPair(round_=2)
+		p += '<li>being dealt any pocket pair == %s%%' % holdemCalculations.pctPocketPairs(round_=2)
+		p += '<li>flopping a set or better == %0.2f%%' % holdemCalculations.pctFlopSet()
 		p += '</ul>'
 
+		p +=  '<h4>Others</h4>'
 		p += 'if you hold a pocket pair, what is the chance of at leat one villain holding a better one (1-9 villains)</th></tr>'
 		p += '<table border="1" cellspacing="0" cellpadding="0">'
 		p += '<tr><th>Pair</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th></tr>'
@@ -120,6 +127,18 @@ class FrameTool(QtGui.QFrame):
 		for pair, prob, pct in holdemCalculations.pPocketPairFlopOvercards():
 			p += '<tr><td>%s</td><td>%.02f%%</td></tr>' % (pair, pct)
 		p += '</table>'
+
+		p += '<br><br>'
+		p += 'if you hold an ace, what is the chance of at least one villain holding a better one (1-9 villains)</th></tr>'
+		p += '<table border="1" cellspacing="0" cellpadding="0">'
+		p += '<tr><th>Pair</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th></tr>'
+		for pair, data in holdemCalculations.pAcesHigher():
+			p += '<tr><td>%s</td>' % pair
+			for prob, pct in data:
+				p += '<td align="right">%s%%</td>' % pct
+			p += '</tr>'
+		p += '</table>'
+
 
 		p += '</body></html>'
 		self.browser.setHtml(p)
