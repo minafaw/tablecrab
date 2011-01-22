@@ -4,8 +4,7 @@ import Tc2GuiHelp
 
 import Tc2GuiToolsFPPCalculator
 import Tc2GuiToolsHandHistoryViewer
-import Tc2GuiToolsPoker
-
+import Tc2GuiToolsHoldemTrivia
 
 from PyQt4 import QtCore, QtGui
 
@@ -17,6 +16,12 @@ class FrameTools(QtGui.QFrame):
 	SettingsKeyBase = 'Gui/Tools'
 	SettingsKeySplitterState = SettingsKeyBase + '/SplitterState'
 	SettingsKeyCurrentToolIndex = SettingsKeyBase + '/CurrentIndex'
+
+	ToolClasses = (
+			Tc2GuiToolsFPPCalculator.FrameTool,
+			Tc2GuiToolsHandHistoryViewer.FrameTool,
+			Tc2GuiToolsHoldemTrivia.FrameTool,
+			)
 
 
 	def __init__(self, parent=None):
@@ -31,10 +36,8 @@ class FrameTools(QtGui.QFrame):
 		self.splitter.addWidget(self.listWidget)
 		self.splitter.addWidget(self.stack)
 
-		self.addTool(Tc2GuiToolsFPPCalculator.FrameTool(parent=self.stack), self.listWidget)
-		self.addTool(Tc2GuiToolsHandHistoryViewer.FrameTool(parent=self.stack), self.listWidget)
-		self.addTool(Tc2GuiToolsPoker.FrameTool(parent=self.stack), self.listWidget)
-
+		for toolClass in self.ToolClasses:
+			self.addTool(toolClass(parent=self.stack) )
 
 		#
 		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
@@ -44,13 +47,13 @@ class FrameTools(QtGui.QFrame):
 		grid = Tc2Config.GridBox(self)
 		grid.col(self.splitter)
 
-	def addTool(self, widget, parent):
-		item = QtGui.QListWidgetItem(widget.toolName(), parent)
-		item.setToolTip(widget.toolTip())
+	def addTool(self, tool):
+		item = QtGui.QListWidgetItem(tool.displayName(), self.listWidget)
+		item.setToolTip(tool.toolTip())
 		self.listWidget.addItem(item)
-		self.stack.addWidget(widget)
+		self.stack.addWidget(tool)
 		item.setData(QtCore.Qt.UserRole, QtCore.QVariant(self.stack.count() -1) )
-		return widget
+		return tool
 
 	def onToolSelected(self):
 		row = self.listWidget.currentRow()
@@ -60,6 +63,8 @@ class FrameTools(QtGui.QFrame):
 		index, ok = item.data(QtCore.Qt.UserRole).toInt()
 		if ok:
 			self.stack.setCurrentIndex(row)
+			tool = self.stack.currentWidget()
+			tool.handleSetCurrent()
 
 	def onCloseEvent(self, event):
 		Tc2Config.settingsSetValue(self.SettingsKeySplitterState, self.splitter.saveState())
