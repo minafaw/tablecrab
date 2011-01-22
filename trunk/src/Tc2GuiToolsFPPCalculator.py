@@ -129,8 +129,11 @@ class FrameTool(QtGui.QFrame):
 	def toolTip(self):
 		return 'FPPCalculator'
 
-	def toolName(self):
+	def displayName(self):
 		return 'FPPCalculator'
+
+	def handleSetCurrent(self):
+		pass
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)

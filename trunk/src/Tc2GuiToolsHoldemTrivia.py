@@ -13,21 +13,7 @@ def fmtInt(n):
 #************************************************************************************
 #
 #************************************************************************************
-class PaneNone(QtGui.QFrame):
-
-	def __init__(self, parent=None):
-		QtGui.QFrame.__init__(self, parent)
-
-	def displayName(self):
-		return 'None'
-
-	def handleSetCurrent(self):
-		pass
-
-
-
-
-class PaneHoldemTrivia(QtGui.QFrame):
+class FrameTool(QtGui.QFrame):
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -40,8 +26,11 @@ class PaneHoldemTrivia(QtGui.QFrame):
 		grid = Tc2Config.GridBox(self)
 		grid.col(self.browser)
 
+	def toolTip(self):
+		return 'HoldemTrivia'
+
 	def displayName(self):
-		return 'Holdem trivia'
+		return 'HoldemTrivia'
 
 	def handleSetCurrent(self):
 		if self._inited:
@@ -134,69 +123,4 @@ class PaneHoldemTrivia(QtGui.QFrame):
 
 		p += '</body></html>'
 		self.browser.setHtml(p)
-
-
-#************************************************************************************
-#
-#************************************************************************************
-class FrameTool(QtGui.QFrame):
-
-	SettingsKeyBase = 'Gui/Tools/PokerTools'
-	SettingsKeyIndexToolCurrent = SettingsKeyBase + '/ToolCurrent'
-
-	PaneClasses = (
-			PaneNone,
-			PaneHoldemTrivia,
-			)
-
-	def __init__(self, parent=None):
-		QtGui.QFrame.__init__(self, parent)
-
-		self.comboBox = QtGui.QComboBox(self)
-		self.stack = QtGui.QStackedWidget(self)
-		for paneClass in self.PaneClasses:
-			pane = paneClass(self)
-			self.addPane(pane)
-		self.comboBox.currentIndexChanged.connect(self.onComboCurrentIndexChanged)
-
-		# connect signals
-		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
-
-	def layout(self):
-		grid = Tc2Config.GridBox(self)
-		grid.col(self.comboBox)
-		grid.row()
-		grid.col(self.stack)
-
-	def addPane(self, pane):
-		self.stack.addWidget(pane)
-		self.comboBox.addItem(pane.displayName(), QtCore.QVariant(self.stack.count() -1) )
-
-	def onGlobalObjectInitSettingsFinished(self, globalObject):
-		self.layout()
-		value, ok = Tc2Config.settingsValue(self.SettingsKeyIndexToolCurrent, 0).toInt()
-		if ok:
-			self.setCurrentIndex(value)
-
-	def onComboCurrentIndexChanged(self, i):
-		self.stack.setCurrentIndex(i)
-		pane = self.stack.currentWidget()
-		pane.handleSetCurrent()
-		Tc2Config.settingsSetValue(self.SettingsKeyIndexToolCurrent, i)
-
-	def currentIndex(self):
-		return self.stack.currentIndex()
-
-	def setCurrentIndex(self, i):
-		if i > -1 and i < self.stack.count():
-			self.comboBox.setCurrentIndex(i)
-			return True
-		return False
-
-	def toolName(self):
-		return 'PokerTools'
-
-
-
-
 

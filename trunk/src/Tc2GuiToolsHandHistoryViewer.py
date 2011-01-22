@@ -107,8 +107,11 @@ class FrameTool(QtGui.QFrame):
 	def toolTip(self):
 		return 'HandHistoryViewer'
 
-	def toolName(self):
+	def displayName(self):
 		return 'HandHistoryViewer'
+
+	def handleSetCurrent(self):
+		pass
 
 	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		self._browser.setUrl(QtCore.QUrl(''))
