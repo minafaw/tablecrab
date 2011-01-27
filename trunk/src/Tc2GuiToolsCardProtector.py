@@ -16,8 +16,8 @@ class CardProtector(QtGui.QWidget):
 	def __init__(self, parent=None):
 		QtGui.QWidget.__init__(self, parent)
 		self.setWindowTitle('Card Protector')
-		flags = self.windowFlags()
 
+		flags = self.windowFlags()
 		flags |= QtCore.Qt.Tool
 		self.setWindowFlags(flags)
 		self.setFocusPolicy(QtCore.Qt.StrongFocus)
@@ -62,13 +62,10 @@ class CardProtector(QtGui.QWidget):
 			self.scrollArea.viewport().setStyleSheet('')
 
 	def setBackgroundImage(self, pixmap):
+		self.label.setPixmap(pixmap)
 		if pixmap.isNull():
-			self.label.setPixmap(QtGui.QPixmap() )
-			self.label.setScaledContents(True)
 			self.label.resize(self.label.parent().size())
 		else:
-			self.label.setPixmap(pixmap)
-			self.label.setScaledContents(False)
 			self.label.resize(pixmap.size() )
 
 	#NOTE: this gets called from TableCrabSiteHander. siteHandler blocks input events
