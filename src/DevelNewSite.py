@@ -24,6 +24,9 @@ class MySiteHandler(object):
 	def siteName(self):
 		return 'MySiteHandler'
 
+	def canGrabHand(self):
+		return False
+
 	# the site handler will be called on in the following methods whenever an event occures
 
 	def handleWindowCreated(self, hwnd):
