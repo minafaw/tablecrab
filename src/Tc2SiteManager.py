@@ -25,17 +25,22 @@ class SiteManager(QtCore.QObject):
 				]
 		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 
-	def tableCrabSiteHandler(self):
-		return self._tableCrabSiteHandler
-
 	def onGlobalObjectInitSettingsFinished(self, globalObject):
-
 		globalObject.mouseHook.inputEvent.connect(self.onInputEvent)
 		globalObject.keyboardHook.inputEvent.connect(self.onInputEvent)
 		globalObject.windowHook.windowCreated.connect(self.onWindowCreated)
 		globalObject.windowHook.windowDestroyed.connect(self.onWindowDestroyed)
 		globalObject.windowHook.windowGainedForeground.connect(self.onWindowGainedForeground)
 		globalObject.windowHook.windowLostForeground.connect(self.onWindowLostForeground)
+
+	def __iter__(self):
+		return iter(self._siteHandlers)
+
+	def siteHandler(self, siteName):
+		for siteHandler in self._siteHandlers:
+			if siteHandler.siteName() == siteName:
+				return siteHandler
+		return None
 
 	def addSiteHander(self, siteHandler):
 		self._siteHandlers.append(siteHandler)

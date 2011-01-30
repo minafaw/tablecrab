@@ -18,7 +18,7 @@ class SiteHandler(QtCore.QObject):
 		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 
 	def siteName(self):
-		return Tc2Config.SiteTableCrab
+		return Tc2Config.SiteNameTableCrab
 
 	def canGrabHand(self):
 		return False

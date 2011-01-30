@@ -628,7 +628,7 @@ class SiteHandler(QtCore.QObject):
 		Tc2Config.globalObject.objectCreatedSiteHandlerPokerStars.emit(self)
 
 	def siteName(self):
-		return Tc2Config.SitePokerStars
+		return Tc2Config.SiteNamePokerStars
 
 	def canGrabHand(self):
 		return True
