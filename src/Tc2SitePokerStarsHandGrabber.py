@@ -102,6 +102,8 @@ class Hand(QtCore.QObject):
 #********************************************************************************************************
 # hand parser
 #********************************************************************************************************
+class NoGameHeaderError(Exception): pass
+
 class HandParser(object):
 	"""hand history parser
 	"""
@@ -320,7 +322,7 @@ class HandParser(object):
 
 			if lineno == 0:
 				if self.matchGameHeader(hand, streetCurrent, line): continue
-				raise ValueError('No gane header found')
+				raise NoGameHeaderError('No gane header found')
 
 			# determine street we are in
 			if line.startswith('*** HOLE CARDS ***'):
@@ -718,6 +720,485 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		p << '</html>'
 
 		return p.data.encode('utf-8')
+
+	PatternHand = re.compile('.*\<pre \s+ class=\"HandSource\"\>(.+)\<\/pre\>', re.X|re.I|re.M|re.S)
+	def handFromHtml(self, html):
+		result = self.PatternHand.search(html)
+		if result is None:
+			return None
+		handHistory = result.group(1)
+		parser = HandParser()
+		try:
+			hand = parser.parse(handHistory)
+		except NoGameHeaderError:
+			return None
+		return hand
+
+
+p = '''
+<html><head>
+        <meta name="author" content="TableCrab">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <style type="text/css"><!-- .handBody{background-color:#BD9D74;color:black;margin-top:0em;}
+.handTable{
+        border-spacing: 0px;
+        border-collapse: collapse;
+        }
+.handSource{margin-top: 1em;}
+
+
+.playerCell{
+        vertical-align: top;
+        border: 1px solid black;
+        }
+.playerName{}
+.playerStack{}
+.playerCardsCell{border: 1px solid black;}
+.playerCards{
+        border: 0px;
+        border-spacing: 0px;
+        width: 100%;
+        }
+.playerActionsCell{
+        white-space: nowrap;
+        vertical-align: top;
+        padding-left: 0.1em;
+        border: 1px solid black;
+        }
+.playerActionFold{}
+.playerActionCall{background-color: #87CEFA ;}
+.playerActionCheck{background-color: #98FB98;}
+.playerActionBet{background-color: #FFA54F;}
+.playerActionRaise{background-color: #FF6EB4;}
+.playerActionPostBlindBig{}
+.playerActionPostBlindSmall{}
+
+
+.potCellExtra{
+        padding-left: 1em;
+        border: 1px solid black;
+        }
+.potCell{
+        text-align: center;
+        border: 1px solid black;
+        }
+
+
+.boardCardCellExtra{border: 1px solid black; }
+.boardCardCell{
+        border:1px solid black;
+        margin-left: auto;        /* centers contents of the cell */
+        margin-right: auto;    /* centers contents of the cell */
+        }
+.boardCards{
+        border: 0px;
+        border-spacing: 0px;
+        margin-left: auto;        /* centers contents of the cell */
+        margin-right: auto;    /* centers contents of the cell */
+        }
+
+
+.cardCell{padding: 0px;}
+.card{
+        border: solid 1px;
+        background-color: red;
+        border-spacing: 0px;
+        margin-left: auto;        /* centers contents of the cell */
+        margin-right: auto;    /* centers contents of the cell */
+        }
+.cardShape{
+        padding: 0px 0px 0px 0px;
+        background-color: white;
+        }
+.cardSuit{
+        text-indent:0.3em;
+        padding: 0px 0px 0px 0px;
+        background-color: white;
+        }
+.cardSuitSpade{color: black;}
+.cardSuitClub{color: black;}
+.cardSuitHeart{color: red;}
+.cardSuitDiamond{color: red;}
+.cardBack{
+        color: #355b73;
+        background-color: #355b73;
+        }
+
+
+ --></style>
+    </head><body class="handBody">
+        <table class="handTable">
+            <tbody><tr>
+                <td class="playerCell">
+                    <div class="playerName">AlmostJa..</div><div class="playerStack">1,500</div>
+                </td>
+                <td class="playerCardsCell">
+                    <table class="playerCards">
+                        <tbody><tr>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardBack">&nbsp;</div><div class="cardSuit cardBack">&nbsp;&nbsp;</div></div>
+                            </td>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardBack">&nbsp;</div><div class="cardSuit cardBack">&nbsp;&nbsp;</div></div>
+                            </td>
+                        </tr>
+                    </tbody></table>
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+                <td class="playerActionsCell">
+                    <div class="playerActionFold">f</div>
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+            </tr>
+            <tr>
+                <td class="playerCell">
+                    <div class="playerName">Win/Angel</div><div class="playerStack">1,480</div>
+                </td>
+                <td class="playerCardsCell">
+                    <table class="playerCards">
+                        <tbody><tr>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardBack">&nbsp;</div><div class="cardSuit cardBack">&nbsp;&nbsp;</div></div>
+                            </td>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardBack">&nbsp;</div><div class="cardSuit cardBack">&nbsp;&nbsp;</div></div>
+                            </td>
+                        </tr>
+                    </tbody></table>
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+                <td class="playerActionsCell">
+                    <div class="playerActionCall">c20</div>
+                </td>
+                <td class="playerActionsCell">
+                    <div class="playerActionCheck">ck</div>
+                </td>
+                <td class="playerActionsCell">
+                    <div class="playerActionFold">f</div>
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+            </tr>
+            <tr>
+                <td class="playerCell">
+                    <div class="playerName">Lea&nbsp;Vegas</div><div class="playerStack">1,660</div>
+                </td>
+                <td class="playerCardsCell">
+                    <table class="playerCards">
+                        <tbody><tr>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardBack">&nbsp;</div><div class="cardSuit cardBack">&nbsp;&nbsp;</div></div>
+                            </td>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardBack">&nbsp;</div><div class="cardSuit cardBack">&nbsp;&nbsp;</div></div>
+                            </td>
+                        </tr>
+                    </tbody></table>
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+                <td class="playerActionsCell">
+                    <div class="playerActionFold">f</div>
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+            </tr>
+            <tr>
+                <td class="playerCell">
+                    <div class="playerName">imnotrixie</div><div class="playerStack">2,910</div>
+                </td>
+                <td class="playerCardsCell">
+                    <table class="playerCards">
+                        <tbody><tr>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardBack">&nbsp;</div><div class="cardSuit cardBack">&nbsp;&nbsp;</div></div>
+                            </td>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardBack">&nbsp;</div><div class="cardSuit cardBack">&nbsp;&nbsp;</div></div>
+                            </td>
+                        </tr>
+                    </tbody></table>
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+                <td class="playerActionsCell">
+                    <div class="playerActionFold">f</div>
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+            </tr>
+            <tr>
+                <td class="playerCell">
+                    <div class="playerName">ervin990</div><div class="playerStack">1,470</div>
+                </td>
+                <td class="playerCardsCell">
+                    <table class="playerCards">
+                        <tbody><tr>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardBack">&nbsp;</div><div class="cardSuit cardBack">&nbsp;&nbsp;</div></div>
+                            </td>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardBack">&nbsp;</div><div class="cardSuit cardBack">&nbsp;&nbsp;</div></div>
+                            </td>
+                        </tr>
+                    </tbody></table>
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+                <td class="playerActionsCell">
+                    <div class="playerActionFold">f</div>
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+            </tr>
+            <tr>
+                <td class="playerCell">
+                    <div class="playerName">greenblu..</div><div class="playerStack">1,480</div>
+                </td>
+                <td class="playerCardsCell">
+                    <table class="playerCards">
+                        <tbody><tr>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardBack">&nbsp;</div><div class="cardSuit cardBack">&nbsp;&nbsp;</div></div>
+                            </td>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardBack">&nbsp;</div><div class="cardSuit cardBack">&nbsp;&nbsp;</div></div>
+                            </td>
+                        </tr>
+                    </tbody></table>
+                </td>
+                <td class="playerActionsCell">
+                    <div class="playerActionPostBlindSmall">sb10</div>
+                </td>
+                <td class="playerActionsCell">
+                    <div class="playerActionFold">f</div>
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+            </tr>
+            <tr>
+                <td class="playerCell">
+                    <div class="playerName">failertb</div><div class="playerStack">1,500</div>
+                </td>
+                <td class="playerCardsCell">
+                    <table class="playerCards">
+                        <tbody><tr>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardSuitClub">6</div><div class="cardSuit cardSuitClub">♣</div></div>
+                            </td>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardSuitHeart">4</div><div class="cardSuit cardSuitHeart">♥</div></div>
+                            </td>
+                        </tr>
+                    </tbody></table>
+                </td>
+                <td class="playerActionsCell">
+                    <div class="playerActionPostBlindBig">bb20</div>
+                </td>
+                <td class="playerActionsCell">
+                    <div class="playerActionCheck">ck</div>
+                </td>
+                <td class="playerActionsCell">
+                    <div class="playerActionCheck">ck</div>
+                </td>
+                <td class="playerActionsCell">
+                    <div class="playerActionBet">b40</div>
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+            </tr>
+            <tr>
+                <td class="playerCell">
+                    <div class="playerName">chozaspa..</div><div class="playerStack">1,500</div>
+                </td>
+                <td class="playerCardsCell">
+                    <table class="playerCards">
+                        <tbody><tr>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardBack">&nbsp;</div><div class="cardSuit cardBack">&nbsp;&nbsp;</div></div>
+                            </td>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardBack">&nbsp;</div><div class="cardSuit cardBack">&nbsp;&nbsp;</div></div>
+                            </td>
+                        </tr>
+                    </tbody></table>
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+                <td class="playerActionsCell">
+                    <div class="playerActionFold">f</div>
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+                <td class="playerActionsCell">
+                    &nbsp;
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" class="potCellExtra">&nbsp;</td>
+                <td class="potCell">30</td>
+                <td class="potCell">50</td>
+                <td class="potCell">50</td>
+                <td class="potCell">90</td>
+                <td class="potCell">&nbsp;</td>
+            </tr>
+            <tr>
+                <td class="boardCardCellExtra" colspan="4">&nbsp;</td>
+                <td class="boardCardCell">
+                    <table class="boardCards">
+                        <tbody><tr>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardSuitSpade">T</div><div class="cardSuit cardSuitSpade">♠</div></div>
+                            </td>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardSuitSpade">9</div><div class="cardSuit cardSuitSpade">♠</div></div>
+                            </td>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardSuitDiamond">6</div><div class="cardSuit cardSuitDiamond">♦</div></div>
+                            </td>
+                        </tr>
+                    </tbody></table>
+                </td>
+                <td class="boardCardCell">
+                    <table class="boardCards">
+                        <tbody><tr>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardSuitDiamond">3</div><div class="cardSuit cardSuitDiamond">♦</div></div>
+                            </td>
+                        </tr>
+                    </tbody></table>
+                </td>
+                <td class="boardCardCell">
+                    <table class="boardCards">
+                        <tbody><tr>
+                            <td class="cardCell">
+                                <div class="card"><div class="cardShape cardBack">&nbsp;</div><div class="cardSuit cardBack">&nbsp;&nbsp;</div></div>
+                            </td>
+                        </tr>
+                    </tbody></table>
+                </td>
+            </tr>
+        </tbody></table>
+        <pre class="handSource">PokerStars Game #52773982573: Tournament #332063598, $1.00+$0.20 USD Hold'em No Limit - Level I (10/20) - 2010/11/16 9:35:30 CET [2010/11/16 3:35:30 ET]
+Table '332063598 1' 9-max Seat #6 is the button
+Seat 1: AlmostJames (1500 in chips) is sitting out
+Seat 3: Win/Angel (1480 in chips)
+Seat 4: Lea Vegas (1660 in chips)
+Seat 5: imnotrixie (2910 in chips)
+Seat 6: ervin990 (1470 in chips) is sitting out
+Seat 7: greenbluered (1480 in chips)
+Seat 8: failertb (1500 in chips)
+Seat 9: chozasparty (1500 in chips)
+greenbluered: posts small blind 10
+failertb: posts big blind 20
+*** HOLE CARDS ***
+Dealt to failertb [6c 4h]
+chozasparty: folds
+AlmostJames: folds
+Win/Angel: calls 20
+Lea Vegas: folds
+imnotrixie: folds
+ervin990: folds
+greenbluered: folds
+failertb: checks
+*** FLOP *** [Ts 9s 6d]
+failertb: checks
+Win/Angel: checks
+*** TURN *** [Ts 9s 6d] [3d]
+AlmostJames has returned
+ervin990 has returned
+failertb: bets 40
+Win/Angel: folds
+Uncalled bet (40) returned to failertb
+failertb collected 50 from pot
+failertb: doesn't show hand
+*** SUMMARY ***
+Total pot 50 | Rake 0
+Board [Ts 9s 6d 3d]
+Seat 1: AlmostJames folded before Flop (didn't bet)
+Seat 3: Win/Angel folded on the Turn
+Seat 4: Lea Vegas folded before Flop (didn't bet)
+Seat 5: imnotrixie folded before Flop (didn't bet)
+Seat 6: ervin990 (button) folded before Flop (didn't bet)
+Seat 7: greenbluered (small blind) folded before Flop
+Seat 8: failertb (big blind) collected (50)
+Seat 9: chozasparty folded before Flop (didn't bet)</pre>
+
+
+</body></html>
+'''
+
+
+PatternHand = re.compile('.*\<pre \s+ class=\"HandSource\"\>(.+)\<\/pre\>', re.X|re.I|re.M|re.S)
+#.+
+#
+# .*\<pre \s+ class\=\"handSource\"\>(.+?)\<\/pre\>.*
+def handFromHtml(html):
+	result = PatternHand.search(html)
+	print result
+	if result is None:
+		return None
+	handHistory = result.group(1)
+	print handHistory
+	parser = HandParser()
+	try:
+		hand = parser.parse(handHistory)
+	except NoGameHeaderError:
+		return None
+	return hand
+
+#print handFromHtml(p)
+
 
 #************************************************************************************
 #
