@@ -95,7 +95,7 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 		if not payoutStructure:
 			return
 		if not hand:
-			self._browser.setHtml('<h3>Can not fetch data for hands loaded from disk</h3>This feature is not yet implemented.')
+			self._browser.setHtml('<h3>Can not fetch data for the hand</h3>')
 			return
 
 		# prep seats/stacks
