@@ -23,6 +23,9 @@ class SiteHandler(QtCore.QObject):
 	def canGrabHand(self):
 		return False
 
+	def handFromHtml(self, html):
+		return None
+
 	def handleWindowCreated(self, hwnd):
 		if Tc2Win32.windowIsSameProcess(hwnd, self._hwndMain):
 			return True
