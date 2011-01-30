@@ -630,6 +630,9 @@ class SiteHandler(QtCore.QObject):
 	def siteName(self):
 		return Tc2Config.SitePokerStars
 
+	def canGrabHand(self):
+		return True
+
 	def handleWindowCreated(self, hwnd):
 		for windowClass in WindowClasses:
 			window = windowClass.fromHwnd(self, hwnd)

@@ -20,6 +20,9 @@ class SiteHandler(QtCore.QObject):
 	def siteName(self):
 		return Tc2Config.SiteTableCrab
 
+	def canGrabHand(self):
+		return False
+
 	def handleWindowCreated(self, hwnd):
 		if Tc2Win32.windowIsSameProcess(hwnd, self._hwndMain):
 			return True
