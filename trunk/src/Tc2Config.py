@@ -326,6 +326,7 @@ class _GlobalObject(QtCore.QObject):
 	objectCreatedSettingsNashCalculationsStyleSheet = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsClock = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsCardProtector = QtCore.pyqtSignal(QtCore.QObject)
+	objectCreatedSiteManager = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSiteHandlerPokerStars = QtCore.pyqtSignal(QtCore.QObject)
 
 	#TODO: overload signal to accept QObject as well
@@ -359,6 +360,7 @@ class _GlobalObject(QtCore.QObject):
 		self.settingsNashCalculationsStyleSheet = self.objectCreatedSettingsNashCalculationsStyleSheet.connect(lambda obj, self=self: setattr(self, 'settingsNashCalculationsStyleSheet', obj))
 		self.settingsClock = self.objectCreatedSettingsClock.connect(lambda obj, self=self: setattr(self, 'settingsClock', obj))
 		self.settingsCardProtector = self.objectCreatedSettingsCardProtector.connect(lambda obj, self=self: setattr(self, 'settingsCardProtector', obj))
+		self.siteManager = self.objectCreatedSiteManager.connect(lambda obj, self=self: setattr(self, 'siteManager', obj))
 		self.siteHandlerPokerStars = self.objectCreatedSiteHandlerPokerStars.connect(lambda obj, self=self: setattr(self, 'siteHandlerPokerStars', obj))
 
 globalObject = _GlobalObject()

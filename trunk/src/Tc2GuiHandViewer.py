@@ -435,13 +435,20 @@ class FrameHandViewer(QtGui.QFrame):
 		if fileName is None:
 			return
 		fp = codecs.open(fileName, 'r', encoding='utf-8')
+		raw = fp.read()
 		try:
-			data = QtCore.QString(fp.read()).toUtf8()
+			data = QtCore.QString(raw).toUtf8()
 		finally:
 			fp.close()
 		self.setHand(data, fileName=fileName)
-		#TODO: we could try to restore that hand from html
-		self.sideBarContainer.handleHandSet(Tc2SitePokerStarsHandGrabber.Hand() )
+		#TODO: either have to get Null hand object from a better place
+		# or not set it to sidebarContainer
+		hand = Tc2SitePokerStarsHandGrabber.Hand()
+		for siteHandler in Tc2Config.globalObject.siteManager:
+			hand = siteHandler.handFromHtml(raw)
+			if hand is not None:
+				break
+		self.sideBarContainer.handleHandSet(hand)
 
 	def onActionSaveTriggered(self):
 		fileName = Tc2Config.dlgOpenSaveFile(

@@ -23,6 +23,7 @@ class SiteManager(QtCore.QObject):
 				self._tableCrabSiteHandler,	# should always be first item
 				Tc2SitePokerStars.SiteHandler(parent=self),
 				]
+		Tc2Config.globalObject.objectCreatedSiteManager.emit(self)
 		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 
 	def onGlobalObjectInitSettingsFinished(self, globalObject):

@@ -634,7 +634,9 @@ class SiteHandler(QtCore.QObject):
 		return True
 
 	def handFromHtml(self, html):
-		return None
+		handFormatter = Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular()
+		hand = handFormatter.handFromHtml(html)
+		return hand
 
 	def handleWindowCreated(self, hwnd):
 		for windowClass in WindowClasses:
