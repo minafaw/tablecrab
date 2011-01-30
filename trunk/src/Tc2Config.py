@@ -248,8 +248,8 @@ HelpTopics = [
 			],
 		]
 
-SiteTableCrab = 'TableCrab'
-SitePokerStars = 'PokerStars'
+SiteNameTableCrab = 'TableCrab'
+SiteNamePokerStars = 'PokerStars'
 
 #***********************************************************************************
 # global QSettings
