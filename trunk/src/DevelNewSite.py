@@ -27,6 +27,9 @@ class MySiteHandler(object):
 	def canGrabHand(self):
 		return False
 
+	def handFromHtml(self, html):
+		return None
+
 	# the site handler will be called on in the following methods whenever an event occures
 
 	def handleWindowCreated(self, hwnd):

@@ -633,6 +633,9 @@ class SiteHandler(QtCore.QObject):
 	def canGrabHand(self):
 		return True
 
+	def handFromHtml(self, html):
+		return None
+
 	def handleWindowCreated(self, hwnd):
 		for windowClass in WindowClasses:
 			window = windowClass.fromHwnd(self, hwnd)
