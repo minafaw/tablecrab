@@ -627,6 +627,9 @@ class SiteHandler(QtCore.QObject):
 
 		Tc2Config.globalObject.objectCreatedSiteHandlerPokerStars.emit(self)
 
+	def siteName(self):
+		return Tc2Config.SitePokerStars
+
 	def handleWindowCreated(self, hwnd):
 		for windowClass in WindowClasses:
 			window = windowClass.fromHwnd(self, hwnd)

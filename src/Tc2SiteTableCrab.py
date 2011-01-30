@@ -17,6 +17,9 @@ class SiteHandler(QtCore.QObject):
 		self._widgetCardProtector = Tc2GuiToolsCardProtector.CardProtector(parent=None)
 		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 
+	def siteName(self):
+		return Tc2Config.SiteTableCrab
+
 	def handleWindowCreated(self, hwnd):
 		if Tc2Win32.windowIsSameProcess(hwnd, self._hwndMain):
 			return True

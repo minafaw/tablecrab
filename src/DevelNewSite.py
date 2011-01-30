@@ -21,6 +21,9 @@ class MySiteHandler(object):
 	def __init__(self, parent, mySettings):
 		pass
 
+	def siteName(self):
+		return 'MySiteHandler'
+
 	# the site handler will be called on in the following methods whenever an event occures
 
 	def handleWindowCreated(self, hwnd):
