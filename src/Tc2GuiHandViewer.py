@@ -434,6 +434,7 @@ class FrameHandViewer(QtGui.QFrame):
 				)
 		if fileName is None:
 			return
+		#TODO: maybe limit max size of file before we read unconditionally
 		fp = codecs.open(fileName, 'r', encoding='utf-8')
 		try:
 			raw = fp.read()
