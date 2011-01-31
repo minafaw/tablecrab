@@ -435,20 +435,27 @@ class FrameHandViewer(QtGui.QFrame):
 		if fileName is None:
 			return
 		fp = codecs.open(fileName, 'r', encoding='utf-8')
-		raw = fp.read()
+		try:
+			raw = fp.read()
+		except UnicodeDecodeError:
+			self._browser.setHtml('<h3>Could not open hand: invalid</h3>')
+			return
 		try:
 			data = QtCore.QString(raw).toUtf8()
 		finally:
 			fp.close()
-		self.setHand(data, fileName=fileName)
-		#TODO: either have to get Null hand object from a better place
-		# or not set it to sidebarContainer
-		hand = Tc2SitePokerStarsHandGrabber.Hand()
+		hand = None
 		for siteHandler in Tc2Config.globalObject.siteManager:
 			hand = siteHandler.handFromHtml(raw)
-			if hand is not None:
+			if hand:
 				break
-		self.sideBarContainer.handleHandSet(hand)
+		if hand is None:
+			pass
+		elif not hand:
+			self._browser.setHtml('<h3>Could not open hand: invalid</h3>')
+		else:
+			self.setHand(data, fileName=fileName)
+			self.sideBarContainer.handleHandSet(hand)
 
 	def onActionSaveTriggered(self):
 		fileName = Tc2Config.dlgOpenSaveFile(
