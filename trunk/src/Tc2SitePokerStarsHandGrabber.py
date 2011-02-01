@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-#TODO: rename (rework) this module to TableCrabHandGrabber.py
+#TODO: tons. maybe iso hand to a generic library of poker hand types and work from there
 
 import Tc2Config
 from PyQt4 import QtCore
