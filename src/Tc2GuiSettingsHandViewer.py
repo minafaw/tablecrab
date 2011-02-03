@@ -35,7 +35,7 @@ class FrameSettings(QtGui.QFrame):
 	actionPrefixChanged = QtCore.pyqtSignal(QtCore.QString)
 	actionPostfixChanged = QtCore.pyqtSignal(QtCore.QString)
 	maxPlayerNameChanged = QtCore.pyqtSignal(int)
-	noFloatingPoint = QtCore.pyqtSignal(bool)
+	noFloatingPointChanged = QtCore.pyqtSignal(bool)
 	sideBarPositionChanged = QtCore.pyqtSignal(QtCore.QString)
 
 	ActionPrefixes = (
@@ -183,8 +183,8 @@ class FrameSettings(QtGui.QFrame):
 		return self.checkNoFloatingPoint.checkState() == QtCore.Qt.Checked
 
 	def setNoFloatingPoint(self, value):
-		Tc2Config.settingsSetValue(c2HandGrabberPokerStars.HandFormatterHtmlTabular.SettingsKeyNoFloatingPoint, value)
-		self.noFloatingPoint.emit(value)
+		Tc2Config.settingsSetValue(self.SettingsKeyNoFloatingPoint, value)
+		self.noFloatingPointChanged.emit(value)
 
 	def sideBarPosition(self):
 		return self.comboSideBarPosition.currentText()
