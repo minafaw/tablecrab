@@ -760,10 +760,11 @@ class HandHistoryFile(object):
 				handHistory.append(line)
 			elif handHistory and not line:
 				#NOTE: have to decode to unicode here to not break our formatter
-				self._handHistories.append('\n'.join(handHistory).decode('utf-8', 'backslashreplace'))
+				#NOTE: have to use 'replace' here. 'backslashreplace' errs for some hhs
+				self._handHistories.append('\n'.join(handHistory).decode('utf-8', 'replace'))
 				handHistory = None
 		if handHistory:
-			self._handHistories.append('\n'.join(handHistory).decode('utf-8', 'backslashreplace'))
+			self._handHistories.append('\n'.join(handHistory).decode('utf-8', 'replace'))
 
 	def __len__(self): return len(self._handHistories)
 	def __getitem__(self, i): return self._handHistories[i]
