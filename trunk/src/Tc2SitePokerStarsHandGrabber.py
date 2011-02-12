@@ -173,7 +173,7 @@ class HandParser(object):
 			hand.seatNoButton = int(result.group('seatNoButton')) -1
 		return result is not None
 
-	PatternSeat = re.compile('^Seat \s(?P<seatNo>[1-9]+)\:\s   (?P<player>.*) \s\( [%s]? (?P<stack>[\d\.]+)\s?.*  \)' % Currencies, re.X)
+	PatternSeat = re.compile('^Seat \s(?P<seatNo>[0-9]+)\:\s   (?P<player>.*) \s\( [%s]? (?P<stack>[\d\.]+)\s?.*  \)' % Currencies, re.X)
 	def matchSeat(self, hand, streetCurrent, line):
 		result= self.PatternSeat.match(line)
 		if result is not None:
