@@ -173,7 +173,7 @@ class HandParser(object):
 			hand.seatNoButton = int(result.group('seatNoButton')) -1
 		return result is not None
 
-	PatternSeat = re.compile('^Seat \s(?P<seatNo>[1-9]+)\:\s   (?P<player>.*?) \s\( [%s]? (?P<stack>.*?)\s.*  \)' % Currencies, re.X)
+	PatternSeat = re.compile('^Seat \s(?P<seatNo>[1-9]+)\:\s   (?P<player>.*) \s\( [%s]? (?P<stack>[\d\.]+)\s?.*  \)' % Currencies, re.X)
 	def matchSeat(self, hand, streetCurrent, line):
 		result= self.PatternSeat.match(line)
 		if result is not None:
@@ -760,10 +760,10 @@ class HandHistoryFile(object):
 				handHistory.append(line)
 			elif handHistory and not line:
 				#NOTE: have to decode to unicode here to not break our formatter
-				self._handHistories.append('\n'.join(handHistory).decode('utf-8'))
+				self._handHistories.append('\n'.join(handHistory).decode('utf-8', 'backslashreplace'))
 				handHistory = None
 		if handHistory:
-			self._handHistories.append('\n'.join(handHistory).decode('utf-8'))
+			self._handHistories.append('\n'.join(handHistory).decode('utf-8', 'backslashreplace'))
 
 	def __len__(self): return len(self._handHistories)
 	def __getitem__(self, i): return self._handHistories[i]
