@@ -542,7 +542,7 @@ def windowGetText(hwnd, maxSize=-1):
 	"""returns the window title of the specified window
 	@param hwnd: handle of the window
 	 @param maxSize: (int) maximum size of text to retrieve. if -1 text is retrieved unconditionally. else only text <= maxSize is retrieved
-	@return: (str)
+	@return: (unicode)
 	"""
 	if not hwnd or maxSize == 0: return ''
 
@@ -573,7 +573,7 @@ def windowGetText(hwnd, maxSize=-1):
 def windowGetClassName(hwnd):
 	"""returns the class name of the specified window
 	@param hwnd: handle of the window
-	@return: (str)
+	@return: (unicode)
 	"""
 	if not hwnd: return ''
 	p = create_unicode_buffer(MY_MAX_CLASS_NAME)
@@ -689,8 +689,6 @@ def windowFindChild(hwnd, className):
 def windowSetText(hwnd, text='', isUnicode=True):
 		"""returns the window title of the specified window
 		@param hwnd: handle of the window
-		@todo: we currently send ANSI text only.
-		@return: (str)
 		"""
 		if not hwnd: raise ValueError('can not set text of desktop window')
 		sendMessageTimeout(hwnd, WM_SETTEXT, 0, text, isUnicode=isUnicode)
