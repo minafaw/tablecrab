@@ -4,7 +4,7 @@
 
 import Tc2Config
 from PyQt4 import QtCore
-import re
+import re, codecs
 
 #***********************************************************************************************
 #
@@ -746,30 +746,41 @@ class HandHistoryFile(object):
 		self._parse()
 
 	def _parse(self):
-		with open(self.filePath, 'r') as fp:
-			#NOTE: would love to use StringIO here, but we run into nasty unicode problems
-			self._data = fp.read()
+		self._data = self._readFileData(self.filePath)
 		handHistory = None
 		#TODO: we could do a replace('\r', '\n') here
 		for line in self._data.split('\n'):
-			line = line.strip().strip('\xef\xbb\xbf')
+			line = line.strip()
 			if line.startswith('PokerStars Game #') or line.startswith('PokerStars Home Game #'):
 				handHistory = [line, ]
 				continue
 			elif handHistory and line:
 				handHistory.append(line)
 			elif handHistory and not line:
-				#NOTE: have to decode to unicode here to not break our formatter
-				#NOTE: have to use 'replace' here. 'backslashreplace' errs for some hhs
-				self._handHistories.append('\n'.join(handHistory).decode('utf-8', 'replace'))
+				p = '\n'.join(handHistory)
+				self._handHistories.append(p)
 				handHistory = None
 		if handHistory:
-			self._handHistories.append('\n'.join(handHistory).decode('utf-8', 'replace'))
+			p = '\n'.join(handHistory)
+			self._handHistories.append(p)
+
+	def _readFileData(self, filePath):
+		# stars seems to have switched to utf-8 at some time. more or less a guess
+		# that it used to be iso-8859-1 before.
+		fp = codecs.open(self.filePath, encoding='utf-8')
+		try:
+			return fp.read()
+		except UnicodeDecodeError:	pass
+		finally:
+			fp.close()
+		fp = codecs.open(self.filePath, encoding='iso-8859-1')
+		try:
+			return fp.read()
+		finally:
+			fp.close()
 
 	def __len__(self): return len(self._handHistories)
 	def __getitem__(self, i): return self._handHistories[i]
 	def __iter__(self): return iter(self._handHistories)
 	def raw(self): return self._data
-
-
 
