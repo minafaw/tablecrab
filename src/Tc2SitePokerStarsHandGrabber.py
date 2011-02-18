@@ -747,6 +747,9 @@ class HandHistoryFile(object):
 
 	def _parse(self):
 		self._data = self._readFileData(self.filePath)
+		#NOTE: have to remove BOM if present
+		if self._data.startswith(u'\ufeff'):
+			self._data = self._data[1:]
 		handHistory = None
 		#TODO: we could do a replace('\r', '\n') here
 		for line in self._data.split('\n'):
