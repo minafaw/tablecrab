@@ -771,7 +771,7 @@ class HandHistoryFile(object):
 		try:
 			data = fp.read()
 			#NOTE: remove BOM if present
-			if data.startswith(u'\ufeff'):
+			if data.startswith(unicode(codecs.BOM_UTF8, 'utf-8')):
 				data = data[1:]
 			return data
 		except UnicodeDecodeError:	pass
