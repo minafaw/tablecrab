@@ -747,9 +747,6 @@ class HandHistoryFile(object):
 
 	def _parse(self):
 		self._data = self._readFileData(self.filePath)
-		#NOTE: have to remove BOM if present
-		if self._data.startswith(u'\ufeff'):
-			self._data = self._data[1:]
 		handHistory = None
 		#TODO: we could do a replace('\r', '\n') here
 		for line in self._data.split('\n'):
@@ -772,7 +769,11 @@ class HandHistoryFile(object):
 		# that it used to be iso-8859-1 before.
 		fp = codecs.open(self.filePath, encoding='utf-8')
 		try:
-			return fp.read()
+			data = fp.read()
+			#NOTE: remove BOM if present
+			if data.startswith(u'\ufeff'):
+				data = data[1:]
+			return data
 		except UnicodeDecodeError:	pass
 		finally:
 			fp.close()
@@ -786,4 +787,6 @@ class HandHistoryFile(object):
 	def __getitem__(self, i): return self._handHistories[i]
 	def __iter__(self): return iter(self._handHistories)
 	def raw(self): return self._data
+
+
 
