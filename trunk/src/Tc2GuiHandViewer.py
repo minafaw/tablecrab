@@ -322,7 +322,7 @@ class FrameHandViewer(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
-		self._handCache = []
+		self._handCache = {}
 
 		self.splitter = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
 
@@ -402,18 +402,15 @@ class FrameHandViewer(QtGui.QFrame):
 			myUrl = QtCore.QUrl('file:///' + fileName)
 		else:
 			myUrl = QtCore.QUrl('')
-		# update our hand cache
-		#TODO: check how WebKit caches urls and/or data. we have to make shure
-		# our cache is <= WebKits cache
+
+		# update cache
 		if data:
-			for i, (tmp_url, tmp_data) in enumerate(self._handCache):
-				if tmp_url == myUrl:
-					self._handCache[i] = (myUrl, data)
-					break
-			else:
-				self._handCache.append( (myUrl, data) )
-			if len(self._handCache) > self._browser.page().history().maximumItemCount():
-				self._handCache.pop(0)
+			cachedUrls = [item.url().toString() for item in self._browser.page().history().items()]
+			for cachedUrl in self._handCache.keys():
+				if cachedUrl not in cachedUrls:
+					del self._handCache[cachedUrl]
+			self._handCache[myUrl.toString()] = data
+
 		self._browser.setUrl(myUrl)
 		self.adjustActions()
 
@@ -522,22 +519,19 @@ class FrameHandViewer(QtGui.QFrame):
 
 	def onNetworkGetData(self, networkReply):
 		url = networkReply.url()
-		for myUrl, data in self._handCache:
-			if myUrl == url:
-				networkReply.setData(data,  'text/html; charset=utf-8')
-				# give feedback
-				if url.scheme() == 'file':
-					fileName = url.path()[1:]
-					fileInfo = QtCore.QFileInfo(fileName)
-					handName = fileInfo.baseName()
-					handName = Tc2Config.truncateString(handName, Tc2Config.MaxName)
-					Tc2Config.globalObject.feedback.emit(self, handName)
-				else:
-					Tc2Config.globalObject.feedback.emit(self, 'Grabbed hand')
-				break
+		data = self._handCache.get(url.toString(), None)
+		if data is None:
+			return
+		networkReply.setData(data,  'text/html; charset=utf-8')
+		# give feedback
+		if url.scheme() == 'file':
+			fileName = url.path()[1:]
+			fileInfo = QtCore.QFileInfo(fileName)
+			handName = fileInfo.baseName()
+			handName = Tc2Config.truncateString(handName, Tc2Config.MaxName)
+			Tc2Config.globalObject.feedback.emit(self, handName)
 		else:
-			#NOTE: we assert only an invalid or no-hand gets here
-			pass
+			Tc2Config.globalObject.feedback.emit(self, 'Grabbed hand')
 
 	def onToolBarZoomFactorChanged(self, value):
 		Tc2Config.settingsSetValue(self.SettingsKeyZoomFactor, value)
