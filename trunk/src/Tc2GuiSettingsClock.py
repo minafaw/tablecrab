@@ -15,12 +15,18 @@ class FrameSettings(QtGui.QFrame):
 	SettingsKeyIncrement = SettingsKeyBase + '/Increment'
 	SettingsKeyRandomMode = SettingsKeyBase + '/RandomMode'
 	SettingsKeyIsOn = SettingsKeyBase + '/IsOn'
+	SettingsKeyBackgroundColor = SettingsKeyBase + '/BackgroundColor'
+	SettingsKeyForegroundColor = SettingsKeyBase + '/ForegroundColor'
 
 	speedChanged = QtCore.pyqtSignal(float)
 	precissionChanged = QtCore.pyqtSignal(int)
 	incrementChanged = QtCore.pyqtSignal(int)
 	randomModeChanged = QtCore.pyqtSignal(bool)
 	isOnChanged = QtCore.pyqtSignal(bool)
+	backgroundColorChanged = QtCore.pyqtSignal(QtGui.QColor)
+	foregroundColorChanged = QtCore.pyqtSignal(QtGui.QColor)
+
+	ColorButtonStyleSheet = 'background-color: %s;'
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -47,6 +53,16 @@ class FrameSettings(QtGui.QFrame):
 		self.checkRandomMode = QtGui.QCheckBox('&Random mode', self)
 		self.checkIsOn = QtGui.QCheckBox('&On', self)
 
+		self.labelForegroundColor = QtGui.QLabel('Foreground color:')
+		self.buttonForegroundColor = QtGui.QPushButton(self)
+		self._foregroundColor = QtGui.QColor()
+		self.buttonForegroundColorReset = QtGui.QPushButton('Reset', self)
+
+		self.labelBackgroundColor = QtGui.QLabel('Background color:')
+		self.buttonBackgroundColor = QtGui.QPushButton(self)
+		self._backgroundColor = QtGui.QColor()
+		self.buttonBackgroundColorReset = QtGui.QPushButton('Reset', self)
+
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		self.buttonHelp.setToolTip('Help (F1)')
 		self.buttonHelp.clicked.connect(self.onHelp)
@@ -71,6 +87,10 @@ class FrameSettings(QtGui.QFrame):
 		grid.col(self.labelIncrement).col(self.spinIncrement).col(Tc2Config.HStretch())
 		grid.row()
 		grid.col(self.checkRandomMode).col(Tc2Config.HStretch())
+		grid.row()
+		grid.col(self.labelForegroundColor).col(self.buttonForegroundColor).col(self.buttonForegroundColorReset)
+		grid.row()
+		grid.col(self.labelBackgroundColor).col(self.buttonBackgroundColor).col(self.buttonBackgroundColorReset)
 		grid.row()
 		grid.col(Tc2Config.VStretch())
 		grid.row()
@@ -111,7 +131,21 @@ class FrameSettings(QtGui.QFrame):
 				lambda value, self=self: self.setIsOn(self.checkIsOn.checkState() == QtCore.Qt.Checked)
 				)
 
+		value = Tc2Config.settingsValue(self.SettingsKeyBackgroundColor, '').toString()
+		color = QtGui.QColor(value)
+		if color.isValid():
+			self.buttonBackgroundColor.setStyleSheet(self.ColorButtonStyleSheet % color.name() )
+			self._backgroundColor = color
+		self.buttonBackgroundColor.clicked.connect(self.onButtonBackgroundColorClicked)
+		self.buttonBackgroundColorReset.clicked.connect(self.onButtonBackgroundColorResetClicked)
 
+		value = Tc2Config.settingsValue(self.SettingsKeyForegroundColor, '').toString()
+		color = QtGui.QColor(value)
+		if color.isValid():
+			self.buttonForegroundColor.setStyleSheet(self.ColorButtonStyleSheet % color.name() )
+			self._foregroundColor = color
+		self.buttonForegroundColor.clicked.connect(self.onButtonForegroundColorClicked)
+		self.buttonForegroundColorReset.clicked.connect(self.onButtonForegroundColorResetClicked)
 
 		Tc2Config.globalObject.objectCreatedSettingsClock.emit(self)
 
@@ -152,6 +186,49 @@ class FrameSettings(QtGui.QFrame):
 	def setIsOn(self, value):
 		Tc2Config.settingsSetValue(self.SettingsKeyIsOn, value)
 		self.isOnChanged.emit(value)
+
+	def backgroundColor(self):
+		return self._backgroundColor
+
+	def setBackgroundColor(self, color):
+		if color.isValid():
+			Tc2Config.settingsSetValue(self.SettingsKeyBackgroundColor, color.name() )
+			self.buttonBackgroundColor.setStyleSheet(self.ColorButtonStyleSheet % color.name() )
+		else:
+			Tc2Config.settingsSetValue(self.SettingsKeyBackgroundColor, '')
+			self.buttonBackgroundColor.setStyleSheet('')
+		self._backgroundColor = color
+		self.backgroundColorChanged.emit(color)
+
+	def onButtonBackgroundColorClicked(self):
+		color = QtGui.QColorDialog.getColor(self.backgroundColor(), self, 'Select background color')
+		if color.isValid():
+			self.setBackgroundColor(color)
+
+	def onButtonBackgroundColorResetClicked(self):
+		self.setBackgroundColor(QtGui.QColor())
+
+	def foregroundColor(self):
+		return self._foregroundColor
+
+	def setForegroundColor(self, color):
+		if color.isValid():
+			Tc2Config.settingsSetValue(self.SettingsKeyForegroundColor, color.name() )
+			self.buttonForegroundColor.setStyleSheet(self.ColorButtonStyleSheet % color.name() )
+		else:
+			Tc2Config.settingsSetValue(self.SettingsKeyForegroundColor, '')
+			self.buttonForegroundColor.setStyleSheet('')
+		self._foregroundColor = color
+		self.foregroundColorChanged.emit(color)
+
+	def onButtonForegroundColorClicked(self):
+		color = QtGui.QColorDialog.getColor(self.foregroundColor(), self, 'Select foreground color')
+		if color.isValid():
+			self.setForegroundColor(color)
+
+	def onButtonForegroundColorResetClicked(self):
+		self.setForegroundColor(QtGui.QColor())
+
 
 
 
