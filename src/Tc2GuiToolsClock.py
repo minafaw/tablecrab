@@ -16,6 +16,8 @@ class ClockLabel(QtGui.QLabel):
 	IncrementMin = 1
 	IncrementMax = 100
 
+	StyleSheet = 'color: %s; background-color: %s'
+
 	def __init__(self, parent=None, precission=PrecissionMin, increment=IncrementMin, speed=SpeedMin, randomMode=False):
 		QtGui.QLabel.__init__(self, parent)
 		self._precission = precission
@@ -40,6 +42,10 @@ class ClockLabel(QtGui.QLabel):
 		settings.speedChanged.connect(self.setSpeed)
 		self.setRandomMode(settings.randomMode())
 		settings.randomModeChanged.connect(self.setRandomMode)
+
+		settings.foregroundColorChanged.connect(self.setColor)
+		settings.backgroundColorChanged.connect(self.setColor)
+		self.setColor(QtGui.QColor())
 
 	def setIncrement(self, value):
 		wasOn = self.setOn(False)
@@ -78,3 +84,20 @@ class ClockLabel(QtGui.QLabel):
 		if self._value >= maxValue:
 			self._value = 0
 		self.setText(str(self._value).zfill(self._precission))
+
+	def setColor(self, color):
+		settings = Tc2Config.globalObject.settingsClock
+		styleSheet = ''
+		color = settings.foregroundColor()
+		if color.isValid():
+			styleSheet += 'color: %s;' % color.name()
+		color = settings.backgroundColor()
+		if color.isValid():
+			styleSheet += 'background-color: %s' % color.name()
+		self.setStyleSheet(styleSheet)
+
+
+
+
+
+
