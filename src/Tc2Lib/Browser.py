@@ -89,6 +89,13 @@ class RawBrowser(QtWebKit.QWebView):
 	def networkAccessManager(self):
 		return self._networkAccessManager
 
+	def clearHistory(self):
+		history = self.history()
+		oldItemCount = history.maximumItemCount()
+		history.setMaximumItemCount(0)
+		history.clear()
+		history.setMaximumItemCount(oldItemCount)
+
 
 class BrowserToolBar(QtGui.QToolBar):
 	ZoomFactorMin = 0.5

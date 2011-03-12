@@ -167,6 +167,8 @@ class FrameTool(QtGui.QFrame):
 		else:
 			self._spinBox.setRange(0, 0)
 			self._spinBox.setSuffix(' /0' )
+
+		self._browser.clearHistory()
 		self.adjustActions()
 
 	def onCloseEvent(self, event):
