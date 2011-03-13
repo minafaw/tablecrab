@@ -32,9 +32,7 @@ class FrameSettings(QtGui.QFrame):
 
 		self.checkshowOnStartUp = QtGui.QCheckBox('&Show on startup', self)
 
-		self.labelBackgroundColor = QtGui.QLabel('Background color:')
-		self.buttonBackgroundColor = ColorButton.ColorButton(parent=self, toolTip='Select background color')
-		self.buttonBackgroundColorReset = QtGui.QPushButton('Reset', self)
+		self.groupBackgroundColor = ColorButton.GroupColorButton(parent=self, text='Background color:', toolTip='Select background color')
 
 		self.labelBackgroundImage = QtGui.QLabel('Background image:')
 		self.buttonBackgroundImage = QtGui.QPushButton(self)
@@ -67,7 +65,7 @@ class FrameSettings(QtGui.QFrame):
 		grid.row()
 		grid.col(self.checkshowOnStartUp).col(Tc2Config.HStretch())
 		grid.row()
-		grid.col(self.labelBackgroundColor).col(self.buttonBackgroundColor).col(self.buttonBackgroundColorReset)
+		grid.col(self.groupBackgroundColor.label() ).col(self.groupBackgroundColor.colorButton() ).col(self.groupBackgroundColor.resetButton() )
 		grid.row()
 		grid.col(self.labelBackgroundImage).col(self.buttonBackgroundImage).col(self.buttonBackgroundImageReset)
 		grid.row()
@@ -91,9 +89,8 @@ class FrameSettings(QtGui.QFrame):
 				)
 
 		value = Tc2Config.settingsValue(self.SettingsKeyBackgroundColor, '').toString()
-		self.buttonBackgroundColor.setColor(QtGui.QColor(value) )
-		self.buttonBackgroundColor.colorChanged.connect(self.setBackgroundColor)
-		self.buttonBackgroundColorReset.clicked.connect(self.buttonBackgroundColor.resetColor)
+		self.groupBackgroundColor.setColor(QtGui.QColor(value) )
+		self.groupBackgroundColor.colorChanged.connect(self.setBackgroundColor)
 
 		value = Tc2Config.settingsValue(self.SettingsKeyBackgroundImage, '').toString()
 		if value:
@@ -130,7 +127,7 @@ class FrameSettings(QtGui.QFrame):
 		self.showOnStartUpChanged.emit(value)
 
 	def backgroundColor(self):
-		return self.buttonBackgroundColor.color()
+		return self.groupBackgroundColor.color()
 
 	def setBackgroundColor(self, color):
 		Tc2Config.settingsSetValue(self.SettingsKeyBackgroundColor, color.name() )

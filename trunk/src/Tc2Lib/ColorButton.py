@@ -42,3 +42,50 @@ class ColorButton(QtGui.QPushButton):
 		if color.isValid():
 			self.setColor(color)
 
+
+class GroupColorButton(QtGui.QLabel):
+
+	colorChanged = QtCore.pyqtSignal(QtGui.QColor)
+
+	def __init__(self, parent=None, color=None, text='', toolTip=''):
+		QtGui.QLabel.__init__(self, text, parent)
+
+		self._colorButton = ColorButton(parent=self, toolTip=toolTip)
+		self._resetButton = QtGui.QPushButton('Reset', self)
+
+		self._colorButton.colorChanged.connect(lambda color: self.colorChanged.emit(color) )
+		self._resetButton.clicked.connect(lambda: self._colorButton.resetColor() )
+
+	def color(self):
+		return self._colorButton.color()
+
+	def setColor(self, color):
+		self._colorButton.setColor(color)
+
+	def label(self):
+		return self
+
+	def colorButton(self):
+		return self._colorButton
+
+	def resetButton(self):
+		return self._resetButton
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

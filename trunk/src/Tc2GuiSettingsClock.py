@@ -52,13 +52,8 @@ class FrameSettings(QtGui.QFrame):
 		self.checkRandomMode = QtGui.QCheckBox('&Random mode', self)
 		self.checkIsOn = QtGui.QCheckBox('&On', self)
 
-		self.labelForegroundColor = QtGui.QLabel('Foreground color:')
-		self.buttonForegroundColor = ColorButton.ColorButton(parent=self, toolTip='Select foreground color')
-		self.buttonForegroundColorReset = QtGui.QPushButton('Reset', self)
-
-		self.labelBackgroundColor = QtGui.QLabel('Background color:')
-		self.buttonBackgroundColor = ColorButton.ColorButton(parent=self, toolTip='Select background color')
-		self.buttonBackgroundColorReset = QtGui.QPushButton('Reset', self)
+		self.groupForegroundColor = ColorButton.GroupColorButton(parent=self, text='Foreground color:', toolTip='Select foreground color')
+		self.groupBackgroundColor = ColorButton.GroupColorButton(parent=self, text='Background color:', toolTip='Select background color')
 
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		self.buttonHelp.setToolTip('Help (F1)')
@@ -85,9 +80,9 @@ class FrameSettings(QtGui.QFrame):
 		grid.row()
 		grid.col(self.checkRandomMode).col(Tc2Config.HStretch())
 		grid.row()
-		grid.col(self.labelForegroundColor).col(self.buttonForegroundColor).col(self.buttonForegroundColorReset)
+		grid.col(self.groupForegroundColor.label() ).col(self.groupForegroundColor.colorButton() ).col(self.groupForegroundColor.resetButton() )
 		grid.row()
-		grid.col(self.labelBackgroundColor).col(self.buttonBackgroundColor).col(self.buttonBackgroundColorReset)
+		grid.col(self.groupBackgroundColor.label() ).col(self.groupBackgroundColor.colorButton() ).col(self.groupBackgroundColor.resetButton() )
 		grid.row()
 		grid.col(Tc2Config.VStretch())
 		grid.row()
@@ -129,14 +124,12 @@ class FrameSettings(QtGui.QFrame):
 				)
 
 		value = Tc2Config.settingsValue(self.SettingsKeyForegroundColor, '').toString()
-		self.buttonForegroundColor.setColor(QtGui.QColor(value) )
-		self.buttonForegroundColor.colorChanged.connect(self.setForegroundColor)
-		self.buttonForegroundColorReset.clicked.connect(self.buttonForegroundColor.resetColor)
+		self.groupForegroundColor.setColor(QtGui.QColor(value) )
+		self.groupForegroundColor.colorChanged.connect(self.setForegroundColor)
 
 		value = Tc2Config.settingsValue(self.SettingsKeyBackgroundColor, '').toString()
-		self.buttonBackgroundColor.setColor(QtGui.QColor(value) )
-		self.buttonBackgroundColor.colorChanged.connect(self.setBackgroundColor)
-		self.buttonBackgroundColorReset.clicked.connect(self.buttonBackgroundColor.resetColor)
+		self.groupBackgroundColor.setColor(QtGui.QColor(value) )
+		self.groupBackgroundColor.colorChanged.connect(self.setBackgroundColor)
 
 		Tc2Config.globalObject.objectCreatedSettingsClock.emit(self)
 
@@ -179,14 +172,14 @@ class FrameSettings(QtGui.QFrame):
 		self.isOnChanged.emit(value)
 
 	def backgroundColor(self):
-		return self.buttonBackgroundColor.color()
+		return self.groupBackgroundColor.color()
 
 	def setBackgroundColor(self, color):
 		Tc2Config.settingsSetValue(self.SettingsKeyBackgroundColor, color.name() )
 		self.backgroundColorChanged.emit(color)
 
 	def foregroundColor(self):
-		return self.buttonForegroundColor.color()
+		return self.groupForegroundColor.color()
 
 	def setForegroundColor(self, color):
 		Tc2Config.settingsSetValue(self.SettingsKeyForegroundColor, color.name() )
