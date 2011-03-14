@@ -11,8 +11,11 @@ class ColorButton(QtGui.QPushButton):
 	def __init__(self, parent=None, color=None, toolTip=''):
 		QtGui.QPushButton.__init__(self, parent)
 		self._color = QtGui.QColor() if color is None else color
+		self._colorDefault = self._color
 		#NOTE: tool tips derrive style sheets from our button, so we can not really use it here
 		self._toolTip = toolTip
+
+		self.setColor(self._color)
 		self.clicked.connect(self.onButtonClicked)
 
 	def color(self):
@@ -27,7 +30,7 @@ class ColorButton(QtGui.QPushButton):
 		self.colorChanged.emit(color)
 
 	def resetColor(self):
-		self.setColor(QtGui.QColor() )
+		self.setColor(self._colorDefault)
 
 	def toolTip(self):
 		return self._toolTip
@@ -50,11 +53,12 @@ class GroupColorButton(QtGui.QLabel):
 	def __init__(self, parent=None, color=None, text='', toolTip=''):
 		QtGui.QLabel.__init__(self, text, parent)
 
-		self._colorButton = ColorButton(parent=self, toolTip=toolTip)
+		self._colorButton = ColorButton(parent=self, color=color, toolTip=toolTip)
 		self._resetButton = QtGui.QPushButton('Reset', self)
+		self.setBuddy(self._colorButton)
 
 		self._colorButton.colorChanged.connect(lambda color: self.colorChanged.emit(color) )
-		self._resetButton.clicked.connect(lambda: self._colorButton.resetColor() )
+		self._resetButton.clicked.connect(self._colorButton.resetColor)
 
 	def color(self):
 		return self._colorButton.color()

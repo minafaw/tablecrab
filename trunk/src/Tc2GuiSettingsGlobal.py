@@ -2,6 +2,8 @@
 import Tc2Config
 import Tc2Win32
 import Tc2GuiHelp
+from Tc2Lib import FontButton
+from Tc2Lib import StyleCombo
 from PyQt4 import QtCore, QtGui, QtWebKit
 
 #************************************************************************************
@@ -43,17 +45,12 @@ class FrameSettings(QtGui.QFrame):
 		self.labelBackup = QtGui.QLabel('&Backup TableCrab:', self)
 		self.labelBackup.setBuddy(self.buttonBackup)
 
-		self.comboGuiStyle = QtGui.QComboBox(self)
-		self.labelGuiStyle = QtGui.QLabel('Global &Style:', self)
-		self.labelGuiStyle.setBuddy(self.comboGuiStyle)
+		self.groupGuiStyle = StyleCombo.GroupStyleCombo(parent=self, style=None, text='Global &Style:')
+		self.groupGuiFont = FontButton.GroupFontButton(parent=self, font=QtGui.qApp.font(), text='Global &Font:', toolTip='Select gui font')
 
-		self.buttonGuiFont = QtGui.QPushButton('..', self)
-		self.labelFont = QtGui.QLabel('Global &Font:', self)
-		self.labelFont.setBuddy(self.buttonGuiFont)
-
-		self.buttonFixedFont = QtGui.QPushButton('..', self)
-		self.labelFixedFont = QtGui.QLabel('Fi&xed Font:', self)
-		self.labelFixedFont.setBuddy(self.buttonFixedFont)
+		settings = QtWebKit.QWebSettings.globalSettings()
+		font = QtGui.QFont(settings.fontFamily(settings.FixedFont), settings.fontSize(settings.DefaultFixedFontSize))
+		self.groupFixedFont = FontButton.GroupFontButton(parent=self, font=QtGui.qApp.font(), text='Fi&xed Font:', toolTip='Select fixed font')
 
 		self.comboSingleApplicationScope = QtGui.QComboBox(self)
 		self.comboSingleApplicationScope.addItems(Tc2Win32.SingleApplication.Scopes)
@@ -104,11 +101,11 @@ class FrameSettings(QtGui.QFrame):
 		grid.row()
 		grid.col(self.labelBackup).col(self.buttonBackup).col(Tc2Config.HStretch())
 		grid.row()
-		grid.col(self.labelGuiStyle).col(self.comboGuiStyle).col(Tc2Config.HStretch())
+		grid.col(self.groupGuiStyle.label() ).col(self.groupGuiStyle.styleCombo() ).col(self.groupGuiStyle.resetButton() )
 		grid.row()
-		grid.col(self.labelFont).col(self.buttonGuiFont).col(Tc2Config.HStretch())
+		grid.col(self.groupGuiFont.label() ).col(self.groupGuiFont.fontButton() ).col(self.groupGuiFont.resetButton() )
 		grid.row()
-		grid.col(self.labelFixedFont).col(self.buttonFixedFont).col(Tc2Config.HStretch())
+		grid.col(self.groupFixedFont.label() ).col(self.groupFixedFont.fontButton() ).col(self.groupFixedFont.resetButton() )
 		grid.row()
 		grid.col(self.labelSingleApplication).col(self.comboSingleApplicationScope).col(Tc2Config.HStretch())
 		grid.row()
@@ -188,23 +185,8 @@ class FrameSettings(QtGui.QFrame):
 	def onHelp(self, *args):
 		Tc2GuiHelp.dialogHelp('settingsGlobal', parent=self)
 
-	def onButtonGuiFontClicked(self, checked):
-		font, ok = QtGui.QFontDialog.getFont(QtGui.qApp.font(), self)
-		if ok:
-			self.buttonGuiFont.setText( QtCore.QString('%1 %2').arg(font.family()).arg(font.pointSize()) )
-			self.setGuiFont(font)
-
-	def onButtonFixedFontClicked(self, checked):
-		font = QtGui.QFont()
-		settings = QtWebKit.QWebSettings.globalSettings()
-		font.setFamily( settings.fontFamily(settings.FixedFont) )
-		font.setPointSize( settings.fontSize(settings.DefaultFixedFontSize) )
-		font, ok = QtGui.QFontDialog.getFont(font, self)
-		if ok:
-			self.setFixedFont(font)
-
 	def guiStyle(self):
-		return self.comboGuiStyle.currentText()
+		return self.groupGuiStyle.style()
 
 	def setGuiStyle(self, value):
 		style = QtGui.QStyleFactory.create(value)
@@ -246,7 +228,6 @@ class FrameSettings(QtGui.QFrame):
 		settings = QtWebKit.QWebSettings.globalSettings()
 		settings.setFontFamily(settings.FixedFont, value.family() )
 		settings.setFontSize(settings.DefaultFixedFontSize, value.pointSize() )
-		self.buttonFixedFont.setText( QtCore.QString('%1 %2').arg(value.family()).arg(value.pointSize()) )
 		self.fixedFontChanged.emit(value)
 
 	def singleApplicationScope(self):
@@ -308,32 +289,26 @@ class FrameSettings(QtGui.QFrame):
 	def onInitSettings(self):
 		self.layout()
 
-		# have to set font ahread of stylre to make it work as expected
+		# have to set font ahead of style to make it work as expected
 		value = QtGui.QFont()
 		if value.fromString( Tc2Config.settingsValue(self.SettingsKeyGuiFont, '').toString() ):
 			QtGui.qApp.setFont(value)
 		else:
 			value = QtGui.qApp.font()
-		self.buttonGuiFont.setText( QtCore.QString('%1 %2').arg(value.family()).arg(value.pointSize()) )
-		self.buttonGuiFont.clicked.connect(self.onButtonGuiFontClicked)
+		self.groupGuiFont.setFont(value)
+		self.groupGuiFont.fontChanged.connect(self.setGuiFont)
 
 		value = Tc2Config.settingsValue(self.SettingsKeyGuiStyle, '').toString()
-		styleNames = QtGui.QStyleFactory().keys()
-		self.comboGuiStyle.addItems(styleNames)
-		if value in styleNames:
-			self.comboGuiStyle.setCurrentIndex( self.comboGuiStyle.findText(value, QtCore.Qt.MatchExactly) )
-		#NOTE: for some reason pyqtSlot decorator is not working, so we connect old style here
-		self.connect(self.comboGuiStyle, QtCore.SIGNAL('currentIndexChanged(QString)'), self.setGuiStyle)
 		if value != QtGui.qApp.style().objectName():	# unddocumented but works
 			QtGui.qApp.setStyle(value)
+		self.groupGuiStyle.setStyle(value)
+		self.groupGuiStyle.styleChanged.connect(self.setGuiStyle)
 
 		value = QtGui.QFont()
 		if value.fromString(Tc2Config.settingsValue(self.SettingsKeyFontFixed, '').toString() ):
-			settings = QtWebKit.QWebSettings.globalSettings()
-			settings.setFontFamily(settings.FixedFont, value.family() )
-			settings.setFontSize(settings.DefaultFixedFontSize, value.pointSize() )
-		self.buttonFixedFont.setText( QtCore.QString('%1 %2').arg(value.family()).arg(value.pointSize()) )
-		self.buttonFixedFont.clicked.connect(self.onButtonFixedFontClicked)
+			self.setFixedFont(value)
+			self.groupFixedFont.setFont(value)
+		self.groupFixedFont.fontChanged.connect(self.setFixedFont)
 
 		value = Tc2Config.settingsValue(Tc2Config.SettingsKeySingleApplicationScope, '').toString()
 		if value not in Tc2Win32.SingleApplication.Scopes:
