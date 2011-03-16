@@ -128,7 +128,7 @@ class FrameSettings(QtGui.QFrame):
 		self.groupForegroundColor.colorChanged.connect(self.setForegroundColor)
 
 		value = Tc2Config.settingsValue(self.SettingsKeyBackgroundColor, '').toString()
-		self.groupBackgroundColor.setColor(QtGui.QColor(value) )
+		self.groupBackgroundColor.setColor(QtGui.QColor(value))
 		self.groupBackgroundColor.colorChanged.connect(self.setBackgroundColor)
 
 		Tc2Config.globalObject.objectCreatedSettingsClock.emit(self)
@@ -175,14 +175,14 @@ class FrameSettings(QtGui.QFrame):
 		return self.groupBackgroundColor.color()
 
 	def setBackgroundColor(self, color):
-		Tc2Config.settingsSetValue(self.SettingsKeyBackgroundColor, color.name() )
+		Tc2Config.settingsSetValue(self.SettingsKeyBackgroundColor, color.name() if color.isValid() else '')
 		self.backgroundColorChanged.emit(color)
 
 	def foregroundColor(self):
 		return self.groupForegroundColor.color()
 
 	def setForegroundColor(self, color):
-		Tc2Config.settingsSetValue(self.SettingsKeyForegroundColor, color.name() )
+		Tc2Config.settingsSetValue(self.SettingsKeyForegroundColor, color.name() if color.isValid() else '')
 		self.foregroundColorChanged.emit(color)
 
 

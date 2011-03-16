@@ -130,7 +130,7 @@ class FrameSettings(QtGui.QFrame):
 		return self.groupBackgroundColor.color()
 
 	def setBackgroundColor(self, color):
-		Tc2Config.settingsSetValue(self.SettingsKeyBackgroundColor, color.name() )
+		Tc2Config.settingsSetValue(self.SettingsKeyBackgroundColor, color.name() if color.isValid() else '')
 		self.backgroundColorChanged.emit(color)
 
 	def backgroundImage(self):
