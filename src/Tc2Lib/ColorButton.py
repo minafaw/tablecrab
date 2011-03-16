@@ -11,7 +11,7 @@ class ColorButton(QtGui.QPushButton):
 	def __init__(self, parent=None, defaultColor=None, toolTip=''):
 		QtGui.QPushButton.__init__(self, parent)
 		self._color = QtGui.QColor() if defaultColor is None else defaultColor
-		self._defaultColor = defaultColor
+		self._defaultColor = self._color
 		#NOTE: tool tips derrive style sheets from our button, so we can not really use it here
 		self._toolTip = toolTip
 
