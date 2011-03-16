@@ -8,10 +8,10 @@ class ColorButton(QtGui.QPushButton):
 	StyleSheet = 'background-color: %s;'
 	colorChanged = QtCore.pyqtSignal(QtGui.QColor)
 
-	def __init__(self, parent=None, color=None, toolTip=''):
+	def __init__(self, parent=None, defaultColor=None, toolTip=''):
 		QtGui.QPushButton.__init__(self, parent)
-		self._color = QtGui.QColor() if color is None else color
-		self._colorDefault = self._color
+		self._color = QtGui.QColor() if defaultColor is None else defaultColor
+		self._defaultColor = defaultColor
 		#NOTE: tool tips derrive style sheets from our button, so we can not really use it here
 		self._toolTip = toolTip
 
@@ -30,7 +30,7 @@ class ColorButton(QtGui.QPushButton):
 		self.colorChanged.emit(color)
 
 	def resetColor(self):
-		self.setColor(self._colorDefault)
+		self.setColor(self._defaultColor)
 
 	def toolTip(self):
 		return self._toolTip
@@ -50,10 +50,10 @@ class GroupColorButton(QtGui.QLabel):
 
 	colorChanged = QtCore.pyqtSignal(QtGui.QColor)
 
-	def __init__(self, parent=None, color=None, text='', toolTip=''):
+	def __init__(self, parent=None, defaultColor=None, text='', toolTip=''):
 		QtGui.QLabel.__init__(self, text, parent)
 
-		self._colorButton = ColorButton(parent=self, color=color, toolTip=toolTip)
+		self._colorButton = ColorButton(parent=self, defaultColor=defaultColor, toolTip=toolTip)
 		self._resetButton = QtGui.QPushButton('Reset', self)
 		self.setBuddy(self._colorButton)
 

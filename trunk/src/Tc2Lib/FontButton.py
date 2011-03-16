@@ -7,10 +7,10 @@ class FontButton(QtGui.QPushButton):
 
 	fontChanged = QtCore.pyqtSignal(QtGui.QFont)
 
-	def __init__(self, parent=None, font=None, toolTip=''):
+	def __init__(self, parent=None, defaultFont=None, toolTip=''):
 		QtGui.QPushButton.__init__(self, parent)
-		self._font = QtGui.QFont() if font is None else font
-		self._fontDefault = self._font
+		self._font = QtGui.QFont() if defaultFont is None else defaultFont
+		self._defaultFont = self._font
 		self._toolTip = toolTip
 
 		self.setFont(self._font)
@@ -25,7 +25,7 @@ class FontButton(QtGui.QPushButton):
 		self.fontChanged.emit(font)
 
 	def resetFont(self):
-		self.setFont(self._fontDefault)
+		self.setFont(self._defaultFont)
 
 	def toolTip(self):
 		return self._toolTip
@@ -43,10 +43,10 @@ class GroupFontButton(QtGui.QLabel):
 
 	fontChanged = QtCore.pyqtSignal(QtGui.QFont)
 
-	def __init__(self, parent=None, font=None, text='', toolTip=''):
+	def __init__(self, parent=None, defaultFont=None, text='', toolTip=''):
 		QtGui.QLabel.__init__(self, text, parent)
 
-		self._fontButton = FontButton(parent=self, font=font, toolTip=toolTip)
+		self._fontButton = FontButton(parent=self, defaultFont=defaultFont, toolTip=toolTip)
 		self._resetButton = QtGui.QPushButton('Reset', self)
 		self.setBuddy(self._fontButton)
 

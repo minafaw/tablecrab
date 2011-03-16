@@ -3,7 +3,7 @@ import Tc2Config
 import Tc2Win32
 import Tc2GuiHelp
 from Tc2Lib import FontButton
-from Tc2Lib import StyleCombo
+from Tc2Lib import ComboBox
 from PyQt4 import QtCore, QtGui, QtWebKit
 
 #************************************************************************************
@@ -45,17 +45,34 @@ class FrameSettings(QtGui.QFrame):
 		self.labelBackup = QtGui.QLabel('&Backup TableCrab:', self)
 		self.labelBackup.setBuddy(self.buttonBackup)
 
-		self.groupGuiStyle = StyleCombo.GroupStyleCombo(parent=self, style=None, text='Global &Style:')
-		self.groupGuiFont = FontButton.GroupFontButton(parent=self, font=QtGui.qApp.font(), text='Global &Font:', toolTip='Select gui font')
+		self.groupGuiStyle = ComboBox.GroupComboBox(
+				parent=self,
+				defaultValue=QtGui.qApp.style().objectName(), 	# undocumented but works
+				values=QtCore.QStringList(QtGui.QStyleFactory().keys()),
+				text='Global &Style:'
+				)
+		self.groupGuiFont = FontButton.GroupFontButton(
+				parent=self,
+				defaultFont=QtGui.qApp.font(),
+				text='Global &Font:',
+				toolTip='Select gui font'
+				)
 
 		settings = QtWebKit.QWebSettings.globalSettings()
 		font = QtGui.QFont(settings.fontFamily(settings.FixedFont), settings.fontSize(settings.DefaultFixedFontSize))
-		self.groupFixedFont = FontButton.GroupFontButton(parent=self, font=QtGui.qApp.font(), text='Fi&xed Font:', toolTip='Select fixed font')
+		self.groupFixedFont = FontButton.GroupFontButton(
+				parent=self,
+				defaultFont=font,
+				text='Fi&xed Font:',
+				toolTip='Select fixed font'
+				)
 
-		self.comboSingleApplicationScope = QtGui.QComboBox(self)
-		self.comboSingleApplicationScope.addItems(Tc2Win32.SingleApplication.Scopes)
-		self.labelSingleApplication = QtGui.QLabel('Single a&pplication scope:', self)
-		self.labelSingleApplication.setBuddy(self.comboSingleApplicationScope)
+		self.groupSingleApplicationScope = ComboBox.GroupComboBox(
+				parent=self,
+				defaultValue=Tc2Config.SingleApplicationScopeDefault,
+				values=QtCore.QStringList(Tc2Win32.SingleApplication.Scopes),
+				text='Single a&pplication scope:'
+				)
 
 		self.spinWebViewZoomSteps = QtGui.QSpinBox(self)
 		self.spinWebViewZoomSteps.setRange(Tc2Config.WebViewZoomStepsMin, Tc2Config.WebViewZoomStepsMax)
@@ -101,13 +118,13 @@ class FrameSettings(QtGui.QFrame):
 		grid.row()
 		grid.col(self.labelBackup).col(self.buttonBackup).col(Tc2Config.HStretch())
 		grid.row()
-		grid.col(self.groupGuiStyle.label() ).col(self.groupGuiStyle.styleCombo() ).col(self.groupGuiStyle.resetButton() )
+		grid.col(self.groupGuiStyle.label() ).col(self.groupGuiStyle.comboBox() ).col(self.groupGuiStyle.resetButton() )
 		grid.row()
 		grid.col(self.groupGuiFont.label() ).col(self.groupGuiFont.fontButton() ).col(self.groupGuiFont.resetButton() )
 		grid.row()
 		grid.col(self.groupFixedFont.label() ).col(self.groupFixedFont.fontButton() ).col(self.groupFixedFont.resetButton() )
 		grid.row()
-		grid.col(self.labelSingleApplication).col(self.comboSingleApplicationScope).col(Tc2Config.HStretch())
+		grid.col(self.groupSingleApplicationScope.label() ).col(self.groupSingleApplicationScope.comboBox() ).col(self.groupSingleApplicationScope.resetButton() )
 		grid.row()
 		grid.col(self.labelTabPosition).col(self.comboTabPosition).col(Tc2Config.HStretch())
 		grid.row()
@@ -231,7 +248,7 @@ class FrameSettings(QtGui.QFrame):
 		self.fixedFontChanged.emit(value)
 
 	def singleApplicationScope(self):
-		return self.comboSingleApplicationScopeScope.currentText()
+		return self.groupSingleApplicationScope.value()
 
 	def setSingleApplicationScope(self, value):
 		Tc2Config.settingsSetValue(Tc2Config.SettingsKeySingleApplicationScope, value)
@@ -299,10 +316,8 @@ class FrameSettings(QtGui.QFrame):
 		self.groupGuiFont.fontChanged.connect(self.setGuiFont)
 
 		value = Tc2Config.settingsValue(self.SettingsKeyGuiStyle, '').toString()
-		if value != QtGui.qApp.style().objectName():	# unddocumented but works
-			QtGui.qApp.setStyle(value)
-		self.groupGuiStyle.setStyle(value)
-		self.groupGuiStyle.styleChanged.connect(self.setGuiStyle)
+		self.groupGuiStyle.valueChanged.connect(self.setGuiStyle)
+		self.groupGuiStyle.setValue(value)
 
 		value = QtGui.QFont()
 		if value.fromString(Tc2Config.settingsValue(self.SettingsKeyFontFixed, '').toString() ):
@@ -313,9 +328,8 @@ class FrameSettings(QtGui.QFrame):
 		value = Tc2Config.settingsValue(Tc2Config.SettingsKeySingleApplicationScope, '').toString()
 		if value not in Tc2Win32.SingleApplication.Scopes:
 			value = Tc2Config.SingleApplicationScopeDefault
-		self.comboSingleApplicationScope.setCurrentIndex( self.comboSingleApplicationScope.findText(value, QtCore.Qt.MatchExactly) )
-		#NOTE: pySlot decorator does not work as expected so we have to connect slot the old fashioned way
-		self.connect(self.comboSingleApplicationScope, QtCore.SIGNAL('currentIndexChanged(QString)'), self.setSingleApplicationScope)
+		self.groupSingleApplicationScope.setValue(value)
+		self.groupSingleApplicationScope.valueChanged.connect(self.setSingleApplicationScope)
 
 		value, ok = Tc2Config.settingsValue(self.SettingsKeyWebViewZoomSteps, Tc2Config.WebViewZoomStepsDefault).toInt()
 		if not ok or value < Tc2Config.WebViewZoomStepsMin or value > Tc2Config.WebViewZoomStepsMax:
