@@ -58,6 +58,7 @@ class GroupComboBox(QtGui.QLabel):
 
 		self._comboBox.valueChanged.connect(lambda value: self.valueChanged.emit(value) )
 		self._resetButton.clicked.connect(self._comboBox.resetValue)
+		self.setBuddy(self._comboBox)
 
 	def value(self):
 		return self._comboBox.value()
