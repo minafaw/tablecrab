@@ -326,10 +326,8 @@ class FrameSettings(QtGui.QFrame):
 		self.groupFixedFont.fontChanged.connect(self.setFixedFont)
 
 		value = Tc2Config.settingsValue(Tc2Config.SettingsKeySingleApplicationScope, '').toString()
-		if value not in Tc2Win32.SingleApplication.Scopes:
-			value = Tc2Config.SingleApplicationScopeDefault
-		self.groupSingleApplicationScope.setValue(value)
 		self.groupSingleApplicationScope.valueChanged.connect(self.setSingleApplicationScope)
+		self.groupSingleApplicationScope.setValue(value)
 
 		value, ok = Tc2Config.settingsValue(self.SettingsKeyWebViewZoomSteps, Tc2Config.WebViewZoomStepsDefault).toInt()
 		if not ok or value < Tc2Config.WebViewZoomStepsMin or value > Tc2Config.WebViewZoomStepsMax:
