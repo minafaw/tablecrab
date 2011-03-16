@@ -203,7 +203,7 @@ class FrameSettings(QtGui.QFrame):
 		Tc2GuiHelp.dialogHelp('settingsGlobal', parent=self)
 
 	def guiStyle(self):
-		return self.groupGuiStyle.style()
+		return self.groupGuiStyle.value()
 
 	def setGuiStyle(self, value):
 		style = QtGui.QStyleFactory.create(value)
@@ -216,7 +216,7 @@ class FrameSettings(QtGui.QFrame):
 		self.guiStyleChanged.emit(value)
 
 	def guiFont(self):
-		return QtGui.qApp.font()
+		return self.groupGuiFont.font()
 
 	def setGuiFont(self, value):
 		Tc2Config.settingsSetValue(self.SettingsKeyGuiFont, value.toString())
@@ -230,18 +230,11 @@ class FrameSettings(QtGui.QFrame):
 		self.guiFontChanged.emit(value)
 
 	def fixedFont(self):
-		font = QtGui.QFont()
-		# take fixed font from QWebKit
-		settings = QtWebKit.QWebSettings.globalSettings()
-		family = settings.fontFamily(settings.FixedFont)
-		pointSize = settings.fontSize(settings.DefaultFixedFontSize)
-		font.setFamily(family)
-		font.setPointSize(pointSize)
-		return font
+		return self.groupFixedFont.font()
 
 	def setFixedFont(self, value):
 		Tc2Config.settingsSetValue(self.SettingsKeyFontFixed, value.toString())
-		# sdjust WeKit fixed font here
+		# adjust WeKit fixed font
 		settings = QtWebKit.QWebSettings.globalSettings()
 		settings.setFontFamily(settings.FixedFont, value.family() )
 		settings.setFontSize(settings.DefaultFixedFontSize, value.pointSize() )
@@ -306,24 +299,20 @@ class FrameSettings(QtGui.QFrame):
 	def onInitSettings(self):
 		self.layout()
 
-		# have to set font ahead of style to make it work as expected
-		value = QtGui.QFont()
-		if value.fromString( Tc2Config.settingsValue(self.SettingsKeyGuiFont, '').toString() ):
-			QtGui.qApp.setFont(value)
-		else:
-			value = QtGui.qApp.font()
-		self.groupGuiFont.setFont(value)
-		self.groupGuiFont.fontChanged.connect(self.setGuiFont)
-
 		value = Tc2Config.settingsValue(self.SettingsKeyGuiStyle, '').toString()
 		self.groupGuiStyle.valueChanged.connect(self.setGuiStyle)
 		self.groupGuiStyle.setValue(value)
 
+		# have to set gui font after style so that changes take effect
 		value = QtGui.QFont()
-		if value.fromString(Tc2Config.settingsValue(self.SettingsKeyFontFixed, '').toString() ):
-			self.setFixedFont(value)
-			self.groupFixedFont.setFont(value)
+		self.groupGuiFont.fontChanged.connect(self.setGuiFont)
+		if value.fromString( Tc2Config.settingsValue(self.SettingsKeyGuiFont, '').toString() ):
+			self.groupGuiFont.setFont(value)
+
+		value = QtGui.QFont()
 		self.groupFixedFont.fontChanged.connect(self.setFixedFont)
+		if value.fromString(Tc2Config.settingsValue(self.SettingsKeyFontFixed, '').toString() ):
+			self.groupFixedFont.setFont(value)
 
 		value = Tc2Config.settingsValue(Tc2Config.SettingsKeySingleApplicationScope, '').toString()
 		self.groupSingleApplicationScope.valueChanged.connect(self.setSingleApplicationScope)
