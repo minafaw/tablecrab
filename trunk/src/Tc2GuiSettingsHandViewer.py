@@ -29,6 +29,8 @@ class FrameSettings(QtGui.QFrame):
 	SettingsKeyPostfixBigBlind = SettingsKeyBase + '/PostfixBigBlind'
 	SettingsKeyPrefixSmallBlind = SettingsKeyBase + '/PrefixSmallBlind'
 	SettingsKeyPostfixSmallBlind = SettingsKeyBase + '/PostfixSmallBlind'
+	SettingsKeyPrefixBuyIn = SettingsKeyBase + '/PrefixBuyIn'
+	SettingsKeyPostfixBuyIn = SettingsKeyBase + '/PostfixBuyIn'
 
 	SettingsKeySideBarPosition = 'Gui/HandViewer/SideBarPosition'
 
@@ -47,6 +49,7 @@ class FrameSettings(QtGui.QFrame):
 			('Ante', SettingsKeyPrefixAnte, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixAnte, SettingsKeyPostfixAnte, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PostfixAnte),
 			('BigBlind', SettingsKeyPrefixBigBlind, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixBigBlind, SettingsKeyPostfixBigBlind, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PostfixBigBlind),
 			('SmallBlind', SettingsKeyPrefixSmallBlind, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixSmallBlind, SettingsKeyPostfixSmallBlind, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PostfixSmallBlind),
+			('BuyIn', SettingsKeyPrefixBuyIn, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixBuyIn, SettingsKeyPostfixBuyIn, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PostfixBuyIn),
 			)
 
 	class ActionLineEdit(QtGui.QLineEdit):
