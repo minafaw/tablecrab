@@ -36,6 +36,7 @@ class Hand(QtCore.QObject):
 		TypePostBlindAnte = 6
 		TypePostBlindSmall = 7
 		TypePostBlindBig = 8
+		TypePostBuyIn = 9
 		def __init__(self, player=None, type=TypeNone, amount=0.0):
 			self.player = player
 			self.type = type
@@ -229,6 +230,17 @@ class HandParser(object):
 			hand.blindBig = max(amount, hand.blindBig)
 		return result is not None
 
+	PatternPostBuyIn = re.compile('^(?P<player>.*?)\: \s posts \s small \s & \s big \s blinds \s [%s]? (?P<amount>[0-9\.\,]+ )' % Currencies, re.X)
+	def matchPostBuyIn(self, hand, streetCurrent, line):
+		result = self.PatternPostBuyIn.match(line)
+		if result is not None:
+			amount = self.stringToFloat(result.group('amount'))
+			player = hand.playerFromName(result.group('player'))
+			action = hand.Action(player=player, type=hand.Action.TypePostBuyIn, amount=amount)
+			hand.actions[streetCurrent].append(action)
+			hand.blindBig = max(amount, hand.blindBig)
+		return result is not None
+
 	PatternBoardCards = re.compile('^Board \s \[  (?P<cards>.*?)   \]', re.X)
 	def matchBoardCards(self, hand, streetCurrent, line):
 		result = self.PatternBoardCards.match(line)
@@ -351,6 +363,7 @@ class HandParser(object):
 				if self.matchPostAnte(hand, streetCurrent,line): continue
 				if self.matchPostSmallBlind(hand, streetCurrent,line): continue
 				if self.matchPostBigBlind(hand, streetCurrent,line): continue
+				if self.matchPostBuyIn(hand, streetCurrent,line): continue
 			elif streetCurrent == hand.StreetShowdown:
 				#TODO: just a guess that it is possible to show cards on showdown
 				if self.matchShowsCards(hand, streetCurrent, line): continue
@@ -418,6 +431,8 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	PostfixSmallBlind = ''
 	PrefixBigBlind = 'bb'
 	PostfixBigBlind = ''
+	PrefixBuyIn = 'bi'
+	PostfixBuyIn = ''
 	PrefixCheck = 'ck'
 	PrefixFold = 'f'
 
@@ -456,6 +471,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 .playerActionRaise{background-color: #FF6EB4;}
 .playerActionPostBlindBig{}
 .playerActionPostBlindSmall{}
+.playerActionPostBuyIn{}
 
 
 .potCellExtra{
@@ -675,6 +691,13 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 								self.formatNum(hand, action.amount),
 								self.settingsHandViewer.actionPostfix('SmallBlind')
 								)
+					elif action.type == action.TypePostBuyIn:
+						p | '<div class="playerActionPostBuyIn">%s%s%s</div>' % (
+								self.settingsHandViewer.actionPrefix('BuyIn'),
+								self.formatNum(hand, action.amount),
+								self.settingsHandViewer.actionPostfix('BuyIn')
+								)
+
 
 				if nActions is None:
 					p | '&nbsp;'
