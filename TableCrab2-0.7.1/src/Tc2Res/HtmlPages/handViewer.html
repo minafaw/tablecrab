@@ -1,0 +1,63 @@
+<html>
+<head>
+<LINK REL=StyleSheet HREF="default.css" TYPE="text/css" MEDIA=screen>
+</head>
+<body>
+
+<div class="textBox">
+	<div class="headerBox">Hand Viewer</div>
+
+	This tab is a bit special. behind the sceeneds there is a grabber running that will check if instant hand history  is open. if so, the
+	currently selected hand is dumped nicely formatted to this tab. best use along with <a href="hotkeyInstantHandHistory.html">
+	hotkey Instant Hand History</a> as a replacement for PokerStars replayer. the hand viewer may be adjusted via <a href="settingsHandViewer.html">
+	settings hand viewer</a> and <a href="settingsHandViewerStyleSheet.html">settings hand viewer style sheet</a>.
+	hitting <b>Ctrl+F</b> will show the text search bar.
+
+	<br>
+	<br>
+
+	<div class="noteBox">
+		<ul>
+			<li>the viewer only works for Texas Hold'em and Omaha (nl/pl)
+			<li>make shure &quot;Show Summary Only&quot; is unchecked in PokerStars
+			instant hand hitory
+		</ul>
+	</div>
+
+</div>
+
+
+<div class="textBox">
+	<div class="headerBox">Side bars</div>
+
+	the hand viewer supports the following side bars:
+
+
+	<div class="textBox">
+		<div class="headerBox">Fetch nash calculations</div>
+
+		if the hand is a <b>sitNgo </b> hand you may fetch nash calculations for it from
+		<b>HoldcemResources.net</b>. to do so either select a payout structure
+		or fill in a custom one. this automatically triggers fetching of stats on every new
+		hand loaded.
+		<br>
+		<br>
+
+		if everthing goes well the data for the hand will be displayed in the side bar
+		as taken from HoldemResources.net icm calculator. you may stop fetching data
+		at any time by selecting the topmostentry in the combo box.
+
+		<div class="noteBox">
+		<ul>
+				<li>the data is fetched from the internets - this may take some time or may fail
+						at any time. so browsing a hand history file may become considerably slower
+				<li>the hand viewer does not know if the hand history displayed is	actually a sitNgo
+						hand. if you fetch data for a non sitNgo hands results are undefined.
+				<li>fetching does not work with hands you load from disk
+			</ul>
+
+	</div>
+</div>
+
+
+</body></html>
