@@ -277,7 +277,7 @@ def settingsKeyJoin(*keys):
 
 def setSettings(settings):
 	Settings.qSettings = settings
-	globalObject.init.emit()
+	globalObject.initSettings.emit()
 
 def settings():
 	return Settings.qSettings
