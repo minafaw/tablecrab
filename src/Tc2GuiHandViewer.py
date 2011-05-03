@@ -397,7 +397,10 @@ class FrameHandViewer(QtGui.QFrame):
 		if data and fileName is None:
 			m = hashlib.sha256()
 			m.update(data)
-			myUrl  = QtCore.QUrl('cache:///' + m.hexdigest() )
+			#NOTE: have to use single slash here. no idea why but tripple slash gets 
+			# truncated to single slash in NetworkReply. file:/// urls work as expected
+			# (PyQt: 4.8.3)
+			myUrl  = QtCore.QUrl('cache:/' + m.hexdigest() )
 		elif data and fileName is not None:
 			myUrl = QtCore.QUrl('file:///' + fileName)
 		else:
