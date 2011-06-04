@@ -208,6 +208,24 @@ class Card(int):
 	Suits = 'hdcs'
 	MinCard = 0
 	MaxCard = len(Shapes) * len(Suits) -1
+	
+	RankNames = {
+			0: ('deuce', 'deuces'),
+			1: ('trey', 'treys'),
+			2: ('four', 'fours'),
+			3: ('five', 'fives'),
+			4: ('six', 'sixes'),
+			5: ('seven', 'sevens'),
+			6: ('eight', 'eights'),
+			7: ('nine', 'nines'),
+			8: ('ten', 'tens'),
+			9: ('jack', 'jacks'),
+			10: ('queen', 'quens'),
+			11: ('king', 'kings'),
+			12: ('ace', 'aces'),
+			}
+	
+	
 	def _tmp_maxBit(value):
 		"""returns the maximum bit set in a given number"""
 		if value <= 0:	return 0
@@ -239,12 +257,12 @@ class Card(int):
 	def __str__(self): return self.__repr__()
 	def __unicode__(self): return self.__repr__()
 
-	def shape(self):
-		"""returns theshape of the card
-		@return: (int) shape
+	def rank(self):
+		"""returns the numeric rank of the card
+		return: (int) rank (0-12)
 		"""
 		return self % len(self.Shapes)
-
+		 
 	def suit(self):
 		"""returns the suite of the card
 		@return: (int) suit
@@ -255,13 +273,13 @@ class Card(int):
 		"""returns the string representation of the card, i.e. 'Ah'
 		@return: 8str) card
 		"""
-		return self.shapeToString() + self.suitToString()
+		return self.rankToString() + self.suitToString()
 
-	def shapeToString(self):
+	def rankToString(self):
 		"""returns the string representation of the shape of the the card, i.e. 'A'
-		@return: 8str) shape
+		@return: str) shape
 		"""
-		return self.Shapes[self.shape()]
+		return self.Shapes[self.rank()]
 
 	def suitToString(self):
 		"""returns the string representation of the suit of the the card, i.e. 'h'
@@ -322,6 +340,355 @@ class Seats(object):
 		seatNames = klass.Names[nSeats]
 		return seatNames[seatNo]
 
+
+class HandEval(object):
+	
+	HandTypeStraightFlush = 'straight-flush'
+	HandTypeQuads = 'quads'
+	HandTypeFullHouse = 'full-house'
+	HandTypeFlush = 'flush'
+	HandTypeStraight = 'straight'
+	HandTypeTrips = 'trips'
+	HandTypeTwoPair = 'two-pair'
+	HandTypePair = 'pair'
+	HandTypeHighCard = 'high-card'
+	HandTypes = (
+			HandTypeStraightFlush,
+			HandTypeQuads,
+			HandTypeFullHouse,
+			HandTypeFlush,
+			HandTypeStraight,
+			HandTypeTrips,
+			HandTypeTwoPair,
+			HandTypePair,
+			HandTypeHighCard,
+			)
+		
+	class Result(object):
+		def __init__(self, handEval, handType, cards, details):
+			self.handEval = handEval
+			self.handType = handType
+			self.cards = cards
+			self.details = details
+		
+		def comp(self, other):
+			iSelf = self.handEval.HandTypes.index(self.handType)
+			iOther = self.handEval.HandTypes.index(other.handType)
+			if iSelf < iOther:
+				return 1
+			elif iSelf > iOther:
+				return -1
+				
+			# straight-flush | straight
+			if self.handType in (self.handEval.HandTypeStraightFlush, self.handEval.HandTypeStraight):
+				return cmp(self.cards[0].rank(), other.cards[0].rank())
+			
+			# quads | full-house
+			elif self.handType in (self.handEval.HandTypeQuads, self.handEval.HandTypeFullHouse):
+				result = cmp(self.cards[0].rank(), other.cards[0].rank())
+				if not result:
+					# compare kicker (pairing card for full-house)
+					result = cmp(self.cards[-1].rank(), other.cards[-1].rank())
+				return result
+			
+			# flush | high-card
+			elif self.handType in (self.handEval.HandTypeFlush, self.handEval.HandTypeHighCard):
+				for i, card in enumerate(self.cards):
+					cardOther = other.cards[i]
+					result = cmp(card.rank(), otherCard.rank())
+					if result:
+						return result
+				return 0
+			
+			# trips
+			elif self.handtype == self.handEval.HandTypeTrips:
+				result = cmp(self.cards[0].rank(), other.cards[0].rank())
+				if not result:
+					# compare kickers
+					for i, card in enumerate(self.cards[4:]):
+						cardOther = other.cards[i+4]
+						result = cmp(card.rank(), otherCard.rank())
+						if result:
+							return result
+				return result
+			
+			# two-pair
+			elif self.handtype == self.handEval.HandTypeTwoPair:
+				result = cmp(self.cards[0].rank(), other.cards[0].rank())
+				if not result:
+					result = cmp(self.cards[2].rank(), other.cards[2].rank())
+					if not result:
+						# compare kicker
+						result = cmp(self.cards[-1].rank(), other.cards[-1].rank())
+				return result
+			
+			# pair
+			elif self.handtype == self.handEval.HandTypePair:
+				result = cmp(self.cards[0].rank(), other.cards[0].rank())
+				if not result:
+					# compare kickers
+					for i, card in enumerate(self.cards[2:]):
+						cardOther = other.cards[i+2]
+						result = cmp(card.rank(), otherCard.rank())
+						if result:
+							return result
+				return result
+			
+			raise ValueError('something went wrong here!')
+			
+		def __eq__(self, other):	return self.comp(other) == 0
+		def __ne__(self): return not self.__eq__(other)
+		def __lt__(self, other): return self.comp(other) < 0
+		def __le__(self, other): return self.comp(other) <= 0
+		def __gt__(self, other): return self.comp(other) > 0
+		def __ge__(self, other): return self.comp(other) >= 0
+		
+	
+	def __init__(self): pass
+	
+	def getStraightFlush(self, hand):
+		# we need at least 5 suited cards to form a straight flush
+		flushSuit = None
+		ranks = []
+		suits = [card.suit() for card in hand]
+		for suit in (0, 1, 2, 3):
+			if suits.count(suit) >= 5:
+				flushSuit = suit
+				ranks = [hand[iSuit].rank() for iSuit, mySuit in enumerate(suits) if suit==mySuit]
+				break
+		if not ranks:
+			return []
+			
+		# Ace can be high or low. no conflicts possible so simply append
+		ranks.sort(reverse=True)
+		if 12 in ranks:
+			ranks.append(-1)
+			
+		# check if we can form a straight from flushing cards
+		straight = []
+		for rank in ranks:
+			expected = range(rank, rank-5, -1)
+			if len([i for i in expected if i in ranks]) == 5:
+				straight = expected
+				break
+			
+		if straight:
+			if straight[-1] == -1:
+				straight[-1]  = 12
+			flushSuitName = Card.Suits[flushSuit]
+			return [Card(Card.Shapes[rank] + flushSuitName) for rank in straight]
+		return []
+			
+	def getQuads(self, hand):
+		quads = []
+		ranks = [card.rank() for card in hand]
+		for rank in ranks:
+			if ranks.count(rank) == 4:
+				kicker = -1
+				iKicker = -1
+				for iRank, myRank in enumerate(ranks):
+					if rank == myRank:
+						quads.append(hand[iRank])
+					else:
+						if myRank > kicker:
+							kicker = myRank
+							iKicker = iRank
+				quads.append(hand[iKicker])
+				break
+		return quads
+		
+	def getFullHouse(self, hand):
+		trips = []
+		pair = []
+		ranks = [card.rank() for card in hand]
+		counts = [(ranks.count(rank), rank) for rank in range(0, 13)]
+		for count, rank in sorted(counts, reverse=True):
+			if not trips:
+				if count == 3:
+					trips = [hand[iRank] for iRank, myRank in enumerate(ranks) if myRank==rank]
+			else:
+				if count >= 2:
+					pair =  [hand[iRank] for iRank, myRank in enumerate(ranks) if myRank==rank][:2]
+					break
+		if trips and pair:
+			return trips + pair
+		return []
+						
+	def getFlush(self, hand):
+		flushSuit = None
+		flushRanks = []
+		suits = [card.suit() for card in hand]
+		for suit in (0, 1, 2, 3):
+			if suits.count(suit) >= 5:
+				flushSuit = suit
+				flushRanks = [hand[iSuit].rank() for iSuit, mySuit in enumerate(suits) if suit==mySuit]
+				break
+		if flushRanks:
+			flushRanks.sort(reverse=True)
+			flushSuitName = Card.Suits[flushSuit]
+			return [Card(Card.Shapes[rank] + flushSuitName) for rank in flushRanks]
+		return []		
+			
+	def getStraight(self, hand):
+		ranks = [card.rank() for card in hand]
+		# Ace can be high or low. no conflicts possible so simply append
+		ranks.sort(reverse=True)
+		if 12 in ranks:
+			ranks.append(-1)
+		
+		# check if we can form a straight from ranks
+		straight = []
+		for rank in ranks:
+			expected = range(rank, rank-5, -1)
+			if len([i for i in expected if i in ranks]) == 5:
+				straight = expected
+				break
+			
+		if straight:
+			if straight[-1] == -1:
+				straight[-1]  = 12
+			# pick a random card acc to rank from lookup dict
+			cards = dict([(card.rank(), card) for card in hand])
+			return [cards[rank] for rank in straight]
+		return []
+		
+	def getTrips(self, hand):
+		trips = []
+		kickers = []
+		ranks = [card.rank() for card in hand]
+		counts = [(ranks.count(rank), rank) for rank in range(0, 13)]
+		for count, rank in sorted(counts, reverse=True):
+			if count == 3:
+				trips = [hand[iRank] for iRank, myRank in enumerate(ranks) if myRank==rank]
+				kickers = [(card.rank(), card) for card in hand if card not in trips]
+				kickers.sort(reverse=True)
+				kickers = [i[1] for i in kickers[:2]]			
+				break
+		if trips:
+			return trips + kickers
+		return []
+
+	def getTwoPair(self, hand):
+		pair1 = []
+		pair2 = []
+		kicker = None
+		ranks = [card.rank() for card in hand]
+		counts = [(ranks.count(rank), rank) for rank in range(0, 13)]
+		for count, rank in sorted(counts, reverse=True):
+			if not pair1:
+				if count == 2:
+					pair1 = [hand[iRank] for iRank, myRank in enumerate(ranks) if myRank==rank]
+			else:
+				if count >= 2:
+					pair2 =  [hand[iRank] for iRank, myRank in enumerate(ranks) if myRank==rank][:2]
+					# get kicker
+					pairingCards = pair1 + pair2
+					kickers = [(card.rank(), card) for card in hand if card not in pairingCards]
+					kickers.sort(reverse=True)
+					kicker = kickers[0][1]
+					break
+		if pair1 and pair2:
+			return pair1 + pair2 + [kicker]
+		return []
+		
+	def getPair(self, hand):
+		pair = []
+		kickers = []
+		ranks = [card.rank() for card in hand]
+		counts = [(ranks.count(rank), rank) for rank in range(0, 13)]
+		for count, rank in sorted(counts, reverse=True):
+			if not pair:
+				if count == 2:
+					pair = [hand[iRank] for iRank, myRank in enumerate(ranks) if myRank==rank]
+					# get kickers
+					kickers = [(card.rank(), card) for card in hand if card not in pair]
+					kickers.sort(reverse=True)
+					kickers = [i[1] for i in kickers[:3]]
+					break
+		if pair:
+			return pair + kickers
+		return []
+		
+	def getHighCard(self, hand):
+		ranks = [card.rank() for card in hand]
+		ranks.sort(reverse=True)
+		# pick a random card acc to rank from lookup dict
+		cards = dict([(card.rank(), card) for card in hand])
+		return [cards[rank] for rank in ranks[:5]]
+		
+	def eval(self, hand):
+		
+		cards = self.getStraightFlush(hand)
+		if cards:
+			details = 'a straight flush %s to %s' % (
+							Card.RankNames[cards[-1].rank()][0],
+							Card.RankNames[cards[0].rank()][0],
+							)
+			return self.Result(self, self.HandTypeStraightFlush, cards, details)
+		
+		cards = self.getQuads(hand)
+		if cards:
+			details = 'quad %s (kicker: %s)' % (
+							Card.RankNames[cards[0].rank()][1], 
+							Card.RankNames[cards[-1].rank()][0]
+							)
+			return  self.Result(self,	self.HandTypeQuads, cards, details)
+		
+		cards = self.getFullHouse(hand)
+		if cards:
+			details = 'a full house %s full of %s' % (
+							Card.RankNames[cards[0].rank()][1], 
+							Card.RankNames[cards[4].rank()][1]
+							)
+			return  self.Result(self,	self.HandTypeFullHouse, cards, details)
+			
+		cards = self.getFlush(hand)
+		if cards:
+			details = 'a flush %s high' % Card.RankNames[cards[0].rank()][0]
+			return  self.Result(self,	self.HandTypeFlush, cards, details)
+		
+		cards = self.getStraight(hand)
+		if cards:
+			details = 'a straight %s to %s' % (
+							Card.RankNames[cards[-1].rank()][0],
+							Card.RankNames[cards[0].rank()][0],
+							)
+			return  self.Result(self,	self.HandTypeStraight, cards, details)
+		
+		cards = self.getTrips(hand)
+		if cards:
+			details = 'trip %s (kicker: %s, %s)' % (
+							Card.RankNames[cards[0].rank()][1], 
+							Card.RankNames[cards[3].rank()][0], 
+							Card.RankNames[cards[4].rank()][0]
+							)
+			return  self.Result(self,	self.HandTypeTrips, cards, details)
+		
+		cards = self.getTwoPair(hand)
+		if cards:
+			details = 'two pair %s and %s (kicker: %s)' % (
+							Card.RankNames[cards[0].rank()][1],
+							Card.RankNames[cards[2].rank()][1],
+							Card.RankNames[cards[4].rank()][0],
+							)
+			return  self.Result(self,	self.HandTypeTwoPair, cards, details)
+		
+		cards = self.getPair(hand)
+		if cards:
+			details = 'a pair of %s (kicker: %s, %s, %s)' % (
+							Card.RankNames[cards[0].rank()][1],
+							Card.RankNames[cards[2].rank()][0],
+							Card.RankNames[cards[3].rank()][0],
+							Card.RankNames[cards[4].rank()][0],
+							)
+			return  self.Result(self,	self.HandTypePair, cards, details)
+		
+		cards = self.getHighCard(hand)
+		if cards:
+			details = 'high card %s' % Card.RankNames[cards[0].rank()][0]
+			return  self.Result(self,	self.HandTypeHighCard, cards, details)
+			
+		raise ValueError('something went wrong here!')
 
 #************************************************************************************
 # event type
@@ -1055,7 +1422,7 @@ def test():
 		print event.toString()
 
 
-test()
+#test()
 		
 
 	
