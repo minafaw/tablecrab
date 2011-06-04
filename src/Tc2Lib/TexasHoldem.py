@@ -3,6 +3,7 @@
 #TODO: int vs float
 #TODO: minChip?
 
+import unittest
 import random
 import operator
 #************************************************************************************
@@ -34,7 +35,7 @@ class Player(object):
 	def act(self, game, choices):
 		event = random.choice(choices)
 		if event in (EventPlayerBets, EventPlayerRaises):
-			amount = random.randint(event.amountMin, event.amountMax*100)
+			amount = random.randint(event.amountMin, event.amountMax)
 			if amount < event.amountMin:
 				amount = event.amountMin
 			if amount > event.amountMax:
@@ -83,10 +84,14 @@ class Game(object):
 			yield result
 		raise StopIteration()
 
-	
+#************************************************************************************
+# pot class
+#************************************************************************************
 class Pot(object):
+	"""pot"""
 	
 	class Sidepot(object):
+		"""sidepot"""
 		def __init__(self, players, bets, playersActive):
 			self.players = players
 			self.bets = bets
@@ -103,8 +108,24 @@ class Pot(object):
 			if player.stack <= 0:
 				raise ValueError('player "%s" has no stack')
 			self.bets.append(0.0)
-		
-		
+			
+	def player(self, name):
+		"""returns a player given its name
+		@param name: (str) player name
+		@return: L{Player}
+		"""
+		for player in self.players:
+			if player.name == name:
+				return player
+		raise ValueError('no such player')
+	
+	def playerBets(self, player):
+		"""returns total of bets player has bet so far
+		@param player: (L{Player})
+		@return: (float) bets
+		"""
+		return self.bets[self.players.index(player)]
+	
 	def fold(self, player):
 		self.playersActive.remove(player)
 		self.genSidepots()
@@ -138,7 +159,7 @@ class Pot(object):
 			if max(self.bets) > 0:	#NOTE: keep this line, just in case we iso as method
 				slices.append(max(self.bets))
 		slices = sorted(slices)
-				
+						
 		self.sidepots = []
 		lastSlice = 0
 		for slice in slices:
@@ -182,23 +203,49 @@ class Pot(object):
 							bet, 'x' if player in sidepot.playersActive else ' ',
 							)
 				
-			
-def test():			
-	players = [
-				Player('foo', 10),
-				Player('bar', 17),
-				Player('baz', 50),
-				Player('goo', 100),
-				]				
-	pot = Pot(players)
-	pot.addBet(players[3], 5)
-	pot.fold(players[3])
-	pot.addBet(players[0], 10)
-	pot.addBet(players[1], 17)
-	pot.addBet(players[2], 30)
 
-	pot.pprint()
+class TestPot(unittest.TestCase):
 	
+	def test_bet(self):
+		pot = Pot([Player('a', 100), Player('b', 100)])
+		self.assertEqual(sum(pot.bets), 0)
+		pot.addBet(pot.player('a'), 50)
+		self.assertEqual(pot.player('a').stack, 50)
+		self.assertEqual(pot.playerBets(pot.player('a')), 50)
+		self.assertEqual(pot.toCall(pot.player('b')), 50)
+		pot.addBet(pot.player('b'), 50)
+		self.assertEqual(pot.player('b').stack, 50)
+		self.assertEqual(pot.toCall(pot.player('b')), 0)
+		
+	def test_sidepots(self):
+		pot = Pot([Player('a', 50), Player('b', 100), Player('c', 100)])
+		pot.addBet(pot.player('a'), 50)
+		pot.addBet(pot.player('b'), 100)
+		pot.addBet(pot.player('c'), 100)
+		self.assertEqual(len(pot.sidepots), 2)
+		self.assertEqual(sum(pot.sidepots[0].bets), 100)
+		self.assertEqual(sum(pot.sidepots[1].bets), 150)
+		
+	def test_unclaimedBet(self):
+		pot = Pot([Player('a', 50), Player('b', 150)])
+		pot.addBet(pot.player('a'), 50)	# player is all-in
+		pot.addBet(pot.player('b'), 100)
+		self.assertEqual(len(pot.sidepots), 2)
+		#NOTE: case when a player bets and everyone folds is not covered by pot object
+			
+	def test_playerBetsMoreThanStack(self):
+		pot = Pot([Player('a', 100), Player('b', 100)])
+		self.assertRaises(ValueError, pot.addBet, pot.player('a'), 500)
+		
+	def test_fold(self):
+		pot = Pot([Player('a', 100), Player('b', 100)])
+		self.assertEqual(len(pot.playersActive), 2)
+		pot.fold(pot.player('a'))
+		self.assertEqual(len(pot.playersActive), 1)
+		
+#************************************************************************************
+#
+#************************************************************************************		
 class Card(int):
 	"""poker card object
 
@@ -213,7 +260,6 @@ class Card(int):
 	Suits = 'hdcs'
 	MinCard = 0
 	MaxCard = len(Shapes) * len(Suits) -1
-	
 	RankNames = {
 			0: ('deuce', 'deuces'),
 			1: ('trey', 'treys'),
@@ -229,8 +275,7 @@ class Card(int):
 			11: ('king', 'kings'),
 			12: ('ace', 'aces'),
 			}
-	
-	
+		
 	def _tmp_maxBit(value):
 		"""returns the maximum bit set in a given number"""
 		if value <= 0:	return 0
@@ -995,11 +1040,6 @@ class EventDealPocketCard(EventBase):
 	def toString(self):
 		return 'player "%s" gets dealt [%s]' % (self.player.name, self.card.toString())
 	
-
-##################################################
-##################################################
-##################################################
-
 #************************************************************************************
 # events - player actions
 #************************************************************************************
@@ -1567,7 +1607,20 @@ class EventShowdownEnd(EventBase):
 	def toString(self):
 		return '***** /Showdown *****'
 
-
+#************************************************************************************
+# unittest
+#************************************************************************************
+def test():
+	suite = unittest.TestSuite()
+	for name, o in globals().items():
+		if name.startswith('Test'):
+			suite.addTest(unittest.makeSuite(o))
+	runner = unittest.TextTestRunner()
+	runner.run(suite)
+		
+if __name__ == '__main__': test()	
+	
+	
 
 
 
