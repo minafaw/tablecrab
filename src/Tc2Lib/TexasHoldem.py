@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 #TODO: int vs float
-#TODO: minChip
-
+#TODO: minChip?
 
 import random
+import operator
 #************************************************************************************
 # helpers
 #************************************************************************************
@@ -41,8 +41,7 @@ class Player(object):
 				amount = event.amountMax
 			event.amount = amount
 		return event
-		
-		
+			
 	def act2(self, game, choices):	
 		i = choices.index(EventPlayerFolds)
 		return choices[i]
@@ -66,6 +65,7 @@ class Game(object):
 		self.eventClasses = EventClasses.copy()
 		self.deck = Deck()
 		self.boardCards = []
+		self.handEval = HandEval()
 		
 		#
 		for player in self.players:
@@ -107,6 +107,7 @@ class Pot(object):
 		
 	def fold(self, player):
 		self.playersActive.remove(player)
+		self.genSidepots()
 		
 	def addBet(self, player, amount):
 		if player.stack <= 0:
@@ -123,6 +124,9 @@ class Pot(object):
 		if self.bets[iPlayer] < max(self.bets) and player.stack > 0:
 			raise valueError('player underbets pot')
 				
+		self.genSidepots()
+		
+	def genSidepots(self):
 		# generate sidepots
 		slices = []
 		for iPlayer, player in enumerate(self.players):
@@ -148,6 +152,7 @@ class Pot(object):
 			sidepot = self.Sidepot(players, bets, playersActive)
 			self.sidepots.insert(0, sidepot)			
 			lastSlice = slice
+		
 	
 	def toCall(self, player):
 		bet = self.bets[self.players.index(player)]
@@ -395,25 +400,25 @@ class HandEval(object):
 			elif self.handType in (self.handEval.HandTypeFlush, self.handEval.HandTypeHighCard):
 				for i, card in enumerate(self.cards):
 					cardOther = other.cards[i]
-					result = cmp(card.rank(), otherCard.rank())
+					result = cmp(card.rank(), cardOther.rank())
 					if result:
 						return result
 				return 0
 			
 			# trips
-			elif self.handtype == self.handEval.HandTypeTrips:
+			elif self.handType == self.handEval.HandTypeTrips:
 				result = cmp(self.cards[0].rank(), other.cards[0].rank())
 				if not result:
 					# compare kickers
 					for i, card in enumerate(self.cards[4:]):
 						cardOther = other.cards[i+4]
-						result = cmp(card.rank(), otherCard.rank())
+						result = cmp(card.rank(), cardOther.rank())
 						if result:
 							return result
 				return result
 			
 			# two-pair
-			elif self.handtype == self.handEval.HandTypeTwoPair:
+			elif self.handType == self.handEval.HandTypeTwoPair:
 				result = cmp(self.cards[0].rank(), other.cards[0].rank())
 				if not result:
 					result = cmp(self.cards[2].rank(), other.cards[2].rank())
@@ -423,13 +428,13 @@ class HandEval(object):
 				return result
 			
 			# pair
-			elif self.handtype == self.handEval.HandTypePair:
+			elif self.handType == self.handEval.HandTypePair:
 				result = cmp(self.cards[0].rank(), other.cards[0].rank())
 				if not result:
 					# compare kickers
 					for i, card in enumerate(self.cards[2:]):
 						cardOther = other.cards[i+2]
-						result = cmp(card.rank(), otherCard.rank())
+						result = cmp(card.rank(), cardOther.rank())
 						if result:
 							return result
 				return result
@@ -738,7 +743,7 @@ class EventGameEnd(EventBase):
 	def trigger(self):
 		return self
 	def toString(self):
-		return 'Game end' 
+		return '#Game end' 
 				
 #************************************************************************************
 # events - determine player roles
@@ -1016,7 +1021,16 @@ class EventPlayerTurn(EventBase):
 		if amountToCall:
 			event = self.game.eventClasses['EventPlayerCalls'](self.game, self.street, self.player, amountToCall)
 			choices.append(event)
-			if not self.flagIncompleteBet and self.player.stack > amountToCall:
+			
+			#RULE: a player can raise if..
+			# ..he has more chips than the amount to call
+			# ..raising is not dissalowed due to an an incomplete bet
+			# ..at least one player has some stack to call the raise
+			if \
+				self.player.stack > amountToCall and \
+				not self.flagIncompleteBet and \
+				len([p for p in self.street.players if p.stack and p in self.game.pot.playersActive]) > 1:
+				
 				event = self.game.eventClasses['EventPlayerRaises'](
 							self.game,
 							self.street, 
@@ -1045,7 +1059,8 @@ class EventPlayerTurn(EventBase):
 		# process action
 		if event == self.game.eventClasses['EventPlayerFolds']:
 			self.game.pot.fold(self.player)
-			#RULE: player does not have to act ehrn all players folded to him
+			#RULE: player can not act when all players have folded to him
+			# ..remove player turn from input event queue
 			if len(self.game.pot.playersActive) == 1:
 				_eventsRemaining=  [_e for _e in self.game.eventsIn if _e == classEventPlayerTurn]
 				if len(_eventsRemaining) > 1:
@@ -1187,6 +1202,104 @@ class EventPlayerFolds(EventBase):
 			self.street = street
 		def toString(self):
 			return 'Player "%s" folds' % self.player.name 
+
+class EventPlayerReceivesUnclaimedBet(EventBase):
+	def __init__(self, game, player, amount):
+		self.game = game
+		self.player = player
+		self.amount = amount
+	def trigger(self):
+		self.player.stack += self.amount
+		return self
+	def toString(self):
+		return 'player "%s" receives unclaimed bet (%s%s)' % (
+						self.player.name, 
+						self.game.currencySymbol, 
+						self.amount
+						)
+
+class EventPlayerWinsUncontested(EventBase):
+	def __init__(self, game, player, amount, potNo):
+		self.game = game
+		self.player = player
+		self.amount = amount
+		self.potNo = potNo
+	def trigger(self):
+		self.player.stack += self.amount
+		return self
+	def toString(self):
+		if self.potNo == 0:
+			s =  'player "%s" wins main pot (%s%s)' % (
+						self.player.name, 
+						self.game.currencySymbol, 
+						self.amount
+						)
+		else:
+			s =  'player "%s" wins side pot %s (%s%s)' % (
+						self.player.name,
+						self.potNo, 
+						self.game.currencySymbol, 
+						self.amount
+						)
+		return s
+		
+
+class EventPlayerWins(EventBase):
+	def __init__(self, game, player, amount, potNo, hand):
+		self.game = game
+		self.player = player
+		self.amount = amount
+		self.potNo = potNo
+		self.hand = hand
+	def trigger(self):
+		self.player.stack += self.amount
+		return self
+	def toString(self):
+		if self.potNo == 0:
+			s =  'player "%s" wins main pot (%s%s) with %s' % (
+						self.player.name, 
+						self.game.currencySymbol, 
+						self.amount,
+						self.hand.details,
+						)
+		else:
+			s =  'player "%s" wins side pot %s (%s%s) with %s' % (
+						self.player.name,
+						self.potNo, 
+						self.game.currencySymbol, 
+						self.amount,
+						self.hand.details,
+						)
+		return s	 
+
+
+class EventPlayerTies(EventBase):
+	def __init__(self, game, player, amount, potNo, hand):
+		self.game = game
+		self.player = player
+		self.amount = amount
+		self.potNo = potNo
+		self.hand = hand
+	def trigger(self):
+		self.player.stack += self.amount
+		return self
+	def toString(self):
+		if self.potNo == 0:
+			s =  'player "%s" ties main pot (%s%s) with %s' % (
+						self.player.name, 
+						self.game.currencySymbol, 
+						self.amount,
+						self.hand.details,
+						)
+		else:
+			s =  'player "%s" ties side pot %s (%s%s) with %s' % (
+						self.player.name,
+						self.potNo, 
+						self.game.currencySymbol, 
+						self.amount,
+						self.hand.details,
+						)
+		return s
 
 #************************************************************************************
 # events - streets
@@ -1365,6 +1478,78 @@ class EventShowdownStart(EventBase):
 	def __init__(self, game):
 		self.game = game
 	def trigger(self):
+		
+		# check for unclaimed bet
+		pot = self.game.pot.sidepots[0]
+		if len(pot.playersActive) == 1:
+			# case1: noone has put money into this pot so far
+			if len(pot.bets) > 1:
+				bets = zip(pot.bets, pot.players)
+				bets.sort(key=operator.itemgetter(0), reverse=True)
+				amount = bets[0][0] - bets[1][0]
+				player = bets[0][1]
+			# case2: a player has put money into this pot so far (blinds for example) 
+			else:
+				amount = pot.bets[0]
+				player = pot.playersActive[0]
+			if amount > 0:
+				iPlayer = pot.players.index(player)
+				pot.bets[iPlayer] -= amount
+				event = self.game.eventClasses['EventPlayerReceivesUnclaimedBet'](self.game, player, amount)
+				self.game.eventsIn.append(event)
+		
+		# skip main pot if pot only contains an unclaimed bet
+		if sum(pot.bets) == 0:
+			sidepots = self.game.pot.sidepots[1:]
+		else:
+			sidepots = self.game.pot.sidepots		
+				
+		# eval sidepots
+		for potNo, pot in enumerate(sidepots):
+			
+			# player wins uncontested
+			if len(pot.playersActive) == 1:
+				player = pot.playersActive[0]
+				amount = sum(pot.bets)
+				event = self.game.eventClasses['EventPlayerWinsUncontested'](self.game, player, amount,potNo)
+				self.game.eventsIn.append(event)
+				continue
+				
+			# gen hands competing for the pot
+			hands = []
+			for player in pot.playersActive:
+				hands.append((player, self.game.handEval.eval(player.pocketCards + self.game.boardCards)))
+			hands.sort(key=operator.itemgetter(1), reverse=True)
+			hands = [h for h in hands if h[1] == hands[0][1]]
+			
+			# pot has a winner
+			if len(hands) == 1:
+				event = self.game.eventClasses['EventPlayerWins'](self.game, player, sum(pot.bets), potNo, hands[0][1])
+				self.game.eventsIn.append(event)
+				continue
+				
+			# pot ties
+			players, hands = zip(*hands)
+			#RULE: pot remainder is passed to first player after button player
+			# ..so order players button last
+			myPlayers = self.game.players[:]
+			myPlayers.append(myPlayers.pop(0))
+			players = [player for player in myPlayers if player in players]
+			
+			# split pot
+			amount = sum(pot.bets)
+			amount, remainder = divmod(amount, len(players))
+			for i, player in enumerate(players):
+				event = self.game.eventClasses['EventPlayerTies'](
+						self.game, 
+						player, 
+						(amount + remainder) if i==0 else amount, 
+						potNo, 
+						 hands[i],
+						)
+				self.game.eventsIn.append(event)
+				
+		# finally		
 		event = self.game.eventClasses['EventShowdownEnd'](self.game)
 		self.game.eventsIn.append(event)
 		return self
@@ -1392,7 +1577,7 @@ def test():
 	players = [
 			Player('foo', 100),
 			Player('bar', 100),
-			Player('baz', 100),
+			Player('baz', 200),
 			]			
 	game = Game(
 			players, 
