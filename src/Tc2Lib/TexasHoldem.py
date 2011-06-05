@@ -34,7 +34,7 @@ class Player(object):
 		self.seatName = ''
 	def act(self, game, choices):
 		event = random.choice(choices)
-		if event in (EventPlayerBets, EventPlayerRaises):
+		if event in (game.EventPlayerBets, game.EventPlayerRaises):
 			amount = random.randint(event.amountMin, event.amountMax)
 			if amount < event.amountMin:
 				amount = event.amountMin
@@ -61,12 +61,13 @@ class Game(object):
 		self.minChip = UINT(minChip)
 		self.minBet = UINT(minBet)
 		self.currencySymbol = currencySymbol
-		self.players = players[:]
+		self.players = list(players)
 		self.pot = Pot(players)
-		self.eventClasses = EventClasses.copy()
 		self.deck = Deck()
 		self.boardCards = []
 		self.handEval = HandEval()
+		for name, klass in EventClasses.items():
+			setattr(self, name, klass)
 		
 		#
 		for player in self.players:
@@ -769,9 +770,9 @@ class EventBase(object):
 class EventGameStart(EventBase):
 	def trigger(self):
 		if len(self.game.players) > 1:
-			event = self.game.eventClasses['EventDeterminePlayerRolesStart'](self.game)
+			event = self.game.EventDeterminePlayerRolesStart(self.game)
 		else:
-			event =  self.game.eventClasses['EventGameEnd'](self.game, reason=EventGameEnd.ReasonNotEnoughPlayers)
+			event =  self.game.EventGameEndNotEnoughPlayers(self.game)
 		self.game.eventsIn.append(event)
 		return self
 	def toString(self):
@@ -779,17 +780,21 @@ class EventGameStart(EventBase):
 		
 
 class EventGameEnd(EventBase):
-	ReasonGameEnd = 'gameEnd'
-	ReasonNotEnoughPlayers = 'notEnoughPlayers'
-	def __init__(self, game, reason=ReasonGameEnd):
+	def __init__(self, game,):
 		self.game = game
-		self.reason = reason
-	
 	def trigger(self):
 		return self
 	def toString(self):
 		return '#Game end' 
 				
+class EventGameEndNotEnoughPlayers(EventBase):
+	def __init__(self, game):
+		self.game = game
+	def trigger(self):
+		return self
+	def toString(self):
+		return '#Game end (not enough players)' 
+
 #************************************************************************************
 # events - determine player roles
 #************************************************************************************
@@ -798,7 +803,7 @@ class EventDeterminePlayerRolesStart(EventBase):
 		self.game = game
 		self.players = self.game.players[:]
 	def trigger(self):
-		eventClass = self.game.eventClasses['EventPlayerRole']
+		eventClass = self.game.EventPlayerRole
 		numPlayers = len(self.game.players)
 		for i, player in enumerate(self.players):
 			seatName = Seats.seatName(numPlayers, i)
@@ -814,9 +819,11 @@ class EventDeterminePlayerRolesEnd(EventBase):
 		self.game = game
 	def trigger(self):
 		if self.game.ante:
-			event = self.game.eventClasses['EventPostAntesStart'](self.game)
+			event = self.game.EventPostAntesStart(self.game)
+		elif self.game.smallBlind or self.game.bigBlind:
+			event = self.game.EventPostBlindsStart(self.game)
 		else:
-			event = self.game.eventClasses['EventPostBlindsStart'](self.game)
+			event = self.game.EventDealPocketCardsStart(self.game)
 		self.game.eventsIn.append(event)
 		return self
 	def toString(self):
@@ -829,8 +836,8 @@ class EventPlayerRole(EventBase):
 		self.player = player
 		self.player.seatName = seatName
 	def trigger(self):
-		if self.game.eventClasses['EventPlayerRole'] not in self.game.eventsIn:
-			event = self.game.eventClasses['EventDeterminePlayerRolesEnd'](self.game)
+		if self.game.EventPlayerRole not in self.game.eventsIn:
+			event = self.game.EventDeterminePlayerRolesEnd(self.game)
 			self.game.eventsIn.append(event)
 		return self
 	def toString(self):
@@ -851,7 +858,7 @@ class EventPostAntesStart(EventBase):
 		self.players.append(self.players.pop(0))
 				
 	def trigger(self):
-		eventClass = self.game.eventClasses['EventPlayerPostsAnte']
+		eventClass = self.game.EventPlayerPostsAnte
 		for player in self.players:
 			event = eventClass(self.game, player)
 			self.game.eventsIn.append(event)
@@ -864,11 +871,11 @@ class EventPostAntesEnd(EventBase):
 	def __init__(self, game):
 		self.game = game
 	def trigger(self):
-		event = self.game.eventClasses['EventPostBlindsStart'](self.game)
+		event = self.game.EventPostBlindsStart(self.game)
 		if event.isValid:
 			self.game.eventsIn.append(event)
 		else:
-			event = self.game.eventClasses['EventDealPocketCardsStart'](self.game)
+			event = self.game.EventDealPocketCardsStart(self.game)
 			self.game.eventsIn.append(event)
 		return self
 	def toString(self):
@@ -883,8 +890,8 @@ class EventPlayerPostsAnte(EventBase):
 	def trigger(self):
 		self.amount = min(self.player.stack, self.game.ante)
 		self.game.pot.addBet(self.player, self.amount)
-		if self.game.eventClasses['EventPlayerPostsAnte'] not in self.game.eventsIn:
-			event = self.game.eventClasses['EventPostAntesEnd'](self.game)
+		if self.game.EventPlayerPostsAnte not in self.game.eventsIn:
+			event = self.game.EventPostAntesEnd(self.game)
 			self.game.eventsIn.append(event)
 		return self
 	def toString(self):
@@ -918,16 +925,16 @@ class EventPostBlindsStart(EventBase):
 	def trigger(self):
 		if not self.isValid:
 			raise valueError('no blinds are posted due to rules')
-		if self.playerSmallBlind.stack:
-			event = self.game.eventClasses['EventPlayerPostsSmallBlind'](
+		if self.game.smallBlind and self.playerSmallBlind.stack:
+			event = self.game.EventPlayerPostsSmallBlind(
 											self.game, 
 											self.numPlayers, 
 											self.playerSmallBlind, 
 											self.playerBigBlind
 											)
 			self.game.eventsIn.append(event)
-		if self.playerBigBlind.stack:
-			event = self.game.eventClasses['EventPlayerPostsBigBlind'](
+		if self.gameBigBlind and self.playerBigBlind.stack:
+			event = self.game.EventPlayerPostsBigBlind(
 											self.game, 
 											self.numPlayers, 
 											self.playerSmallBlind, 
@@ -943,7 +950,7 @@ class EventPostBlindsEnd(EventBase):
 	def __init__(self, game):
 		self.game = game
 	def trigger(self):
-		event = self.game.eventClasses['EventDealPocketCardsStart'](self.game)
+		event = self.game.EventDealPocketCardsStart(self.game)
 		self.game.eventsIn.append(event)
 		return self
 	def toString(self):
@@ -963,8 +970,8 @@ class EventPlayerPostsSmallBlind(EventBase):
 		else:
 			self.amount = min(self.player.stack, self.game.smallBlind)
 		self.game.pot.addBet(self.player, self.amount)
-		if  self.game.eventClasses['EventPlayerPostsBigBlind'] not in self.game.eventsIn:
-			event = self.game.eventClasses['EventPostBlindsEnd'](self.game)
+		if  self.game.EventPlayerPostsBigBlind not in self.game.eventsIn:
+			event = self.game.EventPostBlindsEnd(self.game)
 			self.game.eventsIn.append(event)
 		return self
 	def toString(self):
@@ -986,7 +993,7 @@ class EventPlayerPostsBigBlind(EventBase):
 		else:
 			self.amount = min(self.player.stack, self.game.bigBlind)
 		self.game.pot.addBet(self.player, self.amount)
-		event = self.game.eventClasses['EventPostBlindsEnd'](self.game)
+		event = self.game.EventPostBlindsEnd(self.game)
 		self.game.eventsIn.append(event)
 		return self
 	def toString(self):
@@ -1004,7 +1011,7 @@ class EventDealPocketCardsStart(EventBase):
 		self.players = self.game.players[:]
 		self.players.append(self.players.pop(0))
 	def trigger(self):
-		eventClass = self.game.eventClasses['EventDealPocketCard']
+		eventClass = self.game.EventDealPocketCard
 		for i in range(2):
 			for player in self.players:
 				card = self.game.deck.nextCard()
@@ -1019,7 +1026,7 @@ class EventDealPocketCardsEnd(EventBase):
 	def __init__(self, game):
 		self.game = game
 	def trigger(self):
-		event = self.game.eventClasses['EventPreflopStart'](self.game)
+		event = self.game.EventPreflopStart(self.game)
 		self.game.eventsIn.append(event)
 		return self
 	def toString(self):
@@ -1033,8 +1040,8 @@ class EventDealPocketCard(EventBase):
 		self.card = card
 		self.player.pocketCards.append(self.card)
 	def trigger(self):
-		if self.game.eventClasses['EventDealPocketCard'] not in self.game.eventsIn:
-			event = self.game.eventClasses['EventDealPocketCardsEnd'](self.game)
+		if self.game.EventDealPocketCard not in self.game.eventsIn:
+			event = self.game.EventDealPocketCardsEnd(self.game)
 			self.game.eventsIn.append(event)
 		return self
 	def toString(self):
@@ -1051,16 +1058,16 @@ class EventPlayerTurn(EventBase):
 			self.flagIncompleteBet = False
 	def trigger(self):
 				
-		classEventPlayerTurn = self.game.eventClasses['EventPlayerTurn']
+		classEventPlayerTurn = self.game.EventPlayerTurn
 		
 		# determine actions player can choose from
-		event = self.game.eventClasses['EventPlayerFolds'](self.game, self.street, self.player)
-		choices = [event, ]
+		event = self.game.EventPlayerFolds(self.game, self.street, self.player)
+		choices = {self.game.EventPlayerFolds: event}
 		amountToCall = self.game.pot.toCall(self.player)
 		
 		if amountToCall:
-			event = self.game.eventClasses['EventPlayerCalls'](self.game, self.street, self.player, amountToCall)
-			choices.append(event)
+			event = self.game.EventPlayerCalls(self.game, self.street, self.player, amountToCall)
+			choices[self.game.EventPlayerCalls] = event
 			
 			#RULE: a player can raise if..
 			# ..he has more chips than the amount to call
@@ -1071,7 +1078,7 @@ class EventPlayerTurn(EventBase):
 				not self.flagIncompleteBet and \
 				len([p for p in self.street.players if p.stack and p in self.game.pot.playersActive]) > 1:
 				
-				event = self.game.eventClasses['EventPlayerRaises'](
+				event = self.game.EventPlayerRaises(
 							self.game,
 							self.street, 
 							self.player, 
@@ -1079,25 +1086,25 @@ class EventPlayerTurn(EventBase):
 							amountMax=self.player.stack - amountToCall,
 							amountToCall=amountToCall,
 							)
-				choices.append(event)
+				choices[ self.game.EventPlayerRaises] = event
 			
 		else:
-			event = self.game.eventClasses['EventPlayerChecks'](self.game, self.street, self.player)
-			choices.append(event)
-			event = self.game.eventClasses['EventPlayerBets'](
+			event = self.game.EventPlayerChecks(self.game, self.street, self.player)
+			choices[self.game.EventPlayerChecks] = event
+			event = self.game.EventPlayerBets(
 						self.game, 
 						self.street,
 						self.player, 
 						amountMin=min(self.street.lastRaise, self.player.stack), 
 						amountMax=self.player.stack,
 						)
-			choices.append(event)
+			choices[self.game.EventPlayerBets] = event
 					
 		# let player pick an action
 		event = self.player.act(self.game, choices)
 			
 		# process action
-		if event == self.game.eventClasses['EventPlayerFolds']:
+		if event == self.game.EventPlayerFolds:
 			self.game.pot.fold(self.player)
 			#RULE: player can not act when all players have folded to him
 			# ..remove player turn from input event queue
@@ -1108,13 +1115,13 @@ class EventPlayerTurn(EventBase):
 				for _e in _eventsRemaining:
 					self.game.eventsIn.remove(_e)
 				
-		elif event == self.game.eventClasses['EventPlayerChecks']:
+		elif event == self.game.EventPlayerChecks:
 			pass
 		
-		elif event == self.game.eventClasses['EventPlayerCalls']:
+		elif event == self.game.EventPlayerCalls:
 			self.game.pot.addBet(self.player, event.amount)
 		
-		elif event in (self.game.eventClasses['EventPlayerBets'], self.game.eventClasses['EventPlayerRaises']):
+		elif event in (self.game.EventPlayerBets, self.game.EventPlayerRaises):
 			# validate bet/raise
 			if event.amount > event.amountMax or event.amount < event.amountMin:
 				raise ValueError('invalid bet amount')
@@ -1170,7 +1177,7 @@ class EventPlayerTurn(EventBase):
 		return 'Players turn: %s' % self.player.name
 		
 	def playersInQueue(self):
-		event = self.game.eventClasses['EventPlayerTurn']
+		event = self.game.EventPlayerTurn
 		return [e.player for e in  self.game.eventsIn if e == event]
 		
 
@@ -1360,10 +1367,10 @@ class EventPreflopStart(EventBase):
 			
 	def trigger(self):
 		if len(self.players) < 2:
-			event = self.game.eventClasses['EventPreflopEnd'](self.game)
+			event = self.game.EventPreflopEnd(self.game)
 			self.game.eventsIn.append(event)
 		else:
-			eventClass = self.game.eventClasses['EventPlayerTurn']
+			eventClass = self.game.EventPlayerTurn
 			for player in self.players:
 				event = eventClass(self.game, self, player)
 				self.game.eventsIn.append(event)
@@ -1371,7 +1378,7 @@ class EventPreflopStart(EventBase):
 	def toString(self):
 		return '***** Preflop *****'
 	def streetEnd(self):
-		return self.game.eventClasses['EventPreflopEnd'](self.game)
+		return self.game.EventPreflopEnd(self.game)
 		
 
 class EventPreflopEnd(EventBase):
@@ -1379,9 +1386,9 @@ class EventPreflopEnd(EventBase):
 		self.game = game
 	def trigger(self):
 		if len(self.game.pot.playersActive) < 2:
-			event = self.game.eventClasses['EventShowdownStart'](self.game)
+			event = self.game.EventShowdownStart(self.game)
 		else:
-			event = self.game.eventClasses['EventFlopStart'](self.game)
+			event = self.game.EventFlopStart(self.game)
 		self.game.eventsIn.append(event)
 		return self
 	def toString(self):
@@ -1401,7 +1408,7 @@ class EventFlopStart(EventBase):
 				
 	def trigger(self):
 		if len(self.game.pot.playersActive) < 2:
-			event = self.game.eventClasses['EventShowdownStart'](self.game)
+			event = self.game.EventShowdownStart(self.game)
 			self.game.eventsIn.append(event)
 			return self
 		
@@ -1410,10 +1417,10 @@ class EventFlopStart(EventBase):
 			self.game.boardCards.append(self.game.deck.nextCard())
 				
 		if len(self.players) < 2:
-			event = self.game.eventClasses['EventFlopEnd'](self.game)
+			event = self.game.EventFlopEnd(self.game)
 			self.game.eventsIn.append(event)
 		else:
-			eventClass = self.game.eventClasses['EventPlayerTurn']
+			eventClass = self.game.EventPlayerTurn
 			for player in self.players:
 				event = eventClass(self.game, self, player)
 				self.game.eventsIn.append(event)
@@ -1421,7 +1428,7 @@ class EventFlopStart(EventBase):
 	def toString(self):
 		return '***** Flop [%s %s %s] *****' % tuple([c.toString() for c in self.game.boardCards])
 	def streetEnd(self):
-		return self.game.eventClasses['EventFlopEnd'](self.game)
+		return self.game.EventFlopEnd(self.game)
 
 
 class EventFlopEnd(EventBase):
@@ -1429,9 +1436,9 @@ class EventFlopEnd(EventBase):
 		self.game = game
 	def trigger(self):
 		if len(self.game.pot.playersActive) < 2:
-			event = self.game.eventClasses['EventShowdownStart'](self.game)
+			event = self.game.EventShowdownStart(self.game)
 		else:
-			event = self.game.eventClasses['EventTurnStart'](self.game)
+			event = self.game.EventTurnStart(self.game)
 		self.game.eventsIn.append(event)
 		return self
 	def toString(self):
@@ -1441,7 +1448,7 @@ class EventFlopEnd(EventBase):
 class EventTurnStart(EventFlopStart):
 	def trigger(self):
 		if len(self.game.pot.playersActive) < 2:
-			event = self.game.eventClasses['EventShowdownStart'](self.game)
+			event = self.game.EventShowdownStart(self.game)
 			self.game.eventsIn.append(event)
 			return self
 		
@@ -1449,10 +1456,10 @@ class EventTurnStart(EventFlopStart):
 		self.game.boardCards.append(self.game.deck.nextCard())
 			
 		if len(self.players) < 2:
-			event = self.game.eventClasses['EventTurnEnd'](self.game)
+			event = self.game.EventTurnEnd(self.game)
 			self.game.eventsIn.append(event)
 		else:
-			eventClass = self.game.eventClasses['EventPlayerTurn']
+			eventClass = self.game.EventPlayerTurn
 			for player in self.players:
 				event = eventClass(self.game, self, player)
 				self.game.eventsIn.append(event)
@@ -1460,7 +1467,7 @@ class EventTurnStart(EventFlopStart):
 	def toString(self):
 		return '***** Turn [%s %s %s %s] *****' %  tuple([c.toString() for c in self.game.boardCards])
 	def streetEnd(self):
-		return self.game.eventClasses['EventTurnEnd'](self.game)
+		return self.game.EventTurnEnd(self.game)
 
 
 class EventTurnEnd(EventBase):
@@ -1468,9 +1475,9 @@ class EventTurnEnd(EventBase):
 		self.game = game
 	def trigger(self):
 		if len(self.game.pot.playersActive) < 2:
-			event = self.game.eventClasses['EventShowdownStart'](self.game)
+			event = self.game.EventShowdownStart(self.game)
 		else:
-			event = self.game.eventClasses['EventRiverStart'](self.game)
+			event = self.game.EventRiverStart(self.game)
 		self.game.eventsIn.append(event)
 		return self
 	def toString(self):
@@ -1480,7 +1487,7 @@ class EventTurnEnd(EventBase):
 class EventRiverStart(EventFlopStart):
 	def trigger(self):
 		if len(self.game.pot.playersActive) < 2:
-			event = self.game.eventClasses['EventShowdownStart'](self.game)
+			event = self.game.EventShowdownStart(self.game)
 			self.game.eventsIn.append(event)
 			return self
 			
@@ -1488,17 +1495,17 @@ class EventRiverStart(EventFlopStart):
 		self.game.boardCards.append(self.game.deck.nextCard())
 		
 		if len(self.players) < 2:
-			event = self.game.eventClasses['EventRiverEnd'](self.game)
+			event = self.game.EventRiverEnd(self.game)
 			self.game.eventsIn.append(event)
 		else:
-			eventClass = self.game.eventClasses['EventPlayerTurn']
+			eventClass = self.game.EventPlayerTurn
 			for player in self.players:
 				event = eventClass(self.game, self, player)
 				self.game.eventsIn.append(event)
 		return self
 		
 	def streetEnd(self):
-		return self.game.eventClasses['EventRiverEnd'](self.game)
+		return self.game.EventRiverEnd(self.game)
 	def toString(self):
 		return '***** River [%s %s %s %s %s] *****' %  tuple([c.toString() for c in self.game.boardCards])
 
@@ -1507,7 +1514,7 @@ class EventRiverEnd(EventBase):
 	def __init__(self, game):
 		self.game = game
 	def trigger(self):
-		event = self.game.eventClasses['EventShowdownStart'](self.game)
+		event = self.game.EventShowdownStart(self.game)
 		self.game.eventsIn.append(event)
 		return self
 	def toString(self):
@@ -1535,7 +1542,7 @@ class EventShowdownStart(EventBase):
 			if amount > 0:
 				iPlayer = pot.players.index(player)
 				pot.bets[iPlayer] -= amount
-				event = self.game.eventClasses['EventPlayerReceivesUnclaimedBet'](self.game, player, amount)
+				event = self.game.EventPlayerReceivesUnclaimedBet(self.game, player, amount)
 				self.game.eventsIn.append(event)
 		
 		# skip main pot if pot only contains an unclaimed bet
@@ -1551,7 +1558,7 @@ class EventShowdownStart(EventBase):
 			if len(pot.playersActive) == 1:
 				player = pot.playersActive[0]
 				amount = sum(pot.bets)
-				event = self.game.eventClasses['EventPlayerWinsUncontested'](self.game, player, amount,potNo)
+				event = self.game.EventPlayerWinsUncontested(self.game, player, amount,potNo)
 				self.game.eventsIn.append(event)
 				continue
 				
@@ -1564,7 +1571,7 @@ class EventShowdownStart(EventBase):
 			
 			# pot has a winner
 			if len(hands) == 1:
-				event = self.game.eventClasses['EventPlayerWins'](self.game, player, sum(pot.bets), potNo, hands[0][1])
+				event = self.game.EventPlayerWins(self.game, player, sum(pot.bets), potNo, hands[0][1])
 				self.game.eventsIn.append(event)
 				continue
 				
@@ -1580,7 +1587,7 @@ class EventShowdownStart(EventBase):
 			amount = sum(pot.bets)
 			amount, remainder = divmod(amount, len(players))
 			for i, player in enumerate(players):
-				event = self.game.eventClasses['EventPlayerTies'](
+				event = self.game.EventPlayerTies(
 						self.game, 
 						player, 
 						(amount + remainder) if i==0 else amount, 
@@ -1590,7 +1597,7 @@ class EventShowdownStart(EventBase):
 				self.game.eventsIn.append(event)
 				
 		# finally		
-		event = self.game.eventClasses['EventShowdownEnd'](self.game)
+		event = self.game.EventShowdownEnd(self.game)
 		self.game.eventsIn.append(event)
 		return self
 	def toString(self):
@@ -1601,12 +1608,141 @@ class EventShowdownEnd(EventBase):
 	def __init__(self, game):
 		self.game = game
 	def trigger(self):
-		event = self.game.eventClasses['EventGameEnd'](self.game)
+		event = self.game.EventGameEnd(self.game)
 		self.game.eventsIn.append(event)
 		return self
 	def toString(self):
 		return '***** /Showdown *****'
 
+
+
+class TestGame(unittest.TestCase):
+	
+	def test_incompeteBet(self):
+		
+		class Player(object):
+			def __init__(self, name, stack):
+				self.name = name
+				self.stack = stack
+		players = (
+				Player('a', 10),
+				Player('b', 9),
+				Player('c', 10),
+				)
+		
+		# test raise not allowed when incomplete bet reopend the action
+		
+		class MethodAct(object):
+			def __init__(self, test):
+				self.test = test
+				self.actionNo = 0
+			def __call__(self, game, choices):
+				self.actionNo += 1
+				player = choices.values()[0].player
+				
+				# preflop (no blinds)
+				
+				# player 'a' bets a chip less than player 'b' stack
+				if self.actionNo == 1:
+					event = choices[game.EventPlayerBets]
+					event.amount = 8
+					return event
+				
+				# player 'b' raises for his last chip
+				elif self.actionNo == 2:
+					event = choices[game.EventPlayerRaises]
+					event.amount = 1
+					return event
+				
+				# player 'c' just calls the raise
+				elif self.actionNo == 3:
+					return choices[game.EventPlayerCalls]
+				
+				# now player 'a' is not allowed to raise
+				elif self.actionNo == 4:
+					self.test.assertNotIn(game.EventPlayerRaises, choices)
+					return choices[game.EventPlayerCalls]
+					
+				# postflop (complete the actions)
+				
+				# player 'c' ships his last chip
+				elif self.actionNo == 5:
+					event = choices[game.EventPlayerBets]
+					event.amount = event.amountMax
+					return event
+				
+				# player 'a' calls
+				elif self.actionNo == 6:
+					return choices[game.EventPlayerCalls]
+				
+		# inject our method emulator into each player
+		methodAct = MethodAct(self)
+		for player in players:
+			player.act = methodAct
+		game = Game(players)
+		for event in game.run(game.EventGameStart(game)):
+			#print event.toString()
+			pass
+		
+		#
+		#
+		
+		# test raising allowed when incomplete bet did not reopen the action
+		
+		players = (
+				Player('a', 100),
+				Player('b', 10),
+				Player('c', 100),
+				)
+		
+		class MethodAct(object):
+			def __init__(self, test):
+				self.test = test
+				self.actionNo = 0
+			def __call__(self, game, choices):
+				self.actionNo += 1
+				player = choices.values()[0].player
+				
+				# preflop (no blinds)
+				
+				# player 'a' bets a chip less than player 'b' stack
+				if self.actionNo == 1:
+					event = choices[game.EventPlayerBets]
+					event.amount = 9
+					return event
+				
+				# player 'b' raises for his last chip
+				elif self.actionNo == 2:
+					event = choices[game.EventPlayerRaises]
+					event.amount = 1
+					return event
+				
+				# player 'c' reraises
+				elif self.actionNo == 3:
+					event = choices[game.EventPlayerRaises]
+					event.amount = 20
+					return event
+								
+				# now player 'a' is allowed to raise
+				elif self.actionNo == 4:
+					self.test.assertIn(game.EventPlayerRaises, choices)
+					event = choices[game.EventPlayerRaises]
+					event.amount = event.amountMax
+					return event
+			
+				# player 'c' calls
+				elif self.actionNo == 5:
+					return choices[game.EventPlayerCalls]
+				
+		# inject our method emulator into each player
+		methodAct = MethodAct(self)
+		for player in players:
+			player.act = methodAct
+		game = Game(players)
+		for event in game.run(game.EventGameStart(game)):
+			#print event.toString()
+			pass
+		
 #************************************************************************************
 # unittest
 #************************************************************************************
