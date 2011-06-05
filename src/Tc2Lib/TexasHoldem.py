@@ -741,6 +741,242 @@ class HandEval(object):
 			
 		raise ValueError('something went wrong here!')
 
+
+
+class TestHandEval(unittest.TestCase):
+	
+	@classmethod
+	def HAND(klass, *cards):
+		return [Card(card) for card in cards]
+		
+	def test_straightFlush(self):
+		e = HandEval()
+		
+		# test straight flush
+		hand = self.HAND('Ah', '2h', '3h',  '4h', '5h', 'Ks', 'Ad')
+		result = e.eval(hand)
+		self.assertEqual(result.handType, e.HandTypeStraightFlush)
+		self.assertEqual(result.cards[0].toString(),  '5h')
+		self.assertEqual(result.cards[1].toString(),  '4h')
+		self.assertEqual(result.cards[2].toString(),  '3h')
+		self.assertEqual(result.cards[3].toString(),  '2h')
+		self.assertEqual(result.cards[4].toString(),  'Ah')
+		
+		# test higher straight flush
+		hand = self.HAND('6h', '2h', '3h',  '4h', '5h', 'Ks', 'Ad')
+		result2 = e.eval(hand)
+		self.assertEqual(result.handType, e.HandTypeStraightFlush)
+		self.assertEqual(result2.cards[0].toString(),  '6h')
+		self.assertTrue(result2 > result)
+
+	def test_quads(self):
+		e = HandEval()
+		
+		# test quads
+		hand = self.HAND('Jh', '2h', '3h',  '4h', 'Jc', 'Js', 'Jd')
+		result = e.eval(hand)
+		self.assertEqual(result.handType, e.HandTypeQuads)
+		quads = [i.toString() for i in result.cards]
+		self.assertEqual(len([i for i in ('Jh', 'Js', 'Jc', 'Jd') if i in quads]), 4)
+		self.assertEqual(result.cards[4].toString(),  '4h')
+		
+		# test higher quads
+		hand = self.HAND('2h', 'Kh', '3h',  '4h', 'Kc', 'Ks', 'Kd')
+		result2 = e.eval(hand)
+		self.assertEqual(result2.handType, e.HandTypeQuads)
+		self.assertEqual(result2.cards[0].rankToString(),  'K')
+		self.assertTrue(result < result2)
+		
+		# test quads with better kicker
+		hand = self.HAND('Jh', 'Th', '3h',  '4h', 'Jc', 'Js', 'Jd')
+		result3 = e.eval(hand)
+		self.assertEqual(result3.handType, e.HandTypeQuads)
+		self.assertTrue(result < result3)
+		
+	def test_fullHouse(self):
+		e = HandEval()
+		
+		# test full house
+		hand = self.HAND('Jh', 'Kh', '3h',  'Qs', 'Qd', 'Qs', 'Jd')
+		result = e.eval(hand)
+		self.assertEqual(result.handType, e.HandTypeFullHouse)
+		self.assertEqual(result.cards[0].rankToString(),  'Q')
+		self.assertEqual(result.cards[1].rankToString(),  'Q')
+		self.assertEqual(result.cards[2].rankToString(),  'Q')
+		self.assertEqual(result.cards[3].rankToString(),  'J')
+		self.assertEqual(result.cards[4].rankToString(),  'J')
+		
+		# test higher full house
+		hand = self.HAND('Ah', 'Kh', '3h',  'Qs', 'Qd', 'Qs', 'Ad')
+		result2 = e.eval(hand)
+		self.assertEqual(result2.handType, e.HandTypeFullHouse)
+		self.assertTrue(result < result2)
+		
+	def test_flush(self):
+		e = HandEval()
+		
+		# test flush
+		hand = self.HAND('Ah', 'Kh', '4h',  '3h', '2h', 'Qs', 'Jd')
+		result = e.eval(hand)
+		self.assertEqual(result.handType, e.HandTypeFlush)
+		self.assertEqual(result.cards[0].toString(),  'Ah')
+		self.assertEqual(result.cards[1].toString(),  'Kh')
+		self.assertEqual(result.cards[2].toString(),  '4h')
+		self.assertEqual(result.cards[3].toString(),  '3h')
+		self.assertEqual(result.cards[4].toString(),  '2h')
+				
+		# test higher flush
+		hand = self.HAND('Ah', 'Kh', 'Th',  '3h', '2h', 'Qs', 'Jd')
+		result2 = e.eval(hand)
+		self.assertEqual(result2.handType, e.HandTypeFlush)
+		self.assertTrue(result < result2)
+		
+	def test_straight(self):
+		e = HandEval()
+		
+		# test straight
+		hand = self.HAND('Jh', 'Td', '9s',  '8h', '7h', 'Ks', 'Ad')
+		result = e.eval(hand)
+		self.assertEqual(result.handType, e.HandTypeStraight)
+		self.assertEqual(result.cards[0].toString(),  'Jh')
+		self.assertEqual(result.cards[1].toString(),  'Td')
+		self.assertEqual(result.cards[2].toString(),  '9s')
+		self.assertEqual(result.cards[3].toString(),  '8h')
+		self.assertEqual(result.cards[4].toString(),  '7h')
+		
+		# test higher straight
+		hand = self.HAND('Jh', 'Td', '9s',  '8h', 'Qh', 'Ks', 'Ad')
+		result2 = e.eval(hand)
+		self.assertEqual(result2.handType, e.HandTypeStraight)
+		self.assertTrue(result < result2)
+		
+	def test_trips(self):
+		e = HandEval()
+		
+		# test trips
+		hand = self.HAND('Th', 'Td', 'Ts',  '8h', '7h', 'Ks', 'Qd')
+		result = e.eval(hand)
+		self.assertEqual(result.handType, e.HandTypeTrips)
+		self.assertEqual(result.cards[0].rankToString(),  'T')
+		self.assertEqual(result.cards[1].rankToString(),  'T')
+		self.assertEqual(result.cards[2].rankToString(),  'T')
+		self.assertEqual(result.cards[3].rankToString(),  'K')
+		self.assertEqual(result.cards[4].rankToString(),  'Q')
+		
+		# test higher trips
+		hand = self.HAND('Jh', 'Jd', 'Js',  '8h', '7h', 'Ks', 'Qd')
+		result2 = e.eval(hand)
+		self.assertEqual(result2.handType, e.HandTypeTrips)
+		self.assertTrue(result < result2)
+		
+		# test higher kicker
+		hand = self.HAND('Th', 'Td', 'Ts',  '8h', '7h', 'Ks', 'Ad')
+		result3 = e.eval(hand)
+		self.assertEqual(result3.handType, e.HandTypeTrips)
+		self.assertTrue(result < result3)
+		
+	def test_twoPair(self):
+		e = HandEval()
+		
+		# test two pair
+		hand = self.HAND('Th', 'Td', '8s',  '8h', '7h', 'Ks', 'Qd')
+		result = e.eval(hand)
+		self.assertEqual(result.handType, e.HandTypeTwoPair)
+		self.assertEqual(result.cards[0].rankToString(),  'T')
+		self.assertEqual(result.cards[1].rankToString(),  'T')
+		self.assertEqual(result.cards[2].rankToString(),  '8')
+		self.assertEqual(result.cards[3].rankToString(),  '8')
+		self.assertEqual(result.cards[4].toString(),  'Ks')
+		
+		# test higher two pair
+		hand = self.HAND('Th', 'Td', '9s',  '9h', '7h', 'Ks', 'Qd')
+		result2 = e.eval(hand)
+		self.assertEqual(result2.handType, e.HandTypeTwoPair)
+		self.assertTrue(result < result2)
+		
+		# test higher kicker
+		hand = self.HAND('Th', 'Td', '8s',  '8h', '7h', 'Ks', 'Ad')
+		result3 = e.eval(hand)
+		self.assertEqual(result3.handType, e.HandTypeTwoPair)
+		self.assertTrue(result < result3)
+		
+	def test_pair(self):
+		e = HandEval()
+		
+		# test pair
+		hand = self.HAND('Th', 'Td', '2s',  '8h', '7h', 'Ks', 'Qd')
+		result = e.eval(hand)
+		self.assertEqual(result.handType, e.HandTypePair)
+		self.assertEqual(result.cards[0].rankToString(),  'T')
+		self.assertEqual(result.cards[1].rankToString(),  'T')
+		self.assertEqual(result.cards[2].toString(),  'Ks')
+		self.assertEqual(result.cards[3].toString(),  'Qd')
+		self.assertEqual(result.cards[4].toString(),  '8h')
+		
+		# test higher pair
+		hand = self.HAND('Jh', 'Jd', '9s',  '2h', '7h', 'Ks', 'Qd')
+		result2 = e.eval(hand)
+		self.assertEqual(result2.handType, e.HandTypePair)
+		self.assertTrue(result < result2)
+		
+		# test higher kicker
+		hand = self.HAND('Th', 'Td', '8s',  '2h', '7h', 'Ks', 'Ad')
+		result3 = e.eval(hand)
+		self.assertEqual(result3.handType, e.HandTypePair)
+		self.assertTrue(result < result3)
+		
+	def test_highCard(self):
+		e = HandEval()
+		
+		# test high cards
+		hand = self.HAND('Th', '3d', '2s',  '8h', '7h', 'Ks', 'Qd')
+		result = e.eval(hand)
+		self.assertEqual(result.handType, e.HandTypeHighCard)
+		self.assertEqual(result.cards[0].toString(),  'Ks')
+		self.assertEqual(result.cards[1].toString(),  'Qd')
+		self.assertEqual(result.cards[2].toString(),  'Th')
+		self.assertEqual(result.cards[3].toString(),  '8h')
+		self.assertEqual(result.cards[4].toString(),  '7h')
+		
+		# test higher high cards
+		hand = self.HAND('Jh', '3d', '9s',  '2h', '7h', 'Ks', 'Qd')
+		result2 = e.eval(hand)
+		self.assertEqual(result2.handType, e.HandTypeHighCard)
+		self.assertTrue(result < result2)
+		
+	def test_handTypes(self):
+		e = HandEval()
+		
+		hands = (
+				(self.HAND('Ah', '2h', '3h',  '4h', '5h', 'Ks', 'Ad'), HandEval.HandTypeStraightFlush),
+				(self.HAND('Jh', '2h', '3h',  '4h', 'Jc', 'Js', 'Jd'), HandEval.HandTypeQuads),
+				(self.HAND('Jh', 'Kh', '3h',  'Qs', 'Qd', 'Qs', 'Jd'), HandEval.HandTypeFullHouse),
+				(self.HAND('Ah', 'Kh', '4h',  '3h', '2h', 'Qs', 'Jd'), HandEval.HandTypeFlush),
+				(self.HAND('Jh', 'Td', '9s',  '8h', '7h', 'Ks', 'Ad'), HandEval.HandTypeStraight),
+				(self.HAND('Th', 'Td', 'Ts',  '8h', '7h', 'Ks', 'Qd'), HandEval.HandTypeTrips),
+				(self.HAND('Th', 'Td', '8s',  '8h', '7h', 'Ks', 'Qd'), HandEval.HandTypeTwoPair),
+				(self.HAND('Th', 'Td', '2s',  '8h', '7h', 'Ks', 'Qd'), HandEval.HandTypePair),
+				(self.HAND('Th', '3d', '2s',  '8h', '7h', 'Ks', 'Qd'), HandEval.HandTypeHighCard),
+				)
+		results = []
+		for hand, handType in hands:
+			result = e.eval(hand)
+			self.assertEqual(handType, result.handType)
+			results.append(result)
+		random.shuffle(results)
+		
+		# soert results ascending and comp
+		results.sort(reverse=True)
+		for i, result in enumerate(results):
+			self.assertEqual(result.handType, hands[i][1])
+			
+		# sort results descending and comp
+		results.sort()
+		n =0
+		for i, result in enumerate(results):
+			n -= 1
+			self.assertEqual(result.handType, hands[n][1])
+	
 #************************************************************************************
 # event type
 #************************************************************************************	
