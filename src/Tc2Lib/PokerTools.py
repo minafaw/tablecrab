@@ -6,15 +6,6 @@ import random
 def prob(a, b):
 	return float(a) / float(b)
 
-def binom(n, k):
-	if 0 <= k <= n:
-		p = 1
-		for t in xrange(min(k, n - k)):
-			p = (p * (n - t)) // (t + 1)
-		return float(p)
-	else:
-		return float(0)
-
 def probToPct(probability, round_=2):
 	return round(probability * 100, round_)
 
