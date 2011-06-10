@@ -6,6 +6,7 @@
 import unittest
 import random
 import operator
+from PokerTools import Card, CardDeck, Seats
 #************************************************************************************
 # helpers
 #************************************************************************************
@@ -33,7 +34,12 @@ class Player(object):
 		self.pocketCards = []
 		self.seatName = ''
 	def act(self, game, choices):
-		event = random.choice(choices)
+		"""
+		@param game: (L{Game}) instance
+		@param choices: (dict) eventType --> eventInstance
+		@return: eventInstance
+		"""
+		event = random.choice(choices.values())
 		if event in (game.EventPlayerBets, game.EventPlayerRaises):
 			amount = random.randint(event.amountMin, event.amountMax)
 			if amount < event.amountMin:
@@ -63,7 +69,7 @@ class Game(object):
 		self.currencySymbol = currencySymbol
 		self.players = list(players)
 		self.pot = Pot(players)
-		self.deck = Deck()
+		self.deck = CardDeck()
 		self.boardCards = []
 		self.handEval = HandEval()
 		for name, klass in EventClasses.items():
@@ -244,153 +250,6 @@ class TestPot(unittest.TestCase):
 		pot.fold(pot.player('a'))
 		self.assertEqual(len(pot.playersActive), 1)
 		
-#************************************************************************************
-#
-#************************************************************************************		
-class Card(int):
-	"""poker card object
-
-	@cvar Shapes: (str) card shapes
-	@cvar Suits: (str) card suits
-	@cvar MinCard: (int) minimum card value
-	@cvar MaxCard: (int) maximum card value
-	@cvar BitsMax: (int) maximum number of bits required to store a card
-	@cvar BitMask: (int) card bit mask
-	"""
-	Shapes = '23456789TJQKA'
-	Suits = 'hdcs'
-	MinCard = 0
-	MaxCard = len(Shapes) * len(Suits) -1
-	RankNames = {
-			0: ('deuce', 'deuces'),
-			1: ('trey', 'treys'),
-			2: ('four', 'fours'),
-			3: ('five', 'fives'),
-			4: ('six', 'sixes'),
-			5: ('seven', 'sevens'),
-			6: ('eight', 'eights'),
-			7: ('nine', 'nines'),
-			8: ('ten', 'tens'),
-			9: ('jack', 'jacks'),
-			10: ('queen', 'quens'),
-			11: ('king', 'kings'),
-			12: ('ace', 'aces'),
-			}
-		
-	def _tmp_maxBit(value):
-		"""returns the maximum bit set in a given number"""
-		if value <= 0:	return 0
-		n = 1
-		while (1 << n) <= value: n += 1
-		return n
-	BitsMax = _tmp_maxBit(MaxCard)
-	del _tmp_maxBit
-	BitMask = 2**BitsMax -1
-
-	def __new__(klass, no):
-		"""creates a new card
-		@param no: (int or string) can be either a string like 'Ah' or another card or an integer card value
-		"""
-		if isinstance(no, (int, long)):
-			if no < klass.MinCard or no > klass.MaxCard:
-				raise ValueError('invalid card')
-		else:
-			try:
-				shape = klass.Shapes.index(no[0])
-				suit = klass.Suits.index(no[1])
-			except IndexError:
-				raise ValueError('invalid card')
-			no = suit * len(klass.Shapes) + shape
-		return int.__new__(klass, no)
-
-	def __repr__(self):
-		return '<%s.%s object %r at 0x%x>' % (__name__, self.__class__.__name__, self.toString(), id(self))
-	def __str__(self): return self.__repr__()
-	def __unicode__(self): return self.__repr__()
-
-	def rank(self):
-		"""returns the numeric rank of the card
-		return: (int) rank (0-12)
-		"""
-		return self % len(self.Shapes)
-		 
-	def suit(self):
-		"""returns the suite of the card
-		@return: (int) suit
-		"""
-		return int(self / len(self.Shapes))
-
-	def toString(self):
-		"""returns the string representation of the card, i.e. 'Ah'
-		@return: 8str) card
-		"""
-		return self.rankToString() + self.suitToString()
-
-	def rankToString(self):
-		"""returns the string representation of the shape of the the card, i.e. 'A'
-		@return: str) shape
-		"""
-		return self.Shapes[self.rank()]
-
-	def suitToString(self):
-		"""returns the string representation of the suit of the the card, i.e. 'h'
-		@return: 8str) shape
-		"""
-		return self.Suits[self.suit()]
-		
-
-class Deck(object):
-	"""poker deck object"""
-	__fields__ = ('_cards', )
-	Cards = [Card(shape+suit) for suit in Card.Suits for shape in Card.Shapes]
-
-	def __init__(self):
-		"""creates a new 52 cards deck"""
-		self.cards = None
-		self.reset()
-
-	def reset(self):
-		self.cards = self.Cards[:]
-
-	def __iter__(self):
-		return iter(self.cards())
-
-	def __len__(self): return len(self.cards)
-
-	def shuffle(self, shuffle=random.shuffle):
-		'''shuffles the deck in place'''
-		shuffle(self.cards)
-
-	def nextCard(self):
-		"""returns the next card in the deck
-		@return: (L{Card})
-		"""
-		return self.cards.pop(0)
-
-
-class Seats(object):
-	Names = {		# nPlayers --> seat names
-			2: ('SB', 'BB'),
-			3: ('BTN', 'SB', 'BB'),
-			4: ('BTN', 'SB', 'BB', 'UTG'),
-			5: ('BTN', 'SB', 'BB', 'UTG', 'MP'),
-			6: ('BTN', 'SB', 'BB', 'UTG', 'MP', 'CO'),
-			7: ('BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'MP', 'CO'),
-			8: ('BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'MP1', 'MP2', 'CO', ),
-			9: ('BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'UTG+2', 'MP1', 'MP2', 'CO'),
-			10: ('BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'UTG+2', 'MP1', 'MP2', 'MP3', 'CO'),
-			}
-	
-	@classmethod
-	def seatName(klass, nSeats, seatNo):
-		"""
-		@param nSeats: (int) number of seats total
-		@param seatNo: (int) index of the seat to retrieve name for. 0 == player first to act preflop
-		@return: (str) seat name
-		"""
-		seatNames = klass.Names[nSeats]
-		return seatNames[seatNo]
-
 
 class HandEval(object):
 	
@@ -497,13 +356,16 @@ class HandEval(object):
 	
 	def __init__(self): pass
 	
-	def getStraightFlush(self, hand):
+	def getStraightFlush(self, hand, count=5):
+		"""
+		@param count: (int) minimum number of cards to take into account
+		"""
 		# we need at least 5 suited cards to form a straight flush
 		flushSuit = None
 		ranks = []
 		suits = [card.suit() for card in hand]
 		for suit in (0, 1, 2, 3):
-			if suits.count(suit) >= 5:
+			if suits.count(suit) >= count:
 				flushSuit = suit
 				ranks = [hand[iSuit].rank() for iSuit, mySuit in enumerate(suits) if suit==mySuit]
 				break
@@ -519,15 +381,15 @@ class HandEval(object):
 		straight = []
 		for rank in ranks:
 			expected = range(rank, rank-5, -1)
-			if len([i for i in expected if i in ranks]) == 5:
+			if len([i for i in expected if i in ranks]) == count:
 				straight = expected
 				break
 			
 		if straight:
 			if straight[-1] == -1:
 				straight[-1]  = 12
-			flushSuitName = Card.Suits[flushSuit]
-			return [Card(Card.Shapes[rank] + flushSuitName) for rank in straight]
+			flushSuitName = Card.SuitNames[flushSuit]
+			return [Card(Card.RankNames[rank] + flushSuitName) for rank in straight]
 		return []
 			
 	def getQuads(self, hand):
@@ -565,22 +427,29 @@ class HandEval(object):
 			return trips + pair
 		return []
 						
-	def getFlush(self, hand):
+	def getFlush(self, hand, count=5):
+		"""
+		@param count: (int) minimum number of cards to take into account
+		"""
 		flushSuit = None
 		flushRanks = []
 		suits = [card.suit() for card in hand]
 		for suit in (0, 1, 2, 3):
-			if suits.count(suit) >= 5:
+			if suits.count(suit) >= count:
 				flushSuit = suit
 				flushRanks = [hand[iSuit].rank() for iSuit, mySuit in enumerate(suits) if suit==mySuit]
 				break
 		if flushRanks:
 			flushRanks.sort(reverse=True)
-			flushSuitName = Card.Suits[flushSuit]
-			return [Card(Card.Shapes[rank] + flushSuitName) for rank in flushRanks]
+			flushSuitName = Card.SuitNames[flushSuit]
+			return [Card(Card.RankNames[rank] + flushSuitName) for rank in flushRanks]
 		return []		
-			
-	def getStraight(self, hand):
+	
+	#TODO: getGutshot / getDoubleGutshot		
+	def getStraight(self, hand, count=5):
+		"""
+		@param count: (int) minimum number of cards to take into account
+		"""
 		ranks = [card.rank() for card in hand]
 		# Ace can be high or low. no conflicts possible so simply append
 		ranks.sort(reverse=True)
@@ -590,8 +459,8 @@ class HandEval(object):
 		# check if we can form a straight from ranks
 		straight = []
 		for rank in ranks:
-			expected = range(rank, rank-5, -1)
-			if len([i for i in expected if i in ranks]) == 5:
+			expected = range(rank, rank-count, -1)
+			if len([i for i in expected if i in ranks]) >= count:
 				straight = expected
 				break
 			
@@ -672,71 +541,71 @@ class HandEval(object):
 		cards = self.getStraightFlush(hand)
 		if cards:
 			details = 'a straight flush %s to %s' % (
-							Card.RankNames[cards[-1].rank()][0],
-							Card.RankNames[cards[0].rank()][0],
+							Card.RankNamesDict[cards[-1].rank()][0],
+							Card.RankNamesDict[cards[0].rank()][0],
 							)
 			return self.Result(self, self.HandTypeStraightFlush, cards, details)
 		
 		cards = self.getQuads(hand)
 		if cards:
 			details = 'quad %s (kicker: %s)' % (
-							Card.RankNames[cards[0].rank()][1], 
-							Card.RankNames[cards[-1].rank()][0]
+							Card.RankNamesDict[cards[0].rank()][1], 
+							Card.RankNamesDict[cards[-1].rank()][0]
 							)
 			return  self.Result(self,	self.HandTypeQuads, cards, details)
 		
 		cards = self.getFullHouse(hand)
 		if cards:
 			details = 'a full house %s full of %s' % (
-							Card.RankNames[cards[0].rank()][1], 
-							Card.RankNames[cards[4].rank()][1]
+							Card.RankNamesDict[cards[0].rank()][1], 
+							Card.RankNamesDict[cards[4].rank()][1]
 							)
 			return  self.Result(self,	self.HandTypeFullHouse, cards, details)
 			
 		cards = self.getFlush(hand)
 		if cards:
-			details = 'a flush %s high' % Card.RankNames[cards[0].rank()][0]
+			details = 'a flush %s high' % Card.RankNamesDict[cards[0].rank()][0]
 			return  self.Result(self,	self.HandTypeFlush, cards, details)
 		
 		cards = self.getStraight(hand)
 		if cards:
 			details = 'a straight %s to %s' % (
-							Card.RankNames[cards[-1].rank()][0],
-							Card.RankNames[cards[0].rank()][0],
+							Card.RankNamesDict[cards[-1].rank()][0],
+							Card.RankNamesDict[cards[0].rank()][0],
 							)
 			return  self.Result(self,	self.HandTypeStraight, cards, details)
 		
 		cards = self.getTrips(hand)
 		if cards:
 			details = 'trip %s (kicker: %s, %s)' % (
-							Card.RankNames[cards[0].rank()][1], 
-							Card.RankNames[cards[3].rank()][0], 
-							Card.RankNames[cards[4].rank()][0]
+							Card.RankNamesDict[cards[0].rank()][1], 
+							Card.RankNamesDict[cards[3].rank()][0], 
+							Card.RankNamesDict[cards[4].rank()][0]
 							)
 			return  self.Result(self,	self.HandTypeTrips, cards, details)
 		
 		cards = self.getTwoPair(hand)
 		if cards:
 			details = 'two pair %s and %s (kicker: %s)' % (
-							Card.RankNames[cards[0].rank()][1],
-							Card.RankNames[cards[2].rank()][1],
-							Card.RankNames[cards[4].rank()][0],
+							Card.RankNamesDict[cards[0].rank()][1],
+							Card.RankNamesDict[cards[2].rank()][1],
+							Card.RankNamesDict[cards[4].rank()][0],
 							)
 			return  self.Result(self,	self.HandTypeTwoPair, cards, details)
 		
 		cards = self.getPair(hand)
 		if cards:
 			details = 'a pair of %s (kicker: %s, %s, %s)' % (
-							Card.RankNames[cards[0].rank()][1],
-							Card.RankNames[cards[2].rank()][0],
-							Card.RankNames[cards[3].rank()][0],
-							Card.RankNames[cards[4].rank()][0],
+							Card.RankNamesDict[cards[0].rank()][1],
+							Card.RankNamesDict[cards[2].rank()][0],
+							Card.RankNamesDict[cards[3].rank()][0],
+							Card.RankNamesDict[cards[4].rank()][0],
 							)
 			return  self.Result(self,	self.HandTypePair, cards, details)
 		
 		cards = self.getHighCard(hand)
 		if cards:
-			details = 'high card %s' % Card.RankNames[cards[0].rank()][0]
+			details = 'high card %s' % Card.RankNamesDict[cards[0].rank()][0]
 			return  self.Result(self,	self.HandTypeHighCard, cards, details)
 			
 		raise ValueError('something went wrong here!')
@@ -756,17 +625,17 @@ class TestHandEval(unittest.TestCase):
 		hand = self.HAND('Ah', '2h', '3h',  '4h', '5h', 'Ks', 'Ad')
 		result = e.eval(hand)
 		self.assertEqual(result.handType, e.HandTypeStraightFlush)
-		self.assertEqual(result.cards[0].toString(),  '5h')
-		self.assertEqual(result.cards[1].toString(),  '4h')
-		self.assertEqual(result.cards[2].toString(),  '3h')
-		self.assertEqual(result.cards[3].toString(),  '2h')
-		self.assertEqual(result.cards[4].toString(),  'Ah')
+		self.assertEqual(result.cards[0].name(),  '5h')
+		self.assertEqual(result.cards[1].name(),  '4h')
+		self.assertEqual(result.cards[2].name(),  '3h')
+		self.assertEqual(result.cards[3].name(),  '2h')
+		self.assertEqual(result.cards[4].name(),  'Ah')
 		
 		# test higher straight flush
 		hand = self.HAND('6h', '2h', '3h',  '4h', '5h', 'Ks', 'Ad')
 		result2 = e.eval(hand)
 		self.assertEqual(result.handType, e.HandTypeStraightFlush)
-		self.assertEqual(result2.cards[0].toString(),  '6h')
+		self.assertEqual(result2.cards[0].name(),  '6h')
 		self.assertTrue(result2 > result)
 
 	def test_quads(self):
@@ -776,15 +645,15 @@ class TestHandEval(unittest.TestCase):
 		hand = self.HAND('Jh', '2h', '3h',  '4h', 'Jc', 'Js', 'Jd')
 		result = e.eval(hand)
 		self.assertEqual(result.handType, e.HandTypeQuads)
-		quads = [i.toString() for i in result.cards]
+		quads = [i.name() for i in result.cards]
 		self.assertEqual(len([i for i in ('Jh', 'Js', 'Jc', 'Jd') if i in quads]), 4)
-		self.assertEqual(result.cards[4].toString(),  '4h')
+		self.assertEqual(result.cards[4].name(),  '4h')
 		
 		# test higher quads
 		hand = self.HAND('2h', 'Kh', '3h',  '4h', 'Kc', 'Ks', 'Kd')
 		result2 = e.eval(hand)
 		self.assertEqual(result2.handType, e.HandTypeQuads)
-		self.assertEqual(result2.cards[0].rankToString(),  'K')
+		self.assertEqual(result2.cards[0].rankName(),  'K')
 		self.assertTrue(result < result2)
 		
 		# test quads with better kicker
@@ -800,11 +669,11 @@ class TestHandEval(unittest.TestCase):
 		hand = self.HAND('Jh', 'Kh', '3h',  'Qs', 'Qd', 'Qs', 'Jd')
 		result = e.eval(hand)
 		self.assertEqual(result.handType, e.HandTypeFullHouse)
-		self.assertEqual(result.cards[0].rankToString(),  'Q')
-		self.assertEqual(result.cards[1].rankToString(),  'Q')
-		self.assertEqual(result.cards[2].rankToString(),  'Q')
-		self.assertEqual(result.cards[3].rankToString(),  'J')
-		self.assertEqual(result.cards[4].rankToString(),  'J')
+		self.assertEqual(result.cards[0].rankName(),  'Q')
+		self.assertEqual(result.cards[1].rankName(),  'Q')
+		self.assertEqual(result.cards[2].rankName(),  'Q')
+		self.assertEqual(result.cards[3].rankName(),  'J')
+		self.assertEqual(result.cards[4].rankName(),  'J')
 		
 		# test higher full house
 		hand = self.HAND('Ah', 'Kh', '3h',  'Qs', 'Qd', 'Qs', 'Ad')
@@ -819,11 +688,11 @@ class TestHandEval(unittest.TestCase):
 		hand = self.HAND('Ah', 'Kh', '4h',  '3h', '2h', 'Qs', 'Jd')
 		result = e.eval(hand)
 		self.assertEqual(result.handType, e.HandTypeFlush)
-		self.assertEqual(result.cards[0].toString(),  'Ah')
-		self.assertEqual(result.cards[1].toString(),  'Kh')
-		self.assertEqual(result.cards[2].toString(),  '4h')
-		self.assertEqual(result.cards[3].toString(),  '3h')
-		self.assertEqual(result.cards[4].toString(),  '2h')
+		self.assertEqual(result.cards[0].name(),  'Ah')
+		self.assertEqual(result.cards[1].name(),  'Kh')
+		self.assertEqual(result.cards[2].name(),  '4h')
+		self.assertEqual(result.cards[3].name(),  '3h')
+		self.assertEqual(result.cards[4].name(),  '2h')
 				
 		# test higher flush
 		hand = self.HAND('Ah', 'Kh', 'Th',  '3h', '2h', 'Qs', 'Jd')
@@ -838,11 +707,11 @@ class TestHandEval(unittest.TestCase):
 		hand = self.HAND('Jh', 'Td', '9s',  '8h', '7h', 'Ks', 'Ad')
 		result = e.eval(hand)
 		self.assertEqual(result.handType, e.HandTypeStraight)
-		self.assertEqual(result.cards[0].toString(),  'Jh')
-		self.assertEqual(result.cards[1].toString(),  'Td')
-		self.assertEqual(result.cards[2].toString(),  '9s')
-		self.assertEqual(result.cards[3].toString(),  '8h')
-		self.assertEqual(result.cards[4].toString(),  '7h')
+		self.assertEqual(result.cards[0].name(),  'Jh')
+		self.assertEqual(result.cards[1].name(),  'Td')
+		self.assertEqual(result.cards[2].name(),  '9s')
+		self.assertEqual(result.cards[3].name(),  '8h')
+		self.assertEqual(result.cards[4].name(),  '7h')
 		
 		# test higher straight
 		hand = self.HAND('Jh', 'Td', '9s',  '8h', 'Qh', 'Ks', 'Ad')
@@ -857,11 +726,11 @@ class TestHandEval(unittest.TestCase):
 		hand = self.HAND('Th', 'Td', 'Ts',  '8h', '7h', 'Ks', 'Qd')
 		result = e.eval(hand)
 		self.assertEqual(result.handType, e.HandTypeTrips)
-		self.assertEqual(result.cards[0].rankToString(),  'T')
-		self.assertEqual(result.cards[1].rankToString(),  'T')
-		self.assertEqual(result.cards[2].rankToString(),  'T')
-		self.assertEqual(result.cards[3].rankToString(),  'K')
-		self.assertEqual(result.cards[4].rankToString(),  'Q')
+		self.assertEqual(result.cards[0].rankName(),  'T')
+		self.assertEqual(result.cards[1].rankName(),  'T')
+		self.assertEqual(result.cards[2].rankName(),  'T')
+		self.assertEqual(result.cards[3].rankName(),  'K')
+		self.assertEqual(result.cards[4].rankName(),  'Q')
 		
 		# test higher trips
 		hand = self.HAND('Jh', 'Jd', 'Js',  '8h', '7h', 'Ks', 'Qd')
@@ -882,11 +751,11 @@ class TestHandEval(unittest.TestCase):
 		hand = self.HAND('Th', 'Td', '8s',  '8h', '7h', 'Ks', 'Qd')
 		result = e.eval(hand)
 		self.assertEqual(result.handType, e.HandTypeTwoPair)
-		self.assertEqual(result.cards[0].rankToString(),  'T')
-		self.assertEqual(result.cards[1].rankToString(),  'T')
-		self.assertEqual(result.cards[2].rankToString(),  '8')
-		self.assertEqual(result.cards[3].rankToString(),  '8')
-		self.assertEqual(result.cards[4].toString(),  'Ks')
+		self.assertEqual(result.cards[0].rankName(),  'T')
+		self.assertEqual(result.cards[1].rankName(),  'T')
+		self.assertEqual(result.cards[2].rankName(),  '8')
+		self.assertEqual(result.cards[3].rankName(),  '8')
+		self.assertEqual(result.cards[4].name(),  'Ks')
 		
 		# test higher two pair
 		hand = self.HAND('Th', 'Td', '9s',  '9h', '7h', 'Ks', 'Qd')
@@ -907,11 +776,11 @@ class TestHandEval(unittest.TestCase):
 		hand = self.HAND('Th', 'Td', '2s',  '8h', '7h', 'Ks', 'Qd')
 		result = e.eval(hand)
 		self.assertEqual(result.handType, e.HandTypePair)
-		self.assertEqual(result.cards[0].rankToString(),  'T')
-		self.assertEqual(result.cards[1].rankToString(),  'T')
-		self.assertEqual(result.cards[2].toString(),  'Ks')
-		self.assertEqual(result.cards[3].toString(),  'Qd')
-		self.assertEqual(result.cards[4].toString(),  '8h')
+		self.assertEqual(result.cards[0].rankName(),  'T')
+		self.assertEqual(result.cards[1].rankName(),  'T')
+		self.assertEqual(result.cards[2].name(),  'Ks')
+		self.assertEqual(result.cards[3].name(),  'Qd')
+		self.assertEqual(result.cards[4].name(),  '8h')
 		
 		# test higher pair
 		hand = self.HAND('Jh', 'Jd', '9s',  '2h', '7h', 'Ks', 'Qd')
@@ -932,11 +801,11 @@ class TestHandEval(unittest.TestCase):
 		hand = self.HAND('Th', '3d', '2s',  '8h', '7h', 'Ks', 'Qd')
 		result = e.eval(hand)
 		self.assertEqual(result.handType, e.HandTypeHighCard)
-		self.assertEqual(result.cards[0].toString(),  'Ks')
-		self.assertEqual(result.cards[1].toString(),  'Qd')
-		self.assertEqual(result.cards[2].toString(),  'Th')
-		self.assertEqual(result.cards[3].toString(),  '8h')
-		self.assertEqual(result.cards[4].toString(),  '7h')
+		self.assertEqual(result.cards[0].name(),  'Ks')
+		self.assertEqual(result.cards[1].name(),  'Qd')
+		self.assertEqual(result.cards[2].name(),  'Th')
+		self.assertEqual(result.cards[3].name(),  '8h')
+		self.assertEqual(result.cards[4].name(),  '7h')
 		
 		# test higher high cards
 		hand = self.HAND('Jh', '3d', '9s',  '2h', '7h', 'Ks', 'Qd')
@@ -1169,7 +1038,7 @@ class EventPostBlindsStart(EventBase):
 											self.playerBigBlind
 											)
 			self.game.eventsIn.append(event)
-		if self.gameBigBlind and self.playerBigBlind.stack:
+		if self.game.bigBlind and self.playerBigBlind.stack:
 			event = self.game.EventPlayerPostsBigBlind(
 											self.game, 
 											self.numPlayers, 
@@ -1281,7 +1150,7 @@ class EventDealPocketCard(EventBase):
 			self.game.eventsIn.append(event)
 		return self
 	def toString(self):
-		return 'player "%s" gets dealt [%s]' % (self.player.name, self.card.toString())
+		return 'player "%s" gets dealt [%s]' % (self.player.name, self.card.name())
 	
 #************************************************************************************
 # events - player actions
@@ -1662,7 +1531,7 @@ class EventFlopStart(EventBase):
 				self.game.eventsIn.append(event)
 		return self
 	def toString(self):
-		return '***** Flop [%s %s %s] *****' % tuple([c.toString() for c in self.game.boardCards])
+		return '***** Flop [%s %s %s] *****' % tuple([c.name() for c in self.game.boardCards])
 	def streetEnd(self):
 		return self.game.EventFlopEnd(self.game)
 
@@ -1701,7 +1570,7 @@ class EventTurnStart(EventFlopStart):
 				self.game.eventsIn.append(event)
 		return self
 	def toString(self):
-		return '***** Turn [%s %s %s %s] *****' %  tuple([c.toString() for c in self.game.boardCards])
+		return '***** Turn [%s %s %s %s] *****' %  tuple([c.name() for c in self.game.boardCards])
 	def streetEnd(self):
 		return self.game.EventTurnEnd(self.game)
 
@@ -1743,7 +1612,7 @@ class EventRiverStart(EventFlopStart):
 	def streetEnd(self):
 		return self.game.EventRiverEnd(self.game)
 	def toString(self):
-		return '***** River [%s %s %s %s %s] *****' %  tuple([c.toString() for c in self.game.boardCards])
+		return '***** River [%s %s %s %s %s] *****' %  tuple([c.name() for c in self.game.boardCards])
 
 
 class EventRiverEnd(EventBase):
@@ -1917,7 +1786,7 @@ class TestGame(unittest.TestCase):
 			player.act = methodAct
 		game = Game(players)
 		for event in game.run(game.EventGameStart(game)):
-			#print event.toString()
+			#print event.name()
 			pass
 		
 		#
@@ -1976,7 +1845,7 @@ class TestGame(unittest.TestCase):
 			player.act = methodAct
 		game = Game(players)
 		for event in game.run(game.EventGameStart(game)):
-			#print event.toString()
+			#print event.name()
 			pass
 		
 #************************************************************************************
@@ -2025,15 +1894,16 @@ def test():
 			for player in eventDealPocketCards.players:
 				print 'player "%s" gets dealt [%s %s]' % (
 						player.name, 
-						player.pocketCards[0].toString(),
-						player.pocketCards[1].toString(),
+						player.pocketCards[0].name(),
+						player.pocketCards[1].name(),
 						)
 			
 		print event.toString()
 
 
 #test()
-		
 
-	
+
+
+
 
