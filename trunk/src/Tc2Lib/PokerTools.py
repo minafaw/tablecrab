@@ -1,29 +1,19 @@
 
 import random
 #************************************************************************************
-#
+# math
 #************************************************************************************
-
-# la place experiment
 def prob(a, b):
 	return float(a) / float(b)
 
 def binom(n, k):
-    if 0 <= k <= n:
-        p = 1
-        for t in xrange(min(k, n - k)):
-            p = (p * (n - t)) // (t + 1)
-        return float(p)
-    else:
-        return float(0)
-
-def maxBit(value):
-	"""returns the maximum bit set in a given number"""
-	if value <= 0:	return 0
-	n = 1
-	while (1 << n) <= value: n += 1
-	return n
-
+	if 0 <= k <= n:
+		p = 1
+		for t in xrange(min(k, n - k)):
+			p = (p * (n - t)) // (t + 1)
+		return float(p)
+	else:
+		return float(0)
 
 def probToPct(probability, round_=2):
 	return round(probability * 100, round_)
@@ -37,18 +27,84 @@ def pctValue(percent, base=100):
 def pctBase(value, percent):
 	return 100*float(value) / percent
 
+def distance(x, y):
+	return x - y
+
+def variance(ev, values):
+	p = [distance(i, ev)**2 for i in values]
+	return sum(p) / len(p)
+
+def deviationStd(variance):
+	return math.sqrt(variance)
+
+def variationK(ev, stdDeviation):
+	return stdDeviation / ev if ev else stdDeviation
+	
+def factorial(n):
+	total = n
+	while n > 1:
+		total *= (n - 1)
+		n -= 1
+	return total
+
+def binom(n, k):
+	if 0 <= k <= n:
+		p = 1
+		for t in xrange(min(k, n - k)):
+			p = (p * (n - t)) // (t + 1)
+		return float(p)
+	else:
+		return float(0)
+
+def oddsTopercent(odds):
+	return 100.0 / odds
+	
+def percentToOdds(pcnt):
+	return (100.0 / pcnt) -1
+
+#************************************************************************************
+# others
+#************************************************************************************
+def splitIterable(iterable, condition):
+	result = []
+	for c, group in itertools.groupby(iterable, key=condition):
+		if not c:
+			result.append( [i for i in group] )
+	return result
+
 #************************************************************************************
 #
 #************************************************************************************
 class Card(int):
 	"""card object"""
+	Ranks = range(0, 13)
+	Suits = range(0, 4)
+	MinCard = 0
+	MaxCard = len(Ranks) * len(Suits) -1
 	RankNames = '23456789TJQKA'
 	SuitNames = 'hdcs'
-	MinCard = 0
-	MaxCard = len(RankNames) * len(SuitNames) -1
-	BitsMax = maxBit(MaxCard)
-	BitMask = 2 ** BitsMax -1
-
+	RankNamesDict = {
+			0: ('deuce', 'deuces'),
+			1: ('trey', 'treys'),
+			2: ('four', 'fours'),
+			3: ('five', 'fives'),
+			4: ('six', 'sixes'),
+			5: ('seven', 'sevens'),
+			6: ('eight', 'eights'),
+			7: ('nine', 'nines'),
+			8: ('ten', 'tens'),
+			9: ('jack', 'jacks'),
+			10: ('queen', 'quens'),
+			11: ('king', 'kings'),
+			12: ('ace', 'aces'),
+			}
+	SuitNamesDict = {
+			0: ('heart', 'hearts'),
+			1: ('diamond', 'diamonds'),
+			2: ('cross', 'crosses'),
+			3: ('spade', 'spades'),
+			}
+		
 	def __new__(klass, no):
 		"""creates a new card
 		@param no: (int or string) can be either a string like 'Ah' or another card or an integer card value
@@ -101,10 +157,11 @@ class Card(int):
 		return self.SuitNames[self.suit()]
 
 	def value(self):
-		"""returns the value of the card
+		"""returns the integer representation of the card
 		@return: (int) value
 		"""
 		return int(self)
+
 
 class CardDeck(object):
 	"""poker card deck object"""
@@ -136,6 +193,21 @@ class CardDeck(object):
 		@return: (L{Card})
 		"""
 		return self._cards.pop(0)
+
+#************************************************************************************
+#
+#************************************************************************************
+def genHandTypes():
+	"""
+	@return: (list) of hand types ['AA', 'AKs', 'AKo', ... '32o', '22']
+	"""
+	result = []
+	for iRank, rank in enumerate(Card.RankNames):
+		result.append(rank + rank)
+		for rank2 in Card.RankNames[iRank+1:]:
+			result.append(rank + rank2 + 's')
+			result.append(rank + rank2 + 'o')
+	return result
 
 #************************************************************************************
 #
