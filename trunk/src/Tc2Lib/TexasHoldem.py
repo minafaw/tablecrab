@@ -6,7 +6,7 @@
 import unittest
 import random
 import operator
-from PokerTools import Card, CardDeck, Seats
+import PokerTools
 #************************************************************************************
 # helpers
 #************************************************************************************
@@ -69,7 +69,7 @@ class Game(object):
 		self.currencySymbol = currencySymbol
 		self.players = list(players)
 		self.pot = Pot(players)
-		self.deck = CardDeck()
+		self.deck = PokerTools.CardDeck()
 		self.boardCards = []
 		self.handEval = HandEval()
 		for name, klass in EventClasses.items():
@@ -80,6 +80,7 @@ class Game(object):
 			if player.stack <= 0:
 				raise Valueerror('player "%s" has no stack' % player.name)
 			player.pocketCards = []
+			player.seatName = ''
 					
 	def run(self, event):
 		self.deck.shuffle()
@@ -388,8 +389,8 @@ class HandEval(object):
 		if straight:
 			if straight[-1] == -1:
 				straight[-1]  = 12
-			flushSuitName = Card.SuitNames[flushSuit]
-			return [Card(Card.RankNames[rank] + flushSuitName) for rank in straight]
+			flushSuitName = PokerTools.Card.SuitNames[flushSuit]
+			return [ PokerTools.Card( PokerTools.Card.RankNames[rank] + flushSuitName) for rank in straight]
 		return []
 			
 	def getQuads(self, hand):
@@ -441,8 +442,8 @@ class HandEval(object):
 				break
 		if flushRanks:
 			flushRanks.sort(reverse=True)
-			flushSuitName = Card.SuitNames[flushSuit]
-			return [Card(Card.RankNames[rank] + flushSuitName) for rank in flushRanks]
+			flushSuitName =  PokerTools.Card.SuitNames[flushSuit]
+			return [PokerTools.Card(PokerTools.Card.RankNames[rank] + flushSuitName) for rank in flushRanks]
 		return []		
 	
 	#TODO: getGutshot / getDoubleGutshot		
@@ -541,71 +542,71 @@ class HandEval(object):
 		cards = self.getStraightFlush(hand)
 		if cards:
 			details = 'a straight flush %s to %s' % (
-							Card.RankNamesDict[cards[-1].rank()][0],
-							Card.RankNamesDict[cards[0].rank()][0],
+							PokerTools.Card.RankNamesDict[cards[-1].rank()][0],
+							PokerTools.Card.RankNamesDict[cards[0].rank()][0],
 							)
 			return self.Result(self, self.HandTypeStraightFlush, cards, details)
 		
 		cards = self.getQuads(hand)
 		if cards:
 			details = 'quad %s (kicker: %s)' % (
-							Card.RankNamesDict[cards[0].rank()][1], 
-							Card.RankNamesDict[cards[-1].rank()][0]
+							PokerTools.Card.RankNamesDict[cards[0].rank()][1], 
+							PokerTools.Card.RankNamesDict[cards[-1].rank()][0]
 							)
 			return  self.Result(self,	self.HandTypeQuads, cards, details)
 		
 		cards = self.getFullHouse(hand)
 		if cards:
 			details = 'a full house %s full of %s' % (
-							Card.RankNamesDict[cards[0].rank()][1], 
-							Card.RankNamesDict[cards[4].rank()][1]
+							PokerTools.Card.RankNamesDict[cards[0].rank()][1], 
+							PokerTools.Card.RankNamesDict[cards[4].rank()][1]
 							)
 			return  self.Result(self,	self.HandTypeFullHouse, cards, details)
 			
 		cards = self.getFlush(hand)
 		if cards:
-			details = 'a flush %s high' % Card.RankNamesDict[cards[0].rank()][0]
+			details = 'a flush %s high' % PokerTools.Card.RankNamesDict[cards[0].rank()][0]
 			return  self.Result(self,	self.HandTypeFlush, cards, details)
 		
 		cards = self.getStraight(hand)
 		if cards:
 			details = 'a straight %s to %s' % (
-							Card.RankNamesDict[cards[-1].rank()][0],
-							Card.RankNamesDict[cards[0].rank()][0],
+							PokerTools.Card.RankNamesDict[cards[-1].rank()][0],
+							PokerTools.Card.RankNamesDict[cards[0].rank()][0],
 							)
 			return  self.Result(self,	self.HandTypeStraight, cards, details)
 		
 		cards = self.getTrips(hand)
 		if cards:
 			details = 'trip %s (kicker: %s, %s)' % (
-							Card.RankNamesDict[cards[0].rank()][1], 
-							Card.RankNamesDict[cards[3].rank()][0], 
-							Card.RankNamesDict[cards[4].rank()][0]
+							PokerTools.Card.RankNamesDict[cards[0].rank()][1], 
+							PokerTools.Card.RankNamesDict[cards[3].rank()][0], 
+							PokerTools.Card.RankNamesDict[cards[4].rank()][0]
 							)
 			return  self.Result(self,	self.HandTypeTrips, cards, details)
 		
 		cards = self.getTwoPair(hand)
 		if cards:
 			details = 'two pair %s and %s (kicker: %s)' % (
-							Card.RankNamesDict[cards[0].rank()][1],
-							Card.RankNamesDict[cards[2].rank()][1],
-							Card.RankNamesDict[cards[4].rank()][0],
+							PokerTools.Card.RankNamesDict[cards[0].rank()][1],
+							PokerTools.Card.RankNamesDict[cards[2].rank()][1],
+							PokerTools.Card.RankNamesDict[cards[4].rank()][0],
 							)
 			return  self.Result(self,	self.HandTypeTwoPair, cards, details)
 		
 		cards = self.getPair(hand)
 		if cards:
 			details = 'a pair of %s (kicker: %s, %s, %s)' % (
-							Card.RankNamesDict[cards[0].rank()][1],
-							Card.RankNamesDict[cards[2].rank()][0],
-							Card.RankNamesDict[cards[3].rank()][0],
-							Card.RankNamesDict[cards[4].rank()][0],
+							PokerTools.Card.RankNamesDict[cards[0].rank()][1],
+							PokerTools.Card.RankNamesDict[cards[2].rank()][0],
+							PokerTools.Card.RankNamesDict[cards[3].rank()][0],
+							PokerTools.Card.RankNamesDict[cards[4].rank()][0],
 							)
 			return  self.Result(self,	self.HandTypePair, cards, details)
 		
 		cards = self.getHighCard(hand)
 		if cards:
-			details = 'high card %s' % Card.RankNamesDict[cards[0].rank()][0]
+			details = 'high card %s' % PokerTools.Card.RankNamesDict[cards[0].rank()][0]
 			return  self.Result(self,	self.HandTypeHighCard, cards, details)
 			
 		raise ValueError('something went wrong here!')
@@ -616,7 +617,7 @@ class TestHandEval(unittest.TestCase):
 	
 	@classmethod
 	def HAND(klass, *cards):
-		return [Card(card) for card in cards]
+		return [ PokerTools.Card(card) for card in cards]
 		
 	def test_straightFlush(self):
 		e = HandEval()
@@ -908,10 +909,10 @@ class EventDeterminePlayerRolesStart(EventBase):
 		self.game = game
 		self.players = self.game.players[:]
 	def trigger(self):
-		eventClass = self.game.EventPlayerRole
+		eventClass = self.game.EventDeterminePlayerRole
 		numPlayers = len(self.game.players)
 		for i, player in enumerate(self.players):
-			seatName = Seats.seatName(numPlayers, i)
+			seatName = PokerTools.Seats.seatName(numPlayers, i)
 			event = eventClass(self.game, player, seatName)
 			self.game.eventsIn.append(event)
 		return self
@@ -935,13 +936,13 @@ class EventDeterminePlayerRolesEnd(EventBase):
 		return '***** /PlayerRoles *****'
 
 
-class EventPlayerRole(EventBase):
+class EventDeterminePlayerRole(EventBase):
 	def __init__(self, game, player, seatName):
 		self.game = game
 		self.player = player
 		self.player.seatName = seatName
 	def trigger(self):
-		if self.game.EventPlayerRole not in self.game.eventsIn:
+		if self.game.EventDeterminePlayerRole not in self.game.eventsIn:
 			event = self.game.EventDeterminePlayerRolesEnd(self.game)
 			self.game.eventsIn.append(event)
 		return self
@@ -1721,93 +1722,208 @@ class EventShowdownEnd(EventBase):
 
 
 
+class MyTestGameEventHandler(object):
+		def __init__(self, test, players=None, smallBlind=0.0, bigBlind=0.0, ante=0.0):
+			self.test = test
+			self.actionNo = 0
+			self.done = False
+			self.players = [Player(name, stack) for (name, stack) in players]
+			self.game = Game(self.players, smallBlind=smallBlind, bigBlind=bigBlind, ante=ante)
+			for player in self.players:
+				player.act = self
+		
+		def __call__(self, game, choices):
+			self.actionNo += 1
+			return self.handlePlayerAction(game, choices)			
+				
+		def run(self):
+			for event in self.game.run(self.game.EventGameStart(self.game)):
+				self.handleGameEvent(event)
+				if self.done:
+					break
+		def handlePlayerAction(self, game, choices):
+			raise NotImplementedError()
+			
+		def handleGameEvent(self, event):
+			pass			
+		
+
+
 class TestGame(unittest.TestCase):
+	
+		
+	def test_blindRulesTwoPlayers(self):
+		
+		# test blind rules for two players
+		
+		class EventHandler(MyTestGameEventHandler):
+			
+			def handlePlayerAction(self, game, choices):
+											
+				# preflop
+				
+				# player 'a' first to act completes the big blind
+				if self.actionNo == 1:
+					event = choices[game.EventPlayerCalls]
+					self.test.assertEqual(event.player.name, 'a')
+					self.test.assertEqual(event.player.seatName, PokerTools.Seats.SeatNameSB)
+					return event
+				
+				# player 'b' checks his bis blind
+				elif self.actionNo == 2:
+					event = choices[game.EventPlayerChecks]
+					self.test.assertEqual(event.player.name, 'b')
+					self.test.assertEqual(event.player.seatName, PokerTools.Seats.SeatNameBB)
+					return event
+				
+				# postflop
+				
+				# player 'b' first to act checks
+				elif self.actionNo == 3:
+					event = choices[game.EventPlayerChecks]
+					self.test.assertEqual(event.player.name, 'b')
+					return event
+				
+				# player 'a' checks behind
+				elif self.actionNo == 4:
+					event = choices[game.EventPlayerChecks]
+					self.test.assertEqual(event.player.name, 'a')
+					self.done = True
+					return event
+				
+		# run event handler
+		eh = EventHandler(self, players=(
+				('a', 10),
+				('b', 10),
+				),
+				smallBlind=2,
+				bigBlind=5,
+				)
+		eh.run()
+			
+		
+	def test_blindRulesThreePlayers(self):
+		
+		# test blind rules for three players
+		
+		class EventHandler(MyTestGameEventHandler):
+			
+			def handlePlayerAction(self, game, choices):
+											
+				# preflop
+				
+				# player 'a' first to act limps
+				if self.actionNo == 1:
+					event = choices[game.EventPlayerCalls]
+					self.test.assertEqual(event.player.name, 'a')
+					self.test.assertEqual(event.player.seatName, PokerTools.Seats.SeatNameBTN)
+					return event
+				
+				# player 'b' completes the big blind
+				elif self.actionNo == 2:
+					event = choices[game.EventPlayerCalls]
+					self.test.assertEqual(event.player.name, 'b')
+					self.test.assertEqual(event.player.seatName, PokerTools.Seats.SeatNameSB)
+					return event
+				
+				elif self.actionNo == 3:
+					event = choices[game.EventPlayerChecks]
+					self.test.assertEqual(event.player.name, 'c')
+					self.test.assertEqual(event.player.seatName, PokerTools.Seats.SeatNameBB)
+					return event
+							
+				# postflop
+				
+				# player 'b' first to act checks
+				elif self.actionNo == 4:
+					event = choices[game.EventPlayerChecks]
+					self.test.assertEqual(event.player.name, 'b')
+					return event
+				
+				# player 'c' checks
+				elif self.actionNo == 5:
+					event = choices[game.EventPlayerChecks]
+					self.test.assertEqual(event.player.name, 'c')
+					return event
+					
+				# player 'a' checks behind
+				elif self.actionNo == 6:
+					event = choices[game.EventPlayerChecks]
+					self.test.assertEqual(event.player.name, 'a')
+					self.done = True
+					return event
+				
+		# run event handler
+		eh = EventHandler(self, players=(
+				('a', 10),
+				('b', 10),
+				('c', 10),
+				
+				),
+				smallBlind=2,
+				bigBlind=5,
+				)
+		eh.run()
+	
+	
+	
+	
 	
 	def test_incompeteBet(self):
 		
-		class Player(object):
-			def __init__(self, name, stack):
-				self.name = name
-				self.stack = stack
-		players = (
-				Player('a', 10),
-				Player('b', 9),
-				Player('c', 10),
-				)
-		
 		# test raise not allowed when incomplete bet reopend the action
 		
-		class MethodAct(object):
-			def __init__(self, test):
-				self.test = test
-				self.actionNo = 0
-			def __call__(self, game, choices):
-				self.actionNo += 1
-				player = choices.values()[0].player
-				
+		class EventHandler(MyTestGameEventHandler):
+			
+			
+			def handlePlayerAction(self, game, choices):
+											
 				# preflop (no blinds)
 				
 				# player 'a' bets a chip less than player 'b' stack
 				if self.actionNo == 1:
 					event = choices[game.EventPlayerBets]
+					self.test.assertEqual(event.player.name, 'a')
 					event.amount = 8
 					return event
 				
 				# player 'b' raises for his last chip
 				elif self.actionNo == 2:
 					event = choices[game.EventPlayerRaises]
+					self.test.assertEqual(event.player.name, 'b')
 					event.amount = 1
 					return event
 				
 				# player 'c' just calls the raise
 				elif self.actionNo == 3:
-					return choices[game.EventPlayerCalls]
+					event = choices[game.EventPlayerCalls]
+					self.test.assertEqual(event.player.name, 'c')
+					return event
 				
 				# now player 'a' is not allowed to raise
 				elif self.actionNo == 4:
 					self.test.assertNotIn(game.EventPlayerRaises, choices)
-					return choices[game.EventPlayerCalls]
-					
-				# postflop (complete the actions)
-				
-				# player 'c' ships his last chip
-				elif self.actionNo == 5:
-					event = choices[game.EventPlayerBets]
-					event.amount = event.amountMax
+					self.done = True
+					event = choices[game.EventPlayerCalls]
+					self.test.assertEqual(event.player.name, 'a')
 					return event
+			
+		# run event handler
+		eh = EventHandler(self, players=(
+				('a', 10),
+				('b', 9),
+				('c', 10)
+				))
+		eh.run()
 				
-				# player 'a' calls
-				elif self.actionNo == 6:
-					return choices[game.EventPlayerCalls]
-				
-		# inject our method emulator into each player
-		methodAct = MethodAct(self)
-		for player in players:
-			player.act = methodAct
-		game = Game(players)
-		for event in game.run(game.EventGameStart(game)):
-			#print event.name()
-			pass
-		
 		#
 		#
 		
 		# test raising allowed when incomplete bet did not reopen the action
-		
-		players = (
-				Player('a', 100),
-				Player('b', 10),
-				Player('c', 100),
-				)
-		
-		class MethodAct(object):
-			def __init__(self, test):
-				self.test = test
-				self.actionNo = 0
-			def __call__(self, game, choices):
-				self.actionNo += 1
-				player = choices.values()[0].player
-				
+		class EventHandler(MyTestGameEventHandler):
+			
+			def handlePlayerAction(self, game, choices):
+											
 				# preflop (no blinds)
 				
 				# player 'a' bets a chip less than player 'b' stack
@@ -1833,20 +1949,20 @@ class TestGame(unittest.TestCase):
 					self.test.assertIn(game.EventPlayerRaises, choices)
 					event = choices[game.EventPlayerRaises]
 					event.amount = event.amountMax
+					self.done = True
 					return event
 			
 				# player 'c' calls
 				elif self.actionNo == 5:
 					return choices[game.EventPlayerCalls]
 				
-		# inject our method emulator into each player
-		methodAct = MethodAct(self)
-		for player in players:
-			player.act = methodAct
-		game = Game(players)
-		for event in game.run(game.EventGameStart(game)):
-			#print event.name()
-			pass
+		# run event handler
+		eh = EventHandler(self, players=(
+				('a', 100),
+				('b', 10),
+				('c', 100)
+				))
+		eh.run()
 		
 #************************************************************************************
 # unittest
