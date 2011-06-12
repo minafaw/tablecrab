@@ -549,7 +549,11 @@ class HandRange(object):
 			
 	@classmethod
 	def _combinationsOffsuit(klass, rank1, rank2):
-		return [hand for hand in klass._combinations(rank1, rank2) if hand.cards[0].suit() != hand.cards[1].suit()]
+		result = []
+		for hand in klass._combinations(rank1, rank2):
+			if hand.cards[0].suit() != hand.cards[1].suit():
+				result.append(hand)
+		return result
 			
 	def toString(self):
 
@@ -606,7 +610,7 @@ class HandRange(object):
 						if rankCurrent +1 == rankLast:
 							lastSlc.append(handTypeData)
 						else:
-							rng.append([handTypeData, ])
+							rng.append([handTypeData,] )
 				else:
 					rng.append([handTypeData,] )
 					
@@ -616,7 +620,7 @@ class HandRange(object):
 			rng = ranges[rngName]
 			for slc in rng:
 				if len(slc) > 1:
-					result.append( '%s-%s' % (slc[0]['handType'], slc[-1]['handType']) )
+					result.append( '%s-%s' % (slc[0]['handType'], slc[-1]['handType']))
 				elif len(slc[0]['hands']) == slc[0]['nCardsExpected']:
 					result.append(slc[0]['handType'])
 				else:
