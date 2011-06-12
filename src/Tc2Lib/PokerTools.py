@@ -553,71 +553,74 @@ class HandRange(object):
 			
 	def toString(self):
 
-		class HandType(object):
-			def __init__(self, handtype, hands):
-				self.handType = handType
-				self.hands = hands
-				self.rank1 = Card.RankNames.index(handType[0])
-				self.rank2 = Card.RankNames.index(handType[1])
-								
-		# dump our hands to handType table
-		table = genHandTypeTable()
-		for iRow, row in enumerate(table):
-			for iCol, handType in enumerate(row):
-				hands = []
-				for hand in self.hands:
-					if handTypeFromHand(hand) == handType:
-						hands.append(hand)
-				##print handType, hands
-				row[iCol] = HandType(handType, hands)
-				
-		result = []
-		pairs =[]
-		suited = []
-		offsuit = []
+		# precompute hand types of our hands
+		handTypes = dict([(handType, []) for handType in genHandTypes()])
+		for hand in self.hands:
+			handType = handTypeFromHand(hand)
+			handTypes[handType].append(hand) 
 		
-		for row in table:
-			for handType in row:
-				if len(handType.handType) == 2:
+		# dump our hands to handType table
+		handTypeTable = genHandTypeTable()
+		for row in handTypeTable:
+			for iCol, handType in enumerate(row):
+				# assign dict handTypeData to each cell
+				if len(handType) == 2:
 					nCardsExpected = 6
-					rankSignificant = 'rank1'
-					rng = pairs
-				elif handType.handType[-1] == 's':
+					type = 'pair'
+					rankSignificant = Card.RankNames.index(handType[0])
+					nCardsExpected = 6
+				elif handType[-1] == 's':
+					type = 'suited'
 					nCardsExpected = 4
-					rankSignificant = 'rank2'
-					rng = suited
+					rankSignificant = Card.RankNames.index(handType[1])
 				else:
+					type = 'offsuit'
 					nCardsExpected = 12
-					rankSignificant = 'rank2'
-					rng = offsuit
-				
-				if not handType.hands:
+					rankSignificant = Card.RankNames.index(handType[1])	
+				row[iCol] = {
+						'type': type,
+						'handType': handType,
+						'rankSignificant': rankSignificant,
+						'nCardsExpected': nCardsExpected,
+						'hands': handTypes[handType],
+						}
+						
+		# dump hands to handTypeTable
+		ranges = {'pair': [], 'suited': [], 'offsuit': []}
+		for row in handTypeTable:
+			for handTypeData in row:
+				rng = ranges[handTypeData['type']]
+				if not handTypeData['hands']:
 					continue
-				if len(handType.hands)  == nCardsExpected:
+				if len(handTypeData['hands']) == handTypeData['nCardsExpected']:
 					if not rng:
 						rng.append([])
-					last = rng[-1]
-					if not last:
-						last.append(handType)
+					lastSlc = rng[-1]
+					if not lastSlc:
+						lastSlc.append(handTypeData)
+					elif lastSlc[-1]['nCardsExpected'] != len(lastSlc[-1]['hands']):
+						rng.append([handTypeData,] )
 					else:
-						rankCurrent = getattr(handType, rankSignificant)
-						rankLast = getattr(last[-1], rankSignificant)
+						rankCurrent = handTypeData['rankSignificant']
+						rankLast = lastSlc[-1]['rankSignificant']
 						if rankCurrent +1 == rankLast:
-							last.append(handType)
+							lastSlc.append(handTypeData)
 						else:
-							rng.append([handType, ])
+							rng.append([handTypeData, ])
 				else:
-					rng.append([handType, ])
+					rng.append([handTypeData,] )
 					
-				
-		for rng in (pairs, suited, offsuit):
-			for r in rng:
-				if len(r) > 1:
-					result.append( '%s-%s' % (r[0].handType, r[-1].handType) )
-				elif len(r[0].hands) == 6:
-					result.append( r[0].handType)
+		# gen ranges
+		result = []
+		for rngName in ('pair', 'suited', 'offsuit'):
+			rng = ranges[rngName]
+			for slc in rng:
+				if len(slc) > 1:
+					result.append( '%s-%s' % (slc[0]['handType'], slc[-1]['handType']) )
+				elif len(slc[0]['hands']) == slc[0]['nCardsExpected']:
+					result.append(slc[0]['handType'])
 				else:
-					for hand in r[0].hands:
+					for hand in slc[0]['hands']:
 						s = hand.toString()
 						s = s.replace('[', '').replace(']', '').replace('\x20', '')
 						result.append(s)		
