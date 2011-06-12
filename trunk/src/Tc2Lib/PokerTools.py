@@ -3,6 +3,7 @@ import functools
 import itertools
 import math
 import random
+import re
 #************************************************************************************
 # math
 #************************************************************************************
@@ -175,6 +176,9 @@ class Card(int):
 	def __str__(self): return self.__repr__()
 	def __unicode__(self): return self.__repr__()
 
+	def __eq__(self, other): return self.value() == other.value()
+	def __ne__(self, other): return not self.__eq__(other)
+	
 	def name(self):
 		"""returns the string representation of the card, i.e. 'Ah'
 		@return: (str) card
@@ -243,6 +247,23 @@ class CardDeck(object):
 		"""
 		return self._cards.pop(0)
 
+
+class Hand(object):
+	def __init__(self, *cards):
+		self.cards = cards
+		# no duplicate cards allowed in a hand
+		for card in cards:
+			if cards.count(card) > 1:
+				raise ValueError('duplicate cards in hand')
+	def __eq__(self, other):
+		if len(self.cards) == len(other.cards):
+			if not [card for card in self.cards if card not in other.cards]:
+				return True
+		return False
+	def __ne__(self, other): return not self.__eq__(other)
+	def toString(self):
+		return '[%s]' % ' '.join([card.name() for card in self.cards]) 
+
 #************************************************************************************
 #
 #************************************************************************************
@@ -286,13 +307,13 @@ def genHandTypeTable():
 
 def handTypeFromHand(hand):
 	"""
-	@param hand: list containing two L{Card}s
+	@param hand: L{Hand} containing two L{Card}s
 	@return:(str) hand type of the hand ('AKo' or whatevs)
 	"""
-	if len(hand) != 2:
+	if len(hand.cards) != 2:
 		raise ValueError('expected a two card hand')
 	
-	card0, card1  = hand
+	card0, card1  = hand.cards
 	if card0.rank() == card1.rank():
 		return card0.rankName() + card1.rankName()
 	flag = 's'
@@ -308,236 +329,301 @@ def handTypeFromHand(hand):
 #NOTE: neither is this beast below 100% compatible to PokerTracker nor is it tested
 # in any depth.
 class HandRange(object):
-
-	def __init__(self, string='', hands=None):
-		self._hands = []
-
+	
+	class ParseError(Exception): pass
+	
+	ReRanks = '|'.join(Card.RankNames)
+	ReSuits = '|'.join(Card.SuitNames)
+	ReCard = '(%s)(%s)' % (ReRanks, ReSuits)
+	PatHand = re.compile('''
+					\A
+					(?P<card1>%s)
+					(?P<card2>%s)
+					\Z
+					''' % (ReCard, ReCard), re.X)
+	PatHandTypePair = re.compile('''
+					\A
+					(?P<rank>%s)
+					(?P=rank)
+					(?P<qualifier>\+)?
+					\Z
+					''' % ReRanks, re.X)
+	PatHandTypePairRange = re.compile('''
+					\A(?P<rank1>%s)
+					(?P=rank1)
+					\-
+					(?P<rank2>%s)
+					(?P=rank2)
+					\Z
+					''' % (ReRanks, ReRanks), re.X)
+	PatHandTypeSuit = re.compile('''
+					\A
+					(?P<rank1>%s)
+					(?P<rank2>%s)
+					(?P<suit>s|o)?
+					(?P<qualifier>\+)?
+					\Z
+					''' % (ReRanks, ReRanks), re.X)
+	PatHandTypeSuitRange = re.compile('''
+					\A
+					(?P<rank1>%s)
+					(?P<rank2>%s)
+					(?P<suit1>s|o)?
+					\-
+					(?P<rank3>%s)
+					(?P<rank4>%s)
+					(?P<suit2>s|o)?
+					\Z
+					''' % (ReRanks, ReRanks, ReRanks, ReRanks), re.X)
+	
+	def __init__(self, hands=None):
+		self.hands = []
 		if hands is not None:
-			self += hands
-
-		elif string:
-			s = string.replace(' ', '').replace('\t', '')
-			for s in s.split(','):
-
-				# range is a pair <TT>
-				if len(s) == 2 and s[0] in Card.RankNames and s[1] in Card.RankNames and s[0] == s[1]:
-					self += self.listGenHands(s[0], )
-
-				# range is a pair and above <TT+>
-				elif len(s) == 3 and s[0] in Card.RankNames and s[1] in Card.RankNames and s[0] == s[1] and s[2] == '+':
-					self += self.listGenHands(*self.rangePair(s[:2]))
-
-				# range is a pair range <TT-66>
-				#NOTE:
-				#           - PokerStove corrects <66-TT> to <TT-66>, so do we
-				elif len(s) == 5 and s[0] in Card.RankNames and s[1] in Card.RankNames and s[0] == s[1] and s[2] == '-' \
-							and s[3] in Card.RankNames and s[4] in Card.RankNames and s[3] == s[4]:
-					self += self.listGenHands(*self.rangePair(s[:2], s[3:]))
-
-				# range is a two card combination <KT>
-				#NOTE:
-				#          - Pokerstove corrects <TK> to <KT>, so do we
-				#           - PokerStove corrects this to <KTs, KTo>, so do we
-				#           - PokerStove does not allow <KT+>, so do we
-				elif len(s) == 2 and s[0] in Card.RankNames and s[1] in Card.RankNames and s[0] != s[1]:
-					hand= self.sortHand(s)
-					self += self.listGenHands(hand[0], hand[1])
-
-				# range is a suited two card combination <KTs>
-				elif len(s) == 3 and s[0] in Card.RankNames and s[1] in Card.RankNames and s[0] != s[1] and s[2] == 's':
-					hand= self.sortHand(s[:2])
-					self += self.listGenHands(hand[0], hand[1],isSuited=True)
-
-				# range is a suited two card combination <KTo>
-				elif len(s) == 3 and s[0] in Card.RankNames and s[1] in Card.RankNames and s[0] != s[1] and s[2] == 'o':
-					hand= self.sortHand(s[:2])
-					self += self.listGenHands(hand[0], hand[1],isOffsuit=True)
-
-				# range is a suited two card combination <KTs+>
-				elif len(s) == 4 and s[0] in Card.RankNames and s[1] in Card.RankNames and s[0] != s[1] and s[2] == 's' and s[3] == '+':
-					self += self.listGenHands(*self.rangeTwoCardHand(s[:2]), isSuited=True)
-
-				# range is an offsuit two card combination <KTo+>
-				elif len(s) == 4 and s[0] in Card.RankNames and s[1] in Card.RankNames and s[0] != s[1] and s[2] == 'o' and s[3] == '+':
-					self += self.listGenHands(*self.rangeTwoCardHand(s[:2]), isOffsuit=True)
-
-				# range is a stwo card range <KT-K2>
-				elif len(s) == 5 and s[0] in Card.RankNames and s[1] in Card.RankNames and s[0] != s[1] and s[2] == '-' \
-								and s[3] in Card.RankNames and s[4] in Card.RankNames and s[3] != s[4]:
-					self += self.listGenHands(*self.rangeTwoCardHand(s[:2], s[3:5]))
-
-				# range is a suited two card range <KTs-K2s>
-				#NOTE:
-				#          - Pokerstove does not allow <KT-KTs>, so do we
-				elif len(s) == 7 and s[0] in Card.RankNames and s[1] in Card.RankNames and s[0] != s[1] and s[2] == 's' and s[3] == '-' \
-								and s[4] in Card.RankNames and s[5] in Card.RankNames and s[4] != s[5] and s[6] == 's':
-					self += self.listGenHands(*self.rangeTwoCardHand(s[:2], s[4:6]), isSuited=True)
-
-				# range is an offsuit two card range <KTo-K2o>
-				#NOTE: Pokerstove does not allow <KT-KTo>, so do we
-				elif len(s) == 7 and s[0] in Card.RankNames and s[1] in Card.RankNames and s[0] != s[1] and s[2] == 'o' and s[3] == '-' \
-								and s[4] in Card.RankNames and s[5] in Card.RankNames and s[4] != s[5] and s[6] == 'o':
-					self += self.listGenHands(*self.rangeTwoCardHand(s[:2], s[4:6]), isOffsuit=True)
-
+			for hand in hands:
+				if hand not in self.hands:
+					self.hands.append(hand) 
+			
+	@classmethod
+	def fromString(klass, string):
+		handRange = klass()
+		# clean string
+		p = string.replace(' ', '').replace('\t', '')
+		p = p.split(',')
+		for s in p:
+			
+			# substring is a hand --> 'Kh7d'
+			#
+			result = klass.PatHand.match(s)
+			if result is not None:
+				card1, card2 = Card(result.group('card1')), Card(result.group('card2'))
+				hand = Hand(card1, card2)
+				if hand not in handRange.hands:
+					handRange.hands.append(hand)
+				continue
+				
+			# substring is a handTypePair --> 'TT' or 'TT+'
+			#
+			result = klass.PatHandTypePair.match(s)
+			if result is not None:
+				rank = result.group('rank')[0]
+				hands =  klass._combinationsPair(rank)
+				for hand in hands:
+					if hand not in handRange.hands:
+						handRange.hands.append(hand)
+				
+				# expand pattern if necessary
+				qualifier = result.group('qualifier')
+				if qualifier:
+					iRank = Card.RankNames.index(rank)
+					for otherRank in Card.RankNames[iRank +1:]:
+						p.append(otherRank + otherRank)
+				continue
+								
+			# substring is a handTypeSuit --> 'KTs', 'KTs+', 'KTo' or 'KT'
+			#
+			#NOTE: PokerTracker handles 'KT' but not 'KT+', we do
+			result = klass.PatHandTypeSuit.match(s)
+			if result is not None:
+				rank1 = result.group('rank1')
+				rank2 = result.group('rank2')
+				rank1, rank2 = klass._sortedCardRanks(rank1, rank2, revert=True)
+				suit = result.group('suit')
+				qualifier = result.group('qualifier')
+										
+				# got a pair - assume typo - PokerStove does so as well (?)
+				if rank1 == rank2:
+					if qualifier:
+						p.append('%s%s%s' % (rank1, rank1, qualifier))
+					else:
+						p.append('%s%s' % (rank1, rank1))
+					continue
+							
+				if suit == 's':
+					hands = klass._combinationsSuited(rank1, rank2)
+				elif suit == 'o':
+					hands = klass._combinationsOffsuit(rank1, rank2)
 				else:
-					raise ValueError('invalid hand range: %s' % string)
-
-	def __iter__(self):
-		return iter(self._hands)
-
-	def sortHand(self, hand):
-		p = [card for card in hand]
-		p.sort(cmp=lambda x, y: cmp(Card.RankNames.index(y), Card.RankNames.index(x)) )
-		return ''.join(p)
-
-	def sortHands(self, *hands):
-		p = [self.sortHand(hand) for hand in hands]
-		def sortf(x,y):
-			result = cmp(Card.RankNames.index(y[0]), Card.RankNames.index(x[0]) )
-			if not result:
-				result = cmp(Card.RankNames.index(y[1]), Card.RankNames.index(x[1]) )
-			return result
-		p.sort(cmp=sortf)
-		return p
-
-	def rangePair(self, hand, hand2=None):
-		if hand2 is None:
-			hand = self.sortHand(hand)
-		else:
-			hand, hand2 = self.sortHands(hand, hand2)
-
-		iStart = Card.RankNames.index(hand[1])
-		range1, range2 = [], None
-		if hand2 is None:
-			for rank in Card.RankNames[iStart:]:
-				range1.append(rank)
-		else:
-			iStop = iStart
-			iStart = Card.RankNames.index(hand2[1])
-			for rank in Card.RankNames[iStart:iStop+1]:
-				range1.append(rank)
-		return range1, range2
-
-	def rangeTwoCardHand(self, hand, hand2=None):
-		if hand2 is None:
-			hand = self.sortHand(hand)
-		else:
-			hand, hand2 = self.sortHands(hand, hand2)
-
-		iStart = Card.RankNames.index(hand[1])
-		iStop = Card.RankNames.index(hand[0])
-		range1, range2 = [], []
-		if hand2 is None:
-			for rank in Card.RankNames[iStart:iStop]:
-				range1.append(hand[0])
-				range2.append(rank)
-		else:
-			iStop = iStart
-			iStart = Card.RankNames.index(hand2[1])
-			for rank in Card.RankNames[iStart:iStop+1]:
-				range1.append(hand[0])
-				range2.append(rank)
-		return range1, range2
-
-	def iterGenHands(self, ranks1, ranks2=None, isSuited=False, isOffsuit=False):
-		if ranks2 is not None:
-			if len(ranks1) != len(ranks2):
-				raise ValueError('rank lists must be of equal size')
-
-		for i, rank1 in enumerate(ranks1):
-			rank2 = ranks2[i] if ranks2 is not None else None
-
-			rng1 = [Card(rank1 + suit) for suit in Card.SuitNames]
-			if rank2 is None:
-				enum = itertools.combinations(rng1, 2)
-			else:
-				rng2 = [Card(rank2 + suit) for suit in Card.SuitNames]
-				enum = itertools.product(rng1, rng2)
-			for card1, card2 in enum:
-					hand = [card1, card2]
-					handIsSuited = hand[0].suit() == hand[1].suit()
-					if isSuited and not handIsSuited:
-						continue
-					if isOffsuit and handIsSuited:
-						continue
-					yield hand
-
-	def listGenHands(self, ranks1, ranks2=None, isSuited=False, isOffsuit=False):
-		return [hand for hand in self.iterGenHands(ranks1, ranks2=ranks2, isSuited=isSuited, isOffsuit=isOffsuit)]
-
-	def __len__(self):
-		return len(self._hands)
-
-	def __add__(self, other):
-		for hand in other:
-			if hand not in self._hands:
-				self._hands.append(hand)
-		return self
-	def __ladd__(self, other):
-		self.__add__(other)
-		return self
-	def __radd__(self, other):
-		self.__add__(other)
-		return self
-	def __contains__(self, other):
-		for hand in other:
-			if hand in self._hands:
-				return True
-		return False
-
-	def hands(self):
-		return self._hands
-
+					hands = klass._combinations(rank1, rank2)
+				for hand in hands:
+					if hand not in handRange.hands:
+						handRange.hands.append(hand)
+				
+				# expand pattern if necessary
+				if qualifier:
+					iRank = Card.RankNames.index(rank2)
+					for otherRank in Card.RankNames[iRank +1:]:
+						if otherRank == rank1: continue
+						if suit:
+							p.append(rank1 + otherRank + suit)
+						else:
+							p.append(rank1 + otherRank + 's')
+							p.append(rank1 + otherRank + 'o')
+				continue
+				
+			# substring is a handTypePairRange --> '22-TT'
+			#
+			result = klass.PatHandTypePairRange.match(s)
+			if result is not None:
+				rank1 = result.group('rank1')
+				rank2 = result.group('rank2')
+				rank1, rank2 = klass._sortedCardRanks(rank1, rank2, revert=False)
+				iRank1 = Card.RankNames.index(rank1)
+				iRank2 = Card.RankNames.index(rank2)
+														
+				# expand pattern
+				ranks = Card.RankNames[iRank1:iRank2+1]
+				for rank in ranks:
+					p.append(rank + rank)
+				continue
+							
+			# substring is a handTypeSuiteRange --> 'K7s-KTs', 'KT-K7', 'KTo-K7', ...
+			#
+			result = klass.PatHandTypeSuitRange.match(s)
+			if result is not None:
+				rank1 = result.group('rank1')
+				rank2 = result.group('rank2')
+				rank1, rank2 = klass._sortedCardRanks(rank1, rank2, revert=True)
+				rank3 = result.group('rank3')
+				rank4 = result.group('rank4')
+				rank3, rank4 = klass._sortedCardRanks(rank3, rank4, revert=True)
+				# sort rank2 and 4 once again so we get ascending ranks for expanding
+				rank2, rank4 = klass._sortedCardRanks(rank2, rank4, revert=False)
+				if rank1 != rank3:
+					raise klass.ParseError('invalid range: %s' % s)
+				# determine suit
+				suit1 = result.group('suit1')
+				suit2 = result.group('suit2')
+				if suit1:
+					suit = suit1
+				elif suit2:
+					suit = suit2
+				else:
+					suit = None
+							
+				# expand pattern
+				iRank2 = Card.RankNames.index(rank2)
+				iRank4 = Card.RankNames.index(rank4)
+				ranks = Card.RankNames[iRank2:iRank4+1]
+				for rank in ranks:
+					if suit:
+						p.append(rank1 + rank + suit)
+					else:
+						p.append(rank1 + rank + 's')
+						p.append(rank1 + rank + 'o')		
+				continue
+		
+		# finally		
+		return handRange
+			
+	@classmethod
+	def _sortedCardRanks(self, rank1, rank2, revert=False):
+		iRank1 = Card.RankNames.index(rank1)
+		iRank2 = Card.RankNames.index(rank2)
+		if revert and iRank1 < iRank2:
+			return [rank2, rank1]
+		elif not revert and iRank2 < iRank1:
+			return [rank2, rank1]
+		return [rank1, rank2]
+		
+	@classmethod
+	def _combinations(klass, rank1, rank2):
+		cards1 = [Card(rank1 + suit) for suit in Card.SuitNames]
+		cards2 = [Card(rank2 + suit) for suit in Card.SuitNames]
+		result = []
+		for card1, card2 in itertools.product(cards1, cards2):
+			result.append(Hand(card1, card2))
+		return result	
+	
+	@classmethod
+	def _combinationsPair(klass, rank):
+		cards = [Card(rank + suit) for suit in Card.SuitNames]
+		return [Hand(*cards) for cards in itertools.combinations(cards, 2)]
+		
+	@classmethod
+	def _combinationsSuited(klass, rank1, rank2):
+		result = []
+		for suit in Card.SuitNames:
+			hand = Hand(Card(rank1 + suit), Card(rank2 + suit))
+			result.append(hand)
+		return result
+			
+	@classmethod
+	def _combinationsOffsuit(klass, rank1, rank2):
+		return [hand for hand in klass._combinations(rank1, rank2) if hand.cards[0].suit() != hand.cards[1].suit()]
+			
 	def toString(self):
 
-		#NOTE: not a beauty but lights are on ;-)
-
-		# prep our ranges
-		pairs = [None]* len(Card.RankNames)
-		suited = [[None, ]*(iRank) for iRank in xrange(len(Card.RankNames))]
-		offsuit = [[None, ]*(iRank) for iRank in xrange(len(Card.RankNames))]
-
-		# dump hands from lookup table to our ranges
-		for hand in self:
-			handName = handTypeFromHand(hand)
-			if handName[0] == handName[1]:	# its a pair
-				i = Card.RankNames.index(handName[0])
-				pairs[i] = handName
-				continue
-
-			i1 = Card.RankNames.index(handName[0])
-			i2 = Card.RankNames.index(handName[1])
-			if handName[-1] == 's':
-				suited[i1][i2] = handName
-			elif handName[-1] == 'o':
-				offsuit[i1][i2] = handName
-
-		def genRange(L):
-			szHandRange = ''
-			L = splitIterable(L, lambda x: x is None)
-			for i, L in enumerate(L[::-1]):
-				if not L: continue
-				if szHandRange: szHandRange += ','
-				if i == 0:	# special case: open ended range
-					szHandRange += L[0]
-					if len(L) > 1:
-						szHandRange += '+'
+		class HandType(object):
+			def __init__(self, handtype, hands):
+				self.handType = handType
+				self.hands = hands
+				self.rank1 = Card.RankNames.index(handType[0])
+				self.rank2 = Card.RankNames.index(handType[1])
+								
+		# dump our hands to handType table
+		table = genHandTypeTable()
+		for iRow, row in enumerate(table):
+			for iCol, handType in enumerate(row):
+				hands = []
+				for hand in self.hands:
+					if handTypeFromHand(hand) == handType:
+						hands.append(hand)
+				##print handType, hands
+				row[iCol] = HandType(handType, hands)
+				
+		result = []
+		pairs =[]
+		suited = []
+		offsuit = []
+		
+		for row in table:
+			for handType in row:
+				if len(handType.handType) == 2:
+					nCardsExpected = 6
+					rankSignificant = 'rank1'
+					rng = pairs
+				elif handType.handType[-1] == 's':
+					nCardsExpected = 4
+					rankSignificant = 'rank2'
+					rng = suited
 				else:
-					szHandRange += L[0] if len(L) == 1 else '%s-%s' % (L[-1], L[0])
-			return szHandRange
-
-		# dump our ranges to string
-		szHandRange = genRange(pairs)
-		for L in (suited[::-1], offsuit[::-1]):
-			for L in L:
-				#print L
-				result = genRange(L)
-				if result:
-					if szHandRange:
-						szHandRange += ','
-					szHandRange += result
-		return szHandRange
-
+					nCardsExpected = 12
+					rankSignificant = 'rank2'
+					rng = offsuit
+				
+				if not handType.hands:
+					continue
+				if len(handType.hands)  == nCardsExpected:
+					if not rng:
+						rng.append([])
+					last = rng[-1]
+					if not last:
+						last.append(handType)
+					else:
+						rankCurrent = getattr(handType, rankSignificant)
+						rankLast = getattr(last[-1], rankSignificant)
+						if rankCurrent +1 == rankLast:
+							last.append(handType)
+						else:
+							rng.append([handType, ])
+				else:
+					rng.append([handType, ])
+					
+				
+		for rng in (pairs, suited, offsuit):
+			for r in rng:
+				if len(r) > 1:
+					result.append( '%s-%s' % (r[0].handType, r[-1].handType) )
+				elif len(r[0].hands) == 6:
+					result.append( r[0].handType)
+				else:
+					for hand in r[0].hands:
+						s = hand.toString()
+						s = s.replace('[', '').replace(']', '').replace('\x20', '')
+						result.append(s)		
+		
+		return ', '.join(result)
+		
 #************************************************************************************
 #
 #************************************************************************************
