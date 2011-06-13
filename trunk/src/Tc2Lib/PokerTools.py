@@ -323,6 +323,15 @@ def handTypeFromHand(hand):
 		return card1.rankName() + card0.rankName() + flag
 	return card0.rankName() + card1.rankName()+ flag
 
+def handTypeIsPair(handType):
+	return len(handType) == 2
+
+def handTypeIsSuited(handType):
+	return handType[-1] == 's'
+
+def handTypeIsOffsuit(handType):
+	return handType[-1] == 'o'
+
 #************************************************************************************
 # hand ranges
 #************************************************************************************
