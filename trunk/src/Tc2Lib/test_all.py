@@ -18,7 +18,7 @@ import os, sys, unittest
 #************************************************************************************
 DirSelf = os.path.abspath(os.path.dirname(__file__))
 
-def main(directory=DirSelf, recursive=False, verbosity=2):
+def main(directory=DirSelf, recursive=True, verbosity=2):
 	
 	runner = unittest.TextTestRunner(verbosity=verbosity)
 	
