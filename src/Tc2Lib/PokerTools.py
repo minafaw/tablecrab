@@ -450,8 +450,9 @@ class HandRange(object):
 				
 				# expand pattern if necessary
 				if qualifier:
-					iRank = Card.RankNames.index(rank2)
-					for otherRank in Card.RankNames[iRank +1:]:
+					iRank1 = Card.RankNames.index(rank1)
+					iRank2 = Card.RankNames.index(rank2)
+					for otherRank in Card.RankNames[iRank2 +1:iRank1]:
 						if otherRank == rank1: continue
 						if suit:
 							p.append(rank1 + otherRank + suit)
@@ -571,19 +572,23 @@ class HandRange(object):
 				if len(handType) == 2:
 					nCardsExpected = 6
 					type = 'pair'
+					rank = Card.RankNames.index(handType[0])
 					rankSignificant = Card.RankNames.index(handType[0])
 					nCardsExpected = 6
 				elif handType[-1] == 's':
 					type = 'suited'
 					nCardsExpected = 4
+					rank = Card.RankNames.index(handType[0])
 					rankSignificant = Card.RankNames.index(handType[1])
 				else:
 					type = 'offsuit'
 					nCardsExpected = 12
+					rank = Card.RankNames.index(handType[0])
 					rankSignificant = Card.RankNames.index(handType[1])	
 				row[iCol] = {
 						'type': type,
 						'handType': handType,
+						'rank': rank,
 						'rankSignificant': rankSignificant,
 						'nCardsExpected': nCardsExpected,
 						'hands': handTypes[handType],
@@ -620,7 +625,14 @@ class HandRange(object):
 			rng = ranges[rngName]
 			for slc in rng:
 				if len(slc) > 1:
-					result.append( '%s-%s' % (slc[0]['handType'], slc[-1]['handType']))
+					# handle special case like: 'TT+'
+					if slc[0]['type'] == 'pair' and slc[0]['rankSignificant'] == 12:
+						result.append( '%s+' % slc[-1]['handType'])
+					# handle special case like: 'KTs+', 'KTo+'
+					elif slc[0]['rankSignificant'] +1 == slc[0]['rank']:
+						result.append( '%s+' % slc[-1]['handType'])				
+					else:
+						result.append( '%s-%s' % (slc[0]['handType'], slc[-1]['handType']))
 				elif len(slc[0]['hands']) == slc[0]['nCardsExpected']:
 					result.append(slc[0]['handType'])
 				else:
