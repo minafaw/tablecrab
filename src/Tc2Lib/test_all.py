@@ -6,8 +6,8 @@ and must provide a "suit()" method returning the unittest.TestSuit for the modul
 usage:
 test_all.py [-d directory] [-r] [-v verbosity]
 
--d: (otional) directory to parse for unittests
--r: (optional) traverse directory recursively
+-d: (otional) directory to run unittests from - default is current directory
+-r: (optional) run tests in directory recursively
 -v: (optional) unittest output verbosity - integer 0-N
 
 """
