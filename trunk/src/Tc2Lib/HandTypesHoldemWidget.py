@@ -45,10 +45,10 @@ class HandTypesHoldemWidget(QtGui.QFrame):
 						}
 			#pair{background-color: #E3EBEE;}
 			#pair:checked{background-color: #8DC6E2;}
-			#suited{background-color: #FAF8E0;}
-			#suited:checked{background-color:#C6B92C;}
-			#offsuit{background-color: #FBDFDE;}
-			#offsuit:checked{background-color: #E06D64;	}
+			#suited{background-color: #FBDFDE;}
+			#suited:checked{background-color: #E06D64;	}
+			#offsuit{background-color: #FAF8E0;}
+			#offsuit:checked{background-color:#C6B92C;}
 			'''
 	
 	def __init__(self, parent=None, styleSheet=None):
@@ -67,8 +67,8 @@ class HandTypesHoldemWidget(QtGui.QFrame):
 		fixedSize = QtCore.QSize(w, h)
 		
 		self.handTypeButtons ={}	# handType --> button
-		for y, row in enumerate(PokerTools.genHandTypeTable()):
-			for x, handType in enumerate(row):
+		for x, row in enumerate(PokerTools.genHandTypeTable()):
+			for y, handType in enumerate(row):
 				btn = HandtypeButton(handType, parent=self)
 				btn.setStyleSheet(self.StyleSheet if styleSheet is None else styleSheet)
 				self.handTypeButtons[handType] = btn
