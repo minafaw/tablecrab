@@ -4,7 +4,7 @@ import random
 import TexasHoldem
 import PokerTools
 #************************************************************************************
-# unittest for texasholdem.py
+# unittest for TexasHoldem.py
 #************************************************************************************
 class TestPot(unittest.TestCase):
 	
