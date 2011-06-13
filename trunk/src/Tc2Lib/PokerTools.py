@@ -328,8 +328,8 @@ def handTypeFromHand(hand):
 #************************************************************************************
 #NOTE: neither is this beast below 100% compatible to PokerTracker nor is it tested
 # in any depth.
-class HandRange(object):
-	"""wrapper class for hand ranges
+class HandRangeHoldem(object):
+	"""wrapper class for texas holdem hand ranges
 	
 	you may initialize this class directly with a list of L{Hands}s or use the L{fromString}
 	method to create a hand range from a standard hand range pattern. recognized patterns are:
