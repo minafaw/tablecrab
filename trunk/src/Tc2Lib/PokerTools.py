@@ -332,6 +332,25 @@ def handTypeIsSuited(handType):
 def handTypeIsOffsuit(handType):
 	return handType[-1] == 'o'
 
+def handTypeToHands(handType):
+	if handTypeIsPair(handType):
+		cards = [Card(handType[0] + suit) for suit in Card.SuitNames]
+		return [Hand(*cards) for cards in itertools.combinations(cards, 2)]
+	elif handTypeIsSuited(handType):
+		result = []
+		for suit in Card.SuitNames:
+			hand = Hand(Card(handType[0] + suit), Card(handType[1] + suit))
+			result.append(hand)
+		return result
+	else:
+		cards1 = [handType[0] + suit for suit in Card.SuitNames]
+		cards2 = [handType[1] + suit for suit in Card.SuitNames]
+		result = []
+		for card1, card2 in itertools.product(cards1, cards2):
+			if card1[1] == card2[1]: continue
+			result.append(Hand(Card(card1), Card(card2)))
+		return result	
+		
 #************************************************************************************
 # hand ranges
 #************************************************************************************
@@ -438,8 +457,8 @@ class HandRangeHoldem(object):
 			#
 			result = klass.PatHandTypePair.match(s)
 			if result is not None:
-				rank = result.group('rank')[0]
-				hands =  klass._combinationsPair(rank)
+				rank = result.group('rank')
+				hands =  handTypeToHands(rank+rank)
 				for hand in hands:
 					handRange._hands[hand.cardValues] = hand
 							
@@ -470,12 +489,10 @@ class HandRangeHoldem(object):
 						p.append('%s%s' % (rank1, rank1))
 					continue
 							
-				if suit == 's':
-					hands = klass._combinationsSuited(rank1, rank2)
-				elif suit == 'o':
-					hands = klass._combinationsOffsuit(rank1, rank2)
+				if suit:
+					hands = handTypeToHands(rank1+rank2+suit)
 				else:
-					hands = klass._combinations(rank1, rank2)
+					hands = handTypeToHands(rank1+rank2+'s') + handTypeToHands(rank1+rank2+'o')
 				for hand in hands:
 					handRange._hands[hand.cardValues] = hand
 							
@@ -560,36 +577,6 @@ class HandRangeHoldem(object):
 			return [rank2, rank1]
 		return [rank1, rank2]
 		
-	@classmethod
-	def _combinations(klass, rank1, rank2):
-		cards1 = [Card(rank1 + suit) for suit in Card.SuitNames]
-		cards2 = [Card(rank2 + suit) for suit in Card.SuitNames]
-		result = []
-		for card1, card2 in itertools.product(cards1, cards2):
-			result.append(Hand(card1, card2))
-		return result	
-	
-	@classmethod
-	def _combinationsPair(klass, rank):
-		cards = [Card(rank + suit) for suit in Card.SuitNames]
-		return [Hand(*cards) for cards in itertools.combinations(cards, 2)]
-		
-	@classmethod
-	def _combinationsSuited(klass, rank1, rank2):
-		result = []
-		for suit in Card.SuitNames:
-			hand = Hand(Card(rank1 + suit), Card(rank2 + suit))
-			result.append(hand)
-		return result
-			
-	@classmethod
-	def _combinationsOffsuit(klass, rank1, rank2):
-		result = []
-		for hand in klass._combinations(rank1, rank2):
-			if hand.cards[0].suit() != hand.cards[1].suit():
-				result.append(hand)
-		return result
-			
 	def __init__(self, hands=None):
 		"""
 		@param hands: (list) or L{Hand}s or None to create an empty hand range
@@ -627,13 +614,13 @@ class HandRangeHoldem(object):
 		for row in handTypeTable:
 			for iCol, handType in enumerate(row):
 				# assign dict handTypeData to each cell
-				if len(handType) == 2:
+				if handTypeIsPair(handType):
 					nCardsExpected = 6
 					type = 'pair'
 					rank = Card.RankNames.index(handType[0])
 					rankSignificant = Card.RankNames.index(handType[0])
 					nCardsExpected = 6
-				elif handType[-1] == 's':
+				elif handTypeIsSuited(handType):
 					type = 'suited'
 					nCardsExpected = 4
 					rank = Card.RankNames.index(handType[0])
@@ -714,8 +701,6 @@ class HandRangeHoldem(object):
 						
 		return ', '.join(result)
 		
-#h = HandRangeHoldem.fromString('AKks+lkjjk')
-
 #************************************************************************************
 #
 #************************************************************************************
