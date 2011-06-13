@@ -218,17 +218,17 @@ class Card(int):
 
 class CardDeck(object):
 	"""poker card deck object"""
-	__fields__ = ('_cards', )
+	__fields__ = ('cards', )
 	Cards = [Card(no) for no in xrange(Card.MinCard, Card.MaxCard +1)]
 
 	def __init__(self):
 		"""creates a new odered 52 card deck"""
-		self._cards = None
+		self.cards = None
 		self.reset()
 
 	def reset(self):
 		"""resets the deck to an ordered set of 52 cards"""
-		self._cards = self.Cards[:]
+		self.cards = self.Cards[:]
 
 	def __iter__(self):
 		return iter(self._cards)
@@ -239,27 +239,27 @@ class CardDeck(object):
 		'''shuffles the deck in place
 		@param shuffle: (func) function to shuffle the decs list of cards in-place
 		'''
-		shuffle(self._cards)
+		shuffle(self.cards)
 
 	def nextCard(self):
 		"""pops and returns the next card in the deck
 		@return: (L{Card})
 		"""
-		return self._cards.pop(0)
+		return self.cards.pop(0)
 
 
 class Hand(object):
 	def __init__(self, *cards):
 		self.cards = cards
+		self.cardValues = [card.value() for card in self.cards]
+		self.cardValues.sort()
+		self.cardValues = tuple(self.cardValues)
 		# no duplicate cards allowed in a hand
 		for card in cards:
 			if cards.count(card) > 1:
 				raise ValueError('duplicate cards in hand')
 	def __eq__(self, other):
-		if len(self.cards) == len(other.cards):
-			if not [card for card in self.cards if card not in other.cards]:
-				return True
-		return False
+		return self.cardValues == other.cardValues
 	def __ne__(self, other): return not self.__eq__(other)
 	def toString(self):
 		return '[%s]' % ' '.join([card.name() for card in self.cards]) 
@@ -343,6 +343,7 @@ class HandRangeHoldem(object):
 	you may initialize this class directly with a list of L{Hands}s or use the L{fromString}
 	method to create a hand range from a standard hand range pattern. recognized patterns are:
 	
+	*: all hands
 	JhTd: a specific card
 	AA: a pair
 	TT+: all pairs ten or higher
@@ -403,16 +404,6 @@ class HandRangeHoldem(object):
 					\Z
 					''' % (ReRanks, ReRanks, ReRanks, ReRanks), re.X)
 	
-	def __init__(self, hands=None):
-		"""
-		@param hands: (list) or L{Hand}s or None to create an empty hand range
-		"""
-		self.hands = []
-		if hands is not None:
-			for hand in hands:
-				if hand not in self.hands:
-					self.hands.append(hand) 
-			
 	@classmethod
 	def fromString(klass, string):
 		"""creates a hand range from a string containg hand patterns
@@ -425,15 +416,22 @@ class HandRangeHoldem(object):
 		p = string.replace(' ', '').replace('\t', '')
 		p = p.split(',')
 		for s in p:
-			
+			if not s: continue
+					
+			if s == '*':
+				deck = CardDeck()
+				for cards in itertools.combinations(deck.cards, 2):
+					hand = Hand(*cards)
+					handRange._hands[hand.cardValues] = hand
+				break
+						
 			# substring is a hand --> 'Kh7d'
 			#
 			result = klass.PatHand.match(s)
 			if result is not None:
 				card1, card2 = Card(result.group('card1')), Card(result.group('card2'))
 				hand = Hand(card1, card2)
-				if hand not in handRange.hands:
-					handRange.hands.append(hand)
+				handRange._hands[hand.cardValues] = hand
 				continue
 				
 			# substring is a handTypePair --> 'TT' or 'TT+'
@@ -443,9 +441,8 @@ class HandRangeHoldem(object):
 				rank = result.group('rank')[0]
 				hands =  klass._combinationsPair(rank)
 				for hand in hands:
-					if hand not in handRange.hands:
-						handRange.hands.append(hand)
-				
+					handRange._hands[hand.cardValues] = hand
+							
 				# expand pattern if necessary
 				qualifier = result.group('qualifier')
 				if qualifier:
@@ -480,9 +477,8 @@ class HandRangeHoldem(object):
 				else:
 					hands = klass._combinations(rank1, rank2)
 				for hand in hands:
-					if hand not in handRange.hands:
-						handRange.hands.append(hand)
-				
+					handRange._hands[hand.cardValues] = hand
+							
 				# expand pattern if necessary
 				if qualifier:
 					iRank1 = Card.RankNames.index(rank1)
@@ -547,6 +543,9 @@ class HandRangeHoldem(object):
 						p.append(rank1 + rank + 's')
 						p.append(rank1 + rank + 'o')		
 				continue
+			
+			#
+			raise klass.ParseError('invalid hand pattern: %s' % s)	
 		
 		# finally		
 		return handRange
@@ -591,6 +590,27 @@ class HandRangeHoldem(object):
 				result.append(hand)
 		return result
 			
+	def __init__(self, hands=None):
+		"""
+		@param hands: (list) or L{Hand}s or None to create an empty hand range
+		"""
+		self._hands = {}
+		if hands is not None:
+			for hand in hands:
+				self.hands[hand.cardValues] = hand 
+			
+	def __contains__(self, hand):
+		return hand.cardValues in self._hands
+		
+	def __len__(self):
+		return len(self._hands)
+		
+	def __iter__(self):
+		return iter(self._hands.values())
+		
+	def hands(self):
+		return self._hands.values()
+	
 	def toString(self):
 		"""dumps the hand range to a string representing a hand range pattern
 		@return: (str)
@@ -598,7 +618,7 @@ class HandRangeHoldem(object):
 
 		# precompute hand types of our hands
 		handTypes = dict([(handType, []) for handType in genHandTypes()])
-		for hand in self.hands:
+		for hand in self.hands():
 			handType = handTypeFromHand(hand)
 			handTypes[handType].append(hand) 
 		
@@ -632,32 +652,42 @@ class HandRangeHoldem(object):
 						'hands': handTypes[handType],
 						}
 						
-		# dump hands to handTypeTable
+		# expand handTypeTable in traverse order
+		handTypes = []
+		for delta in xrange(13):
+			pair = handTypeTable[delta][delta]
+			handTypes.append(pair)
+			suited = [handTypeTable[delta][i] for i in xrange(delta +1, 13)]
+			handTypes.extend(suited)
+			offsuit = [handTypeTable[i][delta] for i in xrange(delta +1, 13)]
+			handTypes.extend(offsuit)
+		
+		# sccumulste hands to ranges
 		ranges = {'pair': [], 'suited': [], 'offsuit': []}
-		for row in handTypeTable:
-			for handTypeData in row:
-				rng = ranges[handTypeData['type']]
-				if not handTypeData['hands']:
-					continue
-				if len(handTypeData['hands']) == handTypeData['nCardsExpected']:
-					if not rng:
-						rng.append([])
-					lastSlc = rng[-1]
-					if not lastSlc:
-						lastSlc.append(handTypeData)
-					elif lastSlc[-1]['nCardsExpected'] != len(lastSlc[-1]['hands']):
-						rng.append([handTypeData,] )
-					else:
-						rankCurrent = handTypeData['rankSignificant']
-						rankLast = lastSlc[-1]['rankSignificant']
-						if rankCurrent +1 == rankLast:
-							lastSlc.append(handTypeData)
-						else:
-							rng.append([handTypeData,] )
-				else:
+		for handTypeData in handTypes:
+			rng = ranges[handTypeData['type']]
+			if not handTypeData['hands']:
+				continue
+			if len(handTypeData['hands']) == handTypeData['nCardsExpected']:
+				if not rng:
+					rng.append([])
+				lastSlc = rng[-1]
+				if not lastSlc:
+					lastSlc.append(handTypeData)
+				elif lastSlc[-1]['nCardsExpected'] != len(lastSlc[-1]['hands']):
 					rng.append([handTypeData,] )
-					
-		# gen ranges
+				else:
+					rankCurrent = handTypeData['rankSignificant']
+					rankLast = lastSlc[-1]['rankSignificant']
+					##print lastSlc[-1]['handType'], handTypeData['handType'] 
+					if rankCurrent +1 == rankLast:
+						lastSlc.append(handTypeData)
+					else:
+						rng.append([handTypeData,] )
+			else:
+				rng.append([handTypeData,] )
+				
+		# process ranges
 		result = []
 		for rngName in ('pair', 'suited', 'offsuit'):
 			rng = ranges[rngName]
@@ -680,10 +710,12 @@ class HandRangeHoldem(object):
 					for hand in slc[0]['hands']:
 						s = hand.toString()
 						s = s.replace('[', '').replace(']', '').replace('\x20', '')
-						result.append(s)		
-		
+						result.append(s)
+						
 		return ', '.join(result)
 		
+#h = HandRangeHoldem.fromString('AKks+lkjjk')
+
 #************************************************************************************
 #
 #************************************************************************************
