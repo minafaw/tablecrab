@@ -329,6 +329,24 @@ def handTypeFromHand(hand):
 #NOTE: neither is this beast below 100% compatible to PokerTracker nor is it tested
 # in any depth.
 class HandRange(object):
+	"""wrapper class for hand ranges
+	
+	you may initialize this class directly with a list of L{Hands}s or use the L{fromString}
+	method to create a hand range from a standard hand range pattern. recognized patterns are:
+	
+	JhTd: a specific card
+	AA: a pair
+	TT+: all pairs ten or higher
+	77-KK: all pairs 77 to KK
+	KTs, KTo, KT: all suited, offsuit king ten combinations
+	K6s+, K6o+, K6+: all suited, offsuit kings, king 6 to king jack
+	KTs-K2s, KTo-K2o, KT-K2: all suited, offsuit king combinations king deuce to king ten
+	
+	separate patterns by comma to form complex ranges: 'AA-99, ATs+, AJo+, 56s, 7h2c'
+	
+	@note: the KT (no suit qualifier) types are special to this implementation and
+	only recognized on input.
+	"""
 	
 	class ParseError(Exception): pass
 	
@@ -377,6 +395,9 @@ class HandRange(object):
 					''' % (ReRanks, ReRanks, ReRanks, ReRanks), re.X)
 	
 	def __init__(self, hands=None):
+		"""
+		@param hands: (list) or L{Hand}s or None to create an empty hand range
+		"""
 		self.hands = []
 		if hands is not None:
 			for hand in hands:
@@ -385,6 +406,11 @@ class HandRange(object):
 			
 	@classmethod
 	def fromString(klass, string):
+		"""creates a hand range from a string containg hand patterns
+		@param string: (str) 
+		@return: L{HandRange}
+		
+		"""
 		handRange = klass()
 		# clean string
 		p = string.replace(' ', '').replace('\t', '')
@@ -557,6 +583,9 @@ class HandRange(object):
 		return result
 			
 	def toString(self):
+		"""dumps the hand range to a string representing a hand range pattern
+		@return: (str)
+		"""
 
 		# precompute hand types of our hands
 		handTypes = dict([(handType, []) for handType in genHandTypes()])
@@ -625,17 +654,20 @@ class HandRange(object):
 			rng = ranges[rngName]
 			for slc in rng:
 				if len(slc) > 1:
-					# handle special case like: 'TT+'
+					# slice is a range of hands
 					if slc[0]['type'] == 'pair' and slc[0]['rankSignificant'] == 12:
+						# handle special case like: 'TT+'
 						result.append( '%s+' % slc[-1]['handType'])
-					# handle special case like: 'KTs+', 'KTo+'
 					elif slc[0]['rankSignificant'] +1 == slc[0]['rank']:
+						# handle special case like: 'KTs+', 'KTo+'
 						result.append( '%s+' % slc[-1]['handType'])				
 					else:
 						result.append( '%s-%s' % (slc[0]['handType'], slc[-1]['handType']))
 				elif len(slc[0]['hands']) == slc[0]['nCardsExpected']:
+					# slice is a single handType containing all cards for the handType
 					result.append(slc[0]['handType'])
 				else:
+					# slice is a single HandType with not enough cards to cmplete the handType
 					for hand in slc[0]['hands']:
 						s = hand.toString()
 						s = s.replace('[', '').replace(']', '').replace('\x20', '')
