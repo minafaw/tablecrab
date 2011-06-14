@@ -51,7 +51,7 @@ def pokerEval(game, board, cards, deadCards=None, nIterations=0):
 	@param game: (Game*)
 	@param board: (cards) list of board cards ('Ah', 'Qs', ...)
 	@param cards: (list) list of pocket cards for each player (('4h', '3d'), ...)
-	@param nIterations: (int) if 0 exhaustve enumeration. if > 0 monte carlo enumeration
+	@param nIterations: (int) if 0 exhaustive enumeration. if > 0 monte carlo enumeration
 	@param deadCards: (cards) list containing dead cards
 	@return: (list) of dicts containing evaluation for each player. the dict has the following members:
 	    * cards: cards of player
