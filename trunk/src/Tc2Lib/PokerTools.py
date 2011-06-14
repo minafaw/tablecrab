@@ -151,7 +151,7 @@ class Card(int):
 	SuitNamesDict = {
 			0: ('heart', 'hearts'),
 			1: ('diamond', 'diamonds'),
-			2: ('cross', 'crosses'),
+			2: ('club', 'clubs'),
 			3: ('spade', 'spades'),
 			}
 		
