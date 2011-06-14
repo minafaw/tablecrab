@@ -1,3 +1,5 @@
+"""Widget for displaying and selecting hand ranges"""
+
 
 #TODO: we are a bit off PokerStove when selecting range via percentage
 #TODO: how to give feedback when the user types in an invalid hand pattern?
@@ -7,11 +9,12 @@ import PokerTools
 #************************************************************************************
 #
 #************************************************************************************
-#TODO: 
 class EvsPokerStove(object):
 	"""evs according to PokerStoves method to calc hand ranks
 	(hand preflop all-in vs three random hands)
 	"""
+	#NOTE: evs are generated using pokereval. 100mio iterations / handType currently.
+	# we could increase iterations if necessary.
 	HandTypes = (	# handType, ev, nCards
 			('AA', 0.638, 6),
 			('KK', 0.582, 6),
@@ -185,6 +188,9 @@ class EvsPokerStove(object):
 			)
 	@classmethod
 	def handTypesFromPct(klass, pct):
+		"""returns a list of handTypes contained in the specified percent range 
+		@param pct: (float) percent range
+		"""
 		#NOTE: we implement rule: a handType is included when all* hands of that type 
 		# are within % range.
 		# alternatives:
@@ -205,7 +211,7 @@ class EvsPokerStove(object):
 		return result
 
 
-class HandtypeButton(QtGui.QPushButton):
+class HandTypeButton(QtGui.QPushButton):
 		
 	def __init__(self, handType, iRow, iCol, parent=None):
 		QtGui.QPushButton.__init__(self, handType, parent)
@@ -251,7 +257,14 @@ class HandTypesHoldemWidget(QtGui.QFrame):
 			#offsuit:checked{background-color:#C6B92C;}
 			'''
 	
-	def __init__(self, parent=None, styleSheet=None):
+	def __init__(self, parent=None, styleSheet=None, handRange=None, pct=None):
+		"""
+		@param parent: (L{QWidget}) parent or None
+		@param styleSheet: (str) stylesheet to apply to the widget
+		@param handRange: (L{PokerTools.HandRangeHoldem}) to initialize the widget with
+		@param pct: (float) if no HandRange is specified, percentage of hands to select initially
+		"""
+		
 		QtGui.QFrame.__init__(self, parent)
 				
 		# pseudo lock
@@ -261,12 +274,11 @@ class HandTypesHoldemWidget(QtGui.QFrame):
 		self.handTypeButtons ={}	# handType --> button
 		for iRow, row in enumerate(PokerTools.genHandTypeTable()):
 			for iCol, handType in enumerate(row):
-				btn = HandtypeButton(handType, iRow, iCol, parent=self)
+				btn = HandTypeButton(handType, iRow, iCol, parent=self)
 				btn.setStyleSheet(self.StyleSheet if styleSheet is None else styleSheet)
 				self.handTypeButtons[handType] = btn
 				btn.toggled.connect(self.onRangeButtonToggled)
-				#grid.addWidget(btn, x, y, 1, 1)
-				
+						
 		self.editHandRange = QtGui.QLineEdit(self)
 		self.editHandRange.returnPressed.connect(self.onEditHandRangeReturnPressed)
 		
@@ -317,7 +329,15 @@ class HandTypesHoldemWidget(QtGui.QFrame):
 		s = QtGui.QVBoxLayout()
 		s.addStretch(999)
 		box1.addItem(s)
-					
+		
+		
+		# init widget
+		if handRange is not None:
+			self.editHandRange.setText(handRange.toString())
+			self.onEditHandRangeReturnPressed()
+		elif pct is not None:
+			self.slider.setValue(pct * 10)
+								
 	def handleFontChanged(self, font=None):
 		font = QtGui.qApp.font() if font is None else font
 		m = QtGui.QFontMetrics(font)
@@ -329,6 +349,7 @@ class HandTypesHoldemWidget(QtGui.QFrame):
 			btn.setMinimumSize(fixedSize)
 		
 	def handRange(self):
+		"""returns a HandRange containing currently selected hands"""
 		p = []
 		for btn in self.handTypeButtons.values():
 			if btn.isChecked():
@@ -399,6 +420,9 @@ class HandTypesHoldemWidget(QtGui.QFrame):
 if __name__ == '__main__':
 	import sys
 	application = QtGui.QApplication(sys.argv)
-	gui = HandTypesHoldemWidget()
+	gui = HandTypesHoldemWidget(
+			pct=33.5,
+			#handRange=PokerTools.HandRangeHoldem.fromString('AA-77, KTs+'),
+			)
 	gui.show()
 	application.exec_()
