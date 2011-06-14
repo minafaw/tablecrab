@@ -251,15 +251,9 @@ class CardDeck(object):
 class Hand(object):
 	def __init__(self, *cards):
 		self.cards = cards
-		self.cardValues = [card.value() for card in self.cards]
-		self.cardValues.sort()
-		self.cardValues = tuple(self.cardValues)
-		# no duplicate cards allowed in a hand
-		for card in cards:
-			if cards.count(card) > 1:
-				raise ValueError('duplicate cards in hand')
+		self.hash = hash(tuple(sorted([card.value() for card in self.cards])))
 	def __eq__(self, other):
-		return self.cardValues == other.cardValues
+		return self.hash == other.hash
 	def __ne__(self, other): return not self.__eq__(other)
 	def toString(self):
 		return '[%s]' % ' '.join([card.name() for card in self.cards]) 
@@ -314,14 +308,13 @@ def handTypeFromHand(hand):
 		raise ValueError('expected a two card hand')
 	
 	card0, card1  = hand.cards
-	if card0.rank() == card1.rank():
+	rank0, rank1 = card0.rank(), card1.rank()
+	if rank0 == rank1:
 		return card0.rankName() + card1.rankName()
-	flag = 's'
-	if card1.suit() != card0.suit():
-		flag= 'o'
-	if card1.rank() > card0.rank():
-		return card1.rankName() + card0.rankName() + flag
-	return card0.rankName() + card1.rankName()+ flag
+	suit = 's' if card1.suit() == card0.suit() else 'o'
+	if rank1 > rank0:
+		return card1.rankName() + card0.rankName() + suit
+	return card0.rankName() + card1.rankName()+ suit
 
 def handTypeIsPair(handType):
 	return len(handType) == 2
@@ -337,19 +330,13 @@ def handTypeToHands(handType):
 		cards = [Card(handType[0] + suit) for suit in Card.SuitNames]
 		return [Hand(*cards) for cards in itertools.combinations(cards, 2)]
 	elif handTypeIsSuited(handType):
-		result = []
-		for suit in Card.SuitNames:
-			hand = Hand(Card(handType[0] + suit), Card(handType[1] + suit))
-			result.append(hand)
-		return result
+		return [Hand(Card(handType[0]+s), Card(handType[1]+s)) for s in Card.SuitNames]
 	else:
 		cards1 = [handType[0] + suit for suit in Card.SuitNames]
 		cards2 = [handType[1] + suit for suit in Card.SuitNames]
-		result = []
-		for card1, card2 in itertools.product(cards1, cards2):
-			if card1[1] == card2[1]: continue
-			result.append(Hand(Card(card1), Card(card2)))
-		return result	
+		return [
+			Hand(Card(a), Card(b)) for (a, b) in itertools.product(cards1, cards2) if a[1] != b[1]
+			]
 		
 #************************************************************************************
 # hand ranges
@@ -441,7 +428,7 @@ class HandRangeHoldem(object):
 				deck = CardDeck()
 				for cards in itertools.combinations(deck.cards, 2):
 					hand = Hand(*cards)
-					handRange._hands[hand.cardValues] = hand
+					handRange._hands[hand.hash] = hand
 				break
 						
 			# substring is a hand --> 'Kh7d'
@@ -450,7 +437,7 @@ class HandRangeHoldem(object):
 			if result is not None:
 				card1, card2 = Card(result.group('card1')), Card(result.group('card2'))
 				hand = Hand(card1, card2)
-				handRange._hands[hand.cardValues] = hand
+				handRange._hands[hand.hash] = hand
 				continue
 				
 			# substring is a handTypePair --> 'TT' or 'TT+'
@@ -460,7 +447,7 @@ class HandRangeHoldem(object):
 				rank = result.group('rank')
 				hands =  handTypeToHands(rank+rank)
 				for hand in hands:
-					handRange._hands[hand.cardValues] = hand
+					handRange._hands[hand.hash] = hand
 							
 				# expand pattern if necessary
 				qualifier = result.group('qualifier')
@@ -494,7 +481,7 @@ class HandRangeHoldem(object):
 				else:
 					hands = handTypeToHands(rank1+rank2+'s') + handTypeToHands(rank1+rank2+'o')
 				for hand in hands:
-					handRange._hands[hand.cardValues] = hand
+					handRange._hands[hand.hash] = hand
 							
 				# expand pattern if necessary
 				if qualifier:
@@ -584,10 +571,10 @@ class HandRangeHoldem(object):
 		self._hands = {}
 		if hands is not None:
 			for hand in hands:
-				self.hands[hand.cardValues] = hand 
+				self.hands[hand.hash] = hand 
 			
 	def __contains__(self, hand):
-		return hand.cardValues in self._hands
+		return hand.hash in self._hands
 		
 	def __len__(self):
 		return len(self._hands)
