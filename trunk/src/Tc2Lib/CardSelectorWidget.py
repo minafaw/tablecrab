@@ -58,6 +58,7 @@ class CardSelectorWidget(QtGui.QFrame):
 		@param cards: (list) of L{PokerTools.Card}s to initialize the widget with
 		QtGui.QFrame.__init__(self, parent)
 		"""
+		QtGui.QFrame.__init__(self, parent)
 				
 		self._maxCards = maxCards
 		self._buttonsSelected = []
