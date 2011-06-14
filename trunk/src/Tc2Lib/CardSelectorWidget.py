@@ -1,3 +1,5 @@
+"""Widget oto select one or more cards.
+"""
 
 from PyQt4 import QtCore, QtGui
 import PokerTools
@@ -49,7 +51,13 @@ class CardSelectorWidget(QtGui.QFrame):
 			'''
 	
 	def __init__(self, parent=None, styleSheet=None, maxCards=None, cards=None):
+		"""
+		@param parent: (L{QWidget}) parent or None
+		@param styleSheet: (str) stylesheet to apply to the widget
+		@param maxCards: (int) maximum number of cards that can be selected or None for unlimited
+		@param cards: (list) of L{PokerTools.Card}s to initialize the widget with
 		QtGui.QFrame.__init__(self, parent)
+		"""
 				
 		self._maxCards = maxCards
 		self._buttonsSelected = []
@@ -96,6 +104,7 @@ class CardSelectorWidget(QtGui.QFrame):
 				self._cardButtons[card].setChecked(True)	
 						
 	def cards(self):
+		"""returns a list containing the currently selected cards"""
 		return [btn.card for btn in self._buttonsSelected]
 	
 	def handleFontChanged(self, font=None):
