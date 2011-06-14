@@ -1,7 +1,7 @@
 
 #TODO: we are a bit off PokerStove when selecting range via percentage
 #TODO: how to give feedback when the user types in an invalid hand pattern?
-#TODO: slider mouse wheel up is not working
+#TODO: slider mouse wheel-up is not working
 
 from PyQt4 import QtCore, QtGui
 import PokerTools
@@ -186,6 +186,14 @@ class EvsPokerStove(object):
 			)
 	@classmethod
 	def handTypesFromPct(klass, pct):
+		#NOTE: we implement rule: a handType is included when all* hands of that type 
+		# are within % range.
+		# alternatives:
+		# a) a handType is included if at least one hand of that type is in % range
+		# b) a handType is included if >= half of the hands of that type is in % range
+		# i guess PokerStove uses either alternative a) or b) ..that's why it adjusts
+		# % display at times. we could implement one or the other alternative, but can 
+		# not adjust % display because slider and spinBox are interconnnected.
 		total = int(round(1362 / 100.0 * pct, 0))
 		n = 0
 		result = []
@@ -196,7 +204,7 @@ class EvsPokerStove(object):
 			elif n > total:
 				break
 		return result
-	
+
 
 class HandtypeButton(QtGui.QPushButton):
 		
