@@ -1,7 +1,6 @@
 
 #TODO: we are a bit off PokerStove when selecting range via percentage
 #TODO: how to give feedback when the user types in an invalid hand pattern?
-#TODO: slider mouse wheel-up is not working
 
 from PyQt4 import QtCore, QtGui
 import PokerTools
@@ -380,16 +379,19 @@ class HandTypesHoldemWidget(QtGui.QFrame):
 		try:
 			for handType, btn in self.handTypeButtons.items():
 				btn.setChecked(handType in handTypes)
-			self.slider.setValue(int(n)*10)
+			# NOTE: need to test here so we don't set slider when we are triggered by
+			# slider adjusting spinBox
+			value = int(n*10)
+			if self.slider.value() != value:
+				self.slider.setValue(value)
 			handRange = self.handRange()
 			self.editHandRange.setText(handRange.toString())
 		finally:
 			self.lock = False
 			
 	def onSliderValueChanged(self, n):
-		if not self.lock:
-			pct = (n / 10.0)
-			self.spinSlider.setValue(pct)
+		pct = (n / 10.0)
+		self.spinSlider.setValue(pct)
 		
 #************************************************************************************
 #
