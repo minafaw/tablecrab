@@ -177,12 +177,12 @@ class TestHandRangeHoldem(unittest.TestCase):
 		))
 		
 		print rng
-		h = HandRangeHoldem.fromString('*')
-		self.assertEqual(h.toString(), rng)
+		h = HandRangeHoldem.fromString('random')
+		self.assertEqual(h.toString(), 'random')
 		self.assertEqual(len(h), 1326)
 		
 		h = HandRangeHoldem.fromString(rng)
-		self.assertEqual(h.toString(), rng)
+		self.assertEqual(h.toString(), 'random')
 		self.assertEqual(len(h), 1326)
 		#TODO: no idea how to test HandRangeHoldem.hands()
 		
