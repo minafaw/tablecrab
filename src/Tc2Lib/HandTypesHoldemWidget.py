@@ -193,7 +193,7 @@ class EvsPokerStove(object):
 		# i guess PokerStove uses either alternative a) or b) ..that's why it adjusts
 		# % display at times. we could implement one or the other alternative, but can 
 		# not adjust % display because slider and spinBox are interconnnected.
-		total = int(round(1362 / 100.0 * pct, 0))
+		total =1326 / 100.0 * pct
 		n = 0
 		result = []
 		for handType, _, nCards in klass.HandTypes:
