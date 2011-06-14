@@ -50,6 +50,8 @@ class CardSelectorWidget(QtGui.QFrame):
 			#spade:checked{background-color: #686868; color: white;}
 			'''
 	
+	cardsSelectionChanged = QtCore.pyqtSignal(QtGui.QWidget)
+	
 	def __init__(self, parent=None, styleSheet=None, maxCards=None, cards=None):
 		"""
 		@param parent: (L{QWidget}) parent or None
@@ -108,6 +110,10 @@ class CardSelectorWidget(QtGui.QFrame):
 		"""returns a list containing the currently selected cards"""
 		return [btn.card for btn in self._buttonsSelected]
 	
+	def cardCount(self):
+		"""returns the number of cards currently seelcted"""
+		return len(self._buttonsSelected)
+	
 	def handleFontChanged(self, font=None):
 		font = QtGui.qApp.font() if font is None else font
 		m = QtGui.QFontMetrics(font)
@@ -129,6 +135,7 @@ class CardSelectorWidget(QtGui.QFrame):
 		else:
 			if btn in self._buttonsSelected:
 				self._buttonsSelected.remove(btn)
+		self.cardsSelectionChanged.emit(self)
 		
 #************************************************************************************
 #
