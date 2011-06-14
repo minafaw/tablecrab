@@ -362,7 +362,7 @@ class HandRangeHoldem(object):
 	you may initialize this class directly with a list of L{Hands}s or use the L{fromString}
 	method to create a hand range from a standard hand range pattern. recognized patterns are:
 	
-	*: all hands
+	random: all hands
 	JhTd: a specific card
 	AA: a pair
 	TT+: all pairs ten or higher
@@ -437,7 +437,7 @@ class HandRangeHoldem(object):
 		for s in p:
 			if not s: continue
 					
-			if s == '*':
+			if s == 'random':
 				deck = CardDeck()
 				for cards in itertools.combinations(deck.cards, 2):
 					hand = Hand(*cards)
@@ -603,6 +603,9 @@ class HandRangeHoldem(object):
 		@return: (str)
 		"""
 
+		if len(self) == 1326:
+			return 'random'
+		
 		# precompute hand types of our hands
 		handTypes = dict([(handType, []) for handType in genHandTypes()])
 		for hand in self.hands():
