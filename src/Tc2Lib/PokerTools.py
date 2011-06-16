@@ -338,6 +338,10 @@ def handTypeToHands(handType):
 			Hand(Card(a), Card(b)) for (a, b) in itertools.product(cards1, cards2) if a[1] != b[1]
 			]
 		
+def handTypeRanks(handType):
+	return (Card.RankNames.index(handType[0]), Card.RankNames.index(handType[1]))
+	
+
 #************************************************************************************
 # hand ranges
 #************************************************************************************
