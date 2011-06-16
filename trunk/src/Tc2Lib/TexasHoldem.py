@@ -557,7 +557,62 @@ class HandEval(object):
 			return  self.Result(self,	self.HandTypeHighCard, cards, details)
 			
 		raise ValueError('something went wrong here!')
-
+		
+	def getInsideStraightDraw(self, hand):
+		if len(hand) < 5:
+			return []
+		
+		# Q x T 9 8 x 6
+		ranks = [card.rank() for card in hand]
+		ranks.sort(reverse=True)
+		if 12 in ranks:
+			ranks.append(-1)
+			
+		draw = []
+		for i, rank in enumerate(ranks):
+			h = ranks[i:i+5]
+			if len(h) < 5:
+				break
+			#print h
+			expected = (rank, rank-2, rank-3, rank-4, rank-6)
+			#print '>>', expected
+			if len([i for i in expected if i in h]) == 5:
+				draw = h
+				break
+		if draw:
+			if draw[-1] == -1:
+				draw[-1]  = 12
+			# pick a random card acc to rank from lookup dict
+			cards = dict([(card.rank(), card) for card in hand])
+			return [cards[rank] for rank in draw]
+		return []
+		
+	def getOutsideStraightDraw(self, hand):
+		ranks = [card.rank() for card in hand]
+		ranks.sort(reverse=True)
+		if 12 in ranks:
+			ranks.append(-1)
+		
+		draw = []
+		for i, rank in enumerate(ranks):
+			if rank == 12 or rank-3 == -1:
+				continue
+			if rank+1 in ranks or rank-4 in ranks:
+				continue
+			
+			expected = range(rank, rank-4, -1)
+			if len([i for i in expected if i in ranks]) == 4:
+				draw = expected
+				break
+		
+		if draw:
+			if draw[-1] == -1:
+				draw[-1]  = 12
+			# pick a random card acc to rank from lookup dict
+			cards = dict([(card.rank(), card) for card in hand])
+			return [cards[rank] for rank in draw]	
+		return []
+		
 #************************************************************************************
 # event type
 #************************************************************************************	
@@ -1483,7 +1538,7 @@ def sampleImpl():
 		print event.toString()
 
 
-if __name__ == '__main__': sampleImpl()	
+#if __name__ == '__main__': sampleImpl()	
 
 
 
