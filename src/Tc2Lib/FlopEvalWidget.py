@@ -4,7 +4,7 @@ from PyQt4 import QtCore, QtGui
 import itertools
 import PokerTools
 import TexasHoldem
-import HandTypesHoldemWidget
+import HandRangeWidget
 import CardSelectorWidget
 import FlopEval
 #************************************************************************************
@@ -35,7 +35,7 @@ class FlopEvalWidget(QtGui.QFrame):
 		self.flopEval = FlopEval.FlopEval()
 		
 		self.labelHandRange = QtGui.QLabel('Select a hand range', self)
-		self.handRangeWidget = HandTypesHoldemWidget.HandTypesHoldemWidget(parent=self, pct=15)
+		self.handRangeWidget = HandRangeWidget.HandRangeWidget(parent=self, pct=15)
 		self.labelFlop = QtGui.QLabel('Select a flop', self)
 		self.labelFlop.setWordWrap(True)
 		self.flopWidget = CardSelectorWidget.CardSelectorWidget(parent=self, maxCards=3)
