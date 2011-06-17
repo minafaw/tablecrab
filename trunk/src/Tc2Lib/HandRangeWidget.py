@@ -3,6 +3,9 @@
 
 #TODO: we are a bit off PokerStove when selecting range via percentage
 #TODO: how to give feedback when the user types in an invalid hand pattern?
+#TODO: textual hand range display is currently read only. as soon as
+#      we find a way to give feedback on invalid hand ranges we can support
+#      completely arbitrary hand ranges.
 
 from PyQt4 import QtCore, QtGui
 import PokerTools
@@ -299,7 +302,7 @@ class HandRangeWidget(QtGui.QFrame):
 		
 		self.editHandRange = QtGui.QLineEdit(self)
 		self.editHandRange.returnPressed.connect(self.onEditHandRangeReturnPressed)
-		
+		self.editHandRange.setReadOnly(True)
 		
 		self.handleFontChanged()
 		
@@ -354,17 +357,23 @@ class HandRangeWidget(QtGui.QFrame):
 		
 	def handRange(self):
 		"""returns a HandRange containing currently selected hands"""
-		p = []
-		for btn in self.handTypeButtons.values():
-			if btn.isChecked():
-				p.append(btn.handType)
-		handRange = PokerTools.HandRangeHoldem.fromString(','.join(p))
+		text = self.editHandRange.text().toUtf8()
+		text = unicode(text, 'utf-8')
+		handRange = PokerTools.HandRangeHoldem.fromString(text)
 		return handRange
 				
+	def handRangeFromHandTypes(self):
+		p = []
+		for handType, btn in self.handTypeButtons.items():
+			if btn.isChecked():
+				p.append(btn.handType)
+		handRange = PokerTools.HandRangeHoldem.fromString(', '.join(p))
+		return handRange
+		
 	def onRangeButtonToggled(self, flag):
 		if self.lock:
 			return
-		handRange = self.handRange()
+		handRange = self.handRangeFromHandTypes()
 		self.editHandRange.setText(handRange.toString())
 		
 	def onEditHandRangeReturnPressed(self):
@@ -400,7 +409,7 @@ class HandRangeWidget(QtGui.QFrame):
 			
 	def onSliderReleased(self):
 		self.sliderPressed = False
-		handRange = self.handRange()
+		handRange = self.handRangeFromHandTypes()
 		self.editHandRange.setText(handRange.toString())
 	
 	def onSliderPressed(self):
@@ -427,7 +436,7 @@ class HandRangeWidget(QtGui.QFrame):
 			if self.spin.value() != pct:
 				self.spin.setValue(pct)
 			if updateRange:
-				handRange = self.handRange()
+				handRange = self.handRangeFromHandTypes()
 				self.editHandRange.setText(handRange.toString())
 		finally:
 			self.setUpdatesEnabled(True)
@@ -439,9 +448,12 @@ class HandRangeWidget(QtGui.QFrame):
 if __name__ == '__main__':
 	import sys
 	application = QtGui.QApplication(sys.argv)
-	gui = HandTypesHoldemWidget(
+	gui = HandRangeWidget(
 			pct=33.5,
 			#handRange=PokerTools.HandRangeHoldem.fromString('AA-77, KTs+'),
 			)
 	gui.show()
 	application.exec_()
+	
+	
+
