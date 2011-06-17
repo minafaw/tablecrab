@@ -239,7 +239,7 @@ class HandTypeButton(QtGui.QPushButton):
 		return width
 
 	
-class HandTypesHoldemWidget(QtGui.QFrame):
+class HandRangeWidget(QtGui.QFrame):
 	"""
 	@note: call L{handleFontSizeChanged} if the font for the widget changes
 	"""
