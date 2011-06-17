@@ -240,6 +240,7 @@ HelpTopics = [
 			('tools', 'Tools'), [
 				('toolsFPPCalculator', 'FPP calculator'),
 				('toolsHandHistoryViewer', 'Hand history viewer'),
+				('toolsFlopEval', 'Flop evaluator'),
 				],
 			('developement', 'Developement'), [
 				('ocrEditor', 'Ocr Editor'),
