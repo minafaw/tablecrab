@@ -35,8 +35,7 @@ class TestHandRangeHoldem(unittest.TestCase):
 		self.assertEqual(h.toString(), 'TT-88, 33')
 		self.assertEqual(len(h), 24)
 		#TODO: no idea how to test HandRangeHoldem.hands()
-	
-	
+		
 	def test_suitedHand(self):
 		h = HandRangeHoldem.fromString('JTs')
 		self.assertEqual(h.toString(), 'JTs')
@@ -176,7 +175,6 @@ class TestHandRangeHoldem(unittest.TestCase):
 		'A2o+','K2o+','Q2o+','J2o+','T2o+','92o+','82o+','72o+','62o+','52o+','42o+','32o',
 		))
 		
-		print rng
 		h = HandRangeHoldem.fromString('random')
 		self.assertEqual(h.toString(), 'random')
 		self.assertEqual(len(h), 1326)
@@ -186,9 +184,20 @@ class TestHandRangeHoldem(unittest.TestCase):
 		self.assertEqual(len(h), 1326)
 		#TODO: no idea how to test HandRangeHoldem.hands()
 		
+	def testRangeAccumulation(self):
+		h = HandRangeHoldem.fromString('K9s, K8s, K7s')
+		self.assertEqual(h.toString(), 'K9s-K7s')
+		self.assertEqual(len(h), 12)
+		#TODO: no idea how to test HandRangeHoldem.hands()
 		
+		h = HandRangeHoldem.fromString('TT, 99, 88')
+		self.assertEqual(h.toString(), 'TT-88')
+		self.assertEqual(len(h), 18)
 		
-	
+		# no range accumulation here (bugfix)
+		h = HandRangeHoldem.fromString('75s, 84s')
+		self.assertEqual(h.toString(), '84s, 75s')
+		
 #************************************************************************************
 # run unittests
 #************************************************************************************
