@@ -2344,11 +2344,6 @@ class FlopEvalWidget(QtGui.QFrame):
 					result['nPairs'] += 1
 			return
 					
-		
-	def onProgressValueChanged(self):
-		widget = self.sender()
-		widget.setFormat	
-			
 	def onButtonEvalFlopClicked(self):
 		self._resetResult()
 		flop = self.flopWidget.cards()
@@ -2360,7 +2355,6 @@ class FlopEvalWidget(QtGui.QFrame):
 				continue
 			self._evalFlop(hand, flop, result)
 		self._setResult(result)
-	
 		
 	def onButtonEvalRandomClicked(self):
 		self._resetResult()
@@ -2368,8 +2362,7 @@ class FlopEvalWidget(QtGui.QFrame):
 		result = self._makeResult()
 		result.update(self.flopalyzer.evalHandRange(handRange))
 		self._setResult(result)
-		
-		
+			
 	def onflopWidgetCardsSelectionChanged(self, widget):
 		self.buttonEvalFlop.setEnabled(widget.cardCount() == 3)
 
