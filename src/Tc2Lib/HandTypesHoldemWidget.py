@@ -269,6 +269,7 @@ class HandTypesHoldemWidget(QtGui.QFrame):
 				
 		# pseudo lock
 		self.lock = False
+		self.sliderPressed = False
 		
 		# add range table buttons
 		self.handTypeButtons ={}	# handType --> button
@@ -279,22 +280,26 @@ class HandTypesHoldemWidget(QtGui.QFrame):
 				self.handTypeButtons[handType] = btn
 				btn.toggled.connect(self.onRangeButtonToggled)
 						
-		self.editHandRange = QtGui.QLineEdit(self)
-		self.editHandRange.returnPressed.connect(self.onEditHandRangeReturnPressed)
-		
 		# add range slider
+		self.spin = QtGui.QDoubleSpinBox(self)
+		self.spin.setSuffix('%')
+		self.spin.setMaximum(100.0)
+		self.spin.setDecimals(1)
+		self.spin.setSingleStep(0.1)
+		self.spin.valueChanged.connect(self.onSpinValueChanged)
+		
 		self.slider = QtGui.QSlider(QtCore.Qt.Horizontal, self)
 		self.slider.setMaximum(1000)
 		self.slider.setPageStep(100)
 		self.slider.setTickInterval(100)
 		self.slider.setTickPosition(self.slider.TicksAbove)
 		self.slider.valueChanged.connect(self.onSliderValueChanged)
-		self.spinSlider = QtGui.QDoubleSpinBox(self)
-		self.spinSlider.setSuffix('%')
-		self.spinSlider.setMaximum(100.0)
-		self.spinSlider.setDecimals(1)
-		self.spinSlider.setSingleStep(0.1)
-		self.spinSlider.valueChanged.connect(self.onSpinSliderValueChanged)
+		self.slider.sliderPressed.connect(self.onSliderPressed)
+		self.slider.sliderReleased.connect(self.onSliderReleased)
+		
+		self.editHandRange = QtGui.QLineEdit(self)
+		self.editHandRange.returnPressed.connect(self.onEditHandRangeReturnPressed)
+		
 		
 		self.handleFontChanged()
 		
@@ -320,7 +325,7 @@ class HandTypesHoldemWidget(QtGui.QFrame):
 				
 		box2 = QtGui.QHBoxLayout()
 		box1.addLayout(box2)
-		box2.addWidget(self.spinSlider)
+		box2.addWidget(self.spin)
 		box2.addWidget(self.slider)
 		box2.setStretch(1, 99)
 		
@@ -329,14 +334,13 @@ class HandTypesHoldemWidget(QtGui.QFrame):
 		s = QtGui.QVBoxLayout()
 		s.addStretch(999)
 		box1.addItem(s)
-		
-		
+				
 		# init widget
 		if handRange is not None:
 			self.editHandRange.setText(handRange.toString())
 			self.onEditHandRangeReturnPressed()
 		elif pct is not None:
-			self.slider.setValue(pct * 10)
+			self.setHandRangeToPct(pct)
 								
 	def handleFontChanged(self, font=None):
 		font = QtGui.qApp.font() if font is None else font
@@ -394,26 +398,41 @@ class HandTypesHoldemWidget(QtGui.QFrame):
 		finally:
 			self.lock = False
 			
-	def onSpinSliderValueChanged(self, n):
-		handTypes = EvsPokerStove.handTypesFromPct(n)
+	def onSliderReleased(self):
+		self.sliderPressed = False
+		handRange = self.handRange()
+		self.editHandRange.setText(handRange.toString())
+	
+	def onSliderPressed(self):
+		self.sliderPressed = True
+		
+	def onSpinValueChanged(self, n):
+		if not self.lock:
+			self.setHandRangeToPct(n)
+				
+	def onSliderValueChanged(self, n):
+		if not self.lock:
+			self.setHandRangeToPct(n/10.0, updateRange=not self.sliderPressed)
+		
+	def setHandRangeToPct(self, pct, updateRange=True):
+		handTypes = EvsPokerStove.handTypesFromPct(pct)
 		self.lock = True
+		self.setUpdatesEnabled(False)
 		try:
 			for handType, btn in self.handTypeButtons.items():
 				btn.setChecked(handType in handTypes)
-			# NOTE: need to test here so we don't set slider when we are triggered by
-			# slider adjusting spinBox
-			value = int(n*10)
+			value = int(pct*10)
 			if self.slider.value() != value:
 				self.slider.setValue(value)
-			handRange = self.handRange()
-			self.editHandRange.setText(handRange.toString())
+			if self.spin.value() != pct:
+				self.spin.setValue(pct)
+			if updateRange:
+				handRange = self.handRange()
+				self.editHandRange.setText(handRange.toString())
 		finally:
+			self.setUpdatesEnabled(True)
 			self.lock = False
-			
-	def onSliderValueChanged(self, n):
-		pct = (n / 10.0)
-		self.spinSlider.setValue(pct)
-		
+
 #************************************************************************************
 #
 #************************************************************************************
