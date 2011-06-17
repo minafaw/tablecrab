@@ -10,6 +10,7 @@ import CardSelectorWidget
 #
 #************************************************************************************
 class Flopalyzer(object):
+	"""flop analyzer"""
 	
 	def __init__(self):
 				
@@ -2068,12 +2069,24 @@ class Flopalyzer(object):
 		self.nInsideStraightDraw22 = 0
 
 
-			
-		
-		
-	
-	
 	def evalHandRange(self, handRange):
+		"""evaluates a L{PokerTools.HandRangeHoldem} against all flops
+		@return: (dict) containing the following members:
+			- nFlops: (int) total number of flops evaluated
+			- nStraightFlushs: (int) number of straight flushes flopped
+			- nQuads: (int) number of quads flopped
+			- nFlushs: (int) number of flushs flopped
+			- nFullHouses: (int) number of full houses flopped (not including flop is tripps)
+			- nStraights: (int) number of straights flopped
+			- nSets: (int) number of sets flopped (trips and sets)
+			- nTwoPairs: (int) number of twopairs flopped (not including two pair on paired flops)
+			- nOverpairs: (int) number of overpairs flopped
+			- nTopPairs: (int) number of top pairs flopped (not including overpairs)
+			- nPairs: (int) number of pairs flopped (not including overpairs and top pairs)
+			- nFlushDraws: (int) number of flush draws flopped
+			- nStraightDraws: (int) number of straight draws flopped
+			
+		"""
 		result = {
 				'nFlops': 0,
 				'nStraightFlushs': 0,
@@ -2087,7 +2100,6 @@ class Flopalyzer(object):
 				'nTopPairs': 0,
 				'nPairs': 0,
 				'nFlushDraws': 0,
-				
 				'nStraightDraws': 0,
 				}
 		
@@ -2137,7 +2149,142 @@ class Flopalyzer(object):
 				nOutsideDraws = getattr(self, 'nOutsideStraightDraw%s' % myHandType)
 				result['nStraightDraws'] += nInsideDraws + nOutsideDraws
 				
-		return result		
+		return result	
+		
+	def straightsFromHandType(self, handType):
+		"""generates all straight types a handType can flop
+		@param handType: (str)
+		@return: (list) containing all straight types
+		"""
+		# determine card ranks. special case Ace low
+		if PokerTools.handTypeIsPair(handType):
+			return []
+		rank1, rank2 = PokerTools.handTypeRanks(handType)
+		rank3 = None
+		if rank1 == 12:
+			rank3 = -1
+		# iterate over all straight cadidates
+		result = []
+		for high in range(12, 2, -1):
+			rng = range(high, high-5, -1)
+			if rank2 in rng:
+				if rank1 in rng:
+					result.append([PokerTools.Card.RankNames[i] for i in rng])
+				elif rank3 in rng:
+					rng[-1] = 12
+					result.append([PokerTools.Card.RankNames[i] for i in rng])
+		return result
+		
+	def straightsFromHandTypeFormatted(self, handType):
+		"""generates all straight types a handType can flop
+		@param handType: (str)
+		@return: (list) containing all straight types nicely formatted
+		"""
+		rank1 = handType[0]
+		rank2 = handType[1]
+		result = []
+		for p in self.straightsFromHandType(handType):
+			i = p.index(rank1)
+			p[i] = '(%s)' % rank1
+			if rank2 != rank1:
+				i = p.index(rank2)
+				p[i] = '(%s)' % rank2
+			result.append(' '.join(p))
+		return result
+			
+	def outsideStraightDrawsFromHandType(self, handType):
+		"""generates all outside straight draw types a handType can flop
+		@param handType: (str)
+		@return: (list) containing all outside straight draw types
+		"""
+		# determine card ranks. special case Ace
+		rank1, rank2 = PokerTools.handTypeRanks(handType)
+		if rank1 == 12:
+			return []
+		ranks = (rank1, rank2)
+			
+		# iterate over all straight draw cadidates
+		result = []
+		for high in range(12, 3, -1):
+			rng = range(high, high-6, -1)
+			# if one of the cards is an edge card we do not have a straight draw 
+			if rng[0] in ranks or rng[-1] in ranks:
+				continue
+				
+			if rank1 in rng and rank2 in rng:
+				rng = rng[1:-1]
+				result.append([PokerTools.Card.RankNames[i] for i in rng])
+		return result
+	
+	def outsideStraightDrawsFromHandTypeFormatted(self, handType):
+		"""generates all outside straight draw types a handType can flop
+		@param handType: (str)
+		@return: (list) containing all outside straight draw types nicely formatted
+		"""
+		rank1 = handType[0]
+		rank2 = handType[1]
+		result = []
+		for p in self.outsideStraightDrawsFromHandType(handType):
+			i = p.index(rank1)
+			p[i] = '(%s)' % rank1
+			if rank2 != rank1:
+				i = p.index(rank2)
+				p[i] = '(%s)' % rank2
+			p.insert(0, '_')
+			p.append('_')
+			result.append(' '.join(p))
+		return result
+			
+	def insideStraightDrawsFromHandType(self, handType):
+		"""generates all inside straight draw types a handType can flop
+		@param handType: (str)
+		@return: (list) containing all inside straight draw types
+		"""
+		# determine card ranks. special case Ace low
+		if PokerTools.handTypeIsPair(handType):
+			return []
+		rank1, rank2 = PokerTools.handTypeRanks(handType)
+		rank3 = None
+		if rank1 == 12:
+			rank3 = -1
+		# iterate over all inside straight draw candidates
+		# 9 x 8 7 6 x 4
+		result = []
+		for high in range(12, 4, -1):
+			rng = range(high, high-7, -1)
+			rng[1] = 'x'
+			rng[-2] = 'x'
+			if rank2 in rng:
+				if rank1 in rng:
+					rng.pop(1)
+					rng.pop(-2)
+					result.append([PokerTools.Card.RankNames[i] for i in rng])
+				elif rank3 in rng:
+					rng[-1] = 12
+					rng.pop(1)
+					rng.pop(-2)
+					result.append([PokerTools.Card.RankNames[i] for i in rng])
+		return result
+		
+	def insideStraightDrawsFromHandTypeFormatted(self, handType):
+		"""generates all inside straight draw types a handType can flop
+		@param handType: (str)
+		@return: (list) containing all inside straight draw types nicely formatted
+		"""
+		rank1 = handType[0]
+		rank2 = handType[1]
+		result = []
+		for p in self.insideStraightDrawsFromHandType(handType):
+			i = p.index(rank1)
+			p[i] = '(%s)' % rank1
+			if rank2 != rank1:
+				i = p.index(rank2)
+				p[i] = '(%s)' % rank2
+			p.insert(1, '_')
+			p.insert(-1, '_')
+			result.append(' '.join(p))
+		return result	
+		
 
 class FloatProgressBar(QtGui.QProgressBar):
 	def __init__(self, parent=None, prefix=''):
