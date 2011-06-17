@@ -494,10 +494,14 @@ class HandRangeHoldem(object):
 					for otherRank in Card.RankNames[iRank2 +1:iRank1]:
 						if otherRank == rank1: continue
 						if suit:
-							p.append(rank1 + otherRank + suit)
+							for hand in handTypeToHands(rank1 + otherRank + suit):
+									handRange._hands[hand.hash] = hand
+								
 						else:
-							p.append(rank1 + otherRank + 's')
-							p.append(rank1 + otherRank + 'o')
+							for hand in handTypeToHands(rank1 + otherRank + 's'):
+								handRange._hands[hand.hash] = hand
+							for hand in handTypeToHands(rank1 + otherRank + 'o'):
+								handRange._hands[hand.hash] = hand
 				continue
 				
 			# substring is a handTypePairRange --> '22-TT'
@@ -513,7 +517,8 @@ class HandRangeHoldem(object):
 				# expand pattern
 				ranks = Card.RankNames[iRank1:iRank2+1]
 				for rank in ranks:
-					p.append(rank + rank)
+					for hand in handTypeToHands(rank + rank):
+						handRange._hands[hand.hash] = hand
 				continue
 							
 			# substring is a handTypeSuiteRange --> 'K7s-KTs', 'KT-K7', 'KTo-K7', ...
@@ -546,10 +551,14 @@ class HandRangeHoldem(object):
 				ranks = Card.RankNames[iRank2:iRank4+1]
 				for rank in ranks:
 					if suit:
-						p.append(rank1 + rank + suit)
+						for hand in handTypeToHands(rank1 + rank + suit):
+							handRange._hands[hand.hash] = hand
+						
 					else:
-						p.append(rank1 + rank + 's')
-						p.append(rank1 + rank + 'o')		
+						for hand in handTypeToHands(rank1 + rank + 's'):
+							handRange._hands[hand.hash] = hand
+						for hand in handTypeToHands(rank1 + rank + 'o'):
+							handRange._hands[hand.hash] = hand
 				continue
 			
 			#
@@ -563,10 +572,10 @@ class HandRangeHoldem(object):
 		iRank1 = Card.RankNames.index(rank1)
 		iRank2 = Card.RankNames.index(rank2)
 		if revert and iRank1 < iRank2:
-			return [rank2, rank1]
+			return (rank2, rank1)
 		elif not revert and iRank2 < iRank1:
-			return [rank2, rank1]
-		return [rank1, rank2]
+			return (rank2, rank1)
+		return (rank1, rank2)
 		
 	def __init__(self, hands=None):
 		"""
@@ -694,6 +703,7 @@ class HandRangeHoldem(object):
 						result.append(s)
 						
 		return ', '.join(result)
+
 		
 #************************************************************************************
 #
