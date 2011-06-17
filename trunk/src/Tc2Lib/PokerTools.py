@@ -667,13 +667,23 @@ class HandRangeHoldem(object):
 				elif lastSlc[-1]['nCardsExpected'] != len(lastSlc[-1]['hands']):
 					rng.append([handTypeData,] )
 				else:
-					rankCurrent = handTypeData['rankSignificant']
-					rankLast = lastSlc[-1]['rankSignificant']
-					##print lastSlc[-1]['handType'], handTypeData['handType'] 
-					if rankCurrent +1 == rankLast:
-						lastSlc.append(handTypeData)
+					rankCurrent = handTypeData['rank']
+					rankSignificantCurrent = handTypeData['rankSignificant']
+					rankLast = lastSlc[-1]['rank']
+					rankSignificantLast = lastSlc[-1]['rankSignificant']
+					# case pairs
+					if handTypeData['type'] == 'pair':
+						if rankSignificantCurrent +1 == rankSignificantLast:
+							lastSlc.append(handTypeData)
+						else:
+							rng.append([handTypeData,] )
+					#case unpaired hands
 					else:
-						rng.append([handTypeData,] )
+						if rankLast == rankCurrent and \
+								rankSignificantCurrent +1 == rankSignificantLast:
+							lastSlc.append(handTypeData)
+						else:
+							rng.append([handTypeData,] )	
 			else:
 				rng.append([handTypeData,] )
 				
@@ -704,7 +714,6 @@ class HandRangeHoldem(object):
 						
 		return ', '.join(result)
 
-		
 #************************************************************************************
 #
 #************************************************************************************
