@@ -2,8 +2,6 @@
 
 
 #TODO: we are a bit off PokerStove when selecting range via percentage
-#TODO: how to give feedback when the user types in an invalid hand pattern?
-#      currently we clear range bottons. good idea or not?
 
 from PyQt4 import QtCore, QtGui
 import PokerTools
@@ -258,6 +256,8 @@ class HandRangeWidget(QtGui.QFrame):
 			#offsuit:checked{background-color:#C6B92C;}
 			'''
 	
+	invalidHandRangeEntered = QtCore.pyqtSignal(QtGui.QWidget)
+	
 	def __init__(self, parent=None, styleSheet=None, handRange=None, pct=None):
 		"""
 		@param parent: (L{QWidget}) parent or None
@@ -338,8 +338,7 @@ class HandRangeWidget(QtGui.QFrame):
 				
 		# init widget
 		if handRange is not None:
-			self.editHandRange.setText(handRange.toString())
-			self.onEditHandRangeReturnPressed()
+			selfsetHandRange(handRange)
 		elif pct is not None:
 			self.setHandRangeToPct(pct)
 								
@@ -353,11 +352,28 @@ class HandRangeWidget(QtGui.QFrame):
 			btn.fixedSize = fixedSize
 			btn.setMinimumSize(fixedSize)
 		
+	def setHandRangeText(self, text):
+		self.editHandRange.setText(text)
+		
+	def handRangeText(self):
+		text = self.editHandRange.text().toUtf8()
+		return unicode(text, 'utf-8')
+		
+	def setHandRange(self, handRange):
+		self.editHandRange.setText(handRange.toString())
+		self.onEditHandRangeReturnPressed()
+	
 	def handRange(self):
-		"""returns a HandRange containing currently selected hands"""
+		"""returns a HandRange containing currently selected hands or None
+		if no valid hand range is present in the editbox
+		"""
 		text = self.editHandRange.text().toUtf8()
 		text = unicode(text, 'utf-8')
-		handRange = PokerTools.HandRangeHoldem.fromString(text)
+		try:
+			handRange = PokerTools.HandRangeHoldem.fromString(text)
+		except PokerTools.HandRangeHoldem.ParseError:
+			self.invalidHandRangeEntered.emit(self)
+			return None
 		return handRange
 				
 	def handRangeFromHandTypes(self):
@@ -375,21 +391,9 @@ class HandRangeWidget(QtGui.QFrame):
 		self.editHandRange.setText(handRange.toString())
 		
 	def onEditHandRangeReturnPressed(self):
-		text = self.editHandRange.text().toUtf8()
-		text = unicode(text, 'utf-8')
-		try:
-			handRange = PokerTools.HandRangeHoldem.fromString(text)
-		except PokerTools.HandRangeHoldem.ParseError:
-			self.lock = True
-			try:
-				self.spin.setValue(0)
-				self.slider.setValue(0)
-				for handType, btn in self.handTypeButtons.items():
-					btn.setChecked(False)
-			finally:
-				self.lock = False
+		handRange = self.handRange()
+		if handRange is None:
 			return
-				
 		handTypes = {}
 		for hand in handRange:
 			handType = PokerTools.handTypeFromHand(hand)
@@ -428,6 +432,9 @@ class HandRangeWidget(QtGui.QFrame):
 		if not self.lock:
 			self.setHandRangeToPct(n/10.0, updateRange=not self.sliderPressed)
 		
+	def handRangePct(self):
+		return self.slider.value() / 10.0
+	
 	def setHandRangeToPct(self, pct, updateRange=True):
 		handTypes = EvsPokerStove.handTypesFromPct(pct)
 		self.lock = True
@@ -455,7 +462,7 @@ if __name__ == '__main__':
 	application = QtGui.QApplication(sys.argv)
 	gui = HandRangeWidget(
 			pct=33.5,
-			#handRange=PokerTools.HandRangeHoldem.fromString('AA-77, KTs+'),
+			handRange=PokerTools.HandRangeHoldem.fromString('AA-77, KTs+'),
 			)
 	gui.show()
 	application.exec_()
