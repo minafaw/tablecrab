@@ -435,6 +435,55 @@ class HandRangeHoldem(object):
 					handRange._hands[hand.hash] = hand
 				break
 						
+			elif s == 'suited':
+				p.extend([
+						'A2s+',
+						'K2s+',
+						'Q2s+',
+						'J2s+',
+						'T2s+',
+						'92s+',
+						'82s+',
+						'72s+',
+						'62s+',
+						'52s+',
+						'42s+',
+						'32s+',
+						])
+				continue
+				
+			elif s == 'offsuit':
+				p.extend([
+						'A2o',
+						'K2o+',
+						'Q2o+',
+						'J2o+',
+						'T2o+',
+						'92o+',
+						'82o+',
+						'72o+',
+						'62o+',
+						'52o+',
+						'42o+',
+						'32o+',
+						])
+				continue
+			
+			elif s == 'broadways':
+				p.extend([
+						'TT+',
+						'AT+',
+						'KT+',
+						'QT+',
+						'JT+',
+						])
+				continue
+			elif s == 'pairs':
+				p.append('22+')
+				continue	
+					
+			
+			
 			# substring is a hand --> 'Kh7d'
 			#
 			result = klass.PatHand.match(s)
