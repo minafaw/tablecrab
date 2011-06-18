@@ -211,7 +211,6 @@ class EvsPokerStove(object):
 
 
 class HandTypeButton(QtGui.QPushButton):
-		
 	def __init__(self, handType, iRow, iCol, parent=None):
 		QtGui.QPushButton.__init__(self, handType, parent)
 		self.fixedSize = None
@@ -230,10 +229,8 @@ class HandTypeButton(QtGui.QPushButton):
 		sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
 		sizePolicy.setHeightForWidth(True)
 		self.setSizePolicy(sizePolicy)
-			
 	def sizeHint(self):
 		return self.fixedSize
-	
 	def heightForWidth(self, width):
 		return width
 
@@ -338,10 +335,13 @@ class HandRangeWidget(QtGui.QFrame):
 				
 		# init widget
 		if handRange is not None:
-			selfsetHandRange(handRange)
+			self.setHandRange(handRange)
 		elif pct is not None:
 			self.setHandRangeToPct(pct)
 								
+	# --------------------------------------------------------
+	# methods
+	#---------------------------------------------------------
 	def handleFontChanged(self, font=None):
 		font = QtGui.qApp.font() if font is None else font
 		m = QtGui.QFontMetrics(font)
@@ -352,17 +352,6 @@ class HandRangeWidget(QtGui.QFrame):
 			btn.fixedSize = fixedSize
 			btn.setMinimumSize(fixedSize)
 		
-	def setHandRangeText(self, text):
-		self.editHandRange.setText(text)
-		
-	def handRangeText(self):
-		text = self.editHandRange.text().toUtf8()
-		return unicode(text, 'utf-8')
-		
-	def setHandRange(self, handRange):
-		self.editHandRange.setText(handRange.toString())
-		self.onEditHandRangeReturnPressed()
-	
 	def handRange(self):
 		"""returns a HandRange containing currently selected hands or None
 		if no valid hand range is present in the editbox
@@ -375,7 +364,7 @@ class HandRangeWidget(QtGui.QFrame):
 			self.invalidHandRangeEntered.emit(self)
 			return None
 		return handRange
-				
+			
 	def handRangeFromHandTypes(self):
 		p = []
 		for handType, btn in self.handTypeButtons.items():
@@ -383,13 +372,43 @@ class HandRangeWidget(QtGui.QFrame):
 				p.append(btn.handType)
 		handRange = PokerTools.HandRangeHoldem.fromString(', '.join(p))
 		return handRange
+	
+	def handRangePct(self):
+		return self.slider.value() / 10.0
+	
+	def handRangeText(self):
+		text = self.editHandRange.text().toUtf8()
+		return unicode(text, 'utf-8')
 		
-	def onRangeButtonToggled(self, flag):
-		if self.lock:
-			return
-		handRange = self.handRangeFromHandTypes()
+	def setHandRange(self, handRange):
 		self.editHandRange.setText(handRange.toString())
-		
+		self.onEditHandRangeReturnPressed()
+	
+	def setHandRangeText(self, text):
+		self.editHandRange.setText(text)
+			
+	def setHandRangeToPct(self, pct, updateRange=True):
+		handTypes = EvsPokerStove.handTypesFromPct(pct)
+		self.lock = True
+		self.setUpdatesEnabled(False)
+		try:
+			for handType, btn in self.handTypeButtons.items():
+				btn.setChecked(handType in handTypes)
+			value = int(pct*10)
+			if self.slider.value() != value:
+				self.slider.setValue(value)
+			if self.spin.value() != pct:
+				self.spin.setValue(pct)
+			if updateRange:
+				handRange = self.handRangeFromHandTypes()
+				self.editHandRange.setText(handRange.toString())
+		finally:
+			self.setUpdatesEnabled(True)
+			self.lock = False
+	
+	# --------------------------------------------------------
+	# signal handlers
+	#---------------------------------------------------------
 	def onEditHandRangeReturnPressed(self):
 		handRange = self.handRange()
 		if handRange is None:
@@ -415,45 +434,29 @@ class HandRangeWidget(QtGui.QFrame):
 					btn.setChecked(False)
 		finally:
 			self.lock = False
-			
+	
+	def onRangeButtonToggled(self, flag):
+		if self.lock:
+			return
+		handRange = self.handRangeFromHandTypes()
+		self.editHandRange.setText(handRange.toString())
+		
+	def onSliderPressed(self):
+		self.sliderPressed = True
+	
 	def onSliderReleased(self):
 		self.sliderPressed = False
 		handRange = self.handRangeFromHandTypes()
 		self.editHandRange.setText(handRange.toString())
 	
-	def onSliderPressed(self):
-		self.sliderPressed = True
+	def onSliderValueChanged(self, n):
+		if not self.lock:
+			self.setHandRangeToPct(n/10.0, updateRange=not self.sliderPressed)
 		
 	def onSpinValueChanged(self, n):
 		if not self.lock:
 			self.setHandRangeToPct(n)
 				
-	def onSliderValueChanged(self, n):
-		if not self.lock:
-			self.setHandRangeToPct(n/10.0, updateRange=not self.sliderPressed)
-		
-	def handRangePct(self):
-		return self.slider.value() / 10.0
-	
-	def setHandRangeToPct(self, pct, updateRange=True):
-		handTypes = EvsPokerStove.handTypesFromPct(pct)
-		self.lock = True
-		self.setUpdatesEnabled(False)
-		try:
-			for handType, btn in self.handTypeButtons.items():
-				btn.setChecked(handType in handTypes)
-			value = int(pct*10)
-			if self.slider.value() != value:
-				self.slider.setValue(value)
-			if self.spin.value() != pct:
-				self.spin.setValue(pct)
-			if updateRange:
-				handRange = self.handRangeFromHandTypes()
-				self.editHandRange.setText(handRange.toString())
-		finally:
-			self.setUpdatesEnabled(True)
-			self.lock = False
-
 #************************************************************************************
 #
 #************************************************************************************
@@ -462,7 +465,7 @@ if __name__ == '__main__':
 	application = QtGui.QApplication(sys.argv)
 	gui = HandRangeWidget(
 			pct=33.5,
-			handRange=PokerTools.HandRangeHoldem.fromString('AA-77, KTs+'),
+			#handRange=PokerTools.HandRangeHoldem.fromString('AA-77, KTs+'),
 			)
 	gui.show()
 	application.exec_()
