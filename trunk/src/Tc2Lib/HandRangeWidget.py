@@ -3,9 +3,7 @@
 
 #TODO: we are a bit off PokerStove when selecting range via percentage
 #TODO: how to give feedback when the user types in an invalid hand pattern?
-#TODO: textual hand range display is currently read only. as soon as
-#      we find a way to give feedback on invalid hand ranges we can support
-#      completely arbitrary hand ranges.
+#      currently we clear range bottons. good idea or not?
 
 from PyQt4 import QtCore, QtGui
 import PokerTools
@@ -302,7 +300,7 @@ class HandRangeWidget(QtGui.QFrame):
 		
 		self.editHandRange = QtGui.QLineEdit(self)
 		self.editHandRange.returnPressed.connect(self.onEditHandRangeReturnPressed)
-		self.editHandRange.setReadOnly(True)
+		#self.editHandRange.setReadOnly(True)
 		
 		self.handleFontChanged()
 		
@@ -382,7 +380,14 @@ class HandRangeWidget(QtGui.QFrame):
 		try:
 			handRange = PokerTools.HandRangeHoldem.fromString(text)
 		except PokerTools.HandRangeHoldem.ParseError:
-			#TODO: how to give feedback?
+			self.lock = True
+			try:
+				self.spin.setValue(0)
+				self.slider.setValue(0)
+				for handType, btn in self.handTypeButtons.items():
+					btn.setChecked(False)
+			finally:
+				self.lock = False
 			return
 				
 		handTypes = {}
