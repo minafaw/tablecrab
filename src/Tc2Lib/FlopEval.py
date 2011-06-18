@@ -655,7 +655,7 @@ class FlopEval(object):
 		
 		# flush #
 		
-		p = (11.0/50)*(10.0/49)*(9.0/48)
+		#p = (11.0/50)*(10.0/49)*(9.0/48)
 		self.pFlush = 0.00841836734694
 		self.nFlush = 165
 				
@@ -666,9 +666,8 @@ class FlopEval(object):
 		#ps = (4.0/50)*(4.0/49)*(4.0/48) * 6
 		pThreeCards = 0.00326530612245
 				
-		# 4 ways to form a straight with JT-65
-		#p = 4 * pThreeCards
-		self.pStraightJT = 0.0130612244898
+		# 4 ways to form a straight
+		self.pStraightJT = pThreeCards * 4
 		self.nStraightJT = 256
 		self.pStraightT9 = self.pStraightJT
 		self.nStraightT9 = self.nStraightJT
@@ -681,9 +680,8 @@ class FlopEval(object):
 		self.pStraight65 = self.pStraightJT
 		self.nStraight65 = self.nStraightJT
 				
-		# 3 ways to form a straight with QT-53
-		#p = 3 * pThreeCards
-		self.pStraightQT = 0.00979591836735
+		# 3 ways to form a straight
+		self.pStraightQT = pThreeCards * 3
 		self.nStraightQT = 192
 		self.pStraightT8 = self.pStraightQT
 		self.nStraightT8 = self.nStraightQT
@@ -709,9 +707,8 @@ class FlopEval(object):
 		self.pStraight63 = self.pStraightQT
 		self.nStraight63 = self.nStraightQT
 				
-		# 2 ways to form a straight with KT-52
-		#p = 2 * pThreeCards
-		self.pStraightKT = 0.0065306122449
+		# 2 ways to form a straight
+		self.pStraightKT = pThreeCards * 2
 		self.nStraightKT = 128
 		self.pStraightQ9 = self.pStraightKT
 		self.nStraightQ9 = self.nStraightKT
@@ -749,8 +746,7 @@ class FlopEval(object):
 		self.nStraight32 = self.nStraightKT
 						
 		# 1 way to form a straight 
-		# p = pThreeCards
-		self.pStraightAK = 0.00326530612245
+		self.pStraightAK = pThreeCards * 1
 		self.nStraightAK = 64
 		self.pStraightAQ = self.pStraightAK
 		self.nStraightAQ = self.nStraightAK
@@ -2115,11 +2111,12 @@ class FlopEval(object):
 				result['nStraightDraws'] += nInsideDraws + nOutsideDraws
 				
 			elif PokerTools.handTypeIsSuited(handType):
-				result['nStraightFlushs'] += getattr(self, 'nStraightFlush%s' % myHandType)
+				nStraightFlushs = getattr(self, 'nStraightFlush%s' % myHandType)
+				result['nStraightFlushs'] += nStraightFlushs
 				result['nQuads'] += self.nQuadsUnpaired
 				result['nFullHouses'] += self.nFullHouseSetUnpaired
-				result['nFlushs'] += self.nFlush
-				result['nStraights'] += getattr(self, 'nStraight%s' % myHandType)
+				result['nFlushs'] += self.nFlush - nStraightFlushs
+				result['nStraights'] += getattr(self, 'nStraight%s' % myHandType) - self.nFlush
 				result['nSets'] += self.nSetUnpaired
 				result['nTwoPairs'] += self.nTwoPairUnpaired
 				nTopPairs = getattr(self, 'nTopPair%s' % myHandType)
@@ -2128,7 +2125,7 @@ class FlopEval(object):
 				result['nFlushDraws'] += self.nFlushDrawSuited
 				nInsideDraws = getattr(self, 'nInsideStraightDraw%s' % myHandType)
 				nOutsideDraws = getattr(self, 'nOutsideStraightDraw%s' % myHandType)
-				result['nStraightDraws'] += nInsideDraws + nOutsideDraws
+				result['nStraightDraws'] += nInsideDraws + nOutsideDraws - self.nFlush
 			else:
 				result['nQuads'] += self.nQuadsUnpaired
 				result['nFullHouses'] += self.nFullHouseSetUnpaired
@@ -2278,4 +2275,4 @@ class FlopEval(object):
 			p.insert(-1, '_')
 			result.append(' '.join(p))
 		return result	
-		
+
