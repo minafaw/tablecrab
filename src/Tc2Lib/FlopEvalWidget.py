@@ -16,13 +16,16 @@ class FloatProgressBar(QtGui.QProgressBar):
 		self.floatValue = 0.0
 		self.prefix = prefix
 		self.setMaximum(10000)
-		self.valueChanged.connect(self.onValueChanged)
 		self.setValue(self.floatValue)
-	def onValueChanged(self, value):
-		self.setFormat('%s%.02f%%' % (self.prefix, self.floatValue*100))
 	def setValue(self, value):
 		self.floatValue = value
 		QtGui.QProgressBar.setValue(self, int(value*10000))
+		value = self.floatValue*100
+		if value and round(value, 2) == 0:
+			fmt = '%s+%.02f%%' % (self.prefix, value)
+		else:
+			fmt = '%s%.02f%%' % (self.prefix, value)
+		self.setFormat(fmt)
 			
 
 class FlopEvalWidget(QtGui.QFrame):
@@ -48,7 +51,7 @@ class FlopEvalWidget(QtGui.QFrame):
 		self.buttonEvalRandom.clicked.connect(self.onButtonEvalRandomClicked)
 		
 		self.progressBars = [
-				['nStraightFlushs', 'StraightFlushs: ', None],
+				['nStraightFlushs', 'StraightFlush: ', None],
 				['nQuads', 'Quads: ', None],
 				['nFullHouses', 'FullHouse: ', None],
 				['nFlushs', 'Flush: ', None],
@@ -91,6 +94,11 @@ class FlopEvalWidget(QtGui.QFrame):
 		box2.addWidget(self.buttonEvalRandom)
 		
 		
+		hLine = QtGui.QFrame()
+		hLine.setFrameStyle(hLine.HLine | hLine.Sunken)
+		box0.addWidget(hLine)
+		
+		
 		box2 = QtGui.QHBoxLayout()
 		box0.addLayout(box2)
 			
@@ -121,9 +129,12 @@ class FlopEvalWidget(QtGui.QFrame):
 	def _setResult(self, result):
 		nFlops = float(result['nFlops'])
 		for data in self.progressBars:
+			
 			value = result[data[0]]
 			if value:
 				value = value / float(nFlops)
+			else:
+				value = 0.0
 			data[2].setValue(value)
 			
 	def _makeResult(self):
