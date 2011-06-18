@@ -454,7 +454,7 @@ class HandRangeHoldem(object):
 				
 			elif s == 'offsuit':
 				p.extend([
-						'A2o',
+						'A2o+',
 						'K2o+',
 						'Q2o+',
 						'J2o+',
