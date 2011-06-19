@@ -8,6 +8,9 @@ class FlopEval(object):
 	
 	def __init__(self):
 				
+		
+		#more or less based on: [http://www.flopturnriver.com/Common-Flop-Odds.html]
+		
 		#
 		#
 		
