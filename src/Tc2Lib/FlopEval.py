@@ -2119,7 +2119,7 @@ class FlopEval(object):
 				result['nQuads'] += self.nQuadsUnpaired
 				result['nFullHouses'] += self.nFullHouseSetUnpaired
 				result['nFlushs'] += self.nFlush - nStraightFlushs
-				result['nStraights'] += getattr(self, 'nStraight%s' % myHandType) - self.nFlush
+				result['nStraights'] += getattr(self, 'nStraight%s' % myHandType)
 				result['nSets'] += self.nSetUnpaired
 				result['nTwoPairs'] += self.nTwoPairUnpaired
 				nTopPairs = getattr(self, 'nTopPair%s' % myHandType)
