@@ -712,7 +712,7 @@ class HandRangeHoldem(object):
 			offsuit = [handTypeTable[i][delta] for i in xrange(delta +1, 13)]
 			handTypes.extend(offsuit)
 		
-		# sccumulste hands to ranges
+		# accumulate hands to ranges
 		ranges = {'pair': [], 'suited': [], 'offsuit': []}
 		for handTypeData in handTypes:
 			rng = ranges[handTypeData['type']]
