@@ -498,9 +498,7 @@ class HandRangeHoldem(object):
 			elif s == 'pairs':
 				p.append('22+')
 				continue	
-					
-			
-			
+						
 			# substring is a hand --> 'Kh7d'
 			#
 			result = klass.PatHand.match(s)
