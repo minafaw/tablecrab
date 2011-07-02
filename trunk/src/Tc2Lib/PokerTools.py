@@ -248,13 +248,33 @@ class CardDeck(object):
 		return self.cards.pop(0)
 
 
-class Hand(object):
-	def __init__(self, *cards):
-		self.cards = cards
-		self.hash = hash(tuple(sorted([card.value() for card in self.cards])))
-	def __eq__(self, other):
-		return self.hash == other.hash
-	def __ne__(self, other): return not self.__eq__(other)
+class Hand(long):
+	
+	@classmethod
+	def fromCards(klass, *cards):
+		n = 0
+		for card in cards:
+			n |= 1 << card
+		newClass =  long.__new__(klass, n)
+		newClass.cards = cards
+		return newClass
+	
+	def __new__(klass, n):
+		"""creates a new hand
+		@param no: (int or cards)
+		"""
+		cards = []
+		n = 0
+		while True:
+			b = 1 << n
+			if b > n:
+				break
+			if n & b:
+				cards.append(Card(n))
+			n += 1
+		newClass =  long.__new__(klass, n)
+		newClass.cards = cards
+		return newClass
 	def toString(self):
 		return '[%s]' % ' '.join([card.name() for card in self.cards]) 
 
@@ -273,9 +293,6 @@ def genHandTypes():
 			result.append(rank + rank2 + 's')
 			result.append(rank + rank2 + 'o')
 	return result
-
-#for i in genHandTypes():
-#	print i
 
 def genHandTypeTable():
 	"""creates a table of hand types
@@ -328,14 +345,14 @@ def handTypeIsOffsuit(handType):
 def handTypeToHands(handType):
 	if handTypeIsPair(handType):
 		cards = [Card(handType[0] + suit) for suit in Card.SuitNames]
-		return [Hand(*cards) for cards in itertools.combinations(cards, 2)]
+		return [Hand.fromCards(*cards) for cards in itertools.combinations(cards, 2)]
 	elif handTypeIsSuited(handType):
-		return [Hand(Card(handType[0]+s), Card(handType[1]+s)) for s in Card.SuitNames]
+		return [Hand.fromCards(Card(handType[0]+s), Card(handType[1]+s)) for s in Card.SuitNames]
 	else:
 		cards1 = [handType[0] + suit for suit in Card.SuitNames]
 		cards2 = [handType[1] + suit for suit in Card.SuitNames]
 		return [
-			Hand(Card(a), Card(b)) for (a, b) in itertools.product(cards1, cards2) if a[1] != b[1]
+			Hand.fromCards(Card(a), Card(b)) for (a, b) in itertools.product(cards1, cards2) if a[1] != b[1]
 			]
 		
 def handTypeRanks(handType):
@@ -431,8 +448,8 @@ class HandRangeHoldem(object):
 			if s == 'random':
 				deck = CardDeck()
 				for cards in itertools.combinations(deck.cards, 2):
-					hand = Hand(*cards)
-					handRange._hands[hand.hash] = hand
+					hand = Hand.fromCards(*cards)
+					handRange._hands.add(hand)
 				break
 						
 			elif s == 'suited':
@@ -489,8 +506,8 @@ class HandRangeHoldem(object):
 			result = klass.PatHand.match(s)
 			if result is not None:
 				card1, card2 = Card(result.group('card1')), Card(result.group('card2'))
-				hand = Hand(card1, card2)
-				handRange._hands[hand.hash] = hand
+				hand = Hand.fromCards(card1, card2)
+				handRange._hands.add(hand)
 				continue
 				
 			# substring is a handTypePair --> 'TT' or 'TT+'
@@ -500,7 +517,7 @@ class HandRangeHoldem(object):
 				rank = result.group('rank')
 				hands =  handTypeToHands(rank+rank)
 				for hand in hands:
-					handRange._hands[hand.hash] = hand
+					handRange._hands.add(hand)
 							
 				# expand pattern if necessary
 				qualifier = result.group('qualifier')
@@ -534,7 +551,7 @@ class HandRangeHoldem(object):
 				else:
 					hands = handTypeToHands(rank1+rank2+'s') + handTypeToHands(rank1+rank2+'o')
 				for hand in hands:
-					handRange._hands[hand.hash] = hand
+					handRange._hands.add(hand)
 							
 				# expand pattern if necessary
 				if qualifier:
@@ -544,13 +561,13 @@ class HandRangeHoldem(object):
 						if otherRank == rank1: continue
 						if suit:
 							for hand in handTypeToHands(rank1 + otherRank + suit):
-									handRange._hands[hand.hash] = hand
+									handRange._hands.add(hand)
 								
 						else:
 							for hand in handTypeToHands(rank1 + otherRank + 's'):
-								handRange._hands[hand.hash] = hand
+								handRange._hands.add(hand)
 							for hand in handTypeToHands(rank1 + otherRank + 'o'):
-								handRange._hands[hand.hash] = hand
+								handRange._hands.add(hand)
 				continue
 				
 			# substring is a handTypePairRange --> '22-TT'
@@ -567,7 +584,7 @@ class HandRangeHoldem(object):
 				ranks = Card.RankNames[iRank1:iRank2+1]
 				for rank in ranks:
 					for hand in handTypeToHands(rank + rank):
-						handRange._hands[hand.hash] = hand
+						handRange._hands.add(hand)
 				continue
 							
 			# substring is a handTypeSuiteRange --> 'K7s-KTs', 'KT-K7', 'KTo-K7', ...
@@ -601,13 +618,13 @@ class HandRangeHoldem(object):
 				for rank in ranks:
 					if suit:
 						for hand in handTypeToHands(rank1 + rank + suit):
-							handRange._hands[hand.hash] = hand
+							handRange._hands.add(hand)
 						
 					else:
 						for hand in handTypeToHands(rank1 + rank + 's'):
-							handRange._hands[hand.hash] = hand
+							handRange._hands.add(hand)
 						for hand in handTypeToHands(rank1 + rank + 'o'):
-							handRange._hands[hand.hash] = hand
+							handRange._hands.add(hand)
 				continue
 			
 			#
@@ -630,22 +647,19 @@ class HandRangeHoldem(object):
 		"""
 		@param hands: (list) or L{Hand}s or None to create an empty hand range
 		"""
-		self._hands = {}
-		if hands is not None:
-			for hand in hands:
-				self.hands[hand.hash] = hand 
-			
+		self._hands = set() if hands is None else set(hands)
+				
 	def __contains__(self, hand):
-		return hand.hash in self._hands
+		return hand in self._hands
 		
 	def __len__(self):
 		return len(self._hands)
 		
 	def __iter__(self):
-		return iter(self._hands.values())
+		return iter(self._hands)
 		
 	def hands(self):
-		return self._hands.values()
+		return self._hands
 	
 	def toString(self):
 		"""dumps the hand range to a string representing a hand range pattern
