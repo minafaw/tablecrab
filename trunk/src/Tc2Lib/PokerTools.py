@@ -658,9 +658,6 @@ class HandRangeHoldem(object):
 	def __iter__(self):
 		return iter(self._hands)
 		
-	def hands(self):
-		return self._hands
-	
 	def toString(self):
 		"""dumps the hand range to a string representing a hand range pattern
 		@return: (str)
@@ -671,7 +668,7 @@ class HandRangeHoldem(object):
 		
 		# precompute hand types of our hands
 		handTypes = dict([(handType, []) for handType in genHandTypes()])
-		for hand in self.hands():
+		for hand in self:
 			handType = handTypeFromHand(hand)
 			handTypes[handType].append(hand) 
 		
