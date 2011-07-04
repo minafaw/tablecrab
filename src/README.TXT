@@ -11,7 +11,8 @@ this is for linux only. it seems to be a pain setting up subversion on windows.
 1) install python >= 2.6 binary [ http://www.python.org/download/ ] or use winetricks to do so
 2) install PyQt4 windows binary matching your python version [ http://www.riverbankcomputing.co.uk/software/pyqt/download ]
 	for python 2.6 for example it's "PyQt-Py2.6-gpl-4.7.4-1.exe"
-3) grab a fresh copy of ableCrab from its repository via svn export or copy: svn export http://tablecrab.googlecode.com/svn/trunk/src /path/to/my/TableCrabFolder/
+3) grab a fresh copy of TableCrab from its repository via svn export or copy: svn export http://tablecrab.googlecode.com/svn/trunk/src /path/to/my/TableCrabFolder/
+
 
 locate the python executable under wine "pythonw.exe". a good place to look for is in "/home/UserName/.wine/drive_c/python26"
 
