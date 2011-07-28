@@ -155,6 +155,8 @@ class FrameTool(QtGui.QFrame):
 		if fileName is None:
 			return
 		#TODO: make failsave
+		fileName = fileName.toUtf8()
+		fileName = unicode(fileName, 'utf-8')
 		try:
 			self.handHistoryFile = Tc2SitePokerStarsHandGrabber.HandHistoryFile(fileName)
 		except Exception, d:
