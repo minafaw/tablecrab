@@ -4,6 +4,8 @@ import Tc2SitePokerStarsHandGrabber
 import Tc2GuiHelp
 from Tc2Lib import Browser
 from Tc2Lib import HoldemResources
+from Tc2Lib import PokerTools
+from Tc2Lib import ICM
 
 from PyQt4 import QtCore, QtGui, QtWebKit
 import hashlib, codecs
@@ -253,9 +255,228 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 #************************************************************************************
 #
 #************************************************************************************
+class BrowserSideBarICMTax(QtGui.QFrame):
+
+	SettingsKeyBase = 'Gui/Tools/ICMTax'
+	SettingsKeyCustomPayoutStructure = SettingsKeyBase + '/CustomPayoutStructure'
+	SettingsKeyDialogSaveState = SettingsKeyBase + '/DialogSave/State'
+	SettingsKeyPayoutStructureCurrent = SettingsKeyBase + '/PayoutStructureCurrent'
+
+	PayoutStructures = (	# text, payoutStructure, lineEditMask
+			('- Select payout structure -', '', ''),
+			('PokerStars 9 man sitNgo', '50/30/20', '99/99/99'),
+			('PokerStars 6 man sitNgo', '65/35', '99/99'),
+			('Winner takes all', '100', '999'),
+			('Custom', '', '99/99/99/99/99/99/99/99/99/99')
+			)
+			
+	StyleSheet = '''body{}
+table{}
+td{text-align: center;vertical-align: text-top;}
+.title{font-weight: bold;}
+.roleHero{font-weight: bold;background-color:#F0F0F0;}
+.taxHero{}
+.roleVillain{}
+.taxVillain{}
+'''
+
+
+	def __init__(self, parent, zoomFactor=None):
+		QtGui.QFrame.__init__(self, parent)
+
+		self.lastHand = None
+		
+		self._browser = QtWebKit.QWebView(self)
+		self._browser.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+		self._browser.customContextMenuRequested.connect(self.onContextMenuWebView)
+		if zoomFactor is not None:
+			self._browser.setZoomFactor(zoomFactor)
+
+		self.comboBox = QtGui.QComboBox(self)
+		for i, (text, _, _) in enumerate(self.PayoutStructures):
+			self.comboBox.addItem(text, i)
+		self.editPayoutStructure = QtGui.QLineEdit(self)
+		self.editPayoutStructure.setEnabled(False)
+
+		#setup actions
+		self.actionSave = QtGui.QAction(self)
+		self.actionSave.setText('Save..')
+		self.actionSave.setEnabled(False)
+		#self.actionSave.setToolTip('Save hand history (Alt+S)')
+		#self.actionSave.setShortcut(QtGui.QKeySequence('Alt+S') )
+		self.actionSave.triggered.connect(self.onActionSaveTriggered)
+		#self._toolBar.addAction(self.actionSave)
+
+		# connect signals
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
+		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
+
+	#-----------------------------------------------------------------------------------------
+	# sideBar methods
+	#-----------------------------------------------------------------------------------------
+	def displayName(self):
+		return 'ICM-tax'
+
+	def handleZoomFactorChanged(self, value):
+		self._browser.setZoomFactor(value)
+
+	def handleHandSet(self, hand):
+		
+		if hand is self.lastHand:
+			return
+		self.lastHand = hand
+		if hand is None:
+			return
+		payoutStructure = self.payoutStructure()
+		if not payoutStructure:
+			return
+		if not hand:
+			self._browser.setHtml('<h3>Can not fetch data for the hand</h3>')
+			return
+
+		# prep seats/stacks
+		seats = [i for i in hand.seats if i is not None]
+		if len(seats) == 1:
+			return
+		seatsButtonOrdered = hand.seatsButtonOrdered()
+		stacks = [seat.stack for seat in seats]
+
+		html = '<html><head>'
+		html += '<style type="text/css"><!-- %s --></style>' % self.StyleSheet
+		html += '</head><body>'
+				
+		
+		html += '<table border="1" cellspacing="0" cellpadding="0" width="100%">'	
+		
+		bubbleFactors = ICM.bubbleFactors(stacks, self.payoutStructure())
+		for iHero, villains in enumerate(bubbleFactors):
+			seat = seats[iHero]
+			role = PokerTools.Seats.seatName(len(seats), seatsButtonOrdered.index(seat))
+						
+			title = '&nbsp;'
+			if iHero == 0:
+				title = 'ICM-tax hero--&gt;villain (in %)'
+			html += '<th class="title" colspan="99">%s</th>' % title
+						
+			tr1 = '<tr><td class="roleHero">%s</td>' % role
+			tr2 = '<tr><td class="taxHero"></td>'
+				
+			# sort villains
+			myVillains = []
+			iHero = 0
+			for iVillain, bubbleFactor in enumerate(villains):
+				if bubbleFactor is None:
+					iHero = iVillain
+					myVillains.append(None)
+				else:
+					seat = seats[iVillain]
+					role = PokerTools.Seats.seatName(len(seats), seatsButtonOrdered.index(seat))
+					myVillains.append((role, bubbleFactor, iVillain))
+			myVillains = myVillains[iHero+1:] + myVillains[:iHero]
+			
+			for role, bubbleFactor, iVillain in myVillains:
+				taxHero = ICM.taxFactor(bubbleFactor)
+				taxHero = int(round(taxHero*100, 0))
+				bubbleFactor = bubbleFactors[iVillain][iHero]
+				taxVillain = ICM.taxFactor(bubbleFactor)
+				taxVillain = int(round(taxVillain*100, 0))
+				tr1 += '<td class="roleVillain">%s</td>' % role
+				tr2 += '<td class="taxVillain">%s/%s</td>' % (taxHero, taxVillain)
+					
+			tr1 += '</tr>'
+			tr2 += '</tr>'
+			html += tr1
+			html += tr2
+			
+		html += '</table>'
+		html += '</table></body></html>'
+		self._browser.setHtml(html)
+		self.actionSave.setEnabled(True)
+
+	def payoutStructure(self):
+		return [round( int(i) / 100.0, 2) for i in str(self.editPayoutStructure.text()).split('/') if i]
+
+	def layout(self):
+		grid = Tc2Config.GridBox(self)
+		grid.col(self.comboBox)
+		grid.col(self.editPayoutStructure)
+		iRow = grid.row()
+		grid.setRowStretch(iRow, 99)
+		grid.col(self._browser, colspan=2)
+
+	def onCloseEvent(self, event):
+		Tc2Config.settingsSetValue(self.SettingsKeyPayoutStructureCurrent, self.comboBox.currentIndex())
+	
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
+		self.layout()
+		self.comboBox.currentIndexChanged.connect(self.onComboBoxCurrentIndexChanged)
+		self._browser.setHtml('')
+
+		#NOTE: editingFinished() is only emitted when the whole mask is filled in so we need to connect to textChanged()
+		self.editPayoutStructure.textChanged.connect(self.onEditPayoutStructureTextChanged)
+		value, ok = Tc2Config.settingsValue(self.SettingsKeyPayoutStructureCurrent, 0).toInt()
+		if ok:
+			self.comboBox.setCurrentIndex(value)
+
+	def onComboBoxCurrentIndexChanged(self, i):
+		payoutStructure, mask = self.PayoutStructures[i][1], self.PayoutStructures[i][2]
+		if i == len(self.PayoutStructures) -1:
+			payoutStructure = Tc2Config.settingsValue(self.SettingsKeyCustomPayoutStructure, '').toString()
+		self.editPayoutStructure.setInputMask(mask)
+		self.editPayoutStructure.setText(payoutStructure)
+		self.editPayoutStructure.setEnabled(bool(mask))
+
+		self.editPayoutStructure.home(False)
+		hand, self.lastHand = self.lastHand, None
+		self.handleHandSet(hand)
+
+	def onZoomFactorChanged(self, factor):
+		self._browser.setZoomFactor(factor)
+
+	def onEditPayoutStructureTextChanged(self, text):
+		if self.comboBox.currentIndex() == len(self.PayoutStructures) -1:
+			edit = self.sender()
+			Tc2Config.settingsSetValue(self.SettingsKeyCustomPayoutStructure, text)
+
+	def onContextMenuWebView(self, point):
+		menu = QtGui.QMenu(self)
+		menu.addAction(self._browser.pageAction(QtWebKit.QWebPage.Copy))
+		menu.addAction(self._browser.pageAction(QtWebKit.QWebPage.SelectAll))
+		menu.addAction(self.actionSave)
+		point = self._browser.mapToGlobal(point)
+		menu.exec_(point)
+
+	def onActionSaveTriggered(self):
+		fileName = Tc2Config.dlgOpenSaveFile(
+				parent=self,
+				openFile=False,
+				title='Save ICM-tax..',
+				fileFilters=('HtmlFiles (*.html *.htm)', 'All Files (*)'),
+				#TODO: rename to Gui/HandViewer/DialogSave/State
+				settingsKey=self.SettingsKeyDialogSaveState,
+				defaultSuffix='html',
+				)
+		if fileName is None:
+			return
+		fp = None
+		try:
+			fp = codecs.open(fileName, 'w', encoding='utf-8')
+			fp.write( unicode(self._browser.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
+		except Exception, d:
+			Tc2Config.msgWarning(self, 'Could Not Save ICM tax calculations\n\n%s' % d)
+		finally:
+			if fp is not None: fp.close()
+		#TODO: can we rename hand in cache? i font think so. no way to inform WebKit
+
+
+
+#************************************************************************************
+#
+#************************************************************************************
 class BrowserSideBarContainer(QtGui.QFrame):
 	SideBarsDefault = (
 			BrowserSideBarNashCalculations,
+			BrowserSideBarICMTax,
 			)
 
 	def __init__(self, parent):
@@ -435,6 +656,8 @@ class FrameHandViewer(QtGui.QFrame):
 		if fileName is None:
 			return
 		#TODO: maybe limit max size of file before we read unconditionally
+		fileName = fileName.toUtf8()
+		fileName = unicode(fileName, 'utf-8')
 		fp = codecs.open(fileName, 'r', encoding='utf-8')
 		try:
 			raw = fp.read()
