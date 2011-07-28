@@ -11,6 +11,7 @@ import Tc2GuiSettingsPokerStars
 import Tc2GuiSettingsHandViewer
 import Tc2GuiSettingsHandViewerStyleSheet
 import Tc2GuiSettingsNashCalculationsStyleSheet
+import Tc2GuiSettingsICMTaxStyleSheet
 import Tc2GuiSettingsClock
 import Tc2GuiSettingsCardProtector
 
@@ -45,6 +46,7 @@ class FrameSettings(QtGui.QFrame):
 		self.settingsHand = self.addSetting('HandViewer', Tc2GuiSettingsHandViewer.FrameSettings(parent=self._stack), 'Shift+H', 'Hand viewer (Shift+H)')
 		self.settingsHandStyleSheet = self.addSetting('HandViewerStyleSheet', Tc2GuiSettingsHandViewerStyleSheet.FrameSettings(parent=self._stack), 'Shift+S', 'Hand viewer style sheet (Shift+S)')
 		self.settingsNashCalculationsStyleSheet = self.addSetting('NashCalculationsStyleSheet', Tc2GuiSettingsNashCalculationsStyleSheet.FrameSettings(parent=self._stack), 'Shift+S', 'Nash calculations style sheet (Shift+C)')
+		self.settingsICMTaxStyleSheet = self.addSetting('NashICMTaxStyleSheet', Tc2GuiSettingsICMTaxStyleSheet.FrameSettings(parent=self._stack), 'Shift+S', 'Nash calculations style sheet (Shift+C)')
 		self.settingsCardProtector = self.addSetting('CardProtector', Tc2GuiSettingsCardProtector.FrameSettings(parent=self._stack), 'Shift+A', 'Card Protector (Shift+A)')
 		self.settingsClock = self.addSetting('Clock', Tc2GuiSettingsClock.FrameSettings(parent=self._stack), 'Shift+C', 'Clock (Shift+C)')
 

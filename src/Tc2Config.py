@@ -233,6 +233,7 @@ HelpTopics = [
 				('settingsHandViewer', 'Hand Viewer'),
 				('settingsHandViewerStyleSheet', 'Hand Viewer Style Sheet'),
 				('settingsNashCalculationsStyleSheet', 'Nash Calculations Style Sheet'),
+				('settingsICMTaxStyleSheet', 'ICM-Tax Style Sheet'),
 				('settingsCardProtector', 'Card Protector'),
 				('settingsClock', 'Clock'),
 				],
@@ -325,6 +326,7 @@ class _GlobalObject(QtCore.QObject):
 	objectCreatedSettingsHandViewer = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsHandViewerStyleSheet = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsNashCalculationsStyleSheet = QtCore.pyqtSignal(QtCore.QObject)
+	objectCreatedSettingsICMTaxStyleSheet = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsClock = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsCardProtector = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSiteManager = QtCore.pyqtSignal(QtCore.QObject)
@@ -359,6 +361,7 @@ class _GlobalObject(QtCore.QObject):
 		self.settingsHandViewer = self.objectCreatedSettingsHandViewer.connect(lambda obj, self=self: setattr(self, 'settingsHandViewer', obj))
 		self.settingsPHandViewerStyleSheet = self.objectCreatedSettingsHandViewerStyleSheet.connect(lambda obj, self=self: setattr(self, 'settingsHandViewerStyleSheet', obj))
 		self.settingsNashCalculationsStyleSheet = self.objectCreatedSettingsNashCalculationsStyleSheet.connect(lambda obj, self=self: setattr(self, 'settingsNashCalculationsStyleSheet', obj))
+		self.settingsICMTaxStyleSheet = self.objectCreatedSettingsICMTaxStyleSheet.connect(lambda obj, self=self: setattr(self, 'settingsICMTaxStyleSheet', obj))
 		self.settingsClock = self.objectCreatedSettingsClock.connect(lambda obj, self=self: setattr(self, 'settingsClock', obj))
 		self.settingsCardProtector = self.objectCreatedSettingsCardProtector.connect(lambda obj, self=self: setattr(self, 'settingsCardProtector', obj))
 		self.siteManager = self.objectCreatedSiteManager.connect(lambda obj, self=self: setattr(self, 'siteManager', obj))
