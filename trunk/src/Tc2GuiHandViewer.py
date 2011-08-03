@@ -342,7 +342,7 @@ td{text-align: center;vertical-align: text-top;}
 		stacks = [seat.stack for seat in seats]
 
 		html = '<html><head>'
-		html += '<style type="text/css"><!-- %s --></style>' % self.StyleSheet
+		html += '<style type="text/css"><!-- %s --></style>' % Tc2Config.globalObject.settingsICMTaxStyleSheet.styleSheet()
 		html += '</head><body>'
 				
 		
