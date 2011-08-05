@@ -22,6 +22,8 @@ LookupTable= (
 		0x00,0x59,0x06,0x1C,0x02,0x20
 		)
 
+class Error(Exception): pass
+
 def decryptString(string):
 	# XOR string acc to LookupTable
 	data = ''
@@ -48,8 +50,18 @@ def decryptString(string):
 	fp = gzip.GzipFile(fileobj=cStringIO.StringIO(data), mode='rb')
 	try:
 		data = header + fp.read()
+	except IOError:
+		raise Error('string is not gzipped')
 	finally: fp.close()
 	return data
+
+def splitDecryptedString(string):
+	"""splits a decrypted string into data, iniData"""
+	return string.split('\n', 1)
+
+def joinDecryptedString(data, iniData):
+	"""joins a spilt decrypted string"""
+	return data + '\n' + iniData
 
 
 def encryptString(string):
@@ -64,6 +76,8 @@ def encryptString(string):
 	fp = gzip.GzipFile(fileobj=p, mode='wb', compresslevel=9)
 	try:
 		fp.write(string)
+	except IOError:
+		raise Error('string is not gzipped')
 	finally: fp.close()
 	p.seek(0)
 	string = p.getvalue()
