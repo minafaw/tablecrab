@@ -1,0 +1,85 @@
+<html>
+<head>
+<LINK REL=StyleSheet HREF="default.css" TYPE="text/css" MEDIA=screen>
+</head>
+<body>
+
+<div class="textBox">
+	<div class="headerBox">Flop evaluator</div>
+
+	Flopzilla like tool to evaluate hand ranges against flops.
+	<br>
+	<br>
+	
+	you may enter a hand range by either clicking hand types in the grid
+	or by using the slider / spin or by entering a hand range into the editbox.
+	in case you entered a hand range in the editbox, hitting <b>return</b>
+	will set the grid to all complete hand types in the range entered, that is,
+	single cards are not being reflected.
+	
+	<br>
+	<br>
+	
+	next you can either select a flop in the grid to the right and hit <b>Evaluate 
+	flop</b> or hit <b>Evaluate random</b> to evaluate the range against all
+	possible flops.
+	
+	<div class="noteBox">
+		<ul>
+		<li>evaluated is always the content of the editbox. slider, spinbox and the grid
+			are mere tools to fill the editbox in some predefined ways.
+		</ul>
+	</div>
+	
+	<br>
+	<br>
+	
+	the meters to the bottom show the result of an evaluation, that is the percentages
+	a hand range hits on a certain or all possible flops:
+	<ul>
+		<li><b>StraightFlush</b>: percent straight flushes
+		<li><b>Quads</b>: percent quads
+		<li><b>FullHouse</b>: percent full houses (excluding flops that are a set)
+		<li><b>Flush</b>: percent flushes
+		<li><b>Sets</b>: percent sets
+		<li><b>TwoPair</b>: percent two pairs (excluding paired flops)
+		<li><b>OverPair</b>: percent overpairs (including flops that are a set)
+		<li><b>TopPair</b>: percent top pairs (excluding overpairs)
+		<li><b>Pair</b>: percent pair (excluding overpairs and top pairs)
+		<li><b>FlushDraws</b>: percent flush draws
+		<li><b>StraightDraws</b>: percent straight draws
+	</ul>
+	
+	<br>
+	<br>
+	
+	the <b>editbox</b> recognizes the following (comma separated) <b>patterns</b>:
+	<ul>
+		<li><b>JhQh</b>: a single two card combination
+		
+		<li><b>TT</b>: a single pair
+		<li><b>TT+</b>: all pairs X and above
+		<li><b>TT-22</b>: all pairs X to Y
+				
+		<li><b>KTs</b>: a suited two card combination
+		<li><b>KTs+</b>: all suited two card combinations XY and above
+		<li><b>KTs-K7s</b>: all suited two card combination XY to XZ
+			
+		<li><b>KTo</b>: an offsuit two card combination
+		<li><b>KTo+</b>: all offsuit two card combinations XY and above
+		<li><b>KTo-K7o</b>: all offsuit two card combination XY to XZ
+		
+		
+		<li><b>KT</b>: a two card combination suited and offsuit
+		<li><b>KT+</b>: all suited and offsuit two card combinations XY and above
+		<li><b>KT-K7</b>: all suited and offsuit two card combination XY to XZ
+		
+		<li><b>random</b>: all hands
+		<li><b>suited</b>: all suited hands
+		<li><b>offuit</b>: all offsuit hands
+		<li><b>pairs</b>: all pairs
+		<li><b>broadways</b>: all brodway hands
+		
+	</ul>
+	
+</body></html>
