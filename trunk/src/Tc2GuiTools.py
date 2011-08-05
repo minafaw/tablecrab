@@ -6,6 +6,7 @@ import Tc2GuiToolsFPPCalculator
 import Tc2GuiToolsHandHistoryViewer
 import Tc2GuiToolsHoldemTrivia
 import Tc2GuiToolsFlopEval
+import Tc2GuiToolsPokerStarsIniDecrypter
 
 from PyQt4 import QtCore, QtGui
 
@@ -23,6 +24,7 @@ class FrameTools(QtGui.QFrame):
 			Tc2GuiToolsHandHistoryViewer.FrameTool,
 			Tc2GuiToolsHoldemTrivia.FrameTool,
 			Tc2GuiToolsFlopEval.FrameTool,
+			 Tc2GuiToolsPokerStarsIniDecrypter.FrameTool,
 			)
 
 
