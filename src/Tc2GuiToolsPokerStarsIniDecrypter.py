@@ -62,6 +62,11 @@ class FrameTool(QtGui.QFrame):
 		self.buttonHelp.setToolTip('Help (F1)')
 		self.buttonHelp.clicked.connect(self.onHelp)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
+		
+		action = QtGui.QAction(self)
+		action.setShortcut(QtGui.QKeySequence('F1') )
+		action.triggered.connect(self.onHelp)
+		self.addAction(action)
 				
 		self.layout()
 		self.adjustActions()
