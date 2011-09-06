@@ -163,6 +163,8 @@ class Card(int):
 			if no < klass.MinCard or no > klass.MaxCard:
 				raise ValueError('invalid card')
 		else:
+			if len(no) != 2:
+				raise ValueError('invalid card')
 			try:
 				rank = klass.RankNames.index(no[0])
 				suit = klass.SuitNames.index(no[1])
