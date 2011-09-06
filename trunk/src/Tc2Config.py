@@ -242,6 +242,7 @@ HelpTopics = [
 				('toolsFPPCalculator', 'FPP calculator'),
 				('toolsHandHistoryViewer', 'Hand history viewer'),
 				('toolsFlopEval', 'Flop evaluator'),
+				('toolsFlopster', 'Flopster'),
 				('toolsPokerStarsIniDecrypter', 'PokerStars ini decrypter'),
 				],
 			('developement', 'Developement'), [
