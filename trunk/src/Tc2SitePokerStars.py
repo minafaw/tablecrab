@@ -548,6 +548,8 @@ class PopUpNews(PokerStarsWindow):
 			Tc2Win32.windowClose(self.hwnd)
 			Tc2Config.globalObject.feedbackMessage.emit('Closed Popup News')
 
+class PopUpMyNews(PopUpNews):
+	WindowTitle = 'My News'
 
 class InstantHandHistory(PokerStarsWindow):
 	WindowTitle = 'Instant Hand History'
