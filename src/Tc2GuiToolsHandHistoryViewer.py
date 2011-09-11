@@ -164,12 +164,16 @@ class FrameTool(QtGui.QFrame):
 
 		if self.handHistoryFile:
 			self._spinBox.setRange(1, len(self.handHistoryFile))
-			self._spinBox.setValue(1)
 			self._spinBox.setSuffix(' /%s' % len(self.handHistoryFile))
+			if self._spinBox.value() == 1:
+				self.onSpinBoxValueChanged(1)
+			else:
+				self._spinBox.setValue(1)
 		else:
 			self._spinBox.setRange(0, 0)
 			self._spinBox.setSuffix(' /0' )
-
+			self._spinBox.setValue(0)
+		
 		self._browser.clearHistory()
 		self.adjustActions()
 
