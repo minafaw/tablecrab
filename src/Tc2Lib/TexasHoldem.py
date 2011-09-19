@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""texas holdem card game implementation"""
 
 #TODO: int vs float
 #TODO: minChip?
