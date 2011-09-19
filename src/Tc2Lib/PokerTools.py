@@ -304,18 +304,15 @@ def genHandTypeTable():
 	@return: (list)
 	"""
 	handTypes = genHandTypes()
-	cardRankNames = Card.RankNames[::-1]
-	table = []
-	for i in xrange(13):
-		table.append( [None for i in xrange(13)] )
-		
+	lookup = dict((rank, i) for i, rank in enumerate(Card.RankNames[::-1]))
+	table = [ [None for x in xrange(13)] for y in xrange(13)]
 	for handType in handTypes:
-		x = cardRankNames.index(handType[1])
-		y = cardRankNames.index(handType[0])
+		row = lookup[handType[0]]
+		col = lookup[handType[1]]
 		if handType[-1] == 'o':
-			table[x][y] = handType
+			table[col][row] = handType
 		else:
-			table[y][x] = handType
+			table[row][col] = handType
 	return table
 
 def handTypeFromHand(hand):
