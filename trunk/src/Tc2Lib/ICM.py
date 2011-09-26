@@ -1,5 +1,5 @@
 
-import itertools
+import itertools, random
 #************************************************************************************
 #
 #************************************************************************************
@@ -91,24 +91,42 @@ def taxFactor(bubbleFactor):
 	return 1 - 1/bubbleFactor
 	
 	
-def foo():
-	payouts =  (0.5, 0.3, 0.2)
-	stacks = [1000.0, 5100.0, 2000.0, 500.0]
-	p = bubbleFactors(stacks, payouts)
-	hero = 0
-	for villain, f in enumerate(p[hero]):
-		if f is None: continue
-		
-		f2 = p[villain][hero]
-		
-		tax = taxFactor(f)
-		tax = int(round(tax*100, 0))
-		
-		tax2 = taxFactor(f2)
-		tax2 = int(round(tax2*100, 0))
-		
-		print '(%s, %s)=%s/%s' % (hero, villain, tax, tax2)
-		
-#foo()
-	
+def sicm(stacks, payouts, iterations=1000, randfloat=random.random):
+	'''
+	simulatedICM algorithm
+
+	Given n players
+	Given stack sizes S = S1, S2, ...Sn
+
+	Get normalized stack sizes Q = Q1, Q2, ...Qn by dividing S by average stack
+	Given prizes Z = Z1, Z2, ... Zn
+	Simulate 1 tournament:
+	- For each player i, generate a "place" for each player (Pi) by generating a random 
+	  number between 0 and 1 and raising it to the power of 1/Qi. Pi = rand ^ (1.0 / Qi)
+	- Sort players by their place P - higher is better
+	- Award prizes Z according to P
+
+	Repeat for as many tournaments as desired and calculate the average prize value for each player. 
+	The error will be proportional to 1/sqrt(iterations) so the more iterations you run, 
+	the more accurate it will be.
+
+	see: [http://forumserver.twoplustwo.com/15/poker-theory/new-algorithm-calculate-icm-large-tournaments-1098489/]
+	'''
+	avgStack = sum(stacks) / float(len(stacks))
+	# equivalent to line below
+	##normStacks = [1 / (s / avgStack) for s in stacks]
+	normStacks = [avgStack / s for s in stacks]
+	players = range(len(stacks))
+	result = [0]*len(stacks)
+	for i in xrange(iterations):
+		# equivalent to line below
+		##weights = [log(randfloat()) * q for q in normStacks]
+		weights = [randfloat() ** q for q in normStacks]
+		score = zip(weights, players)
+		score.sort(reverse=True)
+		for i, payout in enumerate(payouts):
+			player = score[i][1]
+			result[player] += payout
+	##print 'err: %s' % (1.0 / sqrt(iterations))
+	return [float(i) / iterations for i in result]
 	
