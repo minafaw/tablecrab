@@ -2128,7 +2128,7 @@ class FlopEval(object):
 				result['nFlushDraws'] += self.nFlushDrawSuited
 				nInsideDraws = getattr(self, 'nInsideStraightDraw%s' % myHandType)
 				nOutsideDraws = getattr(self, 'nOutsideStraightDraw%s' % myHandType)
-				result['nStraightDraws'] += nInsideDraws + nOutsideDraws - self.nFlush
+				result['nStraightDraws'] += nInsideDraws + nOutsideDraws
 			else:
 				result['nQuads'] += self.nQuadsUnpaired
 				result['nFullHouses'] += self.nFullHouseSetUnpaired
