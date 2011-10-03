@@ -559,6 +559,24 @@ class HandEval(object):
 			
 		raise ValueError('something went wrong here!')
 		
+	def getFlushDraw(self, hand, count=4):
+		"""
+		@param count: (int) number of cards to take into account
+		"""
+		flushSuit = None
+		flushRanks = []
+		suits = [card.suit() for card in hand]
+		for suit in (0, 1, 2, 3):
+			if suits.count(suit) == count:
+				flushSuit = suit
+				flushRanks = [hand[iSuit].rank() for iSuit, mySuit in enumerate(suits) if suit==mySuit]
+				break
+		if flushRanks:
+			flushRanks.sort(reverse=True)
+			flushSuitName =  PokerTools.Card.SuitNames[flushSuit]
+			return [PokerTools.Card(PokerTools.Card.RankNames[rank] + flushSuitName) for rank in flushRanks]
+		return []	
+		
 	def getInsideStraightDraw(self, hand):
 		if len(hand) < 5:
 			return []
