@@ -64,7 +64,6 @@ class FlopEvalWidget(QtGui.QFrame):
 		QtGui.QFrame.__init__(self, parent)
 		
 		self.handEval = TexasHoldem.HandEval()
-		self.flopEval = FlopEval.FlopEval()
 		self.errTimer = self.ErrTimer(self)
 		
 		self.labelHandRange = QtGui.QLabel('Select a hand range', self)
@@ -82,27 +81,27 @@ class FlopEvalWidget(QtGui.QFrame):
 		self.buttonEvalRandom.clicked.connect(self.onButtonEvalRandomClicked)
 		
 		self.progressBars = [
-				['nStraightFlushs', 'StraightFlush: ', None],
-				['nQuads', 'Quads: ', None],
-				['nFullHouses', 'FullHouse: ', None],
-				['nFlushs', 'Flush: ', None],
-				['nStraights', 'Straight: ', None],
-				['nSets', 'Set: ', None],
-				['nTwoPairs', 'TwoPair: ', None],
-				['nOverPairs', 'OverPair: ', None],
-				['nTopPairs', 'TopPair: ', None],
-				['nPairs', 'Pair: ', None],
-				['nFlushDraws', 'FlushDraw: ', None],
-				['nStraightDraws', 'StraightDraw: ', None],
+				['StraightFlush', None],
+				['Quads', None],
+				['FullHouse', None],
+				['Flush', None],
+				['Straight', None],
+				['Set', None],
+				['TwoPair', None],
+				['OverPair', None],
+				['TopPair', None],
+				['Pair', None],
+				['FlushDraw', None],
+				['StraightDraw', None],
 				]
 		#TODO: hard code stylefroprogress bars. good idea or not?
 		#some styles display progress text tothe right of the bar
 		# obv we don't like that.
 		style = QtGui.QStyleFactory.create('plastique')
 		for i, data in enumerate(self.progressBars):
-			widget = FloatProgressBar(self, data[1])
+			widget = FloatProgressBar(self, data[0] + ': ')
 			widget.setStyle(style)
-			self.progressBars[i][2] = widget
+			self.progressBars[i][1] = widget
 					
 		
 		# layout
@@ -123,22 +122,19 @@ class FlopEvalWidget(QtGui.QFrame):
 		box2.addWidget(self.flopWidget, 0, QtCore.Qt.AlignHCenter)
 		box2.addWidget(self.buttonEvalFlop)
 		box2.addWidget(self.buttonEvalRandom)
-		
-		
+			
 		hLine = QtGui.QFrame()
 		hLine.setFrameStyle(hLine.HLine | hLine.Sunken)
 		box0.addWidget(hLine)
-		
-		
+			
 		box2 = QtGui.QHBoxLayout()
 		box0.addLayout(box2)
-			
-		
+				
 		for i, data in enumerate(self.progressBars):
 			if i == 0 or i == 6:
 				box = QtGui.QVBoxLayout()
 				box2.addLayout(box)
-			box.addWidget(data[2])
+			box.addWidget(data[1])
 		
 		s = QtGui.QVBoxLayout()
 		s.addStretch(999)
@@ -155,120 +151,20 @@ class FlopEvalWidget(QtGui.QFrame):
 		
 	def _resetResult(self):
 		for data in self.progressBars:
-			data[2].setValue(0.0)	
+			data[1].setValue(0.0)	
 	
 	def _setResult(self, result):
-		nFlops = float(result['nFlops'])
 		for data in self.progressBars:
+			p = result[data[0]]
+			data[1].setValue(p)
 			
-			value = result[data[0]]
-			if value:
-				value = value / float(nFlops)
-			else:
-				value = 0.0
-			data[2].setValue(value)
-			
-	def _makeResult(self):
-		result = {}
-		for data in self.progressBars:
-			result[data[0]] = 0
-		result['nFlops'] = 0
-		return result
-				
-	def _evalFlop(self, hand, flop, result):
-		result['nFlops'] += 1
-		cards = list(hand.cards) + flop
-		
-		if self.handEval.getStraightFlush(cards):
-			result['nStraightFlushs'] += 1
-			return
-		if self.handEval.getQuads(cards):
-			result['nQuads'] += 1
-			return
-		#TODO: case flop is set
-		if self.handEval.getFullHouse(cards):
-			result['nFullHouses'] += 1
-			return
-		if self.handEval.getFlush(cards):
-			result['nFlushs'] += 1
-			return
-		
-		flushDraw = self.handEval.getFlush(cards, count=4)
-		if flushDraw:
-			result['nFlushDraws'] += 1
-				
-		if self.handEval.getStraight(cards):
-			result['nStraights'] += 1
-			return
-						
-		straightDraw = self.handEval.getInsideStraightDraw(cards)
-		if straightDraw:
-			result['nStraightDraws'] += 1
-		straightDraw = self.handEval.getOutsideStraightDraw(cards)
-		if straightDraw:
-			result['nStraightDraws'] += 1	
-				
-		trips =  self.handEval.getTrips(cards)
-		if trips:
-			# filter flop trips
-			n = len([i for i in flop if i in trips[:3]])
-			if n < 3:
-				result['nSets'] += 1
-			return
-				
-		twoPair = self.handEval.getTwoPair(cards)
-		if twoPair:
-			# filter flop pairs
-			pair1 = twoPair[:2]
-			pair2 = twoPair[2:4]
-			# count cards flop contributed to pairs
-			n1 = len([i for i in flop if i in pair1])
-			n2 = len([i for i in flop if i in pair2])
-			if n1 == 1 and n2 == 1:
-				# flopped 2pair
-				result['nTwoPairs'] += 1
-			elif n1 == 1 and n2 == 2:
-				# flopped top pair	
-				result['nTopPairs'] += 1
-			elif n1 == 2 and n2 == 1:
-				# flopped < top pair
-				result['nPairs'] += 1
-			elif n1 == 0 and n2 == 2 and twoPair[0].rank() > twoPair[4].rank():
-				# we have an overpair
-				result['nOverPairs'] += 1
-			return
-			
-		pair = self.handEval.getPair(cards)
-		if pair:
-			# filter flop pair
-			n = len([i for i in flop if i in pair[:2]])
-			if n == 0:
-				# we have a pocket pair
-				if pair[0].rank() > pair[2].rank():
-					# we have an overpair
-					result['nOverPairs'] += 1
-				else:
-					result['nPairs'] += 1
-			elif n == 1:
-				if pair[0].rank() and not [i for i in flop if i.rank() > pair[0].rank()]:
-					# we have topPair
-					result['nTopPairs'] += 1
-				else:
-					result['nPairs'] += 1
-			return
-					
 	def onButtonEvalFlopClicked(self):
 		self._resetResult()
 		flop = self.flopWidget.cards()
 		handRange = self.handRangeWidget.handRange()
 		if handRange is None:
 			return
-		result = self._makeResult()
-		for hand in handRange:
-			# skip hands with cards on flop
-			if [i for i in hand.cards if i in flop]:
-				continue
-			self._evalFlop(hand, flop, result)
+		result = FlopEval.evalBoard(handRange, flop)
 		self._setResult(result)
 		
 	def onButtonEvalRandomClicked(self):
@@ -276,8 +172,7 @@ class FlopEvalWidget(QtGui.QFrame):
 		handRange = self.handRangeWidget.handRange()
 		if handRange is None:
 			return
-		result = self._makeResult()
-		result.update(self.flopEval.evalHandRange(handRange))
+		result = FlopEval.evalHandRange(handRange)
 		self._setResult(result)
 			
 	def onflopWidgetCardsSelectionChanged(self, widget):
