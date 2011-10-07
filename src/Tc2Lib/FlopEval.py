@@ -337,9 +337,7 @@ def genHandTypeData():
 	"""
 	deck = PokerTools.CardDeck().cards
 	handTypes = PokerTools.genHandTypes()
-	evl = TexasHoldem.HandEval()
 	print 'HandTypeData = {'
-	#handTypes = ['AA', 'AJs', 'AJo']
 	for handType in handTypes:
 		data = dict([(i, 0) for i in HandNames.values()])
 		for board in itertools.combinations(deck, 3):
@@ -348,14 +346,7 @@ def genHandTypeData():
 				continue
 			for handNameId, n in evalHandN(holeCards, board).items():
 				data[handNameId] += n
-		##
-		p = data.items()
-		p.sort()
-		s = ''
-		for i in p:
-			s += '%s:%s,' % i
-		print "\t'%s': {%s}," % (handType, s)
-			
+		print "\t'%s': {%s}," % (handType, ','.join(['%s:%s' % i for i in sorted(data.items())]))
 	print '\t}'		
 
 #************************************************************************************
@@ -499,7 +490,7 @@ def insideStraightDrawsFromHandTypeFormatted(handType):
 #
 #************************************************************************************		
 if __name__ == '__main__':
-	##genHandTypeData()
+	genHandTypeData()
 	pass		
 			
 			
