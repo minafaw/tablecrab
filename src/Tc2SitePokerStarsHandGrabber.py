@@ -278,15 +278,19 @@ class HandParser(object):
 			hand.actions[streetCurrent].append(action)
 		return result is not None
 
-	PatternFold = re.compile('^(?P<player>.+?) \:\s folds', re.X)
+	#TODO: test. stars introduced "fold + show", so we may get to see some cards here. have only seen
+	# show both so far. hope it works for show one as well.
+	PatternFold = re.compile('^(?P<player>.+?) \:\s folds (\s \[  (?P<cards>.+?) \])', re.X)
 	def matchFold(self, hand, streetCurrent, line):
 		result = self.PatternFold.match(line)
 		if result is not None:
 			player = hand.playerFromName(result.group('player'))
 			action = hand.Action(player=player, type=hand.Action.TypeFold)
 			hand.actions[streetCurrent].append(action)
+			if result.group('cards'):
+				hand.playerFromName(result.group('player')).cards = self.stringToCards(result.group('cards'))
 		return result is not None
-
+	
 	PatternCall = re.compile('^(?P<player>.+?) \:\s calls \s [%s]? (?P<amount>[0-9\.\,]+)' % Currencies, re.X)
 	def matchCall(self, hand, streetCurrent, line):
 		result = self.PatternCall.match(line)
