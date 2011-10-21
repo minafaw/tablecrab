@@ -179,7 +179,7 @@ class FrameSettings(QtGui.QFrame):
 		return self.spinMaxPlayerName.value()
 
 	def setMaxPlayerName(self, value):
-		Tc2Config.settingsSetValue(Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.SettingsKeyMaxPlayerName, value)
+		Tc2Config.settingsSetValue(self.SettingsKeyMaxPlayerName, value)
 		self.maxPlayerNameChanged.emit(value)
 
 	def noFloatingPoint(self):
