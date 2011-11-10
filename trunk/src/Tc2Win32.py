@@ -330,9 +330,9 @@ WS_EX_TOPMOST	= 8
 #
 #	we emulate the functions as much as necesssary here and track keyboard state by hand. this makes VK_MENU,
 #	VK_CONTROL and VK_SHIFT work. no way to track numlock, capslock and other toggle keys because we do not
-#	know their initial states. side effect is that holding own keys ahead of L{KeyboardManager.start} will never be honored.
+#	know their initial states. side effect is that holding down keys ahead of L{KeyboardManager.start} are never honored.
 #
-# ..then it is up to a keyboard hook to call _setKeyDown() when appropriate
+#  NOTE: it is up to a keyboard hook to call _setKeyDown() on keyboard events
 #
 #	@todo: synchronize this stuff
 #	@warning: this hack overwrites user32.GetAsyncKeyState + user32.GetKeyboardState
@@ -393,7 +393,7 @@ class InputEvent(QtCore.QObject):
 #************************************************************************************
 UOI_NAME = 2
 
-#NOTE: for a read on the theme see [ http://www.flounder.com/nomultiples.htm ]
+#NOTE: for a details on the subject see: [ http://www.flounder.com/nomultiples.htm ]
 #TODO: test single application scopes
 class SingleApplication(object):
 	ScopeNone = 'None'
