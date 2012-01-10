@@ -155,7 +155,7 @@ class HandParser(object):
 			return cards[:zfill]
 		return cards
 
-	PatGameHeader = re.compile('^PokerStars\s (Home\s)? Game\s \#[0-9]+\:\s .*? \s(?P<gameType>%s)\s.*' % '|'.join([re.escape(i).replace('\ ', '\s') for i in GameTypeMapping]), re.X)
+	PatGameHeader = re.compile('^PokerStars\s (Home\sGame\s)? Hand\s \#[0-9]+\:\s .*? \s(?P<gameType>%s)\s.*' % '|'.join([re.escape(i).replace('\ ', '\s') for i in GameTypeMapping]), re.X)
 	def matchGameHeader(self, hand, streetCurrent, line):
 		result = self.PatGameHeader.match(line)
 		if result is not None:
