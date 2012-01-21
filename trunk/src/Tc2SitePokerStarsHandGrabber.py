@@ -155,9 +155,12 @@ class HandParser(object):
 			return cards[:zfill]
 		return cards
 
-	PatGameHeader = re.compile('^PokerStars\s (Home\sGame\s)? Hand\s \#[0-9]+\:\s .*? \s(?P<gameType>%s)\s.*' % '|'.join([re.escape(i).replace('\ ', '\s') for i in GameTypeMapping]), re.X)
+	PatGameHeader1 = re.compile('^PokerStars\s (Home\s)? Game\s \#[0-9]+\:\s .*? \s(?P<gameType>%s)\s.*' % '|'.join([re.escape(i).replace('\ ', '\s') for i in GameTypeMapping]), re.X)
+	PatGameHeader2 = re.compile('^PokerStars\s (Home\sGame\s)? Hand\s \#[0-9]+\:\s .*? \s(?P<gameType>%s)\s.*' % '|'.join([re.escape(i).replace('\ ', '\s') for i in GameTypeMapping]), re.X)
 	def matchGameHeader(self, hand, streetCurrent, line):
-		result = self.PatGameHeader.match(line)
+		result = self.PatGameHeader1.match(line)
+		if result is None:
+			result = self.PatGameHeader2.match(line)
 		if result is not None:
 			gameType = self.GameTypeMapping[result.group('gameType')]
 			hand.gameType = gameType['gameType']
@@ -778,7 +781,10 @@ class HandHistoryFile(object):
 		#TODO: we could do a replace('\r', '\n') here
 		for line in self._data.split('\n'):
 			line = line.strip()
-			if line.startswith('PokerStars Game #') or line.startswith('PokerStars Home Game #'):
+			if line.startswith('PokerStars Game #') or \
+				line.startswith('PokerStars Home Game #') or \
+				line.startswith('PokerStars Hand #') or \
+				line.startswith('PokerStars Home Game Hand #'):
 				handHistory = [line, ]
 				continue
 			elif handHistory and line:
