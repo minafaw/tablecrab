@@ -157,10 +157,13 @@ class HandParser(object):
 
 	PatGameHeader1 = re.compile('^PokerStars\s (Home\s)? Game\s \#[0-9]+\:\s .*? \s(?P<gameType>%s)\s.*' % '|'.join([re.escape(i).replace('\ ', '\s') for i in GameTypeMapping]), re.X)
 	PatGameHeader2 = re.compile('^PokerStars\s (Home\sGame\s)? Hand\s \#[0-9]+\:\s .*? \s(?P<gameType>%s)\s.*' % '|'.join([re.escape(i).replace('\ ', '\s') for i in GameTypeMapping]), re.X)
+	PatGameHeader3 = re.compile('^PokerStars\s Zoom\s Hand\s \#[0-9]+\:\s .*? \s(?P<gameType>%s)\s.*' % '|'.join([re.escape(i).replace('\ ', '\s') for i in GameTypeMapping]), re.X)
 	def matchGameHeader(self, hand, streetCurrent, line):
 		result = self.PatGameHeader1.match(line)
 		if result is None:
 			result = self.PatGameHeader2.match(line)
+			if result is None:
+				result = self.PatGameHeader3.match(line)
 		if result is not None:
 			gameType = self.GameTypeMapping[result.group('gameType')]
 			hand.gameType = gameType['gameType']
@@ -168,13 +171,20 @@ class HandParser(object):
 		return result is not None
 
 	#NOTE: in tourneys <tableName> is composed of 'tourneyID tableNo'. no idea if this is of any relevance to us
-	PatternTableInfo = re.compile('^Table \s \' (?P<tableName>.+?) \' \s (?P<maxPlayers>[0-9]+)\-max \s Seat \s \#(?P<seatNoButton>[0-9]+) \s is \s the \s button', re.X)
+	PatternTableInfo1 = re.compile('^Table \s \' (?P<tableName>.+?) \' \s (?P<maxPlayers>[0-9]+)\-max \s Seat \s \#(?P<seatNoButton>[0-9]+) \s is \s the \s button', re.X)
+	#NOTE: zoom poker does not indicate button player
+	PatternTableInfo2 = re.compile('^Table \s \' (?P<tableName>.+?) \' \s (?P<maxPlayers>[0-9]+)\-max', re.X)
 	def matchTableInfo(self, hand, streetCurrent, line):
-		result = self.PatternTableInfo.match(line)
+		result = self.PatternTableInfo1.match(line)
 		if result is not None:
 			hand.tableName = result.group('tableName')
 			hand.seats = [None for i in range( int(result.group('maxPlayers') ))]
 			hand.seatNoButton = int(result.group('seatNoButton')) -1
+		else:
+			result = self.PatternTableInfo2.match(line)
+			if result is not None:
+				hand.tableName = result.group('tableName')
+				hand.seats = [None for i in range( int(result.group('maxPlayers') ))]
 		return result is not None
 
 	PatternSeat = re.compile('^Seat \s(?P<seatNo>[0-9]+)\:\s   (?P<player>.*) \s\( [%s]? (?P<stack>[\d\.]+)\s?.*  \)' % Currencies, re.X)
@@ -391,7 +401,43 @@ class HandParser(object):
 
 		# postprocess hand
 		hand.hasCents = (hand.blindAnte, hand.blindSmall, hand.blindBig) != (int(hand.blindAnte), int(hand.blindSmall), int(hand.blindBig))
-
+		
+		#NOTE: when introducing zoom poker stars missed indicating button player in
+		# hand histories. following lines try our best to determine this player
+		if hand.seatNoButton is None and hand.actions[hand.StreetBlinds]:
+			
+			players = [player for player in hand.seats if player is not None]
+			if len(players) < 2:
+				raise ValueError('too bad, we can not handle this case :-)')
+								
+			# try to find small blind player
+			for action in hand.actions[hand.StreetBlinds]:
+				if action.type == action.TypePostBlindSmall:
+					i = players.index(action.player)
+					if len(players) == 2:
+						hand.seatNoButton = i
+					else:
+						player = players[i-1]
+						hand.seatNoButton = hand.seats.index(player)
+					break
+					
+			if hand.seatNoButton is None:
+				# try to find big blind player
+				for action in hand.actions[hand.StreetBlinds]:
+					if action.type == action.TypePostBlindBig:
+						i = players.index(action.player)
+						if len(players) == 2:
+							hand.seatNoButton = i-1
+						else:
+							player = players[i-2]
+							hand.seatNoButton = hand.seats.index(player)
+						break
+					
+			if hand.seatNoButton is None:
+				# out of luck, hand may be ante only so we set random plyer as button
+				hand.seatNoButton = hand.seats.index[players[0]]
+			
+				
 		# errorcheck
 		if hand.seatNoButton is None:
 			raise ValueError('Could not determine button player')
@@ -784,7 +830,8 @@ class HandHistoryFile(object):
 			if line.startswith('PokerStars Game #') or \
 				line.startswith('PokerStars Home Game #') or \
 				line.startswith('PokerStars Hand #') or \
-				line.startswith('PokerStars Home Game Hand #'):
+				line.startswith('PokerStars Home Game Hand #') or \
+				line.startswith('PokerStars Zoom Hand #'):
 				handHistory = [line, ]
 				continue
 			elif handHistory and line:
