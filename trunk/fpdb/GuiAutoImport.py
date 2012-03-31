@@ -1,7 +1,6 @@
 #TODO:
 # - default button in DlgEditDirectory?
 # - gtk.Entries need undo/redo
-# - make shure directories are unique in the list
 # - comb over layout
 # - how to save / restore settings?
 # - add controls for: ImportTimeout, start/stop import, Logging
@@ -10,7 +9,7 @@
 # - keyboard shortcuts / tooltips
 # - button 'start/stop import' should be enabled/disabled acc to if directories are in list
 
-#QUESTIONS:
+#OPEN QUESTIONS:
 # - what to do when a user edits the list while import is running? we can not know when
 #   editing is done to restart importing with the new credentials. so maybe we should
 #   tell the user that changes only take effect after restarting import? maybe set status
@@ -20,6 +19,13 @@
 # - how to present settings like 'ImportTimeout'? does not really belong into the gui
 #   ..more like a separate dialog. i guess not doable untill fpdb gets a reall settings
 #   gui.
+# - uniqueness of directories in the list. not shure if should check for it. exsample:
+#   multi user setup with one shared config. to directories '~/dir' and 'home/user/dir'
+#   can point to the same directory for one user and to two different once for another.
+#   similar for making shure dirctories exist. i don't think we should do this. examle: 
+#   user starts gui and then mounts drive where directory exists.
+#       i guess we have to accept user input unconditionally and let other components
+#    find out at runtime which directories they can deal with.
 
 #import L10n
 #TODO: just a placeholder so far
@@ -34,9 +40,9 @@ import gobject
 #TODO: move class to some general purpose module
 class BoxDirectorySelector(gtk.HBox):
 	__gsignals__ = {
-	'directory-selected' : (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE,	(gobject.TYPE_STRING,)),
-	'value-changed' : (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_STRING,)),
-	}
+		'directory-selected': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE,	(gobject.TYPE_STRING,)),
+		'value-changed': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_STRING,)),
+		}
 	
 	def __init__(self, *args, **kws):
 		gtk.HBox.__init__(self, *args, **kws)
@@ -206,7 +212,7 @@ class DirectoryListModel(gtk.ListStore):
 #************************************************************************************
 class DlgEditDirectory(gtk.Dialog):
 		
-	def __init__(self, modeNew=True, directoryName='', directory=''):
+	def __init__(self, modeNew=True, directoryName='', directory='', defaultDirectories=None):
 		if modeNew: 
 			title = _('Add directory..')
 		else:
@@ -223,19 +229,33 @@ class DlgEditDirectory(gtk.Dialog):
 		self.labelName = gtk.Label(_('Name:'))
 		self.editName = gtk.Entry()
 		self.labelDirectory = gtk.Label(_('Directory:'))
+		
 		self.directorySelector = BoxDirectorySelector()
 		self.directorySelector.retranslate()
-		
-		if modeNew and not directoryName:
-			directoryName = _('New diretory')
-		self.editName.set_text(directoryName)
 		self.directorySelector.set_directory(directory)
+		if modeNew and not directoryName:
+			directoryName = _('New directory')
+		self.editName.set_text(directoryName)
+				
+		self.defaultDirectories = defaultDirectories
+		self.labelDefaults = None
+		self.comboDefaults = None
+		if self.defaultDirectories is not None:
+			self.labelDefaults = gtk.Label(_('Defaults:'))
+			self.comboDefaults = gtk.combo_box_new_text()
+			for directoryName, directory in self.defaultDirectories:
+				self.comboDefaults.append_text(directoryName)
+			self.comboDefaults.connect('changed', self.on_combo_defaults_changed)
+				
 		self.init_layout()
 						
 	def init_layout(self):
 		box1 = gtk.VBox()
 		box1.pack_start(self.labelName)
 		box1.pack_start(self.labelDirectory)
+		if self.labelDefaults is not None:
+			box1.pack_start(self.labelDefaults)
+		
 		
 		box2 = gtk.HBox()
 		box2.pack_start(self.directorySelector.edit, expand=True)
@@ -244,6 +264,8 @@ class DlgEditDirectory(gtk.Dialog):
 		box3 = gtk.VBox()
 		box3.pack_start(self.editName)
 		box3.pack_start(box2)
+		if self.comboDefaults is not None:
+			box3.pack_start(self.comboDefaults)
 			
 		box4 = gtk.HBox()
 		box4.pack_start(box1, expand=False)
@@ -260,15 +282,33 @@ class DlgEditDirectory(gtk.Dialog):
 	def get_directory_name(self):
 		return self.editName.get_text()
 		
+	def on_combo_defaults_changed(self, combo):
+		directoryName, directory = self.defaultDirectories[combo.get_active()]
+		self.editName.set_text(directoryName)
+		self.directorySelector.set_directory(directory)
+		
 #************************************************************************************
 #
 #************************************************************************************
 class BoxAutoImport(gtk.VBox):
 		
+	__gsignals__ = {
+		'start-import': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
+		'stop-import': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
+		'directories-changed': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
+		'auto-start-import-changed': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
+		'import-timeout-changed': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
+		'splitter-position-changed': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
+		}
+	
+	
 	def __init__(self,):
 		gtk.VBox.__init__(self)
 				
+		self.defaultDirectories = None
+		
 		self.splitter = gtk.VPaned()
+		self.splitter.connect('size-allocate', self.on_splitter_size_allocate)
 		
 		# setup directory list
 		self.directoryList = gtk.TreeView()
@@ -294,14 +334,21 @@ class BoxAutoImport(gtk.VBox):
 		self.buttonRemove = gtk.Button()
 		self.buttonRemove.connect("clicked", self.on_button_remove_clicked)
 			
+		self.checkAutoStartImport = gtk.CheckButton()
+		self.checkAutoStartImport.connect('toggled', self.on_check_auto_start_import_toggled)
+		self.labelImportTimeout = gtk.Label()
+		self.spinImportTimeout = gtk.SpinButton()
+		self.spinImportTimeout.connect('value-changed', self.on_spin_import_timeout_value_changed)
+			
 		self.logView = WidgetLogView(maxLines=9, modeAppend=False)
 		
-		self.buttonAutoImport = gtk.ToggleButton()
-		self.buttonAutoImport.connect("clicked", self.on_button_auto_import_clicked)
+		self.buttonImport = gtk.ToggleButton()
+		self.buttonImport.connect("clicked", self.on_button_import_clicked)
 				
 		self.adjust_directory_list_widgets()
 			
 	def adjust_directory_list_widgets(self):
+		editEnabled = self.directoryList.get_sensitive()
 		selection = self.directoryList.get_selection()
 		model, selected = selection.get_selected()
 		nRows = self.directoryModel.get_row_count()
@@ -313,11 +360,17 @@ class BoxAutoImport(gtk.VBox):
 			iRow = path[0]
 			canMoveUp = iRow > 0
 			canMoveDown = iRow < (nRows -1)
-		self.buttonEdit.set_sensitive(hasSelection)
-		self.buttonUp.set_sensitive(canMoveUp)
-		self.buttonDown.set_sensitive(canMoveDown)
-		self.buttonRemove.set_sensitive(hasSelection)
+		self.buttonNew.set_sensitive(editEnabled)
+		self.buttonEdit.set_sensitive(hasSelection and editEnabled)
+		self.buttonUp.set_sensitive(canMoveUp and editEnabled)
+		self.buttonDown.set_sensitive(canMoveDown and editEnabled)
+		self.buttonRemove.set_sensitive(hasSelection and editEnabled)
 		
+		self.logView.set_sensitive(not editEnabled)
+		self.buttonImport.set_sensitive(bool(nRows))
+		if self.buttonImport.get_active() and not bool(nRows):
+			self.buttonImport.set_active(False)
+			
 	def retranslate(self):
 		self.directoryModel.retranslate()
 		self.buttonNew.set_label(_('New'))
@@ -325,10 +378,12 @@ class BoxAutoImport(gtk.VBox):
 		self.buttonUp.set_label(_('Up'))
 		self.buttonDown.set_label(_('Down'))
 		self.buttonRemove.set_label(_('Remove'))
-		if self.buttonAutoImport.get_active():
-			self.buttonAutoImport.set_label(_('Stop import'))
+		self.checkAutoStartImport.set_label(_('Autostart import'))
+		self.labelImportTimeout.set_text(_('Import timeout:'))
+		if self.buttonImport.get_active():
+			self.buttonImport.set_label(_('Stop import'))
 		else:
-			self.buttonAutoImport.set_label(_('Start import'))
+			self.buttonImport.set_label(_('Start import'))
 		
 	def init_layout(self):
 		self.pack_start(self.splitter)
@@ -344,27 +399,48 @@ class BoxAutoImport(gtk.VBox):
 		box2.pack_start(self.buttonUp)
 		box2.pack_start(self.buttonDown)
 		box2.pack_start(self.buttonRemove)
-					
+						
 		box1 = gtk.VBox()
 		self.splitter.add(box1)
 		box1.pack_start(self.logView, expand=True)
-		box1.pack_start(self.buttonAutoImport, expand=False)
+		
+		box2 = gtk.HBox()
+		box1.pack_start(box2, expand=False)
+		
+		box3 = gtk.VBox()
+		box2.pack_start(box3)
+		box3.pack_start(self.checkAutoStartImport)
+		
+		box2.pack_start(gtk.VSeparator())
+				
+		box3 = gtk.VBox()
+		box2.pack_start(box3)
+		box4 = gtk.HBox()
+		box3.pack_start(box4)
+		box4.pack_start(self.labelImportTimeout, expand=False)
+		box4.pack_start(self.spinImportTimeout)
+		
+		box1.pack_start(self.buttonImport, expand=False)
 			
 		self.show_all()
-				
-	N = 0
-	def on_button_auto_import_clicked(self, button):
+		
+	def log(self, msg):
+		self.logView.log(msg)
+		
+	def on_button_import_clicked(self, button):
 		if button.get_active():
 			button.set_label(_('Stop import'))
+			self.directoryList.set_sensitive(False)
+			self.emit('start-import')
 		else:
 			button.set_label(_('Start import'))
-			
-		self.N += 1
-		self.logView.log('message number: %s\n' % self.N)
+			self.directoryList.set_sensitive(True)
+			self.emit('stop-import')
+		self.adjust_directory_list_widgets()
 		
-	
+		
 	def on_button_new_clicked(self, button):
-		dlg = DlgEditDirectory(modeNew=True)
+		dlg = DlgEditDirectory(modeNew=True, defaultDirectories=self.defaultDirectories,)
 		result = dlg.run()
 		directoryName = dlg.get_directory_name()
 		directory =  dlg.get_directory()
@@ -379,7 +455,8 @@ class BoxAutoImport(gtk.VBox):
 			self.directoryList.scroll_to_cell(self.directoryModel.get_path(treeIter))
 			# finally
 			self.adjust_directory_list_widgets()
-				
+			self.emit('directories-changed')
+					
 	def on_button_edit_clicked(self, button):
 		selection = self.directoryList.get_selection()
 		model, selected = selection.get_selected()
@@ -390,7 +467,12 @@ class BoxAutoImport(gtk.VBox):
 			treeIter = model.get_iter(iRow)
 			directoryName = model.get_value(treeIter, 'directoryName')
 			directory = model.get_value(treeIter, 'directory')
-			dlg = DlgEditDirectory(modeNew=False, directoryName=directoryName, directory=directory)
+			dlg = DlgEditDirectory(
+					modeNew=False, 
+					directoryName=directoryName, 
+					directory=directory,
+					defaultDirectories=self.defaultDirectories,
+					)
 			result = dlg.run()
 			directoryName = dlg.get_directory_name()
 			directory =  dlg.get_directory()
@@ -398,6 +480,7 @@ class BoxAutoImport(gtk.VBox):
 			if result == gtk.RESPONSE_OK:
 				model.set_value(iRow, 'directoryName', directoryName)
 				model.set_value(iRow, 'directory', directory)
+				self.emit('directories-changed')
 		
 	def on_button_up_clicked(self, button):
 		selection = self.directoryList.get_selection()
@@ -409,6 +492,7 @@ class BoxAutoImport(gtk.VBox):
 			iRowNext = iRow -1
 			self.directoryModel.swap(model.get_iter(iRow), model.get_iter(iRowNext))
 			self.adjust_directory_list_widgets()
+			self.emit('directories-changed')
 		
 	def on_button_down_clicked(self, button):
 		selection = self.directoryList.get_selection()
@@ -420,6 +504,7 @@ class BoxAutoImport(gtk.VBox):
 			iRowNext = iRow +1
 			self.directoryModel.swap(model.get_iter(iRow), model.get_iter(iRowNext))
 			self.adjust_directory_list_widgets()
+			self.emit('directories-changed')
 		
 	def on_button_remove_clicked(self, button):
 		selection = self.directoryList.get_selection()
@@ -436,24 +521,80 @@ class BoxAutoImport(gtk.VBox):
 					iRowNext = iRow
 				selection.select_path(iRowNext)
 			self.adjust_directory_list_widgets()
+			self.emit('directories-changed')
 			
+	def on_check_auto_start_import_toggled(self, checkBox):
+		self.emit('auto-start-import-changed')
+	
 	def on_diretory_list_cursor_changed(self, directoryList):
 		self.adjust_directory_list_widgets()
 		
 	def on_directory_list_row_activated(self, *args):
 		self.on_button_edit_clicked(self.buttonEdit)
 		
+	def on_spin_import_timeout_value_changed(self, spinBox):
+		self.emit('import-timeout-changed')
+		
+	def get_directories(self):
+		pass
+	
+	def set_directories(self, directories):
+		pass
+		
+	def set_default_directories(self, directories):
+		self.defaultDirectories = directories
+		
+	def get_splitter_pos(self):
+		return self.splitter.get_position()
+		
+	def set_splitter_pos(self, pos):
+		self.splitter.set_position(pos)
+		
+	def get_auto_start_import(self):
+		pass
+		
+	def set_auto_start_import(self, flag):
+		pass
+		
+	def set_import_timeout(self, value):
+		pass
+		
+	def get_import_timeout(self):
+		pass
+		
+	def set_directory_status(self, ):
+		pass
+		
+	def on_splitter_size_allocate(self, splitter, allocation):
+		self.emit('splitter-position-changed')
+		
 		
 #************************************************************************************
 #
 #************************************************************************************
 if __name__ == '__main__':	
-	w = BoxAutoImport()
-	w.init_layout()
-	w.retranslate()
+	
+	class MyHandler(object):
+		def __init__(self, boxAutoImport):
+			self.boxAutoImport = boxAutoImport
+			self.boxAutoImport.connect('start-import', self.on_start_import)
+			self.boxAutoImport.connect('stop-import', self.on_stop_import)
+			
+		def on_start_import(self, boxAutoImport):
+			boxAutoImport.log('start import\n')
+		
+		def on_stop_import(self, boxAutoImport):
+			boxAutoImport.log('stop import\n')
+			
+	boxAutoImport = BoxAutoImport()
+	handler = MyHandler(boxAutoImport)
+	boxAutoImport.init_layout()
+	boxAutoImport.retranslate()
+	boxAutoImport.set_default_directories((('foo', '/foo'), ('bar', '/bar')))
+	
 	m = gtk.Window()
 	m.connect('destroy', gtk.main_quit)
-	m.add(w)
+	m.add(boxAutoImport)
 	m.show()
 	gtk.main()
 
