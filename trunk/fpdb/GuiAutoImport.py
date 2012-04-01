@@ -203,14 +203,13 @@ class WidgetLogView(gtk.ScrolledWindow):
         """
         p = self._edit.get_buffer()
         nLines = p.get_line_count()
-        while nLines >= 0:
-            if nLines <= self._maxLines:
+        while nLines > 0:
+            if nLines <= self._maxLines +1:
                 break
-            else:
-                start = p.get_start_iter()
-                end = p.get_start_iter()
-                end.forward_line()
-                p.delete(start, end)
+            start = p.get_start_iter()
+            end = p.get_start_iter()
+            end.forward_line()
+            p.delete(start, end)
             nLines = p.get_line_count()
             
     def _trunc_lines_prepend(self):
@@ -218,14 +217,13 @@ class WidgetLogView(gtk.ScrolledWindow):
         """
         p = self._edit.get_buffer()
         nLines = p.get_line_count()
-        while nLines >= 0:
-            if nLines <= self._maxLines:
+        while nLines > 0:
+            if nLines <= self._maxLines +1:
                 break
-            else:
-                end = p.get_end_iter()
-                start = p.get_end_iter()
-                start.backward_line()
-                p.delete(start, end)
+            end = p.get_end_iter()
+            start = p.get_end_iter()
+            start.backward_line()
+            p.delete(start, end)
             nLines = p.get_line_count()
         
     def get_max_lines(self):
@@ -450,6 +448,7 @@ class BoxAutoImport(gtk.VBox):
     @signal directories-changed: triggerd when the contents of the directory list have changed
     @signal auto-start-import-changed: triggerd when the 'auto start import' setting has changed
     @signal import-timeout-changed: triggerd when the 'import timeout' setting has changed
+    @signal max_log_lines-changed: triggerd when the 'max log lines' setting has changed
     @signal splitter-position-changed: triggerd when the splitter postition has changed
     """
     __gsignals__ = {
@@ -458,9 +457,22 @@ class BoxAutoImport(gtk.VBox):
         'directories-changed': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
         'auto-start-import-changed': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
         'import-timeout-changed': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
+        'max-log-lines-changed': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
         'splitter-position-changed': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
         }
         
+    MAX_LOG_LINES_DEFAULT = 1000
+    MAX_LOG_LINES_MIN = 1
+    MAX_LOG_LINES_MAX = 100000
+    MAX_LOG_LINES_STEP = 1
+    MAX_LOG_LINES_PAGE = 100
+        
+    IMPORT_TIMEOUT_DEFAULT = 1.0
+    IMPORT_TIMEOUT_MIN = 0.1
+    IMPORT_TIMEOUT_MAX = 100.0
+    IMPORT_TIMEOUT_STEP = 0.1
+    IMPORT_TIMEOUT_PAGE = 1.0
+    
     def __init__(self):
         """constructor
         """
@@ -499,16 +511,36 @@ class BoxAutoImport(gtk.VBox):
         self.checkAutoStartImport.connect('toggled', self.on_check_auto_start_import_toggled)
         
         self.spinImportTimeout = gtk.SpinButton(
-                gtk.Adjustment(value=1.0, lower=0.1, upper=10.0, step_incr=0.1, page_incr=1.0),
+                gtk.Adjustment(
+                        value=self.IMPORT_TIMEOUT_DEFAULT, 
+                        lower=self.IMPORT_TIMEOUT_MIN, 
+                        upper=self.IMPORT_TIMEOUT_MAX, 
+                        step_incr=self.IMPORT_TIMEOUT_STEP, 
+                        page_incr=self.IMPORT_TIMEOUT_PAGE
+                        ),
                 climb_rate=0.1, 
                 digits=1
                 )
         self.spinImportTimeout.connect('value-changed', self.on_spin_import_timeout_value_changed)
-        self.spinImportTimeout.set_range(0.1, 10.0)
         self.labelImportTimeout = gtk.Label()
         self.labelImportTimeout.set_mnemonic_widget(self.spinImportTimeout)
             
-        self.logView = WidgetLogView(maxLines=9, modeAppend=False)
+        self.spinMaxLogLines = gtk.SpinButton(
+                gtk.Adjustment(
+                        value=self.MAX_LOG_LINES_DEFAULT, 
+                        lower=self.MAX_LOG_LINES_MIN, 
+                        upper=self.MAX_LOG_LINES_MAX, 
+                        step_incr=self.MAX_LOG_LINES_STEP,
+                        page_incr=self.MAX_LOG_LINES_PAGE
+                        ),
+                climb_rate=1, 
+                digits=0
+                )
+        self.spinMaxLogLines.connect('value-changed', self.on_spin_max_log_lines_value_changed)
+        self.labelMaxLogLines = gtk.Label()
+        self.labelMaxLogLines.set_mnemonic_widget(self.spinMaxLogLines)
+        
+        self.logView = WidgetLogView(maxLines=self.MAX_LOG_LINES_DEFAULT, modeAppend=False)
         
         self.buttonImport = gtk.ToggleButton()
         self.buttonImport.connect("clicked", self.on_button_import_clicked)
@@ -574,6 +606,12 @@ class BoxAutoImport(gtk.VBox):
         """
         return self.spinImportTimeout.get_value()
     
+    def get_max_log_lines(self):
+        """returns value of the 'max log lines' setting
+        @param value: (int)
+        """
+        return self.spinMaxLogLines.get_value_as_int()
+    
     def get_splitter_pos(self):
         """returns the current position of the slitter
         @return: (init) position
@@ -606,13 +644,15 @@ class BoxAutoImport(gtk.VBox):
         
         box2 = gtk.HBox()
         box1.pack_start(box2, expand=False)
-        
+                
         box3 = gtk.VBox()
         box2.pack_start(box3)
         box3.pack_start(self.checkAutoStartImport)
+        box3.pack_start(gtk.VBox())
         
         box2.pack_start(gtk.VSeparator())
                 
+        #TODO: layout is a bit messa here with labels + spinboxes
         box3 = gtk.VBox()
         box2.pack_start(box3)
         box4 = gtk.HBox()
@@ -620,6 +660,11 @@ class BoxAutoImport(gtk.VBox):
         box4.pack_start(self.labelImportTimeout, expand=False)
         box4.pack_start(self.spinImportTimeout)
                     
+        box4 = gtk.HBox()
+        box3.pack_start(box4)
+        box4.pack_start(self.labelMaxLogLines, expand=False)
+        box4.pack_start(self.spinMaxLogLines)
+        
         self.show_all()
     
     def log_message(self, msg):
@@ -651,6 +696,8 @@ class BoxAutoImport(gtk.VBox):
         self.checkAutoStartImport.set_tooltip_text(_('Automatically start import'))
         self.labelImportTimeout.set_text_with_mnemonic(_('Import _timeout:'))
         self.spinImportTimeout.set_tooltip_text(_('Timeout in between import attempts (in seconds)'))
+        self.labelMaxLogLines.set_text_with_mnemonic(_('Max log lines:'))
+        self.spinMaxLogLines.set_tooltip_text(_('Maximum number of lines in the log'))
         #NOTE: mnemonics are not recognized for this button. no idea why
         if self.buttonImport.get_active():
             self.buttonImport.set_label('')
@@ -694,10 +741,16 @@ class BoxAutoImport(gtk.VBox):
         self.directoryModel.set_value(i, 'directoryStatus', status)
     
     def set_import_timeout(self, value):
-        """sets value of the 'import timeout setting'
+        """sets value of the 'import timeout' setting
         @param value: (float)
         """
         self.spinImportTimeout.set_value(value)
+        
+    def set_max_log_lines(self, value):
+        """sets value of the 'max log lines' setting
+        @param value: (float)
+        """
+        self.spinMaxLogLines.set_value(value)
         
     def set_splitter_pos(self, pos):
         """adjusts the position of the splitter
@@ -836,6 +889,12 @@ class BoxAutoImport(gtk.VBox):
         """
         self.emit('import-timeout-changed')
         
+    def on_spin_max_log_lines_value_changed(self, spinBox):
+        """signal handler for the 'max log lines' spinbox
+        """
+        self.logView.set_max_lines(spinBox.get_value_as_int())
+        self.emit('max-log-lines-changed')
+    
     def on_splitter_size_allocate(self, splitter, allocation):
         """signal handler for the splitter
         """
@@ -882,7 +941,7 @@ if __name__ == '__main__':
     # do whatevs with directories and give feedback to the box
     directories = boxAutoImport.get_directories()
     boxAutoImport.set_directory_status(1, '*not found*')
-    boxAutoImport.log_message('Hi there!')
+    boxAutoImport.log_message('Hi there!\n')
     
     #
     m = gtk.Window()
