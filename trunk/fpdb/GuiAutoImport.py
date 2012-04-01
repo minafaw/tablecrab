@@ -346,7 +346,7 @@ class DlgEditDirectory(gtk.Dialog):
         if None the corrosponding controls will not be available.
         """
         if modeNew: 
-            title = _('Add directory..')
+            title = _('New directory..')
         else:
             title = _('Edit directory..')
         gtk.Dialog.__init__(
