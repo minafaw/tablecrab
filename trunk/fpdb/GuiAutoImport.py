@@ -385,7 +385,7 @@ class DlgEditDirectory(gtk.Dialog):
             self.comboDefaults.connect('changed', self.on_combo_defaults_changed)
             self.labelDefaults = gtk.Label()
             self.labelDefaults.set_text_with_mnemonic(_('De_faults:'))
-        self.labelDefaults.set_mnemonic_widget(self.comboDefaults)
+            self.labelDefaults.set_mnemonic_widget(self.comboDefaults)
                         
         self.init_layout()
                         
