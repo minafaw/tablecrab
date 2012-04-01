@@ -32,29 +32,22 @@
 #TODO:
 # - documentation
 # - default button in DlgEditDirectory?
-# - gtk.Entries need undo/redo
-# - tooltips
-# - bg/fg color of directory status
+# - gtk.Entries could use undo/redo
+# - bg/fg color of directory status?
 # - save/restore DlgEditDirectory geometry
-# - when in edit more we can not scroll logViewer
+# - initial splitter position is a bit weird. gtk is pretty limited in what you can
+#   do with splitters so no idea what to do.
 
 #************************************************************************************
 #QUESTIONS:
-# - what to do when a user edits the list while import is running? we can not know when
-#   editing is done to restart importing with the new credentials. so maybe we should
-#   tell the user that changes only take effect after restarting import? maybe set status
-#   to 'Pending' or 'New'?
-# - how to handle default directories? would be nice to have a list somewhere for the user
-#   to pick from. 
-# - how to present settings like 'ImportTimeout'? does not really belong into the gui
-#   ..more like a separate dialog. i guess not doable untill fpdb gets a reall settings
-#   gui.
 # - uniqueness of directories in the list. not shure if should check for it. exsample:
 #   multi user setup with one shared config. to directories '~/dir' and 'home/user/dir'
 #   can point to the same directory for one user and to two different once for another.
 #   similar for making shure dirctories exist. i don't think we should do this. examle: 
-#   user starts gui and then mounts drive where directory exists.
-#       i guess we have to accept user input unconditionally and let other components
+#   user starts gui and then mounts drive where directory exists. other than that it is
+#   only possible to determine if a directory exists / is accessible at the very moment
+#   one tries to access it. 
+#       so i guess we have to accept user input unconditionally and let other components
 #    find out at runtime which directories they can deal with.
 
 import pygtk
@@ -125,7 +118,7 @@ class BoxDirectorySelector(gtk.HBox):
     def on_button_select_directory_clicked(self, button):
         """signal handler for the 'select directory' button"""
         dlg = gtk.FileChooserDialog(
-                    title='foo',
+                    title=_('Select directory..'),
                 action=gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
                 buttons=(
                     gtk.STOCK_CANCEL,
@@ -169,6 +162,10 @@ class WidgetLogView(gtk.ScrolledWindow):
         self._edit.set_editable(False)
         self.add(self._edit)
         
+    def set_sensitive(self, flag):
+        """overwritten method of gtk.ScrolledWindow to allow scrolling even if widget is disabled"""
+        self._edit.set_sensitive(flag)
+    
     def _log_append(self, msg):
         """private method to unconditionally add a message to the bottom of the list. no truncation is dome 
         in the call
@@ -644,7 +641,6 @@ class BoxAutoImport(gtk.VBox):
         
         box2 = gtk.HBox()
         box1.pack_start(box2, expand=False)
-                
         box3 = gtk.VBox()
         box2.pack_start(box3)
         box3.pack_start(self.checkAutoStartImport)
@@ -652,7 +648,8 @@ class BoxAutoImport(gtk.VBox):
         
         box2.pack_start(gtk.VSeparator())
                 
-        #TODO: layout is a bit messa here with labels + spinboxes
+        #TODO: layout is a bit messy here with labels + spinboxes
+        # have not found a way to properly align labes / boxes yet
         box3 = gtk.VBox()
         box2.pack_start(box3)
         box4 = gtk.HBox()
@@ -666,7 +663,7 @@ class BoxAutoImport(gtk.VBox):
         box4.pack_start(self.spinMaxLogLines)
         
         self.show_all()
-    
+        
     def log_message(self, msg):
         """adds a message to the log message widget
         @param msg: (str) message to add
@@ -696,13 +693,14 @@ class BoxAutoImport(gtk.VBox):
         self.checkAutoStartImport.set_tooltip_text(_('Automatically start import'))
         self.labelImportTimeout.set_text_with_mnemonic(_('Import _timeout:'))
         self.spinImportTimeout.set_tooltip_text(_('Timeout in between import attempts (in seconds)'))
-        self.labelMaxLogLines.set_text_with_mnemonic(_('Max log lines:'))
+        self.labelMaxLogLines.set_text_with_mnemonic(_('Max l_og lines:'))
         self.spinMaxLogLines.set_tooltip_text(_('Maximum number of lines in the log'))
-        #NOTE: mnemonics are not recognized for this button. no idea why
         if self.buttonImport.get_active():
+            #NOTE: mnemonics are not recognized for this button. no idea why
             self.buttonImport.set_label('')
             self.buttonImport.child.set_text_with_mnemonic(_('Stop _import'))
         else:
+            #NOTE: mnemonics are not recognized for this button. no idea why
             self.buttonImport.set_label('')
             self.buttonImport.child.set_text_with_mnemonic(_('Start _import'))
         self.buttonImport.set_tooltip_text(_('Start/stop import'))
@@ -733,10 +731,10 @@ class BoxAutoImport(gtk.VBox):
     def set_directory_status(self, i, status):
         """sets status associated to a directoy
         @param i: (int) index of the diretory to associate a status to
-        @param status: (str) any string to reflect its status
+        @param status: (str) any
         @return: always None
-        @note: status is used to give feedback to to the user only. it has no meaning
-        in the processing logic.
+        @note: status is used only to give feedback to the user. that is it it has no 
+        meaning    in the processing logic.
         """
         self.directoryModel.set_value(i, 'directoryStatus', status)
     
@@ -935,7 +933,7 @@ if __name__ == '__main__':
         
     # init some settings of the box
     boxAutoImport.set_default_directories((('foo', '/foo'), ('bar', '/bar')))
-    boxAutoImport.set_directories((('first', '/foo'), ('secund', '/bar')))
+    boxAutoImport.set_directories((('first', '/foo'), ('second', '/bar')))
     ##boxAutoImport.set_auto_start_import(True)
     
     # do whatevs with directories and give feedback to the box
