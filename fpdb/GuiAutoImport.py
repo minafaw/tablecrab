@@ -767,6 +767,7 @@ class BoxAutoImport(gtk.VBox):
             iRow = path[0]
             iRowNext = iRow +1
             self.directoryModel.swap(model.get_iter(iRow), model.get_iter(iRowNext))
+            self.directoryList.scroll_to_cell(model.get_path(model.get_iter(iRowNext)))
             self._adjust_widgets()
             self.emit('directories-changed')
         
@@ -850,6 +851,7 @@ class BoxAutoImport(gtk.VBox):
                 if iRowNext < 0:
                     iRowNext = iRow
                 selection.select_path(iRowNext)
+                self.directoryList.scroll_to_cell(model.get_path(model.get_iter(iRowNext)))
             self._adjust_widgets()
             self.emit('directories-changed')
             
@@ -864,6 +866,7 @@ class BoxAutoImport(gtk.VBox):
             iRow = path[0]
             iRowNext = iRow -1
             self.directoryModel.swap(model.get_iter(iRow), model.get_iter(iRowNext))
+            self.directoryList.scroll_to_cell(model.get_path(model.get_iter(iRowNext)))
             self._adjust_widgets()
             self.emit('directories-changed')
             
@@ -922,7 +925,7 @@ if __name__ == '__main__':
             pos = boxAutoImport.get_splitter_pos()
             #TODO: save to config for later restore
             
-            
+        
     # create box. for this code sample we create a handler to captures some signals from the box
     boxAutoImport = BoxAutoImport()
     handler = MyHandler(boxAutoImport)
