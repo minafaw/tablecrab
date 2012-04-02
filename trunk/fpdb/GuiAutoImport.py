@@ -353,7 +353,7 @@ class DlgEditDirectory(gtk.Dialog):
 		@param directoryName:(str) name of the directory
 		@param directory: (str) directory path
 		@param defaultDirectories: (list) of (directoryName, directory) tuples to pick from.
-		if None the corrosponding controls will not be available.
+		if defaultDirectories evaluate to bool(False) the corrosponding controls will not be available.
 		"""
 		if modeNew: 
 			title = _('New directory..')
@@ -391,7 +391,7 @@ class DlgEditDirectory(gtk.Dialog):
 		self.defaultDirectories = defaultDirectories
 		self.labelDefaults = None
 		self.comboDefaults = None
-		if self.defaultDirectories is not None:
+		if bool(self.defaultDirectories):
 			self.comboDefaults = gtk.combo_box_new_text()
 			for directoryName, directory in self.defaultDirectories:
 				self.comboDefaults.append_text(directoryName)
@@ -728,6 +728,8 @@ class BoxAutoImport(gtk.VBox):
 		"""sets default directories for the user to pick from
 		@param directories: (list) of (directoryName, directory) tuples
 		@note: in the call directoryNames are truncated to DIRECTORY_NAME_MAX if necessary
+		@note: if the list is empty corrosponding controls will not be available in the edit
+		directory dialog.
 		"""
 		self.defaultDirectories = []
 		for directoryName, directory in directories:
@@ -967,8 +969,7 @@ if __name__ == '__main__':
 	boxAutoImport.set_default_directories((
 			('foo', '/foo'), 
 			('bar', '/bar'),
-			# directory name will get truncated to DIRECTORY_NAME_MAX
-			('baz'*100, '/baz'*100),
+			('baz', '/baz'),
 			))
 	boxAutoImport.set_directories((
 			('first', '/foo'), 
