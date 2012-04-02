@@ -64,6 +64,19 @@ except ImportError:
 #************************************************************************************
 __version__ = '0.1'
 
+DIRECTORY_NAME_MAX = 64
+
+MAX_LOG_LINES_DEFAULT = 1000
+MAX_LOG_LINES_MIN = 1
+MAX_LOG_LINES_MAX = 100000
+MAX_LOG_LINES_STEP = 1
+MAX_LOG_LINES_PAGE = 100
+	
+IMPORT_TIMEOUT_DEFAULT = 1.0
+IMPORT_TIMEOUT_MIN = 0.1
+IMPORT_TIMEOUT_MAX = 100.0
+IMPORT_TIMEOUT_STEP = 0.1
+IMPORT_TIMEOUT_PAGE = 1.0
 #************************************************************************************
 #
 #************************************************************************************
@@ -357,6 +370,7 @@ class DlgEditDirectory(gtk.Dialog):
 				)
 		
 		self.editName = gtk.Entry()
+		self.editName.get_buffer().set_max_length(DIRECTORY_NAME_MAX)
 		self.editName.set_tooltip_text(_('Name of the directory'))
 		self.labelName = gtk.Label()
 		if modeNew and not directoryName:
@@ -461,18 +475,6 @@ class BoxAutoImport(gtk.VBox):
 		'splitter-position-changed': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
 		}
 		
-	MAX_LOG_LINES_DEFAULT = 1000
-	MAX_LOG_LINES_MIN = 1
-	MAX_LOG_LINES_MAX = 100000
-	MAX_LOG_LINES_STEP = 1
-	MAX_LOG_LINES_PAGE = 100
-		
-	IMPORT_TIMEOUT_DEFAULT = 1.0
-	IMPORT_TIMEOUT_MIN = 0.1
-	IMPORT_TIMEOUT_MAX = 100.0
-	IMPORT_TIMEOUT_STEP = 0.1
-	IMPORT_TIMEOUT_PAGE = 1.0
-	
 	def __init__(self):
 		"""constructor
 		"""
@@ -512,11 +514,11 @@ class BoxAutoImport(gtk.VBox):
 		
 		self.spinImportTimeout = gtk.SpinButton(
 				gtk.Adjustment(
-						value=self.IMPORT_TIMEOUT_DEFAULT, 
-						lower=self.IMPORT_TIMEOUT_MIN, 
-						upper=self.IMPORT_TIMEOUT_MAX, 
-						step_incr=self.IMPORT_TIMEOUT_STEP, 
-						page_incr=self.IMPORT_TIMEOUT_PAGE
+						value=IMPORT_TIMEOUT_DEFAULT, 
+						lower=IMPORT_TIMEOUT_MIN, 
+						upper=IMPORT_TIMEOUT_MAX, 
+						step_incr=IMPORT_TIMEOUT_STEP, 
+						page_incr=IMPORT_TIMEOUT_PAGE
 						),
 				climb_rate=0.1, 
 				digits=1
@@ -527,11 +529,11 @@ class BoxAutoImport(gtk.VBox):
 			
 		self.spinMaxLogLines = gtk.SpinButton(
 				gtk.Adjustment(
-						value=self.MAX_LOG_LINES_DEFAULT, 
-						lower=self.MAX_LOG_LINES_MIN, 
-						upper=self.MAX_LOG_LINES_MAX, 
-						step_incr=self.MAX_LOG_LINES_STEP,
-						page_incr=self.MAX_LOG_LINES_PAGE
+						value=MAX_LOG_LINES_DEFAULT, 
+						lower=MAX_LOG_LINES_MIN, 
+						upper=MAX_LOG_LINES_MAX, 
+						step_incr=MAX_LOG_LINES_STEP,
+						page_incr=MAX_LOG_LINES_PAGE
 						),
 				climb_rate=1, 
 				digits=0
@@ -540,7 +542,7 @@ class BoxAutoImport(gtk.VBox):
 		self.labelMaxLogLines = gtk.Label()
 		self.labelMaxLogLines.set_mnemonic_widget(self.spinMaxLogLines)
 		
-		self.logView = WidgetLogView(maxLines=self.MAX_LOG_LINES_DEFAULT, modeAppend=False)
+		self.logView = WidgetLogView(maxLines=MAX_LOG_LINES_DEFAULT, modeAppend=False)
 		
 		self.buttonImport = gtk.ToggleButton()
 		self.buttonImport.connect("clicked", self.on_button_import_clicked)
@@ -725,15 +727,21 @@ class BoxAutoImport(gtk.VBox):
 	def set_default_directories(self, directories):
 		"""sets default directories for the user to pick from
 		@param directories: (list) of (directoryName, directory) tuples
+		@note: in the call directoryNames are truncated to DIRECTORY_NAME_MAX if necessary
 		"""
-		self.defaultDirectories = directories
+		self.defaultDirectories = []
+		for directoryName, directory in directories:
+			directoryName = directoryName[:DIRECTORY_NAME_MAX]
+			self.defaultDirectories.append((directoryName, directory))
 	
 	def set_directories(self, directories):
 		"""sets a list of directories to the directoy list
 		@param directories: (list) of (directoryName, directory) tuples
+		@note: in the call directoryNames are truncated to DIRECTORY_NAME_MAX if necessary
 		"""
 		self.directoryModel.clear()
 		for directoryName, directory in directories:
+			directoryName = directoryName[:DIRECTORY_NAME_MAX]
 			self.directoryModel.append_row(directoryName=directoryName, directory=directory)
 			
 	def set_directory_status(self, i, status):
@@ -956,8 +964,18 @@ if __name__ == '__main__':
 	boxAutoImport.retranslate()
 		
 	# init some settings of the box
-	boxAutoImport.set_default_directories((('foo', '/foo'), ('bar', '/bar')))
-	boxAutoImport.set_directories((('first', '/foo'), ('second', '/bar')))
+	boxAutoImport.set_default_directories((
+			('foo', '/foo'), 
+			('bar', '/bar'),
+			# directory name will get truncated to DIRECTORY_NAME_MAX
+			('baz'*100, '/baz'*100),
+			))
+	boxAutoImport.set_directories((
+			('first', '/foo'), 
+			('second', '/bar'),
+			# directory name will get truncated to DIRECTORY_NAME_MAX
+			('third'*100, '/baz'*100),
+			))
 		
 	##boxAutoImport.set_auto_start_import(True)
 	##if boxAutoImport.get_auto_start_import():
