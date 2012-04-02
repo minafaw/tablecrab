@@ -439,6 +439,9 @@ class DlgEditDirectory(gtk.Dialog):
 #************************************************************************************
 class BoxAutoImport(gtk.VBox):
     """(gtk.VBox) main user interface for auto import
+        
+    the gui contains a list of diretories that can be editd by the user. it is toggled
+    from edit mode to import mode whenever the user hits the 'start/stop import' button.
     
     @signal start-import: triggerd when import should started
     @signal start-import: triggerd when import should be stoped
@@ -577,10 +580,10 @@ class BoxAutoImport(gtk.VBox):
         self._adjust_widgets()
     
     def get_auto_start_import(self):
-        """cheks if 'auto start import setting is set
+        """cheks if 'auto start import' setting is set
         @return: (bool)
         '"""
-        return self.checkAutoImport.get_active()
+        return self.checkAutoStartImport.get_active()
     
     def get_directories(self):
         """retrieve diretories contained in the list        
@@ -602,6 +605,12 @@ class BoxAutoImport(gtk.VBox):
         @return: (float)
         """
         return self.spinImportTimeout.get_value()
+    
+    def get_import_mode(self):
+        """cheks if the gui is currently in import mode
+        @return: (bool)
+        '"""
+        return self.buttonImport.get_active()
     
     def get_max_log_lines(self):
         """returns value of the 'max log lines' setting
@@ -708,12 +717,11 @@ class BoxAutoImport(gtk.VBox):
     def set_auto_start_import(self, flag):
         """sets the 'auto start import' setting
         @param flag: (bool) turns it on if True, off othewise
-        @note: if flag is True, if import is not already running it is started in the call
+        @note: only the checkbox is adjusted in the call. you have to manually start importing
+        via L{set_importing} if desired
         """
         self.checkAutoStartImport.set_active(flag)
-        if flag and not self.buttonImport.get_active():
-            self.buttonImport.set_active(True)
-    
+            
     def set_default_directories(self, directories):
         """sets default directories for the user to pick from
         @param directories: (list) of (directoryName, directory) tuples
@@ -743,6 +751,19 @@ class BoxAutoImport(gtk.VBox):
         @param value: (float)
         """
         self.spinImportTimeout.set_value(value)
+        
+    def set_import_mode(self, flag):
+        """sets the gui to import mode / edit more depending on flag
+        @return: (bool) True if the desired modde could be set, False otherwise
+        @note: start-import / stop-import signals are triggered accordingly in the call
+        '"""
+        if self.buttonImport.get_active() and not flag:
+            self.buttonImport.set_active(False)
+            return True
+        elif not self.buttonImport.get_active() and flag:
+            self.buttonImport.set_active(True)
+            return True
+        return False
         
     def set_max_log_lines(self, value):
         """sets value of the 'max log lines' setting
@@ -937,7 +958,10 @@ if __name__ == '__main__':
     # init some settings of the box
     boxAutoImport.set_default_directories((('foo', '/foo'), ('bar', '/bar')))
     boxAutoImport.set_directories((('first', '/foo'), ('second', '/bar')))
+        
     ##boxAutoImport.set_auto_start_import(True)
+    ##if boxAutoImport.get_auto_start_import():
+    ##    boxAutoImport.set_import_mode(True)
     
     # do whatevs with directories and give feedback to the box
     directories = boxAutoImport.get_directories()
