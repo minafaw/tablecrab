@@ -763,7 +763,8 @@ class BoxAutoImport(gtk.VBox):
 		self.spinImportTimeout.set_value(value)
 		
 	def set_import_mode(self, flag):
-		"""sets the gui to import mode / edit more depending on flag
+		"""sets the gui to import mode / edit more corrosponding to flag
+		@param flag: (bool)
 		@return: (bool) True if the desired modde could be set, False otherwise
 		@note: start-import / stop-import signals are triggered accordingly in the call
 		'"""
