@@ -648,10 +648,10 @@ class BoxAutoImport(gtk.VBox):
 		self.splitter.add(box1)
 		box1.pack_start(self.logView, expand=True)
 			
-		box1.pack_start(self.buttonImport, expand=False)
+		self.pack_start(self.buttonImport, expand=False)
 		
 		box2 = gtk.HBox()
-		box1.pack_start(box2, expand=False)
+		self.pack_start(box2, expand=False)
 		box3 = gtk.VBox()
 		box2.pack_start(box3)
 		box3.pack_start(self.checkAutoStartImport)
