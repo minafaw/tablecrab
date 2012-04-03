@@ -25,7 +25,11 @@
 #************************************************************************************
 #VERSION HISTORY:
 #
-# <0.1>
+#
+# 0.2
+# - fixed initial splitter position
+#
+# 0.1
 # initial relase
 
 #************************************************************************************
@@ -35,9 +39,7 @@
 # - gtk.Entries could use undo/redo
 # - bg/fg color of directory status?
 # - save/restore DlgEditDirectory geometry
-# - initial splitter position is a bit weird. gtk is pretty limited in what you can
-#   do with splitters so no idea what to do.
-
+# - initial splitter position is a bit weird - hopefuly fixed now.
 #************************************************************************************
 #QUESTIONS:
 # - uniqueness of directories in the list. not shure if should check for it. exsample:
