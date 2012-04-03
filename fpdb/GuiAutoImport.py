@@ -64,7 +64,7 @@ except ImportError:
 #************************************************************************************
 __version__ = '0.1'
 
-DIRECTORY_NAME_MAX = 64
+DIRECTORY_TAG_NAME_MAX = 64
 
 MAX_LOG_LINES_DEFAULT = 1000
 MAX_LOG_LINES_MIN = 1
@@ -266,7 +266,7 @@ class DirectoryListModel(gtk.ListStore):
 	
 	#TODO: not shure if runtime translation works like this
 	COLUMNS = (
-			('directoryName', str, _('Name')),
+			('directoryTagName', str, _('Name')),
 			('directoryStatus', str, _('Status')),
 			('directory', str, _('Directory')),
 			)
@@ -346,13 +346,13 @@ class DlgEditDirectory(gtk.Dialog):
 	"""(gtk.Dialog) to edit a directory
 	"""
 		
-	def __init__(self, modeNew=True, directoryName='', directory='', defaultDirectories=None):
+	def __init__(self, modeNew=True, directoryTagName='', directory='', defaultDirectories=None):
 		"""constructor
 		@param modeNed: (bool) if true dialog is started to edit a new directory, if False
 		to edit an existing one.
-		@param directoryName:(str) name of the directory
+		@param directoryTagName:(str) name of the directory
 		@param directory: (str) directory path
-		@param defaultDirectories: (list) of (directoryName, directory) tuples to pick from.
+		@param defaultDirectories: (list) of (directoryTagName, directory) tuples to pick from.
 		if defaultDirectories evaluate to bool(False) the corrosponding controls will not be available.
 		"""
 		if modeNew: 
@@ -370,12 +370,12 @@ class DlgEditDirectory(gtk.Dialog):
 				)
 		
 		self.editName = gtk.Entry()
-		self.editName.get_buffer().set_max_length(DIRECTORY_NAME_MAX)
+		self.editName.get_buffer().set_max_length(DIRECTORY_TAG_NAME_MAX)
 		self.editName.set_tooltip_text(_('Name of the directory'))
 		self.labelName = gtk.Label()
-		if modeNew and not directoryName:
-			directoryName = _('New directory')
-		self.editName.set_text(directoryName)
+		if modeNew and not directoryTagName:
+			directoryTagName = _('New directory')
+		self.editName.set_text(directoryTagName)
 		self.labelName.set_text_with_mnemonic(_('_Name:'))
 		self.labelName.set_mnemonic_widget(self.editName)
 			
@@ -393,8 +393,8 @@ class DlgEditDirectory(gtk.Dialog):
 		self.comboDefaults = None
 		if bool(self.defaultDirectories):
 			self.comboDefaults = gtk.combo_box_new_text()
-			for directoryName, directory in self.defaultDirectories:
-				self.comboDefaults.append_text(directoryName)
+			for directoryTagName, directory in self.defaultDirectories:
+				self.comboDefaults.append_text(directoryTagName)
 			self.comboDefaults.set_tooltip_text(_('Default locations'))
 			self.comboDefaults.connect('changed', self.on_combo_defaults_changed)
 			self.labelDefaults = gtk.Label()
@@ -409,7 +409,7 @@ class DlgEditDirectory(gtk.Dialog):
 		"""
 		return self.directorySelector.get_directory()
 	
-	def get_directory_name(self):
+	def get_directory_tag_name(self):
 		"""returns the directoyName
 		@return: (str)
 		"""
@@ -444,8 +444,8 @@ class DlgEditDirectory(gtk.Dialog):
 	
 	def on_combo_defaults_changed(self, combo):
 		"""signal handler for the 'default directories' combobox"""
-		directoryName, directory = self.defaultDirectories[combo.get_active()]
-		self.editName.set_text(directoryName)
+		directoryTagName, directory = self.defaultDirectories[combo.get_active()]
+		self.editName.set_text(directoryTagName)
 		self.directorySelector.set_directory(directory)
 		
 #************************************************************************************
@@ -589,7 +589,7 @@ class BoxAutoImport(gtk.VBox):
 	
 	def get_directories(self):
 		"""retrieve diretories contained in the list		
-		@return: (list) of (directoryName, directory) tuples
+		@return: (list) of (directoryTagName, directory) tuples
 		@note: directories in the list are not guaranteed to exist and there may be
 		multiple enties for the same directory. use L{set_directory_status} to give
 		feedback to the user on problematic entries.
@@ -597,7 +597,7 @@ class BoxAutoImport(gtk.VBox):
 		directories = []
 		for i in range(self.directoryModel.get_row_count()):
 			directories.append((
-					self.directoryModel.get_value(i, 'directoryName'),
+					self.directoryModel.get_value(i, 'directoryTagName'),
 					self.directoryModel.get_value(i, 'directory')
 					))
 		return directories
@@ -726,25 +726,25 @@ class BoxAutoImport(gtk.VBox):
 			
 	def set_default_directories(self, directories):
 		"""sets default directories for the user to pick from
-		@param directories: (list) of (directoryName, directory) tuples
-		@note: in the call directoryNames are truncated to DIRECTORY_NAME_MAX if necessary
+		@param directories: (list) of (directoryTagName, directory) tuples
+		@note: in the call directoryTagNames are truncated to DIRECTORY_TAG_NAME_MAX if necessary
 		@note: if the list is empty corrosponding controls will not be available in the edit
 		directory dialog.
 		"""
 		self.defaultDirectories = []
-		for directoryName, directory in directories:
-			directoryName = directoryName[:DIRECTORY_NAME_MAX]
-			self.defaultDirectories.append((directoryName, directory))
+		for directoryTagName, directory in directories:
+			directoryTagName = directoryTagName[:DIRECTORY_TAG_NAME_MAX]
+			self.defaultDirectories.append((directoryTagName, directory))
 	
 	def set_directories(self, directories):
 		"""sets a list of directories to the directoy list
-		@param directories: (list) of (directoryName, directory) tuples
-		@note: in the call directoryNames are truncated to DIRECTORY_NAME_MAX if necessary
+		@param directories: (list) of (directoryTagName, directory) tuples
+		@note: in the call directoryTagNames are truncated to DIRECTORY_TAG_NAME_MAX if necessary
 		"""
 		self.directoryModel.clear()
-		for directoryName, directory in directories:
-			directoryName = directoryName[:DIRECTORY_NAME_MAX]
-			self.directoryModel.append_row(directoryName=directoryName, directory=directory)
+		for directoryTagName, directory in directories:
+			directoryTagName = directoryTagName[:DIRECTORY_TAG_NAME_MAX]
+			self.directoryModel.append_row(directoryTagName=directoryTagName, directory=directory)
 			
 	def set_directory_status(self, i, status):
 		"""sets status associated to a directoy
@@ -813,20 +813,20 @@ class BoxAutoImport(gtk.VBox):
 			path = model.get_path(selected)
 			iRow = path[0]
 			treeIter = model.get_iter(iRow)
-			directoryName = model.get_value(treeIter, 'directoryName')
+			directoryTagName = model.get_value(treeIter, 'directoryTagName')
 			directory = model.get_value(treeIter, 'directory')
 			dlg = DlgEditDirectory(
 					modeNew=False, 
-					directoryName=directoryName, 
+					directoryTagName=directoryTagName, 
 					directory=directory,
 					defaultDirectories=self.defaultDirectories,
 					)
 			result = dlg.run()
-			directoryName = dlg.get_directory_name()
+			directoryTagName = dlg.get_directory_tag_name()
 			directory =  dlg.get_directory()
 			dlg.destroy()
 			if result == gtk.RESPONSE_OK:
-				model.set_value(iRow, 'directoryName', directoryName)
+				model.set_value(iRow, 'directoryTagName', directoryTagName)
 				model.set_value(iRow, 'directory', directory)
 				self.emit('directories-changed')
 	
@@ -852,11 +852,11 @@ class BoxAutoImport(gtk.VBox):
 		"""
 		dlg = DlgEditDirectory(modeNew=True, defaultDirectories=self.defaultDirectories,)
 		result = dlg.run()
-		directoryName = dlg.get_directory_name()
+		directoryTagName = dlg.get_directory_tag_name()
 		directory =  dlg.get_directory()
 		dlg.destroy()
 		if result == gtk.RESPONSE_OK:
-			self.directoryModel.append_row(directoryName=directoryName, directory=directory)
+			self.directoryModel.append_row(directoryTagName=directoryTagName, directory=directory)
 			# scroll to row + activate row
 			selection = self.directoryList.get_selection()
 			nRows = self.directoryModel.get_row_count()
@@ -975,7 +975,7 @@ if __name__ == '__main__':
 	boxAutoImport.set_directories((
 			('first', '/foo'), 
 			('second', '/bar'),
-			# directory name will get truncated to DIRECTORY_NAME_MAX
+			# directory name will get truncated to DIRECTORY_TAG_NAME_MAX
 			('third'*100, '/baz'*100),
 			))
 		
