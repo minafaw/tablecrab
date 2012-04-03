@@ -691,13 +691,13 @@ class BoxAutoImport(gtk.VBox):
 		self.buttonNew.set_label(_('_New'))
 		self.buttonNew.set_tooltip_text(_('Add a new directory to the list'))
 		self.buttonEdit.set_label(_('_Edit'))
-		self.buttonEdit.set_tooltip_text(_('Edit directory'))
+		self.buttonEdit.set_tooltip_text(_('Edit current directory'))
 		self.buttonUp.set_label(_('_Up'))
-		self.buttonUp.set_tooltip_text(_('Move directory up'))
+		self.buttonUp.set_tooltip_text(_('Move current directory up'))
 		self.buttonDown.set_label(_('_Down'))
-		self.buttonDown.set_tooltip_text(_('Move directory down'))
+		self.buttonDown.set_tooltip_text(_('Move current directory down'))
 		self.buttonRemove.set_label(_('_Remove'))
-		self.buttonRemove.set_tooltip_text(_('Remove directory from the list'))
+		self.buttonRemove.set_tooltip_text(_('Remove current directory from the list'))
 		#NOTE: mnemonics are not recognized for this checkbox. no idea why
 		self.checkAutoStartImport.set_label('')
 		self.checkAutoStartImport.child.set_text_with_mnemonic(_('Auto_start import'))
@@ -751,7 +751,7 @@ class BoxAutoImport(gtk.VBox):
 		@param i: (int) index of the diretory to associate a status to
 		@param status: (str) any
 		@return: always None
-		@note: status is used only to give feedback to the user. that is it it has no 
+		@note: status is used only to give feedback to the user. that is it has no 
 		meaning	in the processing logic.
 		"""
 		self.directoryModel.set_value(i, 'directoryStatus', status)
