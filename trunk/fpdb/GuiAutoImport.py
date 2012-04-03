@@ -630,26 +630,23 @@ class BoxAutoImport(gtk.VBox):
 		"""initializes the layout of the user interface
 		@note: make shure to call this method after intitializing the user inteface
 		"""
+		# layout splitter. directoryList + buttons | logWidget
 		self.pack_start(self.splitter)
-						
 		box1 = gtk.VBox()
 		self.splitter.add(box1)
 		box2 = gtk.HBox()
 		box1.pack_start(self.directoryListScroll)
 		box1.pack_start(box2, expand=False)
-		
 		box2.pack_start(self.buttonNew)
 		box2.pack_start(self.buttonEdit)
 		box2.pack_start(self.buttonUp)
 		box2.pack_start(self.buttonDown)
 		box2.pack_start(self.buttonRemove)
-						
-		box1 = gtk.VBox()
-		self.splitter.add(box1)
-		box1.pack_start(self.logView, expand=True)
+		self.splitter.add(self.logView)
 			
 		self.pack_start(self.buttonImport, expand=False)
 		
+		# layout first column of settings widgets
 		box2 = gtk.HBox()
 		self.pack_start(box2, expand=False)
 		box3 = gtk.VBox()
@@ -659,6 +656,7 @@ class BoxAutoImport(gtk.VBox):
 		
 		box2.pack_start(gtk.VSeparator())
 				
+		# layout secund column of settings widgets
 		#TODO: layout is a bit messy here with labels + spinboxes
 		# have not found a way to properly align labes / boxes yet
 		box3 = gtk.VBox()
@@ -667,7 +665,6 @@ class BoxAutoImport(gtk.VBox):
 		box3.pack_start(box4)
 		box4.pack_start(self.labelImportTimeout, expand=False)
 		box4.pack_start(self.spinImportTimeout)
-					
 		box4 = gtk.HBox()
 		box3.pack_start(box4)
 		box4.pack_start(self.labelMaxLogLines, expand=False)
