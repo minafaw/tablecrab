@@ -21,7 +21,7 @@
 #
 #
 # 0.2
-# - fixed initial splitter position
+# - fixed initial splitter position issue
 #
 # 0.1
 # initial relase
@@ -33,7 +33,6 @@
 # - gtk.Entries could use undo/redo
 # - bg/fg color of directory status?
 # - save/restore DlgEditDirectory geometry
-# - initial splitter position is a bit weird - hopefuly fixed now.
 #************************************************************************************
 #QUESTIONS:
 # - uniqueness of directories in the list. not shure if should check for it. exsample:
@@ -628,8 +627,11 @@ class BoxAutoImport(gtk.VBox):
 		"""
 		# layout splitter. directoryList + buttons | logWidget
 		self.pack_start(self.splitter)
+		frame = gtk.Frame()
+		frame.set_shadow_type(gtk.SHADOW_IN)
 		box1 = gtk.VBox()
-		self.splitter.add(box1)
+		frame.add(box1)
+		self.splitter.pack1(frame, resize=True, shrink=False)
 		box2 = gtk.HBox()
 		box1.pack_start(self.directoryListScroll)
 		box1.pack_start(box2, expand=False)
@@ -638,7 +640,8 @@ class BoxAutoImport(gtk.VBox):
 		box2.pack_start(self.buttonUp)
 		box2.pack_start(self.buttonDown)
 		box2.pack_start(self.buttonRemove)
-		self.splitter.add(self.logView)
+		self.logView.set_shadow_type(gtk.SHADOW_IN)
+		self.splitter.pack2(self.logView, resize=True, shrink=False)
 
 		self.pack_start(self.buttonImport, expand=False)
 
