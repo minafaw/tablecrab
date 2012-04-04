@@ -3,7 +3,7 @@
 #************************************************************************************
 #LICENCE: AGPL
 #
-# Copyright 2012 Jürgen Urner
+# Copyright 2012 Jürgen Urner (jUrner<at>arcor.de)
 #
 # This program is free software: you can redistribute it and/or modify it under the
 # terms of the GNU Affero General Public License as published by the Free Software
@@ -44,6 +44,11 @@
 #   one tries to access it.
 #	   so i guess we have to accept user input unconditionally and let other components
 #	find out at runtime which directories they can deal with.
+#
+# - save / restore dialog geometries. can we just move resize a dialog to a saved
+#    position, hoping that nothing evil happens? Qts method restore_geometry() makes
+#    shure that no widget ends up off screen or blowing dimensions of the screen. no
+#    idea if this is enforced by gtk.
 
 import pygtk
 pygtk.require('2.0')
@@ -817,6 +822,7 @@ class BoxAutoImport(gtk.VBox):
 					directory=directory,
 					defaultDirectories=self.defaultDirectories,
 					)
+			dlg.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
 			result = dlg.run()
 			directoryTagName = dlg.get_directory_tag_name()
 			directory =  dlg.get_directory()
@@ -847,6 +853,7 @@ class BoxAutoImport(gtk.VBox):
 		"""signal handler for the 'new directory' button
 		"""
 		dlg = DlgEditDirectory(modeNew=True, defaultDirectories=self.defaultDirectories,)
+		dlg.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
 		result = dlg.run()
 		directoryTagName = dlg.get_directory_tag_name()
 		directory =  dlg.get_directory()
