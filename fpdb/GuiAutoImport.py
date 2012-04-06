@@ -19,6 +19,8 @@
 #************************************************************************************
 #VERSION HISTORY:
 #
+# 0.3
+# - added 'append messages' setting
 #
 # 0.2
 # - fixed initial splitter position issue
@@ -62,7 +64,7 @@ except ImportError:
 #************************************************************************************
 #
 #************************************************************************************
-__version__ = '0.2'
+__version__ = '0.3'
 
 DIRECTORY_TAG_NAME_MAX = 64
 
@@ -77,6 +79,8 @@ IMPORT_TIMEOUT_MIN = 0.1
 IMPORT_TIMEOUT_MAX = 100.0
 IMPORT_TIMEOUT_STEP = 0.1
 IMPORT_TIMEOUT_PAGE = 1.0
+
+APPEND_MESSAGES_DEFAULT = True
 #************************************************************************************
 #
 #************************************************************************************
@@ -161,17 +165,17 @@ class WidgetLogView(gtk.ScrolledWindow):
 	"""(gtk.ScrolledWindow) logging widget with max lines support
 	"""
 
-	def __init__(self, maxLines=1000, modeAppend=True):
+	def __init__(self, maxLines=1000, appendMessages=True):
 		"""constructor
 		@param maxLines: (int) maximum number of lines allowed in the widget.
 		excess lines will get truncated.
-		@param modeAppend: (bool) if True, new lines will be appended, if False they will
+		@param appendMessages: (bool) if True, new lines will be appended, if False they will
 		be prepended
 		"""
 		gtk.ScrolledWindow.__init__(self)
 		self._edit = gtk.TextView()
 		self._maxLines = maxLines
-		self._modeAppend = modeAppend
+		self._appendMessages = appendMessages
 		self._edit.set_editable(False)
 		self.add(self._edit)
 
@@ -203,8 +207,8 @@ class WidgetLogView(gtk.ScrolledWindow):
 
 	def _trunc_lines(self):
 		"""private method to trauncate lines"""
-		if self._modeAppend:
-			self._trunc_lines__append()
+		if self._appendMessages:
+			self._trunc_lines_append()
 		else:
 			self._trunc_lines_prepend()
 
@@ -246,7 +250,7 @@ class WidgetLogView(gtk.ScrolledWindow):
 		"""logs a message
 		@param msg: (str)
 		"""
-		if self._modeAppend:
+		if self._appendMessages:
 			self._log_append(msg)
 		else:
 			self._log_prepend(msg)
@@ -257,6 +261,19 @@ class WidgetLogView(gtk.ScrolledWindow):
 		"""
 		self._maxLines = n
 		self._trunc_lines()
+
+	def get_append_messages(self):
+		"""checks message insertion mode
+		@return: (bool) True if messages are appended, False other wise
+		"""
+		return self._appendMessages
+
+	def set_append_messages(self, flag):
+		"""adjusts message insertion mode
+		@param flag: (bool) if True, new messages are appended, otherwise new
+		messages are prepended
+		"""
+		self._appendMessages = bool(flag)
 
 #************************************************************************************
 #
@@ -461,6 +478,7 @@ class BoxAutoImport(gtk.VBox):
 	@signal start-import: triggerd when import should be stoped
 	@signal directories-changed: triggerd when the contents of the directory list have changed
 	@signal auto-start-import-changed: triggerd when the 'auto start import' setting has changed
+	@signal append-messages-changed: triggerd when the 'append messages' setting has changed
 	@signal import-timeout-changed: triggerd when the 'import timeout' setting has changed
 	@signal max_log_lines-changed: triggerd when the 'max log lines' setting has changed
 	@signal splitter-position-changed: triggerd when the splitter postition has changed
@@ -470,6 +488,7 @@ class BoxAutoImport(gtk.VBox):
 		'stop-import': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
 		'directories-changed': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
 		'auto-start-import-changed': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
+		'append-messages-changed': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
 		'import-timeout-changed': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
 		'max-log-lines-changed': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
 		'splitter-position-changed': (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
@@ -512,6 +531,11 @@ class BoxAutoImport(gtk.VBox):
 		self.checkAutoStartImport = gtk.CheckButton()
 		self.checkAutoStartImport.connect('toggled', self.on_check_auto_start_import_toggled)
 
+		self.checkAppendMessages = gtk.CheckButton()
+		self.checkAppendMessages.set_active(APPEND_MESSAGES_DEFAULT)
+		self.checkAppendMessages.connect('toggled', self.on_check_append_messages_toggled)
+
+
 		self.spinImportTimeout = gtk.SpinButton(
 				gtk.Adjustment(
 						value=IMPORT_TIMEOUT_DEFAULT,
@@ -542,7 +566,7 @@ class BoxAutoImport(gtk.VBox):
 		self.labelMaxLogLines = gtk.Label()
 		self.labelMaxLogLines.set_mnemonic_widget(self.spinMaxLogLines)
 
-		self.logView = WidgetLogView(maxLines=MAX_LOG_LINES_DEFAULT, modeAppend=False)
+		self.logView = WidgetLogView(maxLines=MAX_LOG_LINES_DEFAULT, appendMessages=APPEND_MESSAGES_DEFAULT)
 
 		self.buttonImport = gtk.ToggleButton()
 		self.buttonImport.connect("clicked", self.on_button_import_clicked)
@@ -602,6 +626,12 @@ class BoxAutoImport(gtk.VBox):
 					))
 		return directories
 
+	def get_append_messages(self):
+		"""returns current value of the 'append messages' setting
+		@return: (bool)
+		"""
+		return self.checkAppendMessages.get_active()
+
 	def get_import_timeout(self):
 		"""returns current value of the 'import timeout' setting
 		@return: (float)
@@ -656,7 +686,7 @@ class BoxAutoImport(gtk.VBox):
 		box3 = gtk.VBox()
 		box2.pack_start(box3)
 		box3.pack_start(self.checkAutoStartImport)
-		box3.pack_start(gtk.VBox())
+		box3.pack_start(self.checkAppendMessages)
 
 		box2.pack_start(gtk.VSeparator())
 
@@ -703,6 +733,10 @@ class BoxAutoImport(gtk.VBox):
 		self.checkAutoStartImport.set_label('')
 		self.checkAutoStartImport.child.set_text_with_mnemonic(_('Auto_start import'))
 		self.checkAutoStartImport.set_tooltip_text(_('Automatically start import'))
+		#NOTE: mnemonics are not recognized for this checkbox. no idea why
+		self.checkAppendMessages.set_label('')
+		self.checkAppendMessages.child.set_text_with_mnemonic(_('A_ppend messages'))
+		self.checkAppendMessages.set_tooltip_text(_('If checked messages are appended to the log, if unchecked prepended'))
 		self.labelImportTimeout.set_text_with_mnemonic(_('Import _timeout:'))
 		self.spinImportTimeout.set_tooltip_text(_('Timeout in between import attempts (in seconds)'))
 		self.labelMaxLogLines.set_text_with_mnemonic(_('Max l_og lines:'))
@@ -716,6 +750,11 @@ class BoxAutoImport(gtk.VBox):
 			self.buttonImport.set_label('')
 			self.buttonImport.child.set_text_with_mnemonic(_('Start _import'))
 		self.buttonImport.set_tooltip_text(_('Start/stop import'))
+
+	def set_append_messages(self, flag):
+		"""sets value of the 'append messages' setting
+		"""
+		self.checkAppendMessages.set_active(flag)
 
 	def set_auto_start_import(self, flag):
 		"""sets the 'auto start import' setting
@@ -905,6 +944,12 @@ class BoxAutoImport(gtk.VBox):
 			self._adjust_widgets()
 			self.emit('directories-changed')
 
+	def on_check_append_messages_toggled(self, checkBox):
+		"""signal handler for the 'append messages' checkbox
+		"""
+		self.logView.set_append_messages(checkBox.get_active())
+		self.emit('append-messages-changed')
+
 	def on_check_auto_start_import_toggled(self, checkBox):
 		"""signal handler for the 'auto start import' checkbox
 		"""
@@ -985,6 +1030,8 @@ if __name__ == '__main__':
 	##boxAutoImport.set_auto_start_import(True)
 	##if boxAutoImport.get_auto_start_import():
 	##	boxAutoImport.set_import_mode(True)
+	##boxAutoImport.set_append_messages(False)
+	##print boxAutoImport.get_append_messages()
 
 	# do whatevs with directories and give feedback to the box
 	directories = boxAutoImport.get_directories()
