@@ -124,7 +124,9 @@ class BoxDirectorySelector(gtk.HBox):
 		@note: make shure to call this method after intitializing the interface and
 		on language changes.
 		"""
-		self.button.set_label(_('...'))
+		#NOTE: mnemonics are not recognized for this checkbox. no idea why
+		self.button.set_label('')
+		self.button.child.set_text_with_mnemonic(_('_...'))
 		self.button.set_tooltip_text(_('Select a directory'))
 		self.edit.set_tooltip_text(_('Directory location'))
 
