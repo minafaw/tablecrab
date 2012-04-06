@@ -735,7 +735,7 @@ class BoxAutoImport(gtk.VBox):
 		self.checkAutoStartImport.set_tooltip_text(_('Automatically start import'))
 		#NOTE: mnemonics are not recognized for this checkbox. no idea why
 		self.checkAppendMessages.set_label('')
-		self.checkAppendMessages.child.set_text_with_mnemonic(_('A_ppend messages'))
+		self.checkAppendMessages.child.set_text_with_mnemonic(_('A_ppend log messages'))
 		self.checkAppendMessages.set_tooltip_text(_('If checked messages are appended to the log, if unchecked prepended'))
 		self.labelImportTimeout.set_text_with_mnemonic(_('Import _timeout:'))
 		self.spinImportTimeout.set_tooltip_text(_('Timeout in between import attempts (in seconds)'))
