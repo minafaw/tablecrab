@@ -125,6 +125,8 @@ class BoxDirectorySelector(gtk.HBox):
 		on language changes.
 		"""
 		self.button.set_label(_('...'))
+		self.button.set_tooltip_text(_('Select a directory'))
+		self.edit.set_tooltip_text(_('Directory location'))
 
 	def set_directory(self, directory):
 		"""sets the contents of the edit box to the specified string
@@ -398,8 +400,6 @@ class DlgEditDirectory(gtk.Dialog):
 
 		self.directorySelector = BoxDirectorySelector()
 		self.directorySelector.retranslate()
-		self.directorySelector.edit.set_tooltip_text(_('Location of the directory'))
-		self.directorySelector.button.set_tooltip_text(_('Select a location'))
 		self.directorySelector.set_directory(directory)
 		self.labelDirectory = gtk.Label()
 		self.labelDirectory.set_text_with_mnemonic(_('_Directory:'))
@@ -412,7 +412,7 @@ class DlgEditDirectory(gtk.Dialog):
 			self.comboDefaults = gtk.combo_box_new_text()
 			for directoryTagName, directory in self.defaultDirectories:
 				self.comboDefaults.append_text(directoryTagName)
-			self.comboDefaults.set_tooltip_text(_('Default locations'))
+			self.comboDefaults.set_tooltip_text(_('Default directories'))
 			self.comboDefaults.connect('changed', self.on_combo_defaults_changed)
 			self.labelDefaults = gtk.Label()
 			self.labelDefaults.set_text_with_mnemonic(_('De_faults:'))
