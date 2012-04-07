@@ -6,7 +6,7 @@
 # project consts
 #************************************************************************************
 ApplicationName = 'TableCrab2'
-Version = '0.7.9'
+Version = '0.8.0'
 ReleaseName = '%s-%s' % (ApplicationName, Version)
 Author = 'JuergenUrner'
 ErrorLogName = ApplicationName + '-Error.log'
@@ -204,6 +204,7 @@ HelpTopics = [
 			('hotkeys', 'Hotkeys'), [
 				('hotkeyCheck', 'Check'),
 				('hotkeyFold', 'Fold'),
+				('hotkeyFoldAndStay', 'Fold And Stay'),
 				('hotkeyRaise', 'Raise'),
 				('hotkeyAll_In', 'All-in'),
 				('hotkeyHilightBet', 'Hilight Bet'),

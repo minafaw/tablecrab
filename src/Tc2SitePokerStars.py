@@ -147,6 +147,8 @@ class Table(PokerStarsWindow):
 			handler = self.handleCheck
 		elif hotkeyID == Tc2ConfigHotkeys.HotkeyFold.id():
 			handler = self.handleFold
+		elif hotkeyID == Tc2ConfigHotkeys.HotkeyFoldAndStay.id():
+			handler = self.handleFoldAndStay
 		elif hotkeyID == Tc2ConfigHotkeys.HotkeyRaise.id():
 			handler = self.handleRaise
 		elif hotkeyID == Tc2ConfigHotkeys.HotkeyAll_In.id():
@@ -240,7 +242,7 @@ class Table(PokerStarsWindow):
 			return None
 		return point
 
-	def clickButton(self, point, template, hotkey):
+	def clickButton(self, point, template, hotkey, modifiers=None):
 		#NOTE:
 		# 1) checkboxes behave like tri state boxes when we send input. not when clicking them (weird)
 		# 2) PostMessage(WM_LBUTTONDOWN,...) works for buttons but is not working for checkboxes
@@ -249,16 +251,24 @@ class Table(PokerStarsWindow):
 		# 4) there is no way we can check if our input triggered the desired effect
 		# 5) we dont know when PS schows us buttons or checkboxes. bet box being
 		#    visible gives us an indicator at times, but is useless for example if s.o. is all-in
-		mi = Tc2Win32.MouseInput()
-		mi.leftClick(point, hwnd=self.hwnd).send(restoreCursor=Tc2Config.globalObject.settingsGlobal.restoreMousePosition())
+		#TODO: have to rewrite InputEvent() to accept mouse and keyboard events
+		modifiers = () if modifiers is None else modifiers
+		si = Tc2Win32.SendInput()
+		for vk in modifiers:
+			si.keyDown(vk)
+		si.leftClick(point, hwnd=self.hwnd)
+		for vk in modifiers:
+			si.keyUp(vk)
+		si.send(restoreCursor=Tc2Config.globalObject.settingsGlobal.restoreMousePosition())
 		# workaround to send double clicks. this handles checkboxes as expected but may trigger
 		# accidental clicks on unrelated tables. we add an abitrary timeout to check if PS has thrown another
 		# table to the foreground. no way to get this fail save, we have a race condition
 		##time.sleep( min(0.05, Tc2Win32.mouseDoubleClickTime()) )
 		##hwnd2 = Tc2Win32.windowForeground()
 		##if hwnd == hwnd2:
-		##	mi.leftClick(point, hwnd=hwnd).send(restoreCursor=self.settingsGlobal.Tc2Config.globalObject.settingsGlobal.())
+		##	si.leftClick(point, hwnd=hwnd).send(restoreCursor=self.settingsGlobal.Tc2Config.globalObject.settingsGlobal.())
 		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name() , hotkey.action() ))
+		return
 
 	def handleCheck(self, hotkey, template, inputEvent):
 		data = self.readData()
@@ -275,6 +285,14 @@ class Table(PokerStarsWindow):
 		if point is None:
 			return
 		self.clickButton(point, template, hotkey)
+
+	def handleFoldAndStay(self, hotkey, template, inputEvent):
+		data = self.readData()
+		if not data: return
+		point = self.point('ButtonFold', template)
+		if point is None:
+			return
+		self.clickButton(point, template, hotkey, modifiers=(Tc2Win32.KEY_VALUES['Control'], ))
 
 	def handleRaise(self, hotkey, template, inputEvent):
 		data = self.readData()
@@ -308,8 +326,8 @@ class Table(PokerStarsWindow):
 		point = self.point('BetSliderEnd', template)
 		if point is None:
 			return
-		mi = Tc2Win32.MouseInput()
-		mi.leftClick(point, hwnd=self.hwnd).send(restoreCursor=Tc2Config.globalObject.settingsGlobal.restoreMousePosition())
+		si = Tc2Win32.SendInput()
+		si.leftClick(point, hwnd=self.hwnd).send(restoreCursor=Tc2Config.globalObject.settingsGlobal.restoreMousePosition())
 		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name() , hotkey.action() ))
 
 	def handleMultiplyBlind(self, hotkey, template, inputEvent):
@@ -427,20 +445,20 @@ class Table(PokerStarsWindow):
 		if not hwndBetBox: return
 		if not data['betBoxIsVisible']: return
 		point = QtCore.QPoint(2, 2)
-		mi = Tc2Win32.MouseInput()
-		mi.leftClickDouble(point, hwnd=hwndBetBox)
-		mi.send(restoreCursor=Tc2Config.globalObject.settingsGlobal.restoreMousePosition())
+		si = Tc2Win32.SendInput()
+		si.leftClickDouble(point, hwnd=hwndBetBox)
+		si.send(restoreCursor=Tc2Config.globalObject.settingsGlobal.restoreMousePosition())
 		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name() , hotkey.action() ))
 
 	def clickRestoreFocus(self, point, template):
 		#NOTE: we always double click. not realy necessary here
-		mi = Tc2Win32.MouseInput()
-		mi.leftClickDouble(point, hwnd=self.hwnd)
-		mi.send(restoreCursor=False)
+		si = Tc2Win32.SendInput()
+		si.leftClickDouble(point, hwnd=self.hwnd)
+		si.send(restoreCursor=False)
 		# replayer gains focus, so we have to wait a bit and send another click to reactivate the table.
-		mi = Tc2Win32.MouseInput()
-		mi.leftClickDouble(template.points['EmptySpace'], hwnd=self.hwnd)
-		mi.send(restoreCursor=Tc2Config.globalObject.settingsGlobal.restoreMousePosition())
+		si = Tc2Win32.SendInput()
+		si.leftClickDouble(template.points['EmptySpace'], hwnd=self.hwnd)
+		si.send(restoreCursor=Tc2Config.globalObject.settingsGlobal.restoreMousePosition())
 
 	def handleReplayer(self, hotkey, template, inputEvent):
 		point = self.point('Replayer', template)

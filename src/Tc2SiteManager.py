@@ -74,9 +74,16 @@ class SiteManager(QtCore.QObject):
 			for hotkey in Tc2Config.globalObject.hotkeyManager:
 				if not hotkey.key() or hotkey.key() != inputEvent.key:
 					continue
-				for handler in self._siteHandlers:
-					if handler.handleInputEvent(hwnd, hotkey, inputEvent):
-						return
+				#NOTE: have to stop hooks here so we do not get recursive
+				Tc2Config.globalObject.keyboardHook.setEnabled(False)
+				Tc2Config.globalObject.mouseHook.setEnabled(False)
+				try:
+					for handler in self._siteHandlers:
+						if handler.handleInputEvent(hwnd, hotkey, inputEvent):
+							break
+				finally:
+					Tc2Config.globalObject.keyboardHook.setEnabled(True)
+					Tc2Config.globalObject.mouseHook.setEnabled(True)
 
 
 

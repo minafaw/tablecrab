@@ -479,11 +479,18 @@ class WindowHook(QtCore.QObject):
 		self._timer = QtCore.QTimer(self)
 		self._timer.setInterval(self._timeout * 1000)
 		self._timer.timeout.connect(self._run)
+		self._enabled = True
+	def getEnabled(self):
+		return self._enabled
+	def setEnabled(self, flag):
+		self._enabled = flag
 	def stop(self):
 		self._timer.stop()
 	def start(self):
 		self._timer.start()
 	def _run(self):
+		if not self._enabled:
+			return
 		hwnds = [hwnd for hwnd in windowChildren(None)]
 		hwndsDestroyed = [hwnd for hwnd in self._hwnds if hwnd not in hwnds]
 		hwndsCreated = [hwnd for hwnd in hwnds if hwnd not in self._hwnds]
@@ -891,6 +898,136 @@ class INPUT(Structure):
 		]
 	_anonymous_ = ("u",)
 
+class SendInput(object):
+
+	def __init__(self):
+		self._input = []
+
+	def send(self, restoreCursor=False):
+		if not self._input:
+			raise ValueError('No input to send')
+		if restoreCursor:
+			pointLast = mouseGetPos()
+		arr = (INPUT*len(self._input))(*self._input)
+		self._input = []
+		user32.SendInput(len(arr), byref(arr), sizeof(INPUT))
+		#NOTE:
+		# 1) wine: the mouse cursor is always moved around. SendInput() is very inaccurate
+		#     so we use mouseSetPos() to restore the cursor position.
+		# 2) winXP: the cursor is not moved around
+		if restoreCursor and pointLast != mouseGetPos():
+			mouseSetPos(pointLast, hwnd=None)
+		return self
+
+	# mouse events
+	def _addMousePoint(self, event, point, hwnd=None):
+		point = windowClientPointToScreenPoint(hwnd, point) if hwnd else point
+		point = pointToWorldCoords(point)
+		mi = MOUSEINPUT(
+				dx=point.x(),
+				dy=point.y(),
+				dwFlags= event | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE_NOCOALESCE,
+				time=getCurrentTime(),		#NOTE: have to set this. wine does not set it in SendInput()
+														#          and looks like it has unwanted side effects in PS client
+														#          like clicks getting ignored. filed a report [http://bugs.winehq.org/show_bug.cgi?id=24435]
+														#          fixed in wine 1.3.4
+				)
+		input = INPUT()
+		input.type = INPUT_MOUSE
+		input.mi = mi
+		self._input.append(input)
+
+	def leftDown(self, point, hwnd=None):
+		self._addMousePoint(MOUSEEVENTF_LEFTDOWN, point, hwnd=hwnd)
+		return self
+	def leftUp(self, point, hwnd=None):
+		self._addMousePoint(MOUSEEVENTF_LEFTUP, point, hwnd=hwnd)
+		return self
+	def leftClick(self, point, hwnd=None):
+		self.move(point, hwnd=hwnd)
+		self.leftDown(point, hwnd=hwnd)
+		self.leftUp(point, hwnd=hwnd)
+		return self
+	def leftClickDouble(self, point, hwnd=None):
+		self.move(point, hwnd=hwnd)
+		self.leftDown(point, hwnd=hwnd)
+		self.leftUp(point, hwnd=hwnd)
+		self.leftDown(point, hwnd=hwnd)
+		self.leftUp(point, hwnd=hwnd)
+		return self
+	def rightDown(self, point, hwnd=None):
+		self._addMousePoint(MOUSEEVENTF_RIGHTDOWN, point, hwnd=hwnd)
+		return self
+	def rightUp(self, point, hwnd=None):
+		self._addMousePoint(MOUSEEVENTF_RIGHTTUP, point, hwnd=hwnd)
+		return self
+	def rightClick(self, point, hwnd=None):
+		self.move(point, hwnd=hwnd)
+		self.rightDown(point, hwnd=hwnd)
+		self.rightUp(point, hwnd=hwnd)
+		return self
+	def middleDown(self, point, hwnd=None):
+		self._addMousePoint(MOUSEEVENTF_MIDDLEDOWN, point, hwnd=hwnd)
+		return self
+	def middleUp(self, point, hwnd=None):
+		self._addMousePoint(MOUSEEVENTF_MIDDLETUP, point, hwnd=hwnd)
+		return self
+	def middleClick(self, point, hwnd=None):
+		self.move(point, hwnd=hwnd)
+		self.middleDown(point, hwnd=hwnd)
+		self.middleUp(point, hwnd=hwnd)
+		return self
+	def move(self, point, hwnd=None):
+		self._addMousePoint(MOUSEEVENTF_MOVE, point, hwnd=hwnd)
+		return self
+	#TODO: MouseInput.wheelScroll() not tested
+	def wheelScroll(self, nSteps):
+		mi = MOUSEINPUT(
+				dwFlags= MOUSEEVENTF_WHEEL | MOUSEEVENTF_ABSOLUTE,
+				mouseData=nSteps,
+				)
+		input = INPUT()
+		input.type = INPUT_MOUSE
+		input.mi = mi
+		self._input.append(input)
+		return self
+	def leftDrag(self, pointStart, pointEnd, hwnd=None):
+		self.move(pointStart, hwnd=hwnd)
+		self.leftDown(pointStart, hwnd=hwnd)
+		self.move(pointEnd, hwnd=hwnd)
+		self.leftUp(pointEnd, hwnd=hwnd)
+		return self
+
+	# keyboard events
+	def keyDown(self, vk):
+		ki = KEYBDINPUT()
+		ki.wVK = vk
+		ki.wScan = user32.MapVirtualKeyW(vk, 0)
+		input = INPUT()
+		input.type = INPUT_KEYBOARD
+		input.ki = ki
+		self._input.append(input)
+		return self
+
+	def keyUp(self, vk):
+		ki = KEYBDINPUT()
+		ki.wVK = vk
+		ki.wScan = user32.MapVirtualKeyW(vk, 0)
+		ki.dwFlags = KEYEVENTF_KEYUP
+		input = INPUT()
+		input.type = INPUT_KEYBOARD
+		input.ki = ki
+		self._input.append(input)
+		return self
+
+	def keyPress(self, vk):
+		self.keyDown(vk)
+		self.keyUp(vk)
+		return self
+
+
+
+
 #TODO: KeyboardInput() not used in TableCrab
 class KeyboardInput(object):
 	def __init__(self):
@@ -1178,9 +1315,12 @@ class MouseHook(QtCore.QObject):
 		self._hHook = None
 		self._pHookProc = MOUSEHOOKPROCLL(self._hookProc)
 		self._eventHandler = eventHandler
+		self._enabled = True
 
 	def _hookProc(self, code, wParam, lParam):
 		"""private method, MOUSEHOOKPROCLL implementation"""
+		if not self._enabled:
+			return user32.CallNextHookEx(self._hHook, code, wParam, lParam)
 
 		if code == HC_ACTION:
 			if wParam == WM_LBUTTONDOWN:
@@ -1206,6 +1346,12 @@ class MouseHook(QtCore.QObject):
 					if e.accept:
 						return TRUE
 		return user32.CallNextHookEx(self._hHook, code, wParam, lParam)
+
+	def getEnabled(self):
+		return self._enabled
+
+	def setEnabled(self, flag):
+		self._enabled = flag
 
 	def isStarted(self):
 		"""cheks if the mouse manager is started"""
@@ -1248,9 +1394,13 @@ class KeyboardHook(QtCore.QObject):
 		self._hHook = None
 		self._pHookProc = KEYBHOOKPROCLL(self._hookProc)
 		self._eventHandler = eventHandler
+		self._enabled = True
 
 	def _hookProc(self, code, wParam, lParam):
 		"""private method, KEYBHOOKPROCLL implementation"""
+		if not self._enabled:
+			return user32.CallNextHookEx(self._hHook, code, wParam, lParam)
+
 		if code == HC_ACTION:
 			keyInfo = KBDLLHOOKSTRUCT.from_address(lParam)
 			keyIsDown = wParam in (WM_KEYDOWN, WM_SYSKEYDOWN)
@@ -1292,6 +1442,12 @@ class KeyboardHook(QtCore.QObject):
 		if result:
 			return '<%s>' % '+'.join(result)
 		return ''
+
+	def getEnabled(self):
+		return self._enabled
+
+	def setEnabled(self, flag):
+		self._enabled = flag
 
 	def isStarted(self):
 		"""cheks if the keyboard manager is started"""

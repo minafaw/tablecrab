@@ -261,6 +261,15 @@ class HotkeyFold(HotkeyBase):
 	def shortcut(klass):	return QtGui.QKeySequence('Shift+F')
 Hotkeys.append(HotkeyFold)
 
+class HotkeyFoldAndStay(HotkeyBase):
+	@classmethod
+	def id(klass): return 'FoldAndStay'
+	@classmethod
+	def menuName(klass): return 'Fold And Stay'
+	@classmethod
+	def shortcut(klass):	return QtGui.QKeySequence('Shift+Y')
+Hotkeys.append(HotkeyFoldAndStay)
+
 class HotkeyRaise(HotkeyBase):
 	@classmethod
 	def id(klass): return 'Raise'
