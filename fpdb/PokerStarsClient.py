@@ -181,16 +181,17 @@ def getTableData():
 		# find note selector
 		for hwnd in windowChildren(hwnd):
 			className = windowGetClassName(hwnd)
-			if className != PokerStarsNoteSelectorClass:
-				continue
+			if className == PokerStarsNoteSelectorClass:
 
-			# get list of player names
-			nItems = SMTO(hwnd, NOTESELECTOR_GET_ITEM_COUNT, 0, 0)
-			for i in xrange(nItems):
-				n = SMTO(hwnd, NOTESELECTOR_GET_ITEM_TEXT_LENGHT, i, 0)
-				p = create_unicode_buffer(n+1)
-				n = SMTO(hwnd, NOTESELECTOR_GET_ITEM_TEXT, i, p)
-				playerNames.append(p.value)
+				# get list of player names
+				nItems = SMTO(hwnd, NOTESELECTOR_GET_ITEM_COUNT, 0, 0)
+				for i in xrange(nItems):
+					n = SMTO(hwnd, NOTESELECTOR_GET_ITEM_TEXT_LENGHT, i, 0)
+					p = create_unicode_buffer(n+1)
+					n = SMTO(hwnd, NOTESELECTOR_GET_ITEM_TEXT, i, p)
+					playerNames.append(p.value)
+
+				break
 
 	return data
 
