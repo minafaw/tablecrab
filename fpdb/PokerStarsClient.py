@@ -92,8 +92,7 @@ def windowGetText(hwnd, maxSize=-1):
 #************************************************************************************
 #
 #************************************************************************************
-# poked around in stars client and found the NoteSelector quite intersting. was able
-# to snoop out some messages to control it.
+# poked around in stars client and found the NoteSelector wich is a standard combobox
 #
 # NoteSelector behaves like this:
 # regular poker - list of players at the table (excluding hero) + players from other tables
@@ -110,36 +109,43 @@ PokerStarsMainClass = '#32770'
 PokerStarsTableClass = 'PokerStarsTableFrameClass'
 PokerStarsNoteSelectorClass = 'PokerStarsNoteSelectorClass'
 
-# PokerStars note selector messages
-#
-# ..less here?
-#NOTESELECTOR_? = 0x00000142
-#NOTESELECTOR_? = 0x00000143	# lParam: buffer
-NOTESELECTOR_REMOVE_ITEM = 0x00000144	# wParam: index lParam: 0 return: nItems or -1
-#NOTESELECTOR_? = 0x00000145	# lParam: buffer
-NOTESELECTOR_GET_ITEM_COUNT = 0x00000146
-NOTESELECTOR_GET_CURRENT_INDEX = 0x00000147			# wParam: 0 lParam: 0 return: index or -1
-NOTESELECTOR_GET_ITEM_TEXT = 0x00000148			# wParam: index lParam: buffer return: nChars or -1
-NOTESELECTOR_GET_ITEM_TEXT_LENGHT = 0x00000149	# wParam: index lParam:0 return: nChars or -1
-NOTESELECTOR_INSERT_ITEM = 0x0000014a	# wParam: index lParam: buffer return: index or -1
-NOTESELECTOR_CLEAR = 0x0000014b	# wParam: 0 lParam: 0 return: bool (?)
-#OTESELECTOR_? = 0x0000014c	# wParam: ? lParam: buffer return: index (?)
-#OTESELECTOR_? = 0x0000014d	# wParam: ? lParam: buffer return: index (?)
-NOTESELECTOR_SET_CURRENT_INDEX = 0x0000014e			# wParam: index lParam: 0 return: index or -1
-#NOTESELECTOR_? = 0x0000014f	# wParam: ? lParam: ? return: index (?)
-#NOTESELECTOR_? = 0x00000150	# wParam: ? lParam: ? return: ?
-#NOTESELECTOR_? = 0x00000151	# wParam: ? lParam: ? return: ?
-#NOTESELECTOR_? = 0x00000152	# wparam: 0 lParam: buffer returns: some bytes ('i\x03\x00\x00\x81\x03\x00\x00\xf6\x03\x00\x00\xd9\x03\x00')
-#NOTESELECTOR_? = 0x00000153
-#NOTESELECTOR_? = 0x00000154	# returns: some N
-#NOTESELECTOR_? = 0x00000155
-#NOTESELECTOR_? = 0x00000156
-#NOTESELECTOR_? = 0x00000157
-NOTESELECTOR_FIND_ITEM = 0x00000158				# wParam: 0 lParam: playerName return: index or -1
-#NOTESELECTOR_? = 0x00000159
-#NOTESELECTOR_? = 0x00000160	# seems to return some byte count?
-# ..more here?
-
+# Combo Box messages
+CB_GETEDITSEL            = 320
+CB_LIMITTEXT             = 321
+CB_SETEDITSEL            = 322
+CB_ADDSTRING             = 323
+CB_DELETESTRING          = 324
+CB_DIR                   = 325
+CB_GETCOUNT              = 326
+CB_GETCURSEL             = 327
+CB_GETLBTEXT             = 328
+CB_GETLBTEXTLEN          = 329
+CB_INSERTSTRING          = 330
+CB_RESETCONTENT          = 331
+CB_FINDSTRING            = 332
+CB_SELECTSTRING          = 333
+CB_SETCURSEL             = 334
+CB_SHOWDROPDOWN          = 335
+CB_GETITEMDATA           = 336
+CB_SETITEMDATA           = 337
+CB_GETDROPPEDCONTROLRECT = 338
+CB_SETITEMHEIGHT         = 339
+CB_GETITEMHEIGHT         = 340
+CB_SETEXTENDEDUI         = 341
+CB_GETEXTENDEDUI         = 342
+CB_GETDROPPEDSTATE       = 343
+CB_FINDSTRINGEXACT       = 344
+CB_SETLOCALE             = 345
+CB_GETLOCALE             = 346
+CB_GETTOPINDEX           = 347
+CB_SETTOPINDEX           = 348
+CB_GETHORIZONTALEXTENT   = 349
+CB_SETHORIZONTALEXTENT   = 350
+CB_GETDROPPEDWIDTH       = 351
+CB_SETDROPPEDWIDTH       = 352
+CB_INITSTORAGE           = 353
+CB_MULTIPLEADDSTRING     = 355
+CB_GETCOMBOBOXINFO       = 356
 #************************************************************************************
 #
 #************************************************************************************
@@ -184,17 +190,18 @@ def getTableData():
 			if className == PokerStarsNoteSelectorClass:
 
 				# get list of player names
-				nItems = SMTO(hwnd, NOTESELECTOR_GET_ITEM_COUNT, 0, 0)
+				nItems = sendMessageTimeout(hwnd, CB_GETCOUNT, 0, 0)
 				for i in xrange(nItems):
-					n = SMTO(hwnd, NOTESELECTOR_GET_ITEM_TEXT_LENGHT, i, 0)
+					n = sendMessageTimeout(hwnd, CB_GETLBTEXTLEN, i, 0)
 					p = create_unicode_buffer(n+1)
-					n = SMTO(hwnd, NOTESELECTOR_GET_ITEM_TEXT, i, p)
+					n = sendMessageTimeout(hwnd, CB_GETLBTEXT, i, p)
 					playerNames.append(p.value)
 
 				break
 
 	return data
-
+# 0 == 1031
+#4294967295
 #************************************************************************************
 #
 #************************************************************************************
