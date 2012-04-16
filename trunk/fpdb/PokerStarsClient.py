@@ -7,6 +7,7 @@ user32 = windll.user32
 #************************************************************************************
 # windows api methods
 #************************************************************************************
+
 ENUMWINDOWSPROC = WINFUNCTYPE(INT, HANDLE, LPARAM)
 MY_MAX_CLASS_NAME = 100
 SMTO_ABORTIFHUNG = 2
@@ -69,7 +70,6 @@ def windowGetText(hwnd, maxSize=-1):
 
 	# try GetWindowText first
 	nChars = user32.GetWindowTextLengthW(hwnd)
-	#nChars = nChars if maxSize < 0 else min(nChars, maxSize)		## this segfaults in TableCrab
 	if nChars:
 		if maxSize > 0 and nChars > maxSize:
 			return  ''
@@ -80,7 +80,6 @@ def windowGetText(hwnd, maxSize=-1):
 	# some text can only be retrieved by WM_GETTEXT, so here we go
 	result = DWORD()
 	nChars = sendMessageTimeout(hwnd, WM_GETTEXTLENGTH, 0, 0)
-	##nChars = nChars if maxSize < 0 else min(nChars, maxSize)		## this segfaults in TableCrab
 	if nChars:
 		if maxSize > 0 and nChars > maxSize:
 			return ''
@@ -159,8 +158,6 @@ def getTableData():
 	@note: hero is never included in the player name lists
 	"""
 
-	SMTO = sendMessageTimeout	# being lazy here
-
 	data = {
 		'hero': None,
 		'tables': [],
@@ -200,8 +197,7 @@ def getTableData():
 				break
 
 	return data
-# 0 == 1031
-#4294967295
+
 #************************************************************************************
 #
 #************************************************************************************
