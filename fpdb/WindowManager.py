@@ -85,6 +85,5 @@ if __name__ == '__main__':
 				self.wm.connect('window-size-changed', lambda wm, window: self.log('window-size-changed: %s\n' % window))
 				self.wm.start()
 		TestWindowManager()
-
 		gtk.main()
 	test_window_manager()
