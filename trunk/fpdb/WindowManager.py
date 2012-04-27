@@ -80,9 +80,9 @@ if __name__ == '__main__':
 		class TestWindowManager(DebugWidget):
 			def setup(self):
 				self.wm = WindowManager()
-				self.wm.connect('window-created', lambda wm, handle: self.log('window-created: %s\n' % handle))
-				self.wm.connect('window-destroyed', lambda wm, handle: self.log('window-destroyed: %s\n' % handle))
-				self.wm.connect('window-size-changed', lambda wm, handle: self.log('window-size-changed: %s\n' % handle))
+				self.wm.connect('window-created', lambda wm, window: self.log('window-created: %s\n' % window))
+				self.wm.connect('window-destroyed', lambda wm, window: self.log('window-destroyed: %s\n' % window))
+				self.wm.connect('window-size-changed', lambda wm, window: self.log('window-size-changed: %s\n' % window))
 				self.wm.start()
 		TestWindowManager()
 
