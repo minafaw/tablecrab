@@ -156,11 +156,12 @@ def list_windows(dsp, window):
 #NOTE: x11 has no real notion of toplevel so we have to go over the whole tree here.
 # to keep things reasonable we filter out windows that have no name.
 def toplevel_windows():
+
 	def walker(dsp, window):
 		yield window
-		for i in list_windows(dsp, window):
-			for x in walker(dsp, i):
-				yield x
+		for x in list_windows(dsp, window):
+			for y in walker(dsp, x):
+				yield y
 
 	dsp = libx11.XOpenDisplay('')
 	try:
@@ -171,7 +172,7 @@ def toplevel_windows():
 				get_window_application(dsp, handle),
 				get_window_geometry(dsp, handle)
 				)
-		windows = [i for i in walker(dsp, window) if i.title]
+		windows = [window for window in walker(dsp, window) if window.title]
 	finally:
 		libx11.XCloseDisplay(dsp)
 	if GetLastError():
