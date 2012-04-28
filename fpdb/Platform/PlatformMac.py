@@ -1,4 +1,7 @@
 """mac specific methods
 """
 
-__all__ = []
+raise NotImplementedError()
+
+
+
