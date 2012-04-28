@@ -36,6 +36,7 @@ MY_SMTO_TIMEOUT = 2000
 
 #************************************************************************************
 #
+#NOTE: we do not errorcheck most api calls here because we may work on dead windows
 #************************************************************************************
 def toplevel_windows():
 	windows = []
@@ -99,24 +100,24 @@ def get_window_geometry(hwnd):
 def get_window_executable(hwnd):
 	pId = DWORD()
 	user32.GetWindowThreadProcessId(hwnd, byref(pId))
-	if not pId:
-		return ''
-	hProcess = kernel32.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, False, pId)
-	if not hProcess:
-		raise WindowsError(GetLastError())
-	try:
-		p= create_unicode_buffer(MAX_PATH+1)
-		GetModuleFileNameEx(hProcess, None, p, sizeof(p))
-	finally:
-		kernel32.CloseHandle(hProcess)
-	return p.value
+	if pId:
+		hProcess = kernel32.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, False, pId)
+		if hProcess:
+			try:
+				p= create_unicode_buffer(MAX_PATH+1)
+				GetModuleFileNameEx(hProcess, None, p, sizeof(p))
+			finally:
+				kernel32.CloseHandle(hProcess)
+			return p.value
+	return ''
 
 def toplevel_windows():
 	hwnds = []
 	def cb(hwnd, lp):
 		hwnds.append(hwnd)
 		return TRUE
-	user32.EnumWindows(ENUMWINDOWSPROC(cb), 0)
+	if not user32.EnumWindows(ENUMWINDOWSPROC(cb), 0):
+		raise WindowsError(FormatError(GetLastError()))
 	windows = []
 	for hwnd in hwnds:
 		windows.append(Window(
