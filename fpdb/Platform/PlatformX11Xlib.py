@@ -6,55 +6,48 @@
 from ctypes import *
 
 __all__ = ['toplevel_windows', ]
+
 #************************************************************************************
-# xlib consts
+# Xlib stuff
 #************************************************************************************
 #NOTE: CDLL() raises OSError when library is not present
 libx11 = CDLL('libX11.so')
 
-Success = 0
-MAX_PROPERTY_VALUE_LEN = 4096
-PROPFMT_NONE = 0	# felt free to define this
-PROPFMT_CHAR_ARRAY = 8
-PROPFMT_SHORT_ARRAY = 16
-PROPFMT_LONG_ARRAY = 32
-
-Atom = c_ulong
 XID = c_ulong
-Window = c_ulong
-XA_STRING = Atom(31)
+XWindow = c_ulong
 
-class Display(Structure):
-    _fields_ = []
+class XDisplay(Structure):
+	_fields_ = []
 
 class XErrorEvent(Structure):
-    _fields_ = [
-		('type', c_int),
-		('display', POINTER(Display)),
-		('resourceid', XID),
-		('serial', c_ulong),
-		('error_code', c_ubyte),
-		('request_code', c_ubyte),
-		('minor_code', c_ubyte),
-		]
+	_fields_ = [
+	('type', c_int),
+	('display', POINTER(XDisplay)),
+	('resourceid', XID),
+	('serial', c_ulong),
+	('error_code', c_ubyte),
+	('request_code', c_ubyte),
+	('minor_code', c_ubyte),
+	]
+
+class XClassHint(Structure):
+	_pack_ = 1
+	_fields_ = [
+			('res_name', c_char_p),
+			('res_class', c_char_p),
+			]
 
 class _ErrorHandler(object):
-
 	def __init__(self):
 		self.lastError = None
-		self.pErrorHandler = CFUNCTYPE(c_int, POINTER(Display), POINTER(XErrorEvent))(self.HandleXError)
+		self.pErrorHandler = CFUNCTYPE(c_int, POINTER(XDisplay), POINTER(XErrorEvent))(self.HandleXError)
 		libx11.XSetErrorHandler(self.pErrorHandler)
-
 	def HandleXError(self, display, pXErrorEvent):
 		#if pXErrorEvent:		# not quite clear from docs if a NULL pointer can be passed
 		p = create_string_buffer(1024)
 		libx11.XGetErrorText(display, pXErrorEvent[0].error_code, p, sizeof(p))
 		self.lastError = p.value
 		return 0
-
-	def HasLastError(self):
-		return self.lastError != None
-
 	def GetLastError(self):
 		"""returns and clears last error"""
 		lastError = self.lastError
@@ -62,152 +55,77 @@ class _ErrorHandler(object):
 		return lastError
 _ErrorHandler = _ErrorHandler()
 GetLastError = _ErrorHandler.GetLastError
-HasLastError = _ErrorHandler.HasLastError
 
 #************************************************************************************
-# platform implementation
+#
 #************************************************************************************
-class PlatformWindow(object):
-	def __init__(self, handle):
-		self.handle = handle
+def init_window(dsp, handle):
 
-	def __eq__(self, other): return self.handle == other.handle
-	def __ne__(self, other): return not self.__eq__(other)
-
-	def get_title(self):
-		return get_property(self.handle, XA_STRING, "WM_NAME")
-
-	def get_geometry(self):
-		rootWindow = Window()
-		x = c_int()
-		y = c_int()
-		w = c_uint()
-		h = c_uint()
-		borderW = c_uint()
-		bitsPerPixel = c_uint()
-		dsp = libx11.XOpenDisplay('')
+	# get window title
+	p = pointer(c_char())
+	if not libx11.XFetchName(dsp, handle, byref(p)):
+		title = ''
+	else:
+		#TODO: found no way to decode the string to unicode. as expected german umlaut fails :-(
+		#title = unicode(string_at(p).decode('utf-8'))
+		title = string_at(p)
 		try:
-			libx11.XGetGeometry(
-					dsp,
-					self.handle,
-					byref(rootWindow),
-					byref(x),
-					byref(y),
-					byref(w),
-					byref(h),
-					byref(borderW),
-					byref(bitsPerPixel)
-					)
+			pass
 		finally:
-			libx11.XCloseDisplay(dsp)
-		if GetLastError():
-			return (0, 0, 0, 0)
-		return (x.value, y.value, w.value, h.value)
+			libx11.XFree(p)
 
+	# get application that created the window
+	#TODO: according to docs we have to free the strings individually using XFree().
+	# no idea how.. every attempt so far segfaulted
+	classHint = XClassHint()
+	if libx11.XGetClassHint(dsp, handle, byref(classHint)):
+		application = classHint.res_name
+	else:
+		application = ''
 
-# XGetWindowProperty in all its glory..
-def get_property(xid, propType, propName):
-
-	result = None
-	dsp = libx11.XOpenDisplay('')
-	try:
-		atomPropName = libx11.XInternAtom(dsp, propName, False)
-		bytesAfter = c_ulong()
-		fmtReturned = c_int()
-		nItems = c_ulong()
-		pReturn = pointer(c_ubyte())
-		typeReturned = Atom()
-		# usual two step query process here. first query with no format, check
-		# what format the method returns, query again with format returned
-		try:
-			result = libx11.XGetWindowProperty(
-					dsp,
-					xid,
-					atomPropName,
-					0,
-					MAX_PROPERTY_VALUE_LEN / 4,
-					False,
-					propType,
-					byref(typeReturned),
-					byref(fmtReturned),
-					byref(nItems),
-					byref(bytesAfter),
-					byref(pReturn)
-				)
-			if result != Success:
-				return None
-		finally:
-			libx11.XFree(pReturn)
-		if fmtReturned.value == PROPFMT_NONE:
-			return None
-		result = libx11.XGetWindowProperty(
+	# get geometry
+	rootWindow = XWindow()
+	x = c_int()
+	y = c_int()
+	w = c_uint()
+	h = c_uint()
+	borderW = c_uint()
+	bitsPerPixel = c_uint()
+	libx11.XGetGeometry(
 				dsp,
-				xid,
-				atomPropName,
-				0,
-				MAX_PROPERTY_VALUE_LEN / 4,
-				False,
-				typeReturned,
-				#propType,
-				byref(typeReturned),
-				byref(fmtReturned),
-				byref(nItems),
-				byref(bytesAfter),
-				byref(pReturn)
+				handle,
+				byref(rootWindow),
+				byref(x),
+				byref(y),
+				byref(w),
+				byref(h),
+				byref(borderW),
+				byref(bitsPerPixel)
 				)
-		#
-		try:
-			# errorcheck
-			if result != Success:
-				return None
-			## may actually differ
-			#if typeReturned.value!= propType.value:
-			#	raise ValueError('Invalid property type: %s' % propName)
-			if bytesAfter.value:
-				raise ValueError('Not all bytes of property requested')
+	# translate coordinates
+	child = XWindow()
+	xDst = c_int()
+	yDst = c_int()
+	libx11.XTranslateCoordinates(dsp, handle, rootWindow, 0, 0, byref(xDst), byref(yDst), byref(child))
+	geometry = (xDst.value, yDst.value, w.value, h.value)
 
-			# retrieve actual data for the returned type
-			if fmtReturned.value == PROPFMT_CHAR_ARRAY:
-				p = create_string_buffer(nItems.value)
-				memmove(p, pReturn, sizeof(p))
-				result = p.value
-			elif fmtReturned.value == PROPFMT_SHORT_ARRAY:
-				arr = (c_short * nItems.value)()
-				memmove(arr, pReturn, sizeof(arr))
-				result = [i for i in arr]
-			elif fmtReturned.value == PROPFMT_LONG_ARRAY:
-				arr = (c_long * nItems.value)()
-				memmove(arr, pReturn, sizeof(arr))
-				result = [i for i in arr]
-			else:
-				raise ValueError('Unknown proprty format')
-		finally:
-			libx11.XFree(pReturn)
-	finally:
-		libx11.XCloseDisplay(dsp)
-
-	return result
-
+	# finally
+	return Window(handle, title, application, geometry)
 
 def list_windows(dsp, window):
-	rootWindow = Window()
-	parentWindow = Window()
-	pChildren = pointer(Window())
+	root = XWindow()
+	parent = XWindow()
+	pChildren = pointer(XWindow())
 	nChildren = c_uint()
-	try:
-		libx11.XQueryTree(
-				dsp,
-				window.handle,
-				byref(rootWindow),
-				byref(parentWindow),
-				byref(pChildren),
-				byref(nChildren)
-				)
-		arr = (Window * nChildren.value)()
-		memmove(arr, pChildren, sizeof(arr))
-	finally:
-		libx11.XFree(pChildren)
-	return [PlatformWindow(i) for i in arr]
+	if libx11.XQueryTree(dsp, window.handle, byref(root), byref(parent), byref(pChildren), byref(nChildren)):
+		if pChildren:
+			try:
+				arr = (XWindow * nChildren.value)()
+				memmove(arr, pChildren, sizeof(arr))
+			finally:
+				libx11.XFree(pChildren)
+			return [init_window(dsp, i) for i in arr]
+	return []
 
 #NOTE: x11 has no real notion of toplevel so we have to go over the whole tree here.
 # to keep things reasonable we filter out windows that have no name.
@@ -220,8 +138,8 @@ def toplevel_windows():
 
 	dsp = libx11.XOpenDisplay('')
 	try:
-		window = PlatformWindow(libx11.XDefaultRootWindow(dsp))
-		windows = [i for i in walker(dsp, window) if i.get_title() is not None]
+		window = init_window(dsp, libx11.XDefaultRootWindow(dsp))
+		windows = [i for i in walker(dsp, window) if i.title]
 	finally:
 		libx11.XCloseDisplay(dsp)
 	if GetLastError():
@@ -231,6 +149,80 @@ def toplevel_windows():
 #************************************************************************************
 #
 #************************************************************************************
+class Window(object):
+	"""window implementation
+	@ivar application: (str) appllication that created the window
+	@ivar geometry: (tuple) client area coordinates (x, y, w, h) relative to the screen
+	@ivar handle: (int) platform dependend window handle
+	@ivar title: (unicode) title of the window
+	"""
+	def __init__(self, handle, title, application, geometry):
+		self.application = application
+		self.geometry = geometry
+		self.handle = handle
+		self.title = title
+	def __eq__(self, other):
+		return self.handle == other.handle and self.application == other.application
+	def __ne__(self, other): return not self.__eq__(other)
+
+class WindowManager(object):
+	"""window manager implementation
+
+	run the manager as generator and process the messages it returns on L{next}
+
+	@cvar MSG_WINDOW_CREATED: message generated when a window has been created. param: L{Window}
+	@cvar MSG_WINDOW_GEOMETRY_CHANGED: message generated when the geometry of a window has changed. param: L{Window}
+	@cvar MSG_WINDOW_DESTROYED: message generated when a window has been destroyed. param: L{Window}
+	"""
+	MSG_WINDOW_CREATED = 'window-created'
+	MSG_WINDOW_GEOMETRY_CHANGED = 'window-geometry-changed'
+	MSG_WINDOW_DESTROYED = 'window-destroyed'
+
+	def __init__(self):
+		"""constructor"""
+		self._windows = []
+
+	def __iter__(self):
+		"""yes, we are a generator"""
+		return self
+
+	def next(self):
+		"""returns next messages in turn generated by the manager
+		@return: (list) of (MSG_*, param) tuples
+		"""
+		messages = []
+		windowsOld = self._windows[:]
+		self._windows = toplevel_windows()
+		for window in self._windows:
+			if window not in windowsOld:
+				messages.append((self.MSG_WINDOW_CREATED, window))
+				messages.append((self.MSG_WINDOW_GEOMETRY_CHANGED, window,))
+		for window in windowsOld:
+			if window in self._windows:
+				if window.geometry != self._windows[self._windows.index(window)].geometry:
+					messages.append((self.MSG_WINDOW_GEOMETRY_CHANGED, window))
+			else:
+				messages.append((self.MSG_WINDOW_DESTROYED, window))
+		return messages
+
+	def windows(self):
+		"""returns list of L{Window}s currently known to the manager"""
+		return self._windows
+
+
+#for window in toplevel_windows():
+#	print window.title, window.application, window.geometry
+
+#************************************************************************************
+#
+#************************************************************************************
 if __name__ == '__main__':
-	for window in toplevel_windows():
-		print 'window: "%s" %s' % (window.get_title(), window.get_geometry())
+	# sample code + run WindowManager (CAUTION: will run unconditionally until keyboard interrupt!!)
+	import time
+	wm = WindowManager()
+	for messages in wm:
+		for message, param in messages:
+			if isinstance(param, Window):
+				window = param
+				print '%s: 0x%x "%s" ("%s") %s' % (message, window.handle, window.title, window.application, window.geometry)
+		time.sleep(0.5)
