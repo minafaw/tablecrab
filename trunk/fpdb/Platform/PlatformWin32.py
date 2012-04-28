@@ -231,7 +231,3 @@ if __name__ == '__main__':
 				window = param
 				print '%s: 0x%x "%s" ("%s") %s' % (message, window.handle, window.title, window.application, window.geometry)
 		time.sleep(0.5)
-
-
-
-
