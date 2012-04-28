@@ -63,7 +63,9 @@ class PlatformWindow(object):
 	def get_geometry(self):
 		rc = RECT()
 		user32.GetClientRect(self.handle, byref(rc))
-		return (rc.left, rc.top, rc.right-rc.left, rc.bottom-rc.top)
+		pt = POINT()
+		user32.ClientToScreen(self.handle, byref(pt))
+		return (pt.x, pt.y, rc.right-rc.left, rc.bottom-rc.top)
 
 
 def toplevel_windows():
