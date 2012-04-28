@@ -1,14 +1,36 @@
+# -*- coding: utf-8 -*-
+
 """x11 specific methods via xlib
 """
 
-#TODO: this is just a boilerplate implementation so far. evil things may happen in here!!!
+#************************************************************************************
+#LICENCE: AGPL
+#
+# Copyright 2012 Jürgen Urner (jUrner<at>arcor.de)
+#
+# This program is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Affero General Public License as published by the Free Software
+# Foundation, version 3 of the License.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License along with
+# this program. If not, see <http://www.gnu.org/licenses/>. In the "official"
+# distribution you can find the license in agpl-3.0.txt.
+#************************************************************************************
+#TODO:
+#
+# - get_window_text() should return unicode
+#************************************************************************************
 
 from ctypes import *
 
 __all__ = ['WindowManager', ]
 
 #************************************************************************************
-# Xlib stuff
+# Xlib
 #************************************************************************************
 #NOTE: CDLL() raises OSError when library is not present
 libx11 = CDLL('libX11.so')
@@ -56,24 +78,10 @@ _ErrorHandler = _ErrorHandler()
 GetLastError = _ErrorHandler.GetLastError
 
 #************************************************************************************
-#
+# helpers
 #************************************************************************************
-def init_window(dsp, handle):
-
-	# get window title
-	p = pointer(c_char())
-	if not libx11.XFetchName(dsp, handle, byref(p)):
-		title = ''
-	else:
-		#TODO: found no way to decode the string to unicode. as expected german umlaut fails :-(
-		#title = unicode(string_at(p).decode('utf-8'))
-		title = string_at(p)
-		try:
-			pass
-		finally:
-			libx11.XFree(p)
-
-	# get application that created the window
+def get_window_application(dsp, handle):
+	application = ''
 	classHint = XClassHint()
 	if libx11.XGetClassHint(dsp, handle, byref(classHint)):
 		application = classHint.res_name[:]
@@ -82,10 +90,9 @@ def init_window(dsp, handle):
 		libx11.XFree(c_char_p.from_address(addr))
 		addr = addressof(classHint) + XClassHint.res_class.offset
 		libx11.XFree(c_char_p.from_address(addr))
-	else:
-		application = ''
+	return application
 
-	# get geometry
+def get_window_geometry(dsp, handle):
 	rootWindow = XWindow()
 	x = c_int()
 	y = c_int()
@@ -109,12 +116,22 @@ def init_window(dsp, handle):
 	xDst = c_int()
 	yDst = c_int()
 	libx11.XTranslateCoordinates(dsp, handle, rootWindow, 0, 0, byref(xDst), byref(yDst), byref(child))
-	geometry = (xDst.value, yDst.value, w.value, h.value)
+	return (xDst.value, yDst.value, w.value, h.value)
 
-	# finally
-	return Window(handle, title, application, geometry)
+def get_window_title(dsp, handle):
+	title = ''
+	p = pointer(c_char())
+	if libx11.XFetchName(dsp, handle, byref(p)):
+		try:
+			#TODO: found no way to decode the string to unicode. as expected german umlaut fails :-(
+			#title = unicode(string_at(p).decode('utf-8'))
+			title = string_at(p)
+		finally:
+			libx11.XFree(p)
+	return title
 
 def list_windows(dsp, window):
+	windows = []
 	root = XWindow()
 	parent = XWindow()
 	pChildren = pointer(XWindow())
@@ -126,8 +143,15 @@ def list_windows(dsp, window):
 				memmove(arr, pChildren, sizeof(arr))
 			finally:
 				libx11.XFree(pChildren)
-			return [init_window(dsp, i) for i in arr]
-	return []
+			for handle in arr:
+				window = Window(
+						handle,
+						get_window_title(dsp, handle),
+						get_window_application(dsp, handle),
+						get_window_geometry(dsp, handle)
+						)
+				windows.append(window)
+	return windows
 
 #NOTE: x11 has no real notion of toplevel so we have to go over the whole tree here.
 # to keep things reasonable we filter out windows that have no name.
@@ -140,7 +164,13 @@ def toplevel_windows():
 
 	dsp = libx11.XOpenDisplay('')
 	try:
-		window = init_window(dsp, libx11.XDefaultRootWindow(dsp))
+		handle = libx11.XDefaultRootWindow(dsp)
+		window = Window(
+				handle,
+				get_window_title(dsp, handle),
+				get_window_application(dsp, handle),
+				get_window_geometry(dsp, handle)
+				)
 		windows = [i for i in walker(dsp, window) if i.title]
 	finally:
 		libx11.XCloseDisplay(dsp)
@@ -149,7 +179,7 @@ def toplevel_windows():
 	return windows
 
 #************************************************************************************
-#
+# window manager implementation
 #************************************************************************************
 class Window(object):
 	"""window implementation
@@ -210,10 +240,6 @@ class WindowManager(object):
 	def windows(self):
 		"""returns list of L{Window}s currently known to the manager"""
 		return self._windows
-
-
-#for window in toplevel_windows():
-#	print window.title, window.application, window.geometry
 
 #************************************************************************************
 #
