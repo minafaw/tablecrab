@@ -27,15 +27,7 @@ import re, subprocess
 __all__ = ['WindowManager', ]
 
 #************************************************************************************
-# window manager implementation
-#
-#NOTES:
-# - windows are not guaranteed to be alive when we handle them
-# - we can not guarantee the identity of a window. another window may have been
-#   created with the same handle from the same application at any time.
-#
-# so i found best approach is to retrieve all data for a window on every hop and let
-# the user deal with eventual troubles.
+# helpers
 #************************************************************************************
 # pattern to match output from xwininfo (warning: not generic, just good enough for our purposes)
 PatXWinInfo = re.compile('''
@@ -79,6 +71,17 @@ def toplevel_windows():
 			windows.append(window)
 	return windows
 
+#************************************************************************************
+# window manager implementation
+#
+#NOTES:
+# - windows are not guaranteed to be alive when we handle them
+# - we can not guarantee the identity of a window. another window may have been
+#   created with the same handle from the same application at any time.
+#
+# so i found best approach is to retrieve all data for a window on every hop and let
+# the user deal with eventual troubles.
+#************************************************************************************
 class Window(object):
 	"""window implementation
 	@ivar application: (str) appllication that created the window
