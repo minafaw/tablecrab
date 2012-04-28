@@ -75,7 +75,7 @@ def toplevel_windows():
 			y = int(d['y'])
 			w = int(d['w'])
 			h = int(d['h'])
-			window = Window(handle, unicode(d['title'].encode('utf-8')), d['application'], (x, y, w, h))
+			window = Window(handle, unicode(d['title'].decode('utf-8')), d['application'], (x, y, w, h))
 			windows.append(window)
 	return windows
 
