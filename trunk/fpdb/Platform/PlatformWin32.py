@@ -1,26 +1,51 @@
+# -*- coding: utf-8 -*-
+
 """win32 specific methods
 """
+
+#************************************************************************************
+#LICENCE: AGPL
+#
+# Copyright 2012 Jürgen Urner (jUrner<at>arcor.de)
+#
+# This program is free software: you can redistribute it and/or modify it under the
+# terms of the GNU Affero General Public License as published by the Free Software
+# Foundation, version 3 of the License.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License along with
+# this program. If not, see <http://www.gnu.org/licenses/>. In the "official"
+# distribution you can find the license in agpl-3.0.txt.
+#************************************************************************************
 
 from ctypes import *
 from ctypes.wintypes import *
 
 __all__ = ['WindowManager', ]
+
 #************************************************************************************
-# win32 consts
+# win32
 #************************************************************************************
 user32 = windll.user32
 kernel32 = windll.kernel32
 psapi = windll.psapi
 
+#NOTE: hope i got tGetModuleFileNameEx() right..
+# looks like there are other methods to get application that createed a window:
+#    - psapi.GetProcessImageFileName() - xp+
+#    - kernel32.QueryFullProcessImageName() - vista+
 GetModuleFileNameEx = None
 # looks like GetModuleFileNameEx is a moving target ..try to catch it
 try:
-	GetModuleFileNameEx = kernel32.GetModuleFileNameExW
+	GetModuleFileNameEx = psapi.GetModuleFileNameExW
 except AttributeError:
 	try:
-		GetModuleFileNameEx = psapi.GetModuleFileNameExW
+		GetModuleFileNameEx = kernel.K32GetModuleFileNameExW
 	except AttributeError:
-		GetModuleFileNameEx = psapi.K32GetModuleFileNameExW
+		pass
 if GetModuleFileNameEx is None:
 	raise ValueError('GetModuleFileNameEx not found, but we need it here!')
 
@@ -35,26 +60,30 @@ SMTO_ABORTIFHUNG = 2
 MY_SMTO_TIMEOUT = 2000
 
 #************************************************************************************
+# helpers
 #
 #NOTE: we do not errorcheck most api calls here because we may work on dead windows
 #************************************************************************************
-def toplevel_windows():
-	windows = []
-	def cb(hwnd, lp):
-		windows.append(PlatformWindow(hwnd))
-		return TRUE
-	user32.EnumWindows(ENUMWINDOWSPROC(cb), 0)
-	return windows
+def get_window_application(hwnd):
+	pId = DWORD()
+	user32.GetWindowThreadProcessId(hwnd, byref(pId))
+	if pId:
+		hProcess = kernel32.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, False, pId)
+		if hProcess:
+			try:
+				p= create_unicode_buffer(MAX_PATH+1)
+				GetModuleFileNameEx(hProcess, None, p, sizeof(p))
+			finally:
+				kernel32.CloseHandle(hProcess)
+			return p.value
+	return ''
 
-#NOTE: for some reason creating gdk windows via gtk.gdk.window_foreign_new()
-# segfaults on win32 when called after a gui has been initialized. no idea why
-# as a workaround we reimplement gtks window_set_transient_for() [gdkwindow-win32.c]
-def set_window_transient_for(gtkWindow, hwnd):
-	#TODO: make shure gtkWindows is not a child window
-	# looks like we have to use SetWindowLong here
-
-	##SetWindowLongPtr(window_id, GWLP_HWNDPARENT, (LONG_PTR) parent_id)
-	pass
+def get_window_geometry(hwnd):
+	rc = RECT()
+	user32.GetClientRect(hwnd, byref(rc))
+	pt = POINT()
+	user32.ClientToScreen(hwnd, byref(pt))
+	return (pt.x, pt.y, rc.right-rc.left, rc.bottom-rc.top)
 
 def get_window_title(hwnd):
 	#NOTE: see: [ http://blogs.msdn.com/b/oldnewthing/archive/2003/08/21/54675.aspx ] "the secret live of GetWindowtext" for details
@@ -90,27 +119,6 @@ def get_window_title(hwnd):
 		return p.value.encode('utf-8')
 	return ''
 
-def get_window_geometry(hwnd):
-	rc = RECT()
-	user32.GetClientRect(hwnd, byref(rc))
-	pt = POINT()
-	user32.ClientToScreen(hwnd, byref(pt))
-	return (pt.x, pt.y, rc.right-rc.left, rc.bottom-rc.top)
-
-def get_window_executable(hwnd):
-	pId = DWORD()
-	user32.GetWindowThreadProcessId(hwnd, byref(pId))
-	if pId:
-		hProcess = kernel32.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, False, pId)
-		if hProcess:
-			try:
-				p= create_unicode_buffer(MAX_PATH+1)
-				GetModuleFileNameEx(hProcess, None, p, sizeof(p))
-			finally:
-				kernel32.CloseHandle(hProcess)
-			return p.value
-	return ''
-
 def toplevel_windows():
 	hwnds = []
 	def cb(hwnd, lp):
@@ -123,14 +131,32 @@ def toplevel_windows():
 		windows.append(Window(
 				hwnd,
 				get_window_title(hwnd),
-				get_window_executable(hwnd),
+				get_window_application(hwnd),
 				get_window_geometry(hwnd),
 
 				))
 	return windows
 
+#NOTE: for some reason creating gdk windows via gtk.gdk.window_foreign_new()
+# segfaults on win32 when called after a gui has been initialized. no idea why
+# as a workaround we reimplement gtks window_set_transient_for() [gdkwindow-win32.c]
+def set_window_transient_for(gtkWindow, hwnd):
+	#TODO: make shure gtkWindows is not a child window
+	# looks like we have to use SetWindowLong here
+
+	##SetWindowLongPtr(window_id, GWLP_HWNDPARENT, (LONG_PTR) parent_id)
+	pass
+
 #************************************************************************************
+# window manager implementation
 #
+#NOTES:
+# - windows are not guaranteed to be alive when we handle them
+# - we can not guarantee the identity of a window. another window may have been
+#   created with the same handle from the same application at any time.
+#
+# so i found best approach is to retrieve all data for a window on every hop and let
+# the user deal with eventual troubles.
 #************************************************************************************
 class Window(object):
 	"""window implementation
