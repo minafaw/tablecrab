@@ -5,7 +5,7 @@
 
 from ctypes import *
 
-__all__ = ['toplevel_windows', ]
+__all__ = ['WindowManager', ]
 
 #************************************************************************************
 # Xlib stuff
