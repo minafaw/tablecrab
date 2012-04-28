@@ -31,7 +31,6 @@ class XErrorEvent(Structure):
 	]
 
 class XClassHint(Structure):
-	_pack_ = 1
 	_fields_ = [
 			('res_name', c_char_p),
 			('res_class', c_char_p),
@@ -75,11 +74,14 @@ def init_window(dsp, handle):
 			libx11.XFree(p)
 
 	# get application that created the window
-	#TODO: according to docs we have to free the strings individually using XFree().
-	# no idea how.. every attempt so far segfaulted
 	classHint = XClassHint()
 	if libx11.XGetClassHint(dsp, handle, byref(classHint)):
-		application = classHint.res_name
+		application = classHint.res_name[:]
+		# docs claim each string in XClassHint has to be freed individually, so here e go..
+		addr = addressof(classHint) + XClassHint.res_name.offset
+		libx11.XFree(c_char_p.from_address(addr))
+		addr = addressof(classHint) + XClassHint.res_class.offset
+		libx11.XFree(c_char_p.from_address(addr))
 	else:
 		application = ''
 
