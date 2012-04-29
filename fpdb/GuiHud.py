@@ -43,22 +43,22 @@ class HudManager(gtk.Window):
 	def on_window_manager_timeout(self):
 		"""event dispatcher for our HUDs"""
 
-		for message, param in self.windowManager.next():
+		for event, param in self.windowManager.next():
 
 			#TODO: something goes wrong when the lobby pops up with the "connecting.."
 			# dialog. seems like we get no message that the lobby has been created
-			if message == self.windowManager.EVENT_WINDOW_CREATED:
+			if event == self.windowManager.EVENT_WINDOW_CREATED:
 				platformWindow = param
 				if platformWindow.application == 'PokerStars.exe' and platformWindow.title == 'PokerStars Lobby':
 					self.huds[platformWindow.handle] = Hud(platformWindow)
 
-			elif message == self.windowManager.EVENT_WINDOW_GEOMETRY_CHANGED:
+			elif event == self.windowManager.EVENT_WINDOW_GEOMETRY_CHANGED:
 				platformWindow = param
 				hud = self.huds.get(platformWindow.handle, None)
 				if hud is not None:
 					hud.handle_window_geometry_changed(platformWindow)
 
-			elif message == self.windowManager.EVENT_WINDOW_DESTROYED:
+			elif event == self.windowManager.EVENT_WINDOW_DESTROYED:
 				platformWindow = param
 				hud = self.huds.get(platformWindow.handle, None)
 				if hud is not None:
