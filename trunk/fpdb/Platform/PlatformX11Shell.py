@@ -29,6 +29,14 @@ __all__ = ['WindowManager', ]
 #************************************************************************************
 # helpers
 #************************************************************************************
+# check if X is running
+#TODO: check if test if ok
+out, err = subprocess.Popen(
+		'ps -e | grep X', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+		).communicate()
+if not ' Xorg' in out:
+	raise OSError('no X server running!')
+
 # pattern to match output from xwininfo (warning: not generic, just good enough for our purposes)
 PatXWinInfo = re.compile('''
 		\s*
