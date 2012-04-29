@@ -21,6 +21,7 @@
 # distribution you can find the license in agpl-3.0.txt.
 #************************************************************************************
 
+import os
 from ctypes import *
 from ctypes.wintypes import *
 
@@ -37,17 +38,19 @@ psapi = windll.psapi
 # looks like there are other methods to get application that createed a window:
 #    - psapi.GetProcessImageFileName() - xp+
 #    - kernel32.QueryFullProcessImageName() - vista+
+#NOTE: we use ansi version here because a)there is a bug in whine with the unicode
+#      version filed in wine bugzilla as [Bug 30543] and b) ansi may be sufficient
 GetModuleFileNameEx = None
 # looks like GetModuleFileNameEx is a moving target ..try to catch it
 try:
-	GetModuleFileNameEx = psapi.GetModuleFileNameExW
+	GetModuleFileNameEx = psapi.GetModuleFileNameExA
 except AttributeError:
 	try:
-		GetModuleFileNameEx = kernel.K32GetModuleFileNameExW
+		GetModuleFileNameEx = kernel.K32GetModuleFileNameExA
 	except AttributeError:
 		pass
 if GetModuleFileNameEx is None:
-	raise ValueError('GetModuleFileNameEx not found, but we need it here!')
+	raise OSError('GetModuleFileNameEx not found, but we need it here!')
 
 MAX_PATH = 260
 PROCESS_VM_READ = 16
@@ -65,18 +68,35 @@ MY_SMTO_TIMEOUT = 2000
 #NOTE: we do not errorcheck most api calls here because we may work on dead windows
 #************************************************************************************
 def get_window_application(hwnd):
+	result = ''
 	pId = DWORD()
 	user32.GetWindowThreadProcessId(hwnd, byref(pId))
 	if pId:
 		hProcess = kernel32.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, False, pId)
 		if hProcess:
 			try:
-				p= create_unicode_buffer(MAX_PATH+1)
-				GetModuleFileNameEx(hProcess, None, p, sizeof(p))
+				#NOTE: GetModuleFileNameEx() gives no information on buffer size required
+				# seems like we have to do trial and error
+				bufferSize = MAX_PATH +1
+				while True:
+					p = create_string_buffer(bufferSize)
+					nChars = GetModuleFileNameEx(hProcess, None, p, sizeof(p))
+					if sizeof(p) == nChars +1:
+						bufferSize *= 2
+					else:
+						break
 			finally:
 				kernel32.CloseHandle(hProcess)
-			return p.value
-	return ''
+			#NOTE: we retrieve executable name only. not much use returning the file path
+			# because a) it is not guaranteed to point to the folder where the executable
+			# resildes in and b) we have to make this method uniform cross platforms.
+			#NOTE: GetModuleFileNameEx() may return short paths "micros~1" so expand it first
+			nChars = kernel32.GetLongPathNameA(p, None, 0)
+			pLongPath = create_string_buffer(nChars +1)
+			kernel32.GetLongPathNameA(p, pLongPath, sizeof(pLongPath))
+			path = os.path.normpath(pLongPath.value)
+			result = os.path.basename(path)
+	return result
 
 def get_window_geometry(hwnd):
 	rc = RECT()
