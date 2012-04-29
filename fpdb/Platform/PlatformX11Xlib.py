@@ -34,6 +34,10 @@ __all__ = ['WindowManager', ]
 #************************************************************************************
 #NOTE: CDLL() raises OSError when library is not present
 libx11 = CDLL('libX11.so')
+dsp = libx11.XOpenDisplay(None)
+if not dsp:
+	raise OSError('no X server running!')
+libx11.XCloseDisplay(dsp)
 
 XID = c_ulong
 XWindow = c_ulong
@@ -245,7 +249,7 @@ class WindowManager(object):
 #************************************************************************************
 #
 #************************************************************************************
-if __name__ == '__main__':
+if __name__ == '__main__2':
 	# sample code + run WindowManager (CAUTION: will run unconditionally until keyboard interrupt!!)
 	import time
 	wm = WindowManager()
