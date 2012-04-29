@@ -210,6 +210,10 @@ class WindowManager(object):
 	@cvar MSG_WINDOW_CREATED: message generated when a window has been created. param: L{Window}
 	@cvar MSG_WINDOW_GEOMETRY_CHANGED: message generated when the geometry of a window has changed. param: L{Window}
 	@cvar MSG_WINDOW_DESTROYED: message generated when a window has been destroyed. param: L{Window}
+
+	@note: L{Window}s passed in messages are snapshots of windows not actual windows.
+	they are meant for emidiate use. that is, the instances passed are never updated.
+	instead	a new instance is passed on every message.
 	"""
 	MSG_WINDOW_CREATED = 'window-created'
 	MSG_WINDOW_GEOMETRY_CHANGED = 'window-geometry-changed'
