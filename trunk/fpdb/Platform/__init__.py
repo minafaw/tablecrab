@@ -9,10 +9,13 @@ import sys
 if sys.platform == 'darwin':
 	from PlatformMac import *
 elif sys.platform == 'linux2':
-	#NOTE: xlib is way faster
+	# try to find a module that works on linux
 	try:
 		from PlatformX11Xlib import *
 	except OSError:
-		from PlatformX11Shell import *
+		try:
+			from PlatformX11Shell import *
+		except OSError:
+			from PlatformWayland import *
 elif sys.platform == 'win32':
 	from PlatformWin32 import *
