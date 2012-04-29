@@ -1,6 +1,7 @@
 """platform package
 
-all platform dependend code should go into the modules in this directory
+all platform dependend code should go into the modules in this directory. modules
+should raise OSError when something is wrong with the platform they are choossen for
 """
 
 import sys
