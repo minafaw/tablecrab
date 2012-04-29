@@ -153,7 +153,6 @@ def toplevel_windows():
 				get_window_title(hwnd),
 				get_window_application(hwnd),
 				get_window_geometry(hwnd),
-
 				))
 	return windows
 
