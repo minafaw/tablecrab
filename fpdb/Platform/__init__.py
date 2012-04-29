@@ -9,7 +9,7 @@ import sys
 if sys.platform == 'darwin':
 	from PlatformMac import *
 elif sys.platform == 'linux2':
-	# try to find a module that works on linux
+	# try to find a module four current linux window system
 	try:
 		from PlatformX11Xlib import *
 	except OSError:
