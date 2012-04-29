@@ -249,7 +249,7 @@ class WindowManager(object):
 #************************************************************************************
 #
 #************************************************************************************
-if __name__ == '__main__2':
+if __name__ == '__main__':
 	# sample code + run WindowManager (CAUTION: will run unconditionally until keyboard interrupt!!)
 	import time
 	wm = WindowManager()
