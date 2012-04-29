@@ -231,14 +231,14 @@ class WindowManager(object):
 		windowsOld = self._windows[:]
 		self._windows = toplevel_windows()
 		for window in self._windows:
-			if window not in windowsOld:
-				messages.append((self.MSG_WINDOW_CREATED, window))
-				messages.append((self.MSG_WINDOW_GEOMETRY_CHANGED, window,))
-		for window in windowsOld:
-			if window in self._windows:
-				if window.geometry != self._windows[self._windows.index(window)].geometry:
+			if window in windowsOld:
+				if window.geometry != windowsOld[windowsOld.index(window)].geometry:
 					messages.append((self.MSG_WINDOW_GEOMETRY_CHANGED, window))
 			else:
+				messages.append((self.MSG_WINDOW_CREATED, window))
+				messages.append((self.MSG_WINDOW_GEOMETRY_CHANGED, window))
+		for window in windowsOld:
+			if window not in self._windows:
 				messages.append((self.MSG_WINDOW_DESTROYED, window))
 		return messages
 
