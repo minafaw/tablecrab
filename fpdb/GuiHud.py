@@ -1,3 +1,7 @@
+"""proove of concept and test bed implementation for a HUD. not tooo much to see here,
+just two small buttons that get attatched to PokerStars lobby at (0, 0) of its client
+ara.
+"""
 
 import pygtk
 import gtk
@@ -8,10 +12,28 @@ import Platform
 #************************************************************************************
 #
 #************************************************************************************
+#NOTE: focus handling. window we are attatched to has focus, our HUD gests clicked
+# - x11: window keeps focus
+# - wine: window loses focus, HudManager gets it and get put to the foreground
+# - wind32: ?
+# + should be os/wm specific which window in the focus chain receives focus next
+# + on win32 we would intercept WM_SETFOCUS and put focus back to prev window by hand
+#
+#NOTE: gtk.gdk.window_foreign_new() from invalid xid/hwnd/whatevs
+# - x11: returns None
+# - wine: returns a gdk.Window to hapily segfault on subsequent calls
+
 class Hud(gtk.Window):
 	def __init__(self, platformWindow):
 		gtk.Window.__init__(self)
+
 		self.set_title('Hud')
+		self.set_decorated(0)
+		self.set_focus(None)
+		self.set_focus_on_map(False)
+		self.set_accept_focus(False)
+		self.set_skip_pager_hint(True)
+		self.set_skip_taskbar_hint(True)
 
 		# init hud for window
 		#NOTE: have to realize() window first, otherwise window has no handle
@@ -19,7 +41,19 @@ class Hud(gtk.Window):
 		self.realize()
 		gdkWindow = gtk.gdk.window_foreign_new(platformWindow.handle)
 		self.get_window().set_transient_for(gdkWindow)
-		self.show()
+
+		self.button1 = gtk.Button('+')
+		self.button2 = gtk.Button('Resize')
+
+		box = gtk.HBox()
+		self.add(box)
+		box.pack_start(self.button1, expand=False)
+		box.pack_start(self.button2, expand=False)
+
+		self.show_all()
+		#self.show()
+
+		print bool(gtk.gdk.window_foreign_new(1234567))
 
 	def handle_window_geometry_changed(self, platformWindow):
 		x, y = platformWindow.geometry[:2]
