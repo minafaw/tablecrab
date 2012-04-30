@@ -14,14 +14,31 @@ import Platform
 #************************************************************************************
 #NOTE: focus handling. window we are attatched to has focus, our HUD gests clicked
 # - x11: window keeps focus
+# - wayland: ?
 # - wine: window loses focus, HudManager gets it and get put to the foreground
-# - wind32: ?
+# - native windows: ?
+# - mac: ?
 # + should be os/wm specific which window in the focus chain receives focus next
 # + on win32 we would intercept WM_SETFOCUS and put focus back to prev window by hand
+# + on wine we are 1) dealing with wine as window manager and 2) with the linux distos
+#   window manager. things could work as expected if we had access to both from within
+#   wine. obv there is no way to do so. so ..focus handling could be made to work on native
+#   windows and on linux but not on wine. i think this could be ok along with some
+#   explanatory words for the user.
+
 #
 #NOTE: gtk.gdk.window_foreign_new() from invalid xid/hwnd/whatevs
 # - x11: returns None
+# - wayland: ?
 # - wine: returns a gdk.Window to hapily segfault on subsequent calls
+# - native windows: ?
+# - mac: ?
+# + imo gtk.gdk.window_foreign_new() is not intended to be used with windows not belonging
+#   to the current process. "foreign" relates to "foreign to gtk" not to "foreign to the process".
+#   so i'd consider the method unusable for the purpose. our window manager(s) should
+#   handle all things necessary for us according to means the platform provides. our task
+#   is to implement things in a failsave way, which should be doable on x11 and native
+#   windows. no idea about mac and wayland though.
 
 class Hud(gtk.Window):
 	def __init__(self, platformWindow):
