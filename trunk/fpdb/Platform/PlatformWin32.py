@@ -163,6 +163,24 @@ def set_window_transient_for(gtkWindow, hwnd):
 	#TODO: make shure gtkWindows is not a child window
 	# looks like we have to use SetWindowLong here
 
+	#NOTE:
+
+	# #ifdef _WIN64
+	# WINUSERAPI LONG_PTR    WINAPI GetWindowLongPtrA(HWND,INT);
+	# WINUSERAPI LONG_PTR    WINAPI GetWindowLongPtrW(HWND,INT);
+	# #else
+	# #define                       GetWindowLongPtrA GetWindowLongA
+	# #define                       GetWindowLongPtrW GetWindowLongW
+	# #endif
+
+	# so SetWindowLongPtr is only defined on 64 bit windows
+	# have to use code like this to make it work on all versions:
+	#
+	#try:
+	#	SetWindowLongPtr = user32.SetWindowLongPtrW
+	#except AttributeError:
+	#	SetWindowLongPtr = user32.SetWindowLongW
+	#
 	##SetWindowLongPtr(window_id, GWLP_HWNDPARENT, (LONG_PTR) parent_id)
 	pass
 
