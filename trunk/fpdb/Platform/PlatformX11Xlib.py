@@ -42,6 +42,21 @@ libx11.XCloseDisplay(dsp)
 XID = c_ulong
 XWindow = c_ulong
 Success = 0
+STRING = POINTER(c_char)
+VisualID = c_ulong
+Colormap = XID
+XPointer = STRING
+
+# map states
+IsUnmapped = 0
+IsUnviewable = 1
+IsViewable = 2
+
+class _XGC(Structure):
+	pass
+_XGC._fields_ = [
+]
+GC = POINTER(_XGC)
 
 class XDisplay(Structure):
 	_fields_ = []
@@ -61,6 +76,86 @@ class XClassHint(Structure):
 	_fields_ = [
 			('res_name', c_char_p),
 			('res_class', c_char_p),
+			]
+
+class _XExtData(Structure):
+	pass
+_XExtData._fields_ = [
+	('number', c_int),
+	('next', POINTER(_XExtData)),
+	('free_private', CFUNCTYPE(c_int, POINTER(_XExtData))),
+	('private_data', XPointer),
+]
+XExtData = _XExtData
+
+class Visual(Structure):
+	_fields_ = [
+			('ext_data', POINTER(XExtData)),
+			('visualid', VisualID),
+			('c_class', c_int),
+			('red_mask', c_ulong),
+			('green_mask', c_ulong),
+			('blue_mask', c_ulong),
+			('bits_per_rgb', c_int),
+			('map_entries', c_int),
+			]
+
+class Depth(Structure):
+   _fields_ = [
+			('depth', c_int),
+			('nvisuals', c_int),
+			('visuals', POINTER(Visual)),
+			]
+
+class Screen(Structure):
+	   _fields_ = [
+			('ext_data', POINTER(XExtData)),
+			('display', POINTER(XDisplay)),
+			('root', XWindow),
+			('width', c_int),
+			('height', c_int),
+			('mwidth', c_int),
+			('mheight', c_int),
+			('ndepths', c_int),
+			('depths', POINTER(Depth)),
+			('root_depth', c_int),
+			('root_visual', POINTER(Visual)),
+			('default_gc', GC),
+			('cmap', Colormap),
+			('white_pixel', c_ulong),
+			('black_pixel', c_ulong),
+			('max_maps', c_int),
+			('min_maps', c_int),
+			('backing_store', c_int),
+			('save_unders', c_int),
+			('root_input_mask', c_long),
+			]
+
+class XWindowAttributes(Structure):
+	_fields_ = [
+			('x', c_int),
+			('y', c_int),
+			('width', c_int),
+			('height', c_int),
+			('border_width', c_int),
+			('depth', c_int),
+			('visual', POINTER(Visual)),
+			('root', XWindow),
+			('c_class', c_int),
+			('bit_gravity', c_int),
+			('win_gravity', c_int),
+			('backing_store', c_int),
+			('backing_planes', c_ulong),
+			('backing_pixel', c_ulong),
+			('save_under', c_int),
+			('colormap', Colormap),
+			('map_installed', c_int),
+			('map_state', c_int),
+			('all_event_masks', c_long),
+			('your_event_mask', c_long),
+			('do_not_propagate_mask', c_long),
+			('override_redirect', c_int),
+			('screen', POINTER(Screen)),
 			]
 
 class _ErrorHandler(object):
@@ -133,6 +228,13 @@ def get_window_title(dsp, handle):
 			libx11.XFree(p)
 	return title
 
+def get_window_is_visible(dsp, handle):
+	isVisible = False
+	windowAttributes = XWindowAttributes()
+	if libx11.XGetWindowAttributes(dsp, handle, byref(windowAttributes)):
+		isVisible = windowAttributes.map_state == IsViewable
+	return isVisible
+
 def list_windows(dsp, window):
 	windows = []
 	root = XWindow()
@@ -151,7 +253,8 @@ def list_windows(dsp, window):
 						handle,
 						get_window_title(dsp, handle),
 						get_window_application(dsp, handle),
-						get_window_geometry(dsp, handle)
+						get_window_geometry(dsp, handle),
+						get_window_is_visible(dsp, handle),
 						)
 				windows.append(window)
 	return windows
@@ -173,7 +276,8 @@ def toplevel_windows():
 				handle,
 				get_window_title(dsp, handle),
 				get_window_application(dsp, handle),
-				get_window_geometry(dsp, handle)
+				get_window_geometry(dsp, handle),
+				get_window_is_visible(dsp, handle),
 				)
 		windows = [window for window in walker(dsp, window) if window.title]
 	finally:
@@ -189,14 +293,14 @@ class Window(object):
 	@ivar geometry: (tuple) client area coordinates (x, y, w, h) relative to the screen
 	@ivar handle: (int) platform dependend window handle
 	@ivar title: (unicode) title of the window
+	@ivar isVisible: (bool) True if the window is currently visible, False otherwise
 	"""
-	def __init__(self, handle, title, application, geometry):
+	def __init__(self, handle, title, application, geometry, isVisible):
 		self.application = application
 		self.geometry = geometry
-		self.geometryOld = (0, 0, 0, 0)
 		self.handle = handle
 		self.title = title
-		self.titleOld = ''
+		self.isVisible = isVisible
 	def __eq__(self, other):
 		return self.handle == other.handle and self.application == other.application
 	def __ne__(self, other): return not self.__eq__(other)
@@ -210,6 +314,7 @@ class WindowManager(object):
 	@cvar EVENT_WINDOW_CREATED: event generated when a window has been created. param: L{Window}
 	@cvar EVENT_WINDOW_GEOMETRY_CHANGED: event generated when the geometry of a window has changed. param: L{Window}
 	@cvar EVENT_WINDOW_TITLE_CHANGED: event generated when the title of a window has changed. param: L{Window}
+	@cvar EVENT_WINDOW_VISIBILITY_CHANGED: event generated when the window becomes visible or gets hidden. param: L{Window}
 	@cvar EVENT_WINDOW_DESTROYED: event generated when a window has been destroyed. param: L{Window}
 
 	@note: L{Window}s passed in events are snapshots of windows not actual windows.
@@ -220,6 +325,7 @@ class WindowManager(object):
 	EVENT_WINDOW_CREATED = 'window-created'
 	EVENT_WINDOW_GEOMETRY_CHANGED = 'window-geometry-changed'
 	EVENT_WINDOW_TITLE_CHANGED = 'window-title-changed'
+	EVENT_WINDOW_VISIBILITY_CHANGED = 'window-visibility-changed'
 	EVENT_WINDOW_DESTROYED = 'window-destroyed'
 
 	def __init__(self):
@@ -244,10 +350,14 @@ class WindowManager(object):
 					events.append((self.EVENT_WINDOW_GEOMETRY_CHANGED, window))
 				if window.title != windowOld.title:
 					events.append((self.EVENT_WINDOW_TITLE_CHANGED, window))
+				if window.isVisible != windowOld.isVisible:
+					events.append((self.EVENT_WINDOW_VISIBILITY_CHANGED, window))
 			else:
 				events.append((self.EVENT_WINDOW_CREATED, window))
 				events.append((self.EVENT_WINDOW_GEOMETRY_CHANGED, window))
 				events.append((self.EVENT_WINDOW_TITLE_CHANGED, window))
+				events.append((self.EVENT_WINDOW_VISIBILITY_CHANGED, window))
+
 		for window in windowsOld:
 			if window not in self._windows:
 				events.append((self.EVENT_WINDOW_DESTROYED, window))
@@ -270,5 +380,12 @@ if __name__ == '__main__':
 		for event, param in events:
 			if isinstance(param, Window):
 				window = param
-				print '%s: 0x%x "%s" ("%s") %s' % (event, window.handle, window.title, window.application, window.geometry)
+				print '%s: 0x%x "%s" ("%s") %s visible=%s' % (
+						event,
+						window.handle,
+						window.title,
+						window.application,
+						window.geometry,
+						window.isVisible,
+						)
 		time.sleep(0.5)
