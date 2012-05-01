@@ -111,16 +111,20 @@ class WindowManager(object):
 
 	run the manager as generator and process the events it returns on L{next}
 
+	@cvar EVENT_IDLE: event generated when there are no new events. param: None
 	@cvar EVENT_WINDOW_CREATED: event generated when a window has been created. param: L{Window}
 	@cvar EVENT_WINDOW_GEOMETRY_CHANGED: event generated when the geometry of a window has changed. param: L{Window}
+	@cvar EVENT_WINDOW_TITLE_CHANGED: event generated when the title of a window has changed. param: L{Window}
 	@cvar EVENT_WINDOW_DESTROYED: event generated when a window has been destroyed. param: L{Window}
 
 	@note: L{Window}s passed in events are snapshots of windows not actual windows.
 	they are meant for emidiate use. that is, the instances passed are never updated.
 	instead	a new instance is passed on every event.
 	"""
+	EVENT_IDLE = 'idle'
 	EVENT_WINDOW_CREATED = 'window-created'
 	EVENT_WINDOW_GEOMETRY_CHANGED = 'window-geometry-changed'
+	EVENT_WINDOW_TITLE_CHANGED = 'window-title-changed'
 	EVENT_WINDOW_DESTROYED = 'window-destroyed'
 
 	def __init__(self):
@@ -140,14 +144,20 @@ class WindowManager(object):
 		self._windows = toplevel_windows()
 		for window in self._windows:
 			if window in windowsOld:
-				if window.geometry != windowsOld[windowsOld.index(window)].geometry:
+				windowOld = windowsOld[windowsOld.index(window)]
+				if window.geometry != windowOld.geometry:
 					events.append((self.EVENT_WINDOW_GEOMETRY_CHANGED, window))
+				if window.title != windowOld.title:
+					events.append((self.EVENT_WINDOW_TITLE_CHANGED, window))
 			else:
 				events.append((self.EVENT_WINDOW_CREATED, window))
 				events.append((self.EVENT_WINDOW_GEOMETRY_CHANGED, window))
+				events.append((self.EVENT_WINDOW_TITLE_CHANGED, window))
 		for window in windowsOld:
 			if window not in self._windows:
 				events.append((self.EVENT_WINDOW_DESTROYED, window))
+		if not events:
+			events.append((self.EVENT_IDLE, None))
 		return events
 
 	def windows(self):
