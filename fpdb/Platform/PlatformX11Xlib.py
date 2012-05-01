@@ -41,6 +41,7 @@ libx11.XCloseDisplay(dsp)
 
 XID = c_ulong
 XWindow = c_ulong
+Success = 0
 
 class XDisplay(Structure):
 	_fields_ = []
@@ -64,19 +65,17 @@ class XClassHint(Structure):
 
 class _ErrorHandler(object):
 	def __init__(self):
-		self.lastError = None
+		self.lastError = Success
 		self.pErrorHandler = CFUNCTYPE(c_int, POINTER(XDisplay), POINTER(XErrorEvent))(self.HandleXError)
 		libx11.XSetErrorHandler(self.pErrorHandler)
 	def HandleXError(self, display, pXErrorEvent):
-		#if pXErrorEvent:		# not quite clear from docs if a NULL pointer can be passed
-		p = create_string_buffer(1024)
-		libx11.XGetErrorText(display, pXErrorEvent[0].error_code, p, sizeof(p))
-		self.lastError = p.value
+		self.lastError = pXErrorEvent[0].error_code
 		return 0
 	def GetLastError(self):
-		"""returns and clears last error"""
+		"""returns and clears last error
+		@return: (int) error code"""
 		lastError = self.lastError
-		self.lastError = None
+		self.lastError = Success
 		return lastError
 _ErrorHandler = _ErrorHandler()
 GetLastError = _ErrorHandler.GetLastError
@@ -179,8 +178,6 @@ def toplevel_windows():
 		windows = [window for window in walker(dsp, window) if window.title]
 	finally:
 		libx11.XCloseDisplay(dsp)
-	if GetLastError():
-		return ()
 	return windows
 
 #************************************************************************************
