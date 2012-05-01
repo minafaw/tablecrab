@@ -40,7 +40,8 @@ psapi = windll.psapi
 #    - kernel32.QueryFullProcessImageName() - vista+
 #NOTE: we use ansi version here because a)there is a bug in whine with the unicode
 #      version filed in wine bugzilla as [Bug 30543] and b) ansi may be sufficient
-#NOTE: looks like GetModuleFileNameEx is a moving target ..try to catch it
+#NOTE: acc to MSDN GetModuleFileNameEx() is either exported psapi.dll or by kernel32.dll
+#      as K32GetModuleFileNameEx()
 try:
 	psapi.GetModuleFileNameExA
 except AttributeError:
