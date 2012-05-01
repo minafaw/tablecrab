@@ -53,6 +53,18 @@ PatXWinInfo = re.compile('''
 		''',
 		re.X|re.I)
 
+
+def get_window_is_visible(handle):
+	isVisible = False
+	out, err = subprocess.Popen(
+		'xwininfo -id %s' % handle, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+		).communicate()
+	if not err:
+		for line in out.split('\n'):
+			if 'Map State:' in line:
+				isVisible = '\x20IsViewable' in line
+	return isVisible
+
 def toplevel_windows():
 	"""returns a list of all toplevel windows
 	@return: (list) L{Window}s
@@ -75,7 +87,14 @@ def toplevel_windows():
 			y = int(d['y'])
 			w = int(d['w'])
 			h = int(d['h'])
-			window = Window(handle, unicode(d['title'].decode('utf-8')), d['application'], (x, y, w, h))
+			isVisible = get_window_is_visible(handle)
+			window = Window(
+					handle,
+					unicode(d['title'].decode('utf-8')),
+					d['application'],
+					(x, y, w, h),
+					isVisible,
+					)
 			windows.append(window)
 	return windows
 
@@ -96,12 +115,14 @@ class Window(object):
 	@ivar geometry: (tuple) client area coordinates (x, y, w, h) relative to the screen
 	@ivar handle: (int) platform dependend window handle
 	@ivar title: (unicode) title of the window
+	@ivar isVisible: (bool) True if the window is currently visible, False otherwise
 	"""
-	def __init__(self, handle, title, application, geometry):
+	def __init__(self, handle, title, application, geometry, isVisible):
 		self.application = application
 		self.geometry = geometry
 		self.handle = handle
 		self.title = title
+		self.isVisible = isVisible
 	def __eq__(self, other):
 		return self.handle == other.handle and self.application == other.application
 	def __ne__(self, other): return not self.__eq__(other)
@@ -115,6 +136,7 @@ class WindowManager(object):
 	@cvar EVENT_WINDOW_CREATED: event generated when a window has been created. param: L{Window}
 	@cvar EVENT_WINDOW_GEOMETRY_CHANGED: event generated when the geometry of a window has changed. param: L{Window}
 	@cvar EVENT_WINDOW_TITLE_CHANGED: event generated when the title of a window has changed. param: L{Window}
+	@cvar EVENT_WINDOW_VISIBILITY_CHANGED: event generated when the window becomes visible or gets hidden. param: L{Window}
 	@cvar EVENT_WINDOW_DESTROYED: event generated when a window has been destroyed. param: L{Window}
 
 	@note: L{Window}s passed in events are snapshots of windows not actual windows.
@@ -125,6 +147,7 @@ class WindowManager(object):
 	EVENT_WINDOW_CREATED = 'window-created'
 	EVENT_WINDOW_GEOMETRY_CHANGED = 'window-geometry-changed'
 	EVENT_WINDOW_TITLE_CHANGED = 'window-title-changed'
+	EVENT_WINDOW_VISIBILITY_CHANGED = 'window-visibility-changed'
 	EVENT_WINDOW_DESTROYED = 'window-destroyed'
 
 	def __init__(self):
@@ -149,10 +172,14 @@ class WindowManager(object):
 					events.append((self.EVENT_WINDOW_GEOMETRY_CHANGED, window))
 				if window.title != windowOld.title:
 					events.append((self.EVENT_WINDOW_TITLE_CHANGED, window))
+				if window.isVisible != windowOld.isVisible:
+					events.append((self.EVENT_WINDOW_VISIBILITY_CHANGED, window))
 			else:
 				events.append((self.EVENT_WINDOW_CREATED, window))
 				events.append((self.EVENT_WINDOW_GEOMETRY_CHANGED, window))
 				events.append((self.EVENT_WINDOW_TITLE_CHANGED, window))
+				events.append((self.EVENT_WINDOW_VISIBILITY_CHANGED, window))
+
 		for window in windowsOld:
 			if window not in self._windows:
 				events.append((self.EVENT_WINDOW_DESTROYED, window))
@@ -175,5 +202,12 @@ if __name__ == '__main__':
 		for event, param in events:
 			if isinstance(param, Window):
 				window = param
-				print '%s: 0x%x "%s" ("%s") %s' % (event, window.handle, window.title, window.application, window.geometry)
+				print '%s: 0x%x "%s" ("%s") %s visible=%s' % (
+						event,
+						window.handle,
+						window.title,
+						window.application,
+						window.geometry,
+						window.isVisible,
+						)
 		time.sleep(0.5)
