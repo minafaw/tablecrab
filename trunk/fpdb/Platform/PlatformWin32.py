@@ -40,17 +40,11 @@ psapi = windll.psapi
 #    - kernel32.QueryFullProcessImageName() - vista+
 #NOTE: we use ansi version here because a)there is a bug in whine with the unicode
 #      version filed in wine bugzilla as [Bug 30543] and b) ansi may be sufficient
-GetModuleFileNameEx = None
-# looks like GetModuleFileNameEx is a moving target ..try to catch it
+#NOTE: looks like GetModuleFileNameEx is a moving target ..try to catch it
 try:
-	GetModuleFileNameEx = psapi.GetModuleFileNameExA
+	psapi.GetModuleFileNameExA
 except AttributeError:
-	try:
-		GetModuleFileNameEx = kernel.K32GetModuleFileNameExA
-	except AttributeError:
-		pass
-if GetModuleFileNameEx is None:
-	raise OSError('GetModuleFileNameEx not found, but we need it here!')
+	psapi.GetModuleFileNameExA = kernel.K32GetModuleFileNameExA
 
 MAX_PATH = 260
 PROCESS_VM_READ = 16
@@ -80,7 +74,7 @@ def get_window_application(hwnd):
 				bufferSize = MAX_PATH +1
 				while True:
 					p = create_string_buffer(bufferSize)
-					nChars = GetModuleFileNameEx(hProcess, None, p, sizeof(p))
+					nChars = psapi.GetModuleFileNameExA(hProcess, None, p, sizeof(p))
 					if sizeof(p) == nChars +1:
 						bufferSize *= 2
 					else:
