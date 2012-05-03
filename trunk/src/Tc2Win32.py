@@ -566,10 +566,11 @@ def windowGetText(hwnd, maxSize=-1):
 			return p.value
 
 	# some text can only be retrieved by WM_GETTEXT, so here we go
-	result = DWORD()
 	nChars = sendMessageTimeout(hwnd, WM_GETTEXTLENGTH, 0, 0)
+	# WM_GETTEXTLENGTH returns LRESULT so we have to cast here
+	nChars = LRESULT(nChars).value
 	##nChars = nChars if maxSize < 0 else min(nChars, maxSize)		## this segfaults in TableCrab
-	if nChars:
+	if nChars > 0:
 		if maxSize > 0 and nChars > maxSize:
 			return ''
 		p = create_unicode_buffer(nChars +1)
