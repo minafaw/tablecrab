@@ -169,12 +169,12 @@ def window_list():
 	@note: the list should be sorted in stacking oder. desktop first, topmost window last
 	"""
 	handle = user32.GetDesktopWindow()
-	window = Window(
+	window = WindowManagerBase.Window(
 				None,
 				handle,
 				get_window_title(handle),
 				get_window_application(handle),
-				Rectangle(*get_window_geometry(handle)),
+				WindowManagerBase.Rectangle(*get_window_geometry(handle)),
 				get_window_is_visible(handle),
 				)
 	handles = []
@@ -184,12 +184,12 @@ def window_list():
 	user32.EnumWindows(ENUMWINDOWSPROC(cb), 0)
 	windows = [window, ]
 	for handle in handles:
-		childWindow = Window(
+		childWindow = WindowManagerBase.Window(
 				window,
 				handle,
 				get_window_title(handle),
 				get_window_application(handle),
-				Rectangle(*get_window_geometry(handle)),
+				WindowManagerBase.Rectangle(*get_window_geometry(handle)),
 				get_window_is_visible(handle),
 				)
 		windows.append(childWindow)

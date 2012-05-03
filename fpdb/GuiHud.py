@@ -7,7 +7,7 @@ import pygtk
 import gtk
 import gobject
 
-import Platform
+import WindowManager
 
 #************************************************************************************
 #
@@ -86,7 +86,7 @@ class HudManager(gtk.Window):
 		self.set_title('HudManager')
 
 		self.huds = {}
-		self.windowManager = Platform.WindowManager()
+		self.windowManager = WindowManager.WindowManager()
 
 		gobject.timeout_add(500, self.on_window_manager_timeout)
 
