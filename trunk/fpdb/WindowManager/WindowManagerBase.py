@@ -70,7 +70,7 @@ class Display(object):
 				i = self._windows.index(window)
 				for windowOther in self._windows[i+1:]:
 					if windowOther.isVisible:
-						if windowOther.geometry.contains(rect):
+						if windowOther.geometry.intersects(rect):
 							break
 				else:
 					return True
