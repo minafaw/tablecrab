@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 
-"""win32 specific methods
+"""win32 window manager implementattion
 """
-
-#TODO: we can not only list top level windows. dialiogs are skipped. so we need
-# a full tree
 
 #************************************************************************************
 #LICENCE: AGPL
@@ -23,10 +20,22 @@
 # this program. If not, see <http://www.gnu.org/licenses/>. In the "official"
 # distribution you can find the license in agpl-3.0.txt.
 #************************************************************************************
+#************************************************************************************
+#
+#NOTE: linux/wine
+# - the window manager does not work 1000% on wine. unlike native windows neither EnumWindows()
+#   nor GetWindow() not GetNextWindow() provide reliable information on window stacking order.
+
+#NOTE: executable path
+# - we use ansi version of GetModuleFileNameEx() because there is a bug in wine (1.5)
+#   filed in bugzilla as [Bug 30543]. wide version segfaults overflowing output buffer.
+#************************************************************************************
+
 
 import os
 from ctypes import *
 from ctypes.wintypes import *
+import WindowManagerBase
 
 __all__ = ['WindowManager', ]
 
@@ -41,8 +50,6 @@ psapi = windll.psapi
 # looks like there are other methods to get application that createed a window:
 #    - psapi.GetProcessImageFileName() - xp+
 #    - kernel32.QueryFullProcessImageName() - vista+
-#NOTE: we use ansi version here because a)there is a bug in whine with the unicode
-#      version filed in wine bugzilla as [Bug 30543] and b) ansi may be sufficient
 #NOTE: acc to MSDN GetModuleFileNameEx() is either exported psapi.dll or by kernel32.dll
 #      as K32GetModuleFileNameEx()
 try:
@@ -65,10 +72,10 @@ MY_SMTO_TIMEOUT = 2000
 #
 #NOTE: we do not errorcheck most api calls here because we may work on dead windows
 #************************************************************************************
-def get_window_application(hwnd):
+def get_window_application(handle):
 	result = ''
 	pId = DWORD()
-	user32.GetWindowThreadProcessId(hwnd, byref(pId))
+	user32.GetWindowThreadProcessId(handle, byref(pId))
 	if pId:
 		hProcess = kernel32.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, False, pId)
 		if hProcess:
@@ -96,26 +103,26 @@ def get_window_application(hwnd):
 			result = os.path.basename(path)
 	return result
 
-def get_window_geometry(hwnd):
+def get_window_geometry(handle):
 	rc = RECT()
-	user32.GetClientRect(hwnd, byref(rc))
+	user32.GetClientRect(handle, byref(rc))
 	pt = POINT()
-	user32.ClientToScreen(hwnd, byref(pt))
+	user32.ClientToScreen(handle, byref(pt))
 	return (pt.x, pt.y, rc.right-rc.left, rc.bottom-rc.top)
 
-def get_window_title(hwnd):
+def get_window_title(handle):
 	#NOTE: see: [ http://blogs.msdn.com/b/oldnewthing/archive/2003/08/21/54675.aspx ] "the secret live of GetWindowtext" for details
 	# try GetWindowText first
-	nChars = user32.GetWindowTextLengthW(hwnd)
+	nChars = user32.GetWindowTextLengthW(handle)
 	nChars = 0
 	if nChars:
 		p = create_unicode_buffer(nChars +1)
-		if user32.GetWindowTextW(hwnd, p, sizeof(p)):
+		if user32.GetWindowTextW(handle, p, sizeof(p)):
 			return p.value.encode('utf-8')
 	# some text can only be retrieved by WM_GETTEXT, so here we go
 	nChars = DWORD()
 	result = user32.SendMessageTimeoutW(
-			hwnd,
+			handle,
 			WM_GETTEXTLENGTH,
 			0,
 			0,
@@ -123,10 +130,12 @@ def get_window_title(hwnd):
 			MY_SMTO_TIMEOUT,
 			byref(nChars)
 			)
-	if nChars:
+	#NOTE: WM_GETTEXTLENGTH returns LRESULT so we have to cast here
+	nChars = c_long(nChars.value)
+	if nChars > 0:
 		p = create_unicode_buffer(nChars.value +1)
 		result = user32.SendMessageTimeoutW(
-			hwnd,
+			handle,
 			WM_GETTEXT,
 			sizeof(p),
 			p,
@@ -137,40 +146,59 @@ def get_window_title(hwnd):
 		return p.value.encode('utf-8')
 	return ''
 
-def get_window_is_visible(hwnd):
+def get_window_is_visible(handle):
 	isVisible = False
-	if user32.IsWindowVisible(hwnd):
-		if not user32.IsIconic(hwnd):
+	if user32.IsWindowVisible(handle):
+		if not user32.IsIconic(handle):
 			isVisible = True
 	return isVisible
 
+#NOTE: stacking order
+# - undocumented feature of EnumWindows() is hat windows are enumerated in stacking order.
+#   this feature is documented for EnumChildWindows(). if something goes wroong we have
+#   to use GetWindow() tosort windows in stacking order by hand.
+#
+#NOTE: child windows
+# - for pratical reasons we do not include child windows in the enumeration, so list is
+#   toplevel windows only. if we ever include child windows we have to keep in mind
+#   that WM_GETTEXT retrieves text of a window not its title.
+#
 def window_list():
 	"""returns a list of all windows currently open
 	@note: list should always start at the root window (the desktop)
-	@note: the list should be sorted in stacking oder. root first, topmost window last
+	@note: the list should be sorted in stacking oder. desktop first, topmost window last
 	"""
-	hwnds = []
-	def cb(hwnd, lp):
-		hwnds.append(hwnd)
-		return TRUE
-	if not user32.EnumWindows(ENUMWINDOWSPROC(cb), 0):
-		raise WindowsError(FormatError(GetLastError()))
-	windows = []
-	for hwnd in hwnds:
-		windows.append(Window(
+	handle = user32.GetDesktopWindow()
+	window = Window(
 				None,
-				hwnd,
-				get_window_title(hwnd),
-				get_window_application(hwnd),
-				Rectangle(*get_window_geometry(hwnd)),
-				get_window_is_visible(hwnd),
-				))
+				handle,
+				get_window_title(handle),
+				get_window_application(handle),
+				Rectangle(*get_window_geometry(handle)),
+				get_window_is_visible(handle),
+				)
+	handles = []
+	def cb(handle, lp):
+		handles.append(handle)
+		return TRUE
+	user32.EnumWindows(ENUMWINDOWSPROC(cb), 0)
+	windows = [window, ]
+	for handle in handles:
+		childWindow = Window(
+				window,
+				handle,
+				get_window_title(handle),
+				get_window_application(handle),
+				Rectangle(*get_window_geometry(handle)),
+				get_window_is_visible(handle),
+				)
+		windows.append(childWindow)
 	return windows
 
 #NOTE: for some reason creating gdk windows via gtk.gdk.window_foreign_new()
 # segfaults on win32 when called after a gui has been initialized. no idea why
 # as a workaround we reimplement gtks window_set_transient_for() [gdkwindow-win32.c]
-def set_window_transient_for(gtkWindow, hwnd):
+def set_window_transient_for(gtkWindow, handle):
 	#TODO: make shure gtkWindows is not a child window
 	# looks like we have to use SetWindowLong here
 
@@ -206,133 +234,9 @@ def set_window_transient_for(gtkWindow, hwnd):
 # so i found best approach is to retrieve all data for a window on every hop and let
 # the user deal with eventual troubles.
 #************************************************************************************
-class Rectangle(object):
-	"""rectangle"""
-	def __init__(self, x=0, y=0, w=0, h=0):
-		self.x = x
-		self.y = y
-		self.w = w
-		self.h = h
-	@classmethod
-	def new(klass, x=0, y=0, w=0, h=0):
-		"""creates a new rectangle
-		@return: (L{Rectangle})
-		"""
-		return klass(x, y, w, h)
-	def __ne__(self, rect): return not self.__eq__(rect)
-	def __eq__(self, rect):
-		return (
-			self.x == rect.x
-			and self.w == rect.w
-			and self.y == rect.y
-			and self.h == rect.h
-			)
-	def is_empty(self):
-		"""checks if the rectangle is empty
-		@return: (bool)
-		"""
-		return self.w > 0 and self.h > 0
-	def intersects(self, rect):
-		"""checks if the rectangle has an intersection with another rectangle
-		@return: (bool)
-		"""
-		return not (
-			self.x > (rect.x+rect.w)
-			or self.y > (rect.y+rect.h)
-			or rect.x > (self.x+self.w)
-			or rect.y > (self.y+self.h)
-			)
-	def to_tuple(self):
-		"""converts the rectangle to a tuple"""
-		return (self.x, self.y, self.w, self.h)
-
-class Display(object):
-	def __init__(self, windows):
-		self._windows = windows
-
-class Window(object):
-	"""window implementation
-	@ivar parent: (L{Window}) parent window or None
-	@ivar application: (str) appllication that created the window
-	@ivar geometry: (tuple) client area coordinates (x, y, w, h) relative to the screen
-	@ivar handle: (int) platform dependend window handle
-	@ivar title: (unicode) title of the window
-	@ivar isVisible: (bool) True if the window is currently visible, False otherwise
-	"""
-	def __init__(self, parent, handle, title, application, geometry, isVisible):
-		self.parent = parent
-		self.application = application
-		self.geometry = geometry
-		self.handle = handle
-		self.title = title
-		self.isVisible = isVisible
-	def __eq__(self, other):
-		return self.handle == other.handle and self.application == other.application
-	def __ne__(self, other): return not self.__eq__(other)
-
-class WindowManager(object):
-	"""window manager implementation
-
-	run the manager as generator and process the events it returns on L{next}
-
-	@cvar EVENT_DISPLAY_COMPOSITION: event generated on every hop. param: L{Display}
-	@cvar EVENT_WINDOW_GEOMETRY_CHANGED: event generated when the geometry of a window has changed. param: L{Window}
-	@cvar EVENT_WINDOW_TITLE_CHANGED: event generated when the title of a window has changed. param: L{Window}
-	@cvar EVENT_WINDOW_VISIBILITY_CHANGED: event generated when the window becomes visible or gets hidden. param: L{Window}
-	@cvar EVENT_WINDOW_DESTROYED: event generated when a window has been destroyed. param: L{Window}
-
-	@note: L{Window}s passed in events are snapshots of windows not actual windows.
-	they are meant for emidiate use. that is, the instances passed are never updated.
-	instead	a new instance is passed on every event.
-	"""
-	EVENT_WINDOW_CREATED = 'window-created'
-	EVENT_WINDOW_GEOMETRY_CHANGED = 'window-geometry-changed'
-	EVENT_WINDOW_TITLE_CHANGED = 'window-title-changed'
-	EVENT_WINDOW_VISIBILITY_CHANGED = 'window-visibility-changed'
-	EVENT_WINDOW_DESTROYED = 'window-destroyed'
-	EVENT_DISPLAY_COMPOSITION = 'display-composition'
-
-	def __init__(self):
-		"""constructor"""
-		self._windows = []
-
-	def __iter__(self):
-		"""yes, we are a generator"""
-		return self
-
-	def next(self):
-		"""returns next event in turn generated by the manager
-		@return: (list) of (EVENT_*, param) tuples
-		"""
-		events = []
-		windowsOld = self._windows[:]
-		self._windows = window_list()
-		for window in self._windows:
-			if window in windowsOld:
-				windowOld = windowsOld[windowsOld.index(window)]
-				if window.geometry != windowOld.geometry:
-					events.append((self.EVENT_WINDOW_GEOMETRY_CHANGED, window))
-				if window.title != windowOld.title:
-					events.append((self.EVENT_WINDOW_TITLE_CHANGED, window))
-				if window.isVisible != windowOld.isVisible:
-					events.append((self.EVENT_WINDOW_VISIBILITY_CHANGED, window))
-			else:
-				events.append((self.EVENT_WINDOW_CREATED, window))
-				events.append((self.EVENT_WINDOW_GEOMETRY_CHANGED, window))
-				events.append((self.EVENT_WINDOW_TITLE_CHANGED, window))
-				events.append((self.EVENT_WINDOW_VISIBILITY_CHANGED, window))
-
-		for window in windowsOld:
-			if window not in self._windows:
-				events.append((self.EVENT_WINDOW_DESTROYED, window))
-
-		display =Display(self._windows[:])
-		events.append((self.EVENT_DISPLAY_COMPOSITION, display))
-		return events
-
-	def windows(self):
-		"""returns list of L{Window}s currently known to the manager"""
-		return self._windows
+class WindowManager(WindowManagerBase.WindowManagerBase):
+	def window_list(self):
+		return window_list()
 
 #************************************************************************************
 #
@@ -343,7 +247,7 @@ if __name__ == '__main__':
 	wm = WindowManager()
 	for events in wm:
 		for event, param in events:
-			if isinstance(param, Window):
+			if isinstance(param, WindowManagerBase.Window):
 				window = param
 				print '%s: 0x%x "%s" ("%s") %s visible=%s' % (
 						event,
@@ -354,3 +258,7 @@ if __name__ == '__main__':
 						window.isVisible,
 						)
 		time.sleep(0.5)
+
+
+
+

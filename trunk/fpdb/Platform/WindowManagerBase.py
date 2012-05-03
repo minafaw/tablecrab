@@ -1,113 +1,7 @@
-# -*- coding: utf-8 -*-
-
-"""x11 specific methods via shell
-
-@dependences: xwininfo
-"""
-#************************************************************************************
-#LICENCE: AGPL
-#
-# Copyright 2012 Jürgen Urner (jUrner<at>arcor.de)
-#
-# This program is free software: you can redistribute it and/or modify it under the
-# terms of the GNU Affero General Public License as published by the Free Software
-# Foundation, version 3 of the License.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-# PARTICULAR PURPOSE. See the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU Affero General Public License along with
-# this program. If not, see <http://www.gnu.org/licenses/>. In the "official"
-# distribution you can find the license in agpl-3.0.txt.
-#************************************************************************************
-
-import re, subprocess
-
-__all__ = ['WindowManager', ]
+""""""
 
 #************************************************************************************
-# helpers
-#************************************************************************************
-# check if X is running
-#TODO: check if test if ok
-out, err = subprocess.Popen(
-		'ps -e | grep X', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-		).communicate()
-if not ' Xorg' in out:
-	raise OSError('no X server running!')
-
-# pattern to match output from xwininfo (warning: not generic, just good enough for our purposes)
-PatXWinInfo = re.compile('''
-		\s*
-		(?P<handle>0x[\dabcdef]+)\s+
-		\"(?P<title>.+)\"\:\s+
-		\(
-			\"(?P<application>.+?)\".*?
-		\)\s+
-		(?P<w>\d+)x
-		(?P<h>\d+)+
-		.+?\s
-		\+(?P<x>\-?\d+)
-		\+(?P<y>\-?\d+)
-		''',
-		re.X|re.I)
-
-
-def get_window_is_visible(handle):
-	isVisible = False
-	out, err = subprocess.Popen(
-		'xwininfo -id %s' % handle, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-		).communicate()
-	if not err:
-		for line in out.split('\n'):
-			if 'Map State:' in line:
-				isVisible = '\x20IsViewable' in line
-	return isVisible
-
-def window_list():
-	"""returns a list of all windows currently open
-	@note: list should always start at the root window (the desktop)
-	@note: the list should be sorted in stacking oder. root first, topmost window last
-	"""
-	windows = []
-	out, err = subprocess.Popen(
-		'xwininfo -root -tree', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-		).communicate()
-	if err:
-		raise ValueError(err)
-	for line in out.split('\n'):
-		if ' (has no name): ' in line:
-			continue
-		match = PatXWinInfo.match(line)
-		if match:
-			d = match.groupdict()
-			handle = int(d['handle'], 16)
-			x = int(d['x'])
-			y = int(d['y'])
-			w = int(d['w'])
-			h = int(d['h'])
-			isVisible = get_window_is_visible(handle)
-			window = Window(
-					handle,
-					unicode(d['title'].decode('utf-8')),
-					d['application'],
-					Rectangle(x, y, w, h),
-					isVisible,
-					)
-			windows.append(window)
-	return windows
-
-#************************************************************************************
-# window manager implementation
-#
-#NOTES:
-# - windows are not guaranteed to be alive when we handle them
-# - we can not guarantee the identity of a window. another window may have been
-#   created with the same handle from the same application at any time.
-#
-# so i found best approach is to retrieve all data for a window on every hop and let
-# the user deal with eventual troubles.
+# window manager base implementation
 #************************************************************************************
 class Rectangle(object):
 	"""rectangle"""
@@ -173,7 +67,7 @@ class Window(object):
 		return self.handle == other.handle and self.application == other.application
 	def __ne__(self, other): return not self.__eq__(other)
 
-class WindowManager(object):
+class WindowManagerBase(object):
 	"""window manager implementation
 
 	run the manager as generator and process the events it returns on L{next}
@@ -209,7 +103,7 @@ class WindowManager(object):
 		"""
 		events = []
 		windowsOld = self._windows[:]
-		self._windows = window_list()
+		self._windows = self.window_list()
 		for window in self._windows:
 			if window in windowsOld:
 				windowOld = windowsOld[windowsOld.index(window)]
@@ -237,23 +131,12 @@ class WindowManager(object):
 		"""returns list of L{Window}s currently known to the manager"""
 		return self._windows
 
-#************************************************************************************
-#
-#************************************************************************************
-if __name__ == '__main__':
-	# sample code + run WindowManager (CAUTION: will run unconditionally until keyboard interrupt!!)
-	import time
-	wm = WindowManager()
-	for events in wm:
-		for event, param in events:
-			if isinstance(param, Window):
-				window = param
-				print '%s: 0x%x "%s" ("%s") %s visible=%s' % (
-						event,
-						window.handle,
-						window.title,
-						window.application,
-						window.geometry.to_tuple(),
-						window.isVisible,
-						)
-		time.sleep(0.5)
+	def window_list(self):
+		"""returns list of L{Window}s currently open
+		@note: overwrite in derrived classes
+		@note: the list returned should be in window stacking order, starting with
+		the lowest window in the hirarchy (root window or desktop)
+		"""
+		raise NotImplementedError()
+
+
