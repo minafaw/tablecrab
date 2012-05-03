@@ -75,6 +75,17 @@ class Display(object):
 				else:
 					return True
 		return False
+	def window_from_rect(self, rect):
+		"""returns the window that contains the specified rect
+		@param rectangle: (L{Rectangle})
+		@return window: (L{Window}) or None if no window contains the rect fully
+		@note: the window is the topmost (child) window that fully contains the rect
+		"""
+		for window in self._windows[::-1]:
+			if window.isVisible:
+				if window.geometry.contains(rect):
+					return window
+		return None
 
 class Window(object):
 	"""window implementation
