@@ -62,7 +62,7 @@ class Display(object):
 		@param rectangle: (L{Rectangle})
 		@return: (bool)
 		@note: the rectangle is considered being visible if it is not obscured by other
-		windows in any ways and the window itsself is visible and the rect if fully
+		windows in any ways and the window itsself is visible and the rect is fully
 		contained in the window.
 		"""
 		if window.isVisible:
