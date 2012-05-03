@@ -7,15 +7,16 @@ should raise OSError when something is wrong with the platform they are choossen
 import sys
 
 if sys.platform == 'darwin':
-	from PlatformMac import *
+	from WindowManagerMac import *
 elif sys.platform == 'linux2':
 	# try to find a module four current linux window system
 	try:
-		from PlatformX11Xlib import *
+		from WindowManagerX11Xlib import *
 	except OSError:
 		try:
-			from PlatformX11Shell import *
+			from WindowManagerX11Shell import *
 		except OSError:
-			from PlatformWayland import *
+			from WindowManagerWayland import *
 elif sys.platform == 'win32':
-	from PlatformWin32 import *
+	from WindowManagerWin32 import *
+

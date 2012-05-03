@@ -73,8 +73,7 @@ class Hud(gtk.Window):
 		print bool(gtk.gdk.window_foreign_new(1234567))
 
 	def handle_window_geometry_changed(self, platformWindow):
-		x, y = platformWindow.geometry[:2]
-		self.move(x, y)
+		self.move(platformWindow.geometry.x, platformWindow.geometry.y)
 
 	def handle_window_destroyed(self, platformWindow):
 		self.destroy()
