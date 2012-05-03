@@ -249,7 +249,7 @@ def list_windows(dsp, window):
 				memmove(arr, pChildren, sizeof(arr))
 			finally:
 				libx11.XFree(pChildren)
-			for stackingOrder, handle in enumerate(arr):
+			for handle in arr:
 				childWindow = WindowManagerBase.Window(
 						window,
 						handle,
@@ -287,7 +287,7 @@ def window_list():
 				get_window_is_visible(dsp, handle),
 				)
 		#windows = [window for window in walker(dsp, window) if window.title]
-		windows = [window for window in walker(dsp, window) ]
+		windows = [window for window in walker(dsp, window)]
 	finally:
 		libx11.XCloseDisplay(dsp)
 	return windows
@@ -319,9 +319,4 @@ if __name__ == '__main__':
 						window.isVisible,
 						)
 		time.sleep(0.5)
-
-
-
-
-
 
