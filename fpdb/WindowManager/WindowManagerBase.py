@@ -30,7 +30,7 @@ class Rectangle(object):
 		"""
 		return self.w > 0 and self.h > 0
 	def intersects(self, rect):
-		"""checks if the rectangle has an intersection with another rectangle
+		"""checks if the rectangle intersects another rectangle
 		@return: (bool)
 		"""
 		return not (
@@ -39,6 +39,16 @@ class Rectangle(object):
 			or rect.x > (self.x+self.w)
 			or rect.y > (self.y+self.h)
 			)
+	def contains(self, rect):
+		"""checks if the rectangle passed is contained in this rectangle
+		@return: (bool)
+		"""
+		return (
+			self.x <= rect.x
+			and self.y <= rect.y
+			and (self.x+self.w) >= (rect.x+rect.w)
+			and (self.y+self.h) >= (rect.y+rect.h)
+			)
 	def to_tuple(self):
 		"""converts the rectangle to a tuple"""
 		return (self.x, self.y, self.w, self.h)
@@ -46,6 +56,25 @@ class Rectangle(object):
 class Display(object):
 	def __init__(self, windows):
 		self._windows = windows
+	def rect_is_visible(self, window, rect):
+		"""checks if the specified rectangle of a window is wisible to the user
+		@raram window: (L{Window})
+		@param rectangle: (L{Rectangle})
+		@return: (bool)
+		@note: the rectangle is considered being visible if it is not obscured by other
+		windows in any ways and the window itsself is visible and the rect if fully
+		contained in the window.
+		"""
+		if window.isVisible:
+			if window.geometry.contains(rect):
+				i = self._windows.index(window)
+				for windowOther in self._windows[i+1:]:
+					if windowOther.isVisible:
+						if windowOther.geometry.contains(rect):
+							break
+				else:
+					return True
+		return False
 
 class Window(object):
 	"""window implementation
@@ -72,7 +101,7 @@ class WindowManagerBase(object):
 
 	run the manager as generator and process the events it returns on L{next}
 
-	@cvar EVENT_DISPLAY_COMPOSITION: event generated on every hop. param: L{Display}
+	@cvar EVENT_DISPLAY_COMPOSITION: event generated as last message on every hop. param: L{Display}
 	@cvar EVENT_WINDOW_GEOMETRY_CHANGED: event generated when the geometry of a window has changed. param: L{Window}
 	@cvar EVENT_WINDOW_TITLE_CHANGED: event generated when the title of a window has changed. param: L{Window}
 	@cvar EVENT_WINDOW_VISIBILITY_CHANGED: event generated when the window becomes visible or gets hidden. param: L{Window}
