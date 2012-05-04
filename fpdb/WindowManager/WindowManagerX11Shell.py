@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-raise NotImplementedError('this module is currently not functional')
+##raise NotImplementedError('this module is currently not functional')
 
 """window manager implementation via shell
 
@@ -81,47 +81,45 @@ def get_root_window():
 		'xwininfo -root', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
 		).communicate()
 	if not err:
-		data = {
-				'handle': 0,
-				'geometry': WindowManagerBase.Rectangle(),
-				'isVisible': False,
-				}
+
+		window = WindowManagerBase.Window(
+			None,
+			0,
+			'RootWindow',
+			'',
+			WindowManagerBase.Rectangle(),
+			False
+			)
 		for line in out.split('\n'):
-			if not data['handle']:
+			if not window.handle:
 				match = PatRootWindow.match(line)
 				if match is not None:
-					data['handle'] = int(match.group('handle'), 16)
+					window.handle = int(match.group('handle'), 16)
 			else:
 				if 'Absolute upper-left X:' in line:
 					x = line.rsplit('\x20', 1)[1]
-					data['geometry'].x = int(x)
+					window.geometry.x = int(x)
 				elif 'Absolute upper-left Y:' in line:
 					y = line.rsplit('\x20', 1)[1]
-					data['geometry'].y = int(y)
+					window.geometry.y = int(y)
 				elif 'Width:' in line:
 					w = line.rsplit('\x20', 1)[1]
-					data['geometry'].w = int(w)
+					window.geometry.w = int(w)
 				elif 'Height:' in line:
 					h = line.rsplit('\x20', 1)[1]
-					data['geometry'].h = int(h)
+					window.geometry.h = int(h)
 				elif 'Map State:' in line:
-					data['isVisible'] = '\x20IsViewable' in line
-	return WindowManagerBase.Window(
-			None,
-			data['handle'],
-			'RootWindow',
-			'',
-			data['geometry'],
-			data['isVisible']
-			)
+					window.isVisible = '\x20IsViewable' in line
+	return window
 
+#NOTE: currently we ignore windows with no name here
+#
 def window_list():
 	"""returns a list of all windows currently open
 	@note: list should always start at the root window (the desktop)
 	@note: the list should be sorted in stacking oder. root first, topmost window last
 	"""
 	windows = []
-	# get info on root window
 	window = get_root_window()
 	if not window.handle:
 		raise ValueError('could not retrieve root window')
@@ -133,13 +131,17 @@ def window_list():
 		raise ValueError(err)
 
 	parents = [window, ]
-	lastLevel = 0
 	for line in out.split('\n'):
 		if ' (has no name): ' in line:
 			continue
 		match = PatXWinInfo.match(line)
 		if match:
 			d = match.groupdict()
+			# determine window parent. xwininfo has 3 space chars per level,
+			# prefixed by 2 space chars for root
+			level = ((d['indent'].count('\x20') -2) / 3)
+			parents = parents[:level]
+
 			handle = int(d['handle'], 16)
 			x = int(d['x'])
 			y = int(d['y'])
@@ -155,11 +157,7 @@ def window_list():
 					isVisible,
 					)
 			windows.append(window)
-
-			#TODO: get parent window
-			# xwininfo uses 3 space chars per level, always prefixed with 2 space chars for root
-			level = ((d['indent'].count('\x20') -2) / 3) +1
-
+			parents.append(window)
 
 	return windows
 
@@ -197,33 +195,5 @@ if __name__ == '__main__':
 						window.geometry.to_tuple(),
 						window.isVisible,
 						)
-		#time.sleep(0.5)
-		break
+		time.sleep(0.5)
 
-'''
-xwininfo: Window id: 0x151 (the root window) (has no name)
-
-  Root window id: 0x151 (the root window) (has no name)
-  Parent window id: 0x0 (none)
-     93 children:
-     0xe00294 (has no name): ()  1680x25+0+0  +0+0
-        16 children:
-        0x1000004 "xfce4-panel": ("xfce4-panel" "Xfce4-panel")  1680x25+0+0  +0+0
-           3 children:
-           0x1000022 (has no name): ()  34x24+1605+0  +1605+0
-              1 child:
-              0x2400004 "wrapper": ("wrapper" "Wrapper")  34x24+0+0  +1605+0
-                 1 child:
-                 0x2400005 (has no name): ()  1x1+-1+-1  +1604+-1
-           0x1000021 (has no name): ()  24x24+1581+0  +1581+0
-              1 child:
-              0x2200004 "wrapper": ("wrapper" "Wrapper")  24x24+0+0  +1581+0
-                 2 children:
-                 0x2200046 (has no name): ()  20x20+2+2  +1583+2
-                    1 child:
-                    0x200000a "Netzwerk-Manager-Applet": ("nm-applet" "Nm-applet")  20x20+0+0  +1583+2
-                       1 child:
-                       0x200000b (has no name): ()  1x1+-1+-1  +1582+1
-                 0x2200005 (has no name): ()  1x1+-1+-1  +1580+-1
-
-'''
