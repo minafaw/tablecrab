@@ -36,6 +36,25 @@ import WindowManagerBase
 __all__ = ['WindowManager', ]
 
 #************************************************************************************
+# window manager implementation
+#
+#NOTES:
+# - windows are not guaranteed to be alive when we handle them
+# - we can not guarantee the identity of a window. another window may have been
+#   created with the same handle from the same application at any time.
+#
+# so i found best approach is to retrieve all data for a window on every hop and let
+# the user deal with eventual troubles.
+#************************************************************************************
+class Window(WindowManagerBase.Window):
+	def set_size(self, w, h):
+		 set_window_size(self.handle, w, h)
+
+class WindowManager(WindowManagerBase.WindowManagerBase):
+	def window_list(self):
+		return window_list()
+
+#************************************************************************************
 # win32
 #************************************************************************************
 user32 = windll.user32
@@ -62,12 +81,20 @@ WM_GETTEXT = 13
 WM_GETTEXTLENGTH = 0x000E
 SMTO_ABORTIFHUNG = 2
 MY_SMTO_TIMEOUT = 2000
+SWP_NOSIZE = 0x0001
+SWP_NOMOVE = 0x0002
+SWP_NOZORDER = 0x0004
+SWP_NOOWNERZORDER = 0x0200
+SWP_NOACTIVATE = 0x0010
 
 #************************************************************************************
 # helpers
 #
 #NOTE: we do not errorcheck most api calls here because we may work on dead windows
 #************************************************************************************
+def set_window_size(hwnd, w, h):
+	user32.SetWindowPos(hwnd, 0, 0, 0, w, h, SWP_NOMOVE|SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE)
+
 def get_window_application(handle):
 	result = ''
 	pId = DWORD()
@@ -165,7 +192,7 @@ def window_list():
 	@note: the list should be sorted in stacking oder. desktop first, topmost window last
 	"""
 	handle = user32.GetDesktopWindow()
-	window = WindowManagerBase.Window(
+	window = Window(
 				None,
 				handle,
 				get_window_title(handle),
@@ -180,7 +207,7 @@ def window_list():
 	user32.EnumWindows(ENUMWINDOWSPROC(cb), 0)
 	windows = [window, ]
 	for handle in handles:
-		childWindow = WindowManagerBase.Window(
+		childWindow = Window(
 				window,
 				handle,
 				get_window_title(handle),
@@ -220,21 +247,6 @@ def set_window_transient_for(gtkWindow, handle):
 	pass
 
 #************************************************************************************
-# window manager implementation
-#
-#NOTES:
-# - windows are not guaranteed to be alive when we handle them
-# - we can not guarantee the identity of a window. another window may have been
-#   created with the same handle from the same application at any time.
-#
-# so i found best approach is to retrieve all data for a window on every hop and let
-# the user deal with eventual troubles.
-#************************************************************************************
-class WindowManager(WindowManagerBase.WindowManagerBase):
-	def window_list(self):
-		return window_list()
-
-#************************************************************************************
 #
 #************************************************************************************
 if __name__ == '__main__':
@@ -254,7 +266,4 @@ if __name__ == '__main__':
 						window.isVisible,
 						)
 		time.sleep(0.5)
-
-
-
 

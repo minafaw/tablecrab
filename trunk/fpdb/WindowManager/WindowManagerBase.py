@@ -125,6 +125,11 @@ class Window(object):
 				break
 			parents.insert(0, parent)
 		return parents
+	def set_size(self, w, h):
+		"""resizes the window
+		@note: overwrite in derrived classes
+		"""
+		raise NotImplementedError()
 
 class WindowManagerBase(object):
 	"""window manager implementation
