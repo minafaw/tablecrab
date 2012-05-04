@@ -56,7 +56,7 @@ class Rectangle(object):
 class Display(object):
 	def __init__(self, windows):
 		self._windows = windows
-	def rect_is_visible(self, window, rect):
+	def window_rect_is_visible(self, window, rect):
 		"""checks if the specified rectangle of a window is wisible to the user
 		@raram window: (L{Window})
 		@param rectangle: (L{Rectangle})
@@ -86,6 +86,15 @@ class Display(object):
 				if window.geometry.contains(rect):
 					return window
 		return None
+	def window_is_topmost(self, window):
+		"""checks if the window is topmost"""
+		if window.isVisible:
+			i = self._windows.index(window)
+			for windowOther in self._windows[i+1:]:
+				if window in windowOther.parents():
+					continue
+				return False
+		return True
 
 class Window(object):
 	"""window implementation
@@ -106,6 +115,16 @@ class Window(object):
 	def __eq__(self, other):
 		return self.handle == other.handle and self.application == other.application
 	def __ne__(self, other): return not self.__eq__(other)
+	def parents(self):
+		"""returns list of all parent windows of the window"""
+		parents = []
+		parent = self
+		while True:
+			parent = parent.parent
+			if parent is None:
+				break
+			parents.insert(0, parent)
+		return parents
 
 class WindowManagerBase(object):
 	"""window manager implementation
