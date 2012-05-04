@@ -21,10 +21,6 @@
 # distribution you can find the license in agpl-3.0.txt.
 #************************************************************************************
 #************************************************************************************
-#
-#NOTE: linux/wine
-# - the window manager does not work 1000% on wine. unlike native windows neither EnumWindows()
-#   nor GetWindow() not GetNextWindow() provide reliable information on window stacking order.
 
 #NOTE: executable path
 # - we use ansi version of GetModuleFileNameEx() because there is a bug in wine (1.5)
