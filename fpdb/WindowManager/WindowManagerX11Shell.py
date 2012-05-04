@@ -4,7 +4,7 @@
 
 """window manager implementation via shell
 
-@dependences: xwininfo
+@dependences: xwininfo, xdotool
 """
 #************************************************************************************
 #LICENCE: AGPL
@@ -29,9 +29,6 @@ import WindowManagerBase
 
 __all__ = ['WindowManager', ]
 
-#************************************************************************************
-# helpers
-#************************************************************************************
 # check if X is running
 #TODO: check if test if ok
 out, err = subprocess.Popen(
@@ -40,6 +37,30 @@ out, err = subprocess.Popen(
 if not ' Xorg' in out:
 	raise OSError('no X server running!')
 
+#************************************************************************************
+# window manager implementation
+#
+#NOTES:
+# - windows are not guaranteed to be alive when we handle them
+# - we can not guarantee the identity of a window. another window may have been
+#   created with the same handle from the same application at any time.
+#
+# so i found best approach is to retrieve all data for a window on every hop and let
+# the user deal with eventual troubles.
+#************************************************************************************
+class Window(WindowManagerBase.Window):
+	def set_size(self, w, h):
+		out, err = subprocess.Popen(
+			'xdotool WINDOWSIZE %s %s %s' % (self.handle, w, h), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+			).communicate()
+
+class WindowManager(WindowManagerBase.WindowManagerBase):
+	def window_list(self):
+		return window_list()
+
+#************************************************************************************
+# helpers
+#************************************************************************************
 PatRootWindow = re.compile('''
 		xwininfo\:\s
 		window\sid\:\s
@@ -63,7 +84,6 @@ PatXWinInfo = re.compile('''
 		''',
 		re.X|re.I)
 
-
 def get_window_is_visible(handle):
 	isVisible = False
 	out, err = subprocess.Popen(
@@ -82,7 +102,7 @@ def get_root_window():
 		).communicate()
 	if not err:
 
-		window = WindowManagerBase.Window(
+		window = Window(
 			None,
 			0,
 			'RootWindow',
@@ -148,7 +168,7 @@ def window_list():
 			w = int(d['w'])
 			h = int(d['h'])
 			isVisible = get_window_is_visible(handle)
-			window = WindowManagerBase.Window(
+			window = Window(
 					parents[-1],
 					handle,
 					unicode(d['title'].decode('utf-8')),
@@ -160,21 +180,6 @@ def window_list():
 			parents.append(window)
 
 	return windows
-
-#************************************************************************************
-# window manager implementation
-#
-#NOTES:
-# - windows are not guaranteed to be alive when we handle them
-# - we can not guarantee the identity of a window. another window may have been
-#   created with the same handle from the same application at any time.
-#
-# so i found best approach is to retrieve all data for a window on every hop and let
-# the user deal with eventual troubles.
-#************************************************************************************
-class WindowManager(WindowManagerBase.WindowManagerBase):
-	def window_list(self):
-		return window_list()
 
 #************************************************************************************
 #

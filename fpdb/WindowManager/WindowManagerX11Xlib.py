@@ -30,9 +30,6 @@ import WindowManagerBase
 
 __all__ = ['WindowManager', ]
 
-#************************************************************************************
-# Xlib
-#************************************************************************************
 #NOTE: CDLL() raises OSError when library is not present
 libx11 = CDLL('libX11.so')
 dsp = libx11.XOpenDisplay(None)
@@ -40,6 +37,20 @@ if not dsp:
 	raise OSError('no X server running!')
 libx11.XCloseDisplay(dsp)
 
+#************************************************************************************
+# window manager implementation
+#************************************************************************************
+class Window(WindowManagerBase.Window):
+	def set_size(self, w, h):
+		 set_window_size(self.handle, w, h)
+
+class WindowManager(WindowManagerBase.WindowManagerBase):
+	def window_list(self):
+		return window_list()
+
+#************************************************************************************
+# Xlib
+#************************************************************************************
 XID = c_ulong
 XWindow = c_ulong
 Success = 0
@@ -191,6 +202,13 @@ def get_window_application(dsp, handle):
 		libx11.XFree(c_char_p.from_address(addr))
 	return application
 
+def set_window_size(handle, w, h):
+	dsp = libx11.XOpenDisplay('')
+	try:
+		libx11.XResizeWindow(dsp, handle, w, h)
+	finally:
+		libx11.XCloseDisplay(dsp)
+
 def get_window_geometry(dsp, handle):
 	rootWindow = XWindow()
 	x = c_int()
@@ -250,7 +268,7 @@ def list_windows(dsp, window):
 			finally:
 				libx11.XFree(pChildren)
 			for handle in arr:
-				childWindow = WindowManagerBase.Window(
+				childWindow = Window(
 						window,
 						handle,
 						get_window_title(dsp, handle),
@@ -278,7 +296,7 @@ def window_list():
 	dsp = libx11.XOpenDisplay('')
 	try:
 		handle = libx11.XDefaultRootWindow(dsp)
-		window = WindowManagerBase.Window(
+		window = Window(
 				None,
 				handle,
 				get_window_title(dsp, handle),
@@ -291,13 +309,6 @@ def window_list():
 	finally:
 		libx11.XCloseDisplay(dsp)
 	return windows
-
-#************************************************************************************
-# window manager implementation
-#************************************************************************************
-class WindowManager(WindowManagerBase.WindowManagerBase):
-	def window_list(self):
-		return window_list()
 
 #************************************************************************************
 #

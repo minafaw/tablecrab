@@ -40,10 +40,16 @@ import WindowManager
 #   is to implement things in a failsave way, which should be doable on x11 and native
 #   windows. no idea about mac and wayland though.
 
+#NOTE: application name
+# - when PokerStars lobby is created with "connecting.." dialog we get no application name for it
+#
+
+
 class Hud(gtk.Window):
-	def __init__(self, platformWindow):
+	def __init__(self, wmWindow):
 		gtk.Window.__init__(self)
 
+		self.wmWindow = wmWindow
 		self.set_title('Hud')
 		self.set_decorated(0)
 		self.set_focus(None)
@@ -56,11 +62,12 @@ class Hud(gtk.Window):
 		#NOTE: have to realize() window first, otherwise window has no handle
 		#NOTE: have to set stransient before showing the window, otherwise it won't work
 		self.realize()
-		gdkWindow = gtk.gdk.window_foreign_new(platformWindow.handle)
+		gdkWindow = gtk.gdk.window_foreign_new(wmWindow.handle)
 		self.get_window().set_transient_for(gdkWindow)
 
 		self.button1 = gtk.Button('+')
 		self.button2 = gtk.Button('Resize')
+		self.button2.connect("clicked", self.on_button_resize_clicked)
 
 		box = gtk.HBox()
 		self.add(box)
@@ -72,11 +79,18 @@ class Hud(gtk.Window):
 
 		print bool(gtk.gdk.window_foreign_new(1234567))
 
-	def handle_window_geometry_changed(self, platformWindow):
-		self.move(platformWindow.geometry.x, platformWindow.geometry.y)
+	def handle_window_geometry_changed(self, wmWindow):
+		self.wmWindow = wmWindow
+		self.move(wmWindow.geometry.x, wmWindow.geometry.y)
 
-	def handle_window_destroyed(self, platformWindow):
+	def handle_window_destroyed(self, wmWindow):
+		self.wmWindow = None
 		self.destroy()
+
+	def on_button_resize_clicked(self, button):
+		self.wmWindow.set_size(600, 300)
+
+
 
 
 class HudManager(gtk.Window):
@@ -98,22 +112,22 @@ class HudManager(gtk.Window):
 			#TODO: something goes wrong when the lobby pops up with the "connecting.."
 			# dialog. seems like we get no message that the lobby has been created
 			if event == self.windowManager.EVENT_WINDOW_CREATED:
-				platformWindow = param
-				if platformWindow.application == 'PokerStars.exe' and platformWindow.title == 'PokerStars Lobby':
-					self.huds[platformWindow.handle] = Hud(platformWindow)
+				wmWindow = param
+				if wmWindow.application == 'PokerStars.exe' and wmWindow.title == 'PokerStars Lobby':
+					self.huds[wmWindow.handle] = Hud(wmWindow)
 
 			elif event == self.windowManager.EVENT_WINDOW_GEOMETRY_CHANGED:
-				platformWindow = param
-				hud = self.huds.get(platformWindow.handle, None)
+				wmWindow = param
+				hud = self.huds.get(wmWindow.handle, None)
 				if hud is not None:
-					hud.handle_window_geometry_changed(platformWindow)
+					hud.handle_window_geometry_changed(wmWindow)
 
 			elif event == self.windowManager.EVENT_WINDOW_DESTROYED:
-				platformWindow = param
-				hud = self.huds.get(platformWindow.handle, None)
+				wmWindow = param
+				hud = self.huds.get(wmWindow.handle, None)
 				if hud is not None:
-					hud.handle_window_destroyed(platformWindow)
-					del self.huds[platformWindow.handle]
+					hud.handle_window_destroyed(wmWindow)
+					del self.huds[wmWindow.handle]
 
 		return True
 
