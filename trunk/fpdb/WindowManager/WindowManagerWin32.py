@@ -50,6 +50,9 @@ class Window(WindowManagerBase.Window):
 	def set_size(self, w, h):
 		 set_window_size(self.handle, w, h)
 
+	#NOTE: attatching a foreign window to a window is a terrible hack. all sorts of evil
+	# things may happen. MSDN explicitely warns to not do this. unlike linux the win32 api
+	# does not provide any means to do so in a clean way.
 	#NOTE: windows removes minimize button from the parent, so i guess we are treated like a modeless dialog
 	#NOTE: strangely enough the call to SetWindowLong() does not have the desired efect
 	# when put into a method. have to test this. for now the call should stay here.
