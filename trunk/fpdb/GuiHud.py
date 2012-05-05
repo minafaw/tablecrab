@@ -72,8 +72,23 @@ class Hud(gtk.Window):
 		#NOTE: have to realize() window first, otherwise window has no handle
 		#NOTE: have to set stransient before showing the window, otherwise it won't work
 		self.realize()
-		gdkWindow = gtk.gdk.window_foreign_new(wmWindow.handle)
-		self.get_window().set_transient_for(gdkWindow)
+
+		#NOTE: on win32 window_foreign_new() if passed an invalid handle returns a
+		# pointer instead of None and segfaults on subsequent calls so we don't use it
+		##gdkWindow = gtk.gdk.window_foreign_new(wmWindow.handle)
+		##self.get_window().set_transient_for(gdkWindow)
+		#-----------
+		#NOTE: win32 - PokerStars lobby crashes randomly when we attatch something to
+		# it. they may be checking for dialogs, news flyers, whatevs being around and
+		# hit our window in the process. they may do something with it they should not do
+		# with windows from other processes.
+		try:
+			handle = self.window.xid
+		except AttributeError:
+			handle = self.window.handle
+		wmWindow.attatch(handle)
+
+
 
 		self.buttonAddTableSize = gtk.Button('+')
 		self.buttonAddTableSize.connect("clicked", self.on_button_add_table_size_clicked)

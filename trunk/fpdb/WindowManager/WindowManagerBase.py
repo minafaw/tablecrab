@@ -115,6 +115,19 @@ class Window(object):
 	def __eq__(self, other):
 		return self.handle == other.handle and self.application == other.application
 	def __ne__(self, other): return not self.__eq__(other)
+	def attatch(self, other):
+		"""attatches another window to the window
+		@param other: (int) handle of the window to attatch to the window
+		@note: this method is usually used for dialogs to make them stay above the
+		parent window
+		@note: behaviour of the attatched window may differ from platform to platform
+		@note: to be save you must call this method after the window to be attatched
+		is created, but before it is shown
+		@note: there is currently no way to verify that the window is actually attatched.
+		you are on your own here
+		"""
+		raise NotImplementedError()
+
 	def parents(self):
 		"""returns list of all parent windows of the window"""
 		parents = []
