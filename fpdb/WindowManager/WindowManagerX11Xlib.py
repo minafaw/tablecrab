@@ -279,20 +279,14 @@ def list_windows(dsp, window):
 				windows.append(childWindow)
 	return windows
 
-#NOTE: x11 has no real notion of toplevel so we have to go over the whole tree here.
-# to keep things reasonable we filter out windows that have no name.
-#NOTE: we may have to XGrabServer() XUngrabServer() here
+#NOTE: we include top level window (frame) and 1st child in the list (main window).
+# this should be enough for our purposes
+#TODO: we may have to XGrabServer() XUngrabServer() here
 def window_list():
 	"""returns a list of all windows currently open
 	@note: list should always start at the root window (the desktop)
 	@note: the list should be sorted in stacking oder. root first, topmost window last
 	"""
-	def walker(dsp, window):
-		yield window
-		for x in list_windows(dsp, window):
-			for y in walker(dsp, x):
-				yield y
-
 	dsp = libx11.XOpenDisplay('')
 	try:
 		handle = libx11.XDefaultRootWindow(dsp)
@@ -304,8 +298,20 @@ def window_list():
 				WindowManagerBase.Rectangle(*get_window_geometry(dsp, handle)),
 				get_window_is_visible(dsp, handle),
 				)
-		#windows = [window for window in walker(dsp, window) if window.title]
-		windows = [window for window in walker(dsp, window)]
+		windows = [window, ]
+		for child in list_windows(dsp, window):
+			windows.append(child)
+			for grandChild in list_windows(dsp, child):
+				windows.append(grandChild)
+
+		# this would retrieve full window tree
+		#def walker(dsp, window):
+		#	yield window
+		#	for x in list_windows(dsp, window):
+		#		for y in walker(dsp, x):
+		#			yield y
+		#windows = [window for window in walker(dsp, window)]
+
 	finally:
 		libx11.XCloseDisplay(dsp)
 	return windows
@@ -313,7 +319,7 @@ def window_list():
 #************************************************************************************
 #
 #************************************************************************************
-if __name__ == '__main__':
+if __name__ == '__main__2':
 	# sample code + run WindowManager (CAUTION: will run unconditionally until keyboard interrupt!!)
 	import time
 	wm = WindowManager()
