@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """x11 specific methods via xlib
+
+@dependency: libx11
 """
 
 #************************************************************************************
@@ -43,6 +45,8 @@ libx11.XCloseDisplay(dsp)
 class Window(WindowManagerBase.Window):
 	def set_size(self, w, h):
 		 set_window_size(self.handle, w, h)
+	def attatch(self, child):
+		return set_window_transient_for(self.handle, child)
 
 class WindowManager(WindowManagerBase.WindowManagerBase):
 	def window_list(self):
@@ -202,6 +206,14 @@ def get_window_application(dsp, handle):
 		libx11.XFree(c_char_p.from_address(addr))
 	return application
 
+#TODO: check if child is a toplevel window
+def set_window_transient_for(parent, child):
+	dsp = libx11.XOpenDisplay('')
+	try:
+		libx11.XSetTransientForHint(dsp, child, parent)
+	finally:
+		libx11.XCloseDisplay(dsp)
+
 def set_window_size(handle, w, h):
 	dsp = libx11.XOpenDisplay('')
 	try:
@@ -319,7 +331,7 @@ def window_list():
 #************************************************************************************
 #
 #************************************************************************************
-if __name__ == '__main__2':
+if __name__ == '__main__':
 	# sample code + run WindowManager (CAUTION: will run unconditionally until keyboard interrupt!!)
 	import time
 	wm = WindowManager()

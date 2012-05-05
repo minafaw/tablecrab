@@ -50,6 +50,13 @@ class Window(WindowManagerBase.Window):
 	def set_size(self, w, h):
 		 set_window_size(self.handle, w, h)
 
+	#NOTE: windows removes minimize button from the parent, so i guess we are treated like a modeless dialog
+	#NOTE: strangely enough the call to SetWindowLong() does not have the desired efect
+	# when put into a method. have to test this. for now the call should stay here.
+	def attatch(self, child):
+		#TODO: check if child is a toplevel window
+		user32.SetWindowLongW(child, GWL_HWNDPARENT, self.handle)
+
 class WindowManager(WindowManagerBase.WindowManagerBase):
 	def window_list(self):
 		return window_list()
@@ -87,11 +94,14 @@ SWP_NOZORDER = 0x0004
 SWP_NOOWNERZORDER = 0x0200
 SWP_NOACTIVATE = 0x0010
 
+GWL_HWNDPARENT = -8
+
 #************************************************************************************
 # helpers
 #
 #NOTE: we do not errorcheck most api calls here because we may work on dead windows
 #************************************************************************************
+
 def set_window_size(hwnd, w, h):
 	user32.SetWindowPos(hwnd, 0, 0, 0, w, h, SWP_NOMOVE|SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE)
 
