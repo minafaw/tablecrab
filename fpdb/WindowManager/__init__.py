@@ -13,10 +13,7 @@ elif sys.platform == 'linux2':
 	try:
 		from WindowManagerX11Xlib import *
 	except OSError:
-		try:
-			from WindowManagerX11Shell import *
-		except OSError:
-			from WindowManagerWayland import *
+		from WindowManagerWayland import *
 elif sys.platform == 'win32':
 	from WindowManagerWin32 import *
 
