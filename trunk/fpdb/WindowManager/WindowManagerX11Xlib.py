@@ -194,16 +194,18 @@ GetLastError = _ErrorHandler.GetLastError
 #************************************************************************************
 # helpers
 #************************************************************************************
-def get_window_application(dsp, handle):
+def get_window_application(dsp, handle,
+		XFree=libx11.XFree, XGetClassHint=libx11.XGetClassHint, XClassHint=XClassHint,
+		addressof=addressof, c_char_p=c_char_p, byref=byref):
 	application = ''
 	classHint = XClassHint()
-	if libx11.XGetClassHint(dsp, handle, byref(classHint)):
+	if XGetClassHint(dsp, handle, byref(classHint)):
 		application = classHint.res_name[:]
 		# docs claim each string in XClassHint has to be freed individually, so here e go..
 		addr = addressof(classHint) + XClassHint.res_name.offset
-		libx11.XFree(c_char_p.from_address(addr))
+		XFree(c_char_p.from_address(addr))
 		addr = addressof(classHint) + XClassHint.res_class.offset
-		libx11.XFree(c_char_p.from_address(addr))
+		XFree(c_char_p.from_address(addr))
 	return application
 
 #TODO: check if child is a toplevel window
@@ -221,7 +223,10 @@ def set_window_size(handle, w, h):
 	finally:
 		libx11.XCloseDisplay(dsp)
 
-def get_window_geometry(dsp, handle):
+def get_window_geometry(dsp, handle,
+		XGetGeometry=libx11.XGetGeometry, XTranslateCoordinates=libx11.XTranslateCoordinates,
+		byref=byref, c_uint=c_uint, c_int=c_int, XWindow=XWindow
+		):
 	rootWindow = XWindow()
 	x = c_int()
 	y = c_int()
@@ -229,7 +234,7 @@ def get_window_geometry(dsp, handle):
 	h = c_uint()
 	borderW = c_uint()
 	bitsPerPixel = c_uint()
-	libx11.XGetGeometry(
+	XGetGeometry(
 				dsp,
 				handle,
 				byref(rootWindow),
@@ -244,42 +249,45 @@ def get_window_geometry(dsp, handle):
 	child = XWindow()
 	xDst = c_int()
 	yDst = c_int()
-	libx11.XTranslateCoordinates(dsp, handle, rootWindow, 0, 0, byref(xDst), byref(yDst), byref(child))
+	XTranslateCoordinates(dsp, handle, rootWindow, 0, 0, byref(xDst), byref(yDst), byref(child))
 	return (xDst.value, yDst.value, w.value, h.value)
 
-def get_window_title(dsp, handle):
-	title = ''
-	p = pointer(c_char())
-	if libx11.XFetchName(dsp, handle, byref(p)):
+def get_window_title(dsp, handle,
+		XFetchName=libx11.XFetchName, byref=byref, c_char_p=c_char_p, string_at=string_at, XFree=libx11.XFree
+		):
+	p = c_char_p()
+	if XFetchName(dsp, handle, byref(p)):
 		try:
 			#TODO: found no way to decode the string to unicode. as expected german umlaut fails :-(
 			#title = unicode(string_at(p).decode('utf-8'))
-			title = string_at(p)
+			return p.value
 		finally:
-			libx11.XFree(p)
-	return title
+			XFree(p)
+	return ''
 
-def get_window_is_visible(dsp, handle):
+def get_window_is_visible(dsp, handle,
+		XGetWindowAttributes=libx11.XGetWindowAttributes, XWindowAttributes=XWindowAttributes,
+		IsViewable=IsViewable, byref=byref):
 	isVisible = False
 	windowAttributes = XWindowAttributes()
-	if libx11.XGetWindowAttributes(dsp, handle, byref(windowAttributes)):
+	if XGetWindowAttributes(dsp, handle, byref(windowAttributes)):
 		isVisible = windowAttributes.map_state == IsViewable
 	return isVisible
 
-def list_windows(dsp, handle):
-	windows = []
+def list_windows(dsp, handle,
+		XQueryTree=libx11.XQueryTree, XFree=libx11.XFree,  XWindow= XWindow, pointer=pointer,
+		byref=byref, memmove=memmove, xrange=xrange,
+		):
 	root = XWindow()
 	parent = XWindow()
 	pChildren = pointer(XWindow())
 	nChildren = c_uint()
-	if libx11.XQueryTree(dsp, handle, byref(root), byref(parent), byref(pChildren), byref(nChildren)):
+	if XQueryTree(dsp, handle, byref(root), byref(parent), byref(pChildren), byref(nChildren)):
 		if pChildren:
 			try:
-				arr = (XWindow * nChildren.value)()
-				memmove(arr, pChildren, sizeof(arr))
+				return map(pChildren.__getitem__, xrange(nChildren.value))
 			finally:
-				libx11.XFree(pChildren)
-			return arr
+				XFree(pChildren)
 	return []
 
 #TODO: we may have to XGrabServer() XUngrabServer() here
