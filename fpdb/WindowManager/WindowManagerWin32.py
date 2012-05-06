@@ -58,7 +58,7 @@ class Window(WindowManagerBase.Window):
 	# when put into a method. have to test this. for now the call should stay here.
 	def attatch(self, child):
 		#TODO: check if child is a toplevel window
-		user32.SetWindowLongW(child, GWL_HWNDPARENT, self.handle)
+		user32.SetWindowLongPtrW(child, GWL_HWNDPARENT, self.handle)
 
 class WindowManager(WindowManagerBase.WindowManagerBase):
 	def window_list(self):
@@ -72,7 +72,7 @@ kernel32 = windll.kernel32
 psapi = windll.psapi
 
 #NOTE: hope i got tGetModuleFileNameEx() right..
-# looks like there are other methods to get application that createed a window:
+# looks like there are other methods to get application that created a window:
 #    - psapi.GetProcessImageFileName() - xp+
 #    - kernel32.QueryFullProcessImageName() - vista+
 #NOTE: acc to MSDN GetModuleFileNameEx() is either exported psapi.dll or by kernel32.dll
@@ -81,6 +81,22 @@ try:
 	psapi.GetModuleFileNameExA
 except AttributeError:
 	psapi.GetModuleFileNameExA = kernel.K32GetModuleFileNameExA
+#NOTE: GetModuleFileNameExW segfaults on wine (up to version 1.5.3) see <Bug 30543> 0on http://bugs.winehq.org
+try:
+	psapi.GetModuleFileNameExW
+except AttributeError:
+	psapi.GetModuleFileNameExW = kernel.K32GetModuleFileNameExW
+
+#NOTE: user32.GetWindowLongPtr is only exported on 64 bit windows, use SetWindowLong instead
+# on 32 bit builds
+try:
+	user32.SetWindowLongPtrA
+except AttributeError:
+	user32.SetWindowLongPtrA = user32.SetWindowLongA
+try:
+	user32.SetWindowLongPtrW
+except AttributeError:
+	user32.SetWindowLongPtrW = user32.SetWindowLongW
 
 MAX_PATH = 260
 PROCESS_VM_READ = 16
@@ -96,7 +112,6 @@ SWP_NOMOVE = 0x0002
 SWP_NOZORDER = 0x0004
 SWP_NOOWNERZORDER = 0x0200
 SWP_NOACTIVATE = 0x0010
-
 GWL_HWNDPARENT = -8
 
 #************************************************************************************
@@ -238,34 +253,6 @@ def window_list():
 				)
 		windows.append(childWindow)
 	return windows
-
-#NOTE: for some reason creating gdk windows via gtk.gdk.window_foreign_new()
-# segfaults on win32 when called after a gui has been initialized. no idea why
-# as a workaround we reimplement gtks window_set_transient_for() [gdkwindow-win32.c]
-def set_window_transient_for(gtkWindow, handle):
-	#TODO: make shure gtkWindows is not a child window
-	# looks like we have to use SetWindowLong here
-
-	#NOTE:
-
-	# #ifdef _WIN64
-	# WINUSERAPI LONG_PTR    WINAPI GetWindowLongPtrA(HWND,INT);
-	# WINUSERAPI LONG_PTR    WINAPI GetWindowLongPtrW(HWND,INT);
-	# #else
-	# #define                       GetWindowLongPtrA GetWindowLongA
-	# #define                       GetWindowLongPtrW GetWindowLongW
-	# #endif
-
-	# so SetWindowLongPtr is only defined on 64 bit windows
-	# have to use code like this to make it work on all versions:
-	#
-	#try:
-	#	SetWindowLongPtr = user32.SetWindowLongPtrW
-	#except AttributeError:
-	#	SetWindowLongPtr = user32.SetWindowLongW
-	#
-	##SetWindowLongPtr(window_id, GWLP_HWNDPARENT, (LONG_PTR) parent_id)
-	pass
 
 #************************************************************************************
 #
