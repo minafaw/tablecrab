@@ -266,64 +266,66 @@ def get_window_is_visible(dsp, handle):
 		isVisible = windowAttributes.map_state == IsViewable
 	return isVisible
 
-def list_windows(dsp, window):
+def list_windows(dsp, handle):
 	windows = []
 	root = XWindow()
 	parent = XWindow()
 	pChildren = pointer(XWindow())
 	nChildren = c_uint()
-	if libx11.XQueryTree(dsp, window.handle, byref(root), byref(parent), byref(pChildren), byref(nChildren)):
+	if libx11.XQueryTree(dsp, handle, byref(root), byref(parent), byref(pChildren), byref(nChildren)):
 		if pChildren:
 			try:
 				arr = (XWindow * nChildren.value)()
 				memmove(arr, pChildren, sizeof(arr))
 			finally:
 				libx11.XFree(pChildren)
-			for handle in arr:
-				childWindow = Window(
-						window,
-						handle,
-						get_window_title(dsp, handle),
-						get_window_application(dsp, handle),
-						WindowManagerBase.Rectangle(*get_window_geometry(dsp, handle)),
-						get_window_is_visible(dsp, handle),
-						)
-				windows.append(childWindow)
-	return windows
+			return arr
+	return []
 
-#NOTE: we include top level window (frame) and 1st child in the list (main window).
-# this should be enough for our purposes
 #TODO: we may have to XGrabServer() XUngrabServer() here
 def window_list():
-	"""returns a list of all windows currently open
+	"""returns a list of all toplevel windows currently open
 	@note: list should always start at the root window (the desktop)
 	@note: the list should be sorted in stacking oder. root first, topmost window last
 	"""
 	dsp = libx11.XOpenDisplay('')
 	try:
-		handle = libx11.XDefaultRootWindow(dsp)
-		window = Window(
+		handleRoot = libx11.XDefaultRootWindow(dsp)
+		geometryRoot = get_window_geometry(dsp, handleRoot)
+		windowRoot = Window(
 				None,
-				handle,
-				get_window_title(dsp, handle),
-				get_window_application(dsp, handle),
-				WindowManagerBase.Rectangle(*get_window_geometry(dsp, handle)),
-				get_window_is_visible(dsp, handle),
+				handleRoot,
+				get_window_title(dsp, handleRoot),
+				get_window_application(dsp, handleRoot),
+				WindowManagerBase.Rectangle(*geometryRoot),
+				WindowManagerBase.Rectangle(*geometryRoot),
+				get_window_is_visible(dsp, handleRoot),
 				)
-		windows = [window, ]
-		for child in list_windows(dsp, window):
-			windows.append(child)
-			for grandChild in list_windows(dsp, child):
-				windows.append(grandChild)
-
-		# this would retrieve full window tree
-		#def walker(dsp, window):
-		#	yield window
-		#	for x in list_windows(dsp, window):
-		#		for y in walker(dsp, x):
-		#			yield y
-		#windows = [window for window in walker(dsp, window)]
-
+		windows = [windowRoot, ]
+		#NOTE: looks like in x11 each window has an unnamed frame with first named child being
+		# the actual window, hope i got this right and it is reliable.
+		#NOTE: we take the handle of the actual window as handle for our window. this could
+		# cause troubles. we have to either work on the parent for some calls or rework
+		# attributes of our window to assign "handleFrame" and "handleWindow"
+		for handleFrame in list_windows(dsp, handleRoot):
+			title = get_window_title(dsp, handleFrame)
+			if not title:
+				windowFrame = None
+				for handleWindow in list_windows(dsp, handleFrame):
+					title = get_window_title(dsp, handleWindow)
+					if title:
+						windowFrame = Window(
+								windowRoot,
+								handleWindow,
+								title,
+								get_window_application(dsp, handleWindow),
+								WindowManagerBase.Rectangle(*get_window_geometry(dsp, handleFrame)),
+								WindowManagerBase.Rectangle(*get_window_geometry(dsp, handleWindow)),
+								get_window_is_visible(dsp, handleFrame),	# have to take frame here (?)
+								)
+						break
+				if windowFrame is not None:
+					windows.append(windowFrame)
 	finally:
 		libx11.XCloseDisplay(dsp)
 	return windows
@@ -339,12 +341,13 @@ if __name__ == '__main__':
 		for event, param in events:
 			if isinstance(param, WindowManagerBase.Window):
 				window = param
-				print '%s: 0x%x "%s" ("%s") %s visible=%s' % (
+				print '%s: 0x%x "%s" ("%s") %s %s visible=%s' % (
 						event,
 						window.handle,
 						window.title,
 						window.application,
-						window.geometry.to_tuple(),
+						window.frameRect.to_tuple(),
+						window.clientRect.to_tuple(),
 						window.isVisible,
 						)
 		time.sleep(0.5)

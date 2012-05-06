@@ -112,7 +112,7 @@ class Hud(gtk.Window):
 
 	def handle_window_geometry_changed(self, wmWindow):
 		self.wmWindow = wmWindow
-		self.move(wmWindow.geometry.x, wmWindow.geometry.y)
+		self.move(wmWindow.clientRect.x, wmWindow.clientRect.y)
 
 	def handle_window_destroyed(self, wmWindow):
 		self.wmWindow = None
@@ -120,7 +120,7 @@ class Hud(gtk.Window):
 
 	def on_button_add_table_size_clicked(self, button):
 		#TODO: we may have to update wmWindow here
-		self.hudManager.add_table_size(None, self.wmWindow.geometry.w, self.wmWindow.geometry.h)
+		self.hudManager.add_table_size(None, self.wmWindow.clientRect.w, self.wmWindow.clientRect.h)
 
 	def on_button_resize_table_clicked(self, button):
 		sizes = self.hudManager.get_table_sizes()

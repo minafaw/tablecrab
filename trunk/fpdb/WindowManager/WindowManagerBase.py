@@ -66,11 +66,11 @@ class Display(object):
 		contained in the window.
 		"""
 		if window.isVisible:
-			if window.geometry.contains(rect):
+			if window.frameRect.contains(rect):
 				i = self._windows.index(window)
 				for windowOther in self._windows[i+1:]:
 					if windowOther.isVisible:
-						if windowOther.geometry.intersects(rect):
+						if windowOther.frameRect.intersects(rect):
 							break
 				else:
 					return True
@@ -83,7 +83,7 @@ class Display(object):
 		"""
 		for window in self._windows[::-1]:
 			if window.isVisible:
-				if window.geometry.contains(rect):
+				if window.frameRect.contains(rect):
 					return window
 		return None
 	def window_is_topmost(self, window):
@@ -99,16 +99,19 @@ class Display(object):
 class Window(object):
 	"""window implementation
 	@ivar parent: (L{Window}) parent window or None
+	@ivar handle: (int) platform specific ghandle of the window
 	@ivar application: (str) appllication that created the window
-	@ivar geometry: (tuple) client area coordinates (x, y, w, h) relative to the screen
+	@ivar frameRect: (L{Rectangle}) absolute coordinates of the window
+	@ivar clientRect: (L{Rectangle}) absolute coordinates of the client area
 	@ivar handle: (int) platform dependend window handle
 	@ivar title: (unicode) title of the window
 	@ivar isVisible: (bool) True if the window is currently visible, False otherwise
 	"""
-	def __init__(self, parent, handle, title, application, geometry, isVisible):
+	def __init__(self, parent, handle, title, application, frameRect, clientRect, isVisible):
 		self.parent = parent
 		self.application = application
-		self.geometry = geometry
+		self.frameRect = frameRect
+		self.clientRect = clientRect
 		self.handle = handle
 		self.title = title
 		self.isVisible = isVisible
@@ -184,7 +187,7 @@ class WindowManagerBase(object):
 		for window in self._windows:
 			if window in windowsOld:
 				windowOld = windowsOld[windowsOld.index(window)]
-				if window.geometry != windowOld.geometry:
+				if window.frameRect != windowOld.frameRect:
 					events.append((self.EVENT_WINDOW_GEOMETRY_CHANGED, window))
 				if window.title != windowOld.title:
 					events.append((self.EVENT_WINDOW_TITLE_CHANGED, window))

@@ -139,7 +139,12 @@ def get_window_application(handle):
 			result = os.path.basename(path)
 	return result
 
-def get_window_geometry(handle):
+def get_window_rect(handle):
+	rc = RECT()
+	user32.GetWindowRect(handle, byref(rc))
+	return (rc.left, rc.top, rc.right-rc.left, rc.bottom-rc.top)
+
+def get_window_client_rect(handle):
 	rc = RECT()
 	user32.GetClientRect(handle, byref(rc))
 	pt = POINT()
@@ -205,12 +210,14 @@ def window_list():
 	@note: the list should be sorted in stacking oder. desktop first, topmost window last
 	"""
 	handle = user32.GetDesktopWindow()
+	geometry = get_window_rect(handle)
 	window = Window(
 				None,
 				handle,
 				get_window_title(handle),
 				get_window_application(handle),
-				WindowManagerBase.Rectangle(*get_window_geometry(handle)),
+				WindowManagerBase.Rectangle(*geometry),
+				WindowManagerBase.Rectangle(*geometry),
 				get_window_is_visible(handle),
 				)
 	handles = []
@@ -225,7 +232,8 @@ def window_list():
 				handle,
 				get_window_title(handle),
 				get_window_application(handle),
-				WindowManagerBase.Rectangle(*get_window_geometry(handle)),
+				WindowManagerBase.Rectangle(*get_window_rect(handle)),
+				WindowManagerBase.Rectangle(*get_window_client_rect(handle)),
 				get_window_is_visible(handle),
 				)
 		windows.append(childWindow)
@@ -270,12 +278,13 @@ if __name__ == '__main__':
 		for event, param in events:
 			if isinstance(param, WindowManagerBase.Window):
 				window = param
-				print '%s: 0x%x "%s" ("%s") %s visible=%s' % (
+				print '%s: 0x%x "%s" ("%s") %s %s visible=%s' % (
 						event,
 						window.handle,
 						window.title,
 						window.application,
-						window.geometry.to_tuple(),
+						window.frameRect.to_tuple(),
+						window.clientRect.to_tuple(),
 						window.isVisible,
 						)
 		time.sleep(0.5)
