@@ -311,7 +311,7 @@ def window_list():
 				)
 		windows = [windowRoot, ]
 		#NOTE: looks like in x11 each window has an unnamed frame with first named child being
-		# the actual window, hope i got this right and it is reliable.
+		# the actual window. i guess this is window manager specific, we will see..
 		#NOTE: we take the handle of the actual window as handle for our window. this could
 		# cause troubles. we have to either work on the parent for some calls or rework
 		# attributes of our window to assign "handleFrame" and "handleWindow"
