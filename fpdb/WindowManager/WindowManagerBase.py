@@ -65,21 +65,22 @@ class Display(object):
 		windows in any ways and the window itsself is visible and the rect is fully
 		contained in the window.
 		"""
-		if window.isVisible:
-			if window.frameRect.contains(rect):
-				i = self._windows.index(window)
-				for windowOther in self._windows[i+1:]:
-					if windowOther.isVisible:
-						if windowOther.frameRect.intersects(rect):
-							break
-				else:
-					return True
+		if self._windows:
+			if self._windows[0].frameRect.contains(reect):
+				if window.isVisible:
+					if window.frameRect.contains(rect):
+						i = self._windows.index(window)
+						for windowOther in self._windows[i+1:]:
+							if windowOther.isVisible:
+								if windowOther.frameRect.intersects(rect):
+									break
+						else:
+							return True
 		return False
 	def window_from_rect(self, rect):
 		"""returns the window that contains the specified rect
 		@param rectangle: (L{Rectangle})
 		@return window: (L{Window}) or None if no window contains the rect fully
-		@note: the window is the topmost (child) window that fully contains the rect
 		"""
 		for window in self._windows[::-1]:
 			if window.isVisible:
@@ -182,7 +183,7 @@ class WindowManagerBase(object):
 		@return: (list) of (EVENT_*, param) tuples
 		"""
 		events = []
-		windowsOld = self._windows[:]
+		windowsOld = self._windows
 		self._windows = self.window_list()
 		for window in self._windows:
 			if window in windowsOld:
