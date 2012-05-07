@@ -345,21 +345,18 @@ def window_list(
 #
 #************************************************************************************
 if __name__ == '__main__':
-	# sample code + run WindowManager (CAUTION: will run unconditionally until keyboard interrupt!!)
-	import time
+	# print all currently running toplevel windows
 	wm = WindowManager()
-	for events in wm:
-		for event, param in events:
-			if isinstance(param, WindowManagerBase.Window):
-				window = param
-				print '%s: 0x%x "%s" ("%s") %s %s visible=%s' % (
-						event,
-						window.handle,
-						window.title,
-						window.application,
-						window.frameRect.to_tuple(),
-						window.clientRect.to_tuple(),
-						window.isVisible,
-						)
-		time.sleep(0.5)
+	for event, param in wm.next():
+		if event == wm.EVENT_WINDOW_CREATED:
+			window = param
+			print '0x%x title="%s" application="%s" frameRect=%s clientRect=%s isVisible=%s' % (
+					window.handle,
+					window.title,
+					window.application,
+					window.frameRect.to_tuple(),
+					window.clientRect.to_tuple(),
+					window.isVisible,
+					)
+
 
