@@ -186,23 +186,22 @@ class WindowManagerBase(object):
 		windowsOld = self._windows
 		self._windows = self.window_list()
 		for window in self._windows:
-			if window in windowsOld:
-				windowOld = windowsOld[windowsOld.index(window)]
+			try:
+				windowOld = windowsOld.pop(windowsOld.index(window))
+			except ValueError:
+				events.append((self.EVENT_WINDOW_CREATED, window))
+				events.append((self.EVENT_WINDOW_GEOMETRY_CHANGED, window))
+				events.append((self.EVENT_WINDOW_TITLE_CHANGED, window))
+				events.append((self.EVENT_WINDOW_VISIBILITY_CHANGED, window))
+			else:
 				if window.frameRect != windowOld.frameRect:
 					events.append((self.EVENT_WINDOW_GEOMETRY_CHANGED, window))
 				if window.title != windowOld.title:
 					events.append((self.EVENT_WINDOW_TITLE_CHANGED, window))
 				if window.isVisible != windowOld.isVisible:
 					events.append((self.EVENT_WINDOW_VISIBILITY_CHANGED, window))
-			else:
-				events.append((self.EVENT_WINDOW_CREATED, window))
-				events.append((self.EVENT_WINDOW_GEOMETRY_CHANGED, window))
-				events.append((self.EVENT_WINDOW_TITLE_CHANGED, window))
-				events.append((self.EVENT_WINDOW_VISIBILITY_CHANGED, window))
-
 		for window in windowsOld:
-			if window not in self._windows:
-				events.append((self.EVENT_WINDOW_DESTROYED, window))
+			events.append((self.EVENT_WINDOW_DESTROYED, window))
 
 		display =Display(self._windows[:])
 		events.append((self.EVENT_DISPLAY_COMPOSITION, display))

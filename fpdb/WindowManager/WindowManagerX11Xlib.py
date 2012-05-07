@@ -197,16 +197,14 @@ GetLastError = _ErrorHandler.GetLastError
 def get_window_application(dsp, handle,
 		XFree=libx11.XFree, XGetClassHint=libx11.XGetClassHint, XClassHint=XClassHint,
 		addressof=addressof, c_char_p=c_char_p, byref=byref):
-	application = ''
 	classHint = XClassHint()
 	if XGetClassHint(dsp, handle, byref(classHint)):
-		application = classHint.res_name[:]
+		application = classHint.res_name
 		# docs claim each string in XClassHint has to be freed individually, so here e go..
-		addr = addressof(classHint) + XClassHint.res_name.offset
-		XFree(c_char_p.from_address(addr))
-		addr = addressof(classHint) + XClassHint.res_class.offset
-		XFree(c_char_p.from_address(addr))
-	return application
+		XFree(c_char_p.from_address(addressof(classHint) + XClassHint.res_name.offset))
+		XFree(c_char_p.from_address(addressof(classHint) + XClassHint.res_class.offset))
+		return application
+	return ''
 
 #TODO: check if child is a toplevel window
 def set_window_transient_for(parent, child):
@@ -268,15 +266,14 @@ def get_window_title(dsp, handle,
 def get_window_is_visible(dsp, handle,
 		XGetWindowAttributes=libx11.XGetWindowAttributes, XWindowAttributes=XWindowAttributes,
 		IsViewable=IsViewable, byref=byref):
-	isVisible = False
 	windowAttributes = XWindowAttributes()
 	if XGetWindowAttributes(dsp, handle, byref(windowAttributes)):
-		isVisible = windowAttributes.map_state == IsViewable
-	return isVisible
+		return windowAttributes.map_state == IsViewable
+	return False
 
 def list_windows(dsp, handle,
 		XQueryTree=libx11.XQueryTree, XFree=libx11.XFree,  XWindow= XWindow, pointer=pointer,
-		byref=byref, memmove=memmove, xrange=xrange,
+		byref=byref, xrange=xrange,
 		):
 	root = XWindow()
 	parent = XWindow()
@@ -291,14 +288,20 @@ def list_windows(dsp, handle,
 	return []
 
 #TODO: we may have to XGrabServer() XUngrabServer() here
-def window_list():
+def window_list(
+		XDefaultRootWindow=libx11.XDefaultRootWindow, XOpenDisplay=libx11.XOpenDisplay, XCloseDisplay=libx11.XCloseDisplay,
+		list_windows=list_windows, get_window_title=get_window_title, get_window_geometry=get_window_geometry,
+		get_window_application=get_window_application, get_window_is_visible=get_window_is_visible,
+		Window=Window, Rectangle=WindowManagerBase.Rectangle,
+
+		):
 	"""returns a list of all toplevel windows currently open
 	@note: list should always start at the root window (the desktop)
 	@note: the list should be sorted in stacking oder. root first, topmost window last
 	"""
-	dsp = libx11.XOpenDisplay('')
+	dsp = XOpenDisplay('')
 	try:
-		handleRoot = libx11.XDefaultRootWindow(dsp)
+		handleRoot = XDefaultRootWindow(dsp)
 		geometryRoot = get_window_geometry(dsp, handleRoot)
 		windowRoot = Window(
 				None,
@@ -306,7 +309,7 @@ def window_list():
 				get_window_title(dsp, handleRoot),
 				get_window_application(dsp, handleRoot),
 				WindowManagerBase.Rectangle(*geometryRoot),
-				WindowManagerBase.Rectangle(*geometryRoot),
+				Rectangle(*geometryRoot),
 				get_window_is_visible(dsp, handleRoot),
 				)
 		windows = [windowRoot, ]
@@ -327,15 +330,15 @@ def window_list():
 								handleWindow,
 								title,
 								get_window_application(dsp, handleWindow),
-								WindowManagerBase.Rectangle(*get_window_geometry(dsp, handleFrame)),
-								WindowManagerBase.Rectangle(*get_window_geometry(dsp, handleWindow)),
+								Rectangle(*get_window_geometry(dsp, handleFrame)),
+								Rectangle(*get_window_geometry(dsp, handleWindow)),
 								get_window_is_visible(dsp, handleFrame),	# have to take frame here (?)
 								)
 						break
 				if windowFrame is not None:
 					windows.append(windowFrame)
 	finally:
-		libx11.XCloseDisplay(dsp)
+		XCloseDisplay(dsp)
 	return windows
 
 #************************************************************************************
