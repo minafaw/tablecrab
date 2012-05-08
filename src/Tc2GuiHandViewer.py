@@ -88,6 +88,13 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 		self._browser.setZoomFactor(value)
 
 	def handleHandSet(self, hand):
+		if hand.gameType & hand.GameTypeHoldem:
+			self.setEnabled(True)
+		else:
+			self.setEnabled(False)
+			self._browser.setHtml('<h4>Unsupported game type</h4>')
+			return
+
 		if hand is self.lastHand:
 			return
 		self.lastHand = hand
@@ -97,7 +104,7 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 		if not payoutStructure:
 			return
 		if not hand:
-			self._browser.setHtml('<h3>Can not fetch data for the hand</h3>')
+			self._browser.setHtml('<h4>Can not fetch data for the hand</h4>')
 			return
 
 		# prep seats/stacks
@@ -269,7 +276,7 @@ class BrowserSideBarICMTax(QtGui.QFrame):
 			('Winner takes all', '100', '999'),
 			('Custom', '', '99/99/99/99/99/99/99/99/99/99')
 			)
-			
+
 	StyleSheet = '''body{}
 table{}
 td{text-align: center;vertical-align: text-top;}
@@ -285,7 +292,7 @@ td{text-align: center;vertical-align: text-top;}
 		QtGui.QFrame.__init__(self, parent)
 
 		self.lastHand = None
-		
+
 		self._browser = QtWebKit.QWebView(self)
 		self._browser.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		self._browser.customContextMenuRequested.connect(self.onContextMenuWebView)
@@ -321,7 +328,7 @@ td{text-align: center;vertical-align: text-top;}
 		self._browser.setZoomFactor(value)
 
 	def handleHandSet(self, hand):
-		
+
 		if hand is self.lastHand:
 			return
 		self.lastHand = hand
@@ -344,23 +351,23 @@ td{text-align: center;vertical-align: text-top;}
 		html = '<html><head>'
 		html += '<style type="text/css"><!-- %s --></style>' % Tc2Config.globalObject.settingsICMTaxStyleSheet.styleSheet()
 		html += '</head><body>'
-				
-		
-		html += '<table border="1" cellspacing="0" cellpadding="0" width="100%">'	
-		
+
+
+		html += '<table border="1" cellspacing="0" cellpadding="0" width="100%">'
+
 		bubbleFactors = ICM.bubbleFactors(stacks, self.payoutStructure())
 		for iHero, villains in enumerate(bubbleFactors):
 			seat = seats[iHero]
 			role = PokerTools.Seats.seatName(len(seats), seatsButtonOrdered.index(seat))
-						
+
 			title = '&nbsp;'
 			if iHero == 0:
 				title = 'ICM-tax hero--&gt;villain (in %)'
 			html += '<th class="title" colspan="99">%s</th>' % title
-						
+
 			tr1 = '<tr><td class="roleHero">%s</td>' % role
 			tr2 = '<tr><td class="taxHero"></td>'
-				
+
 			# sort villains
 			myVillains = []
 			iHero = 0
@@ -373,7 +380,7 @@ td{text-align: center;vertical-align: text-top;}
 					role = PokerTools.Seats.seatName(len(seats), seatsButtonOrdered.index(seat))
 					myVillains.append((role, bubbleFactor, iVillain))
 			myVillains = myVillains[iHero+1:] + myVillains[:iHero]
-			
+
 			for role, bubbleFactor, iVillain in myVillains:
 				taxHero = ICM.taxFactor(bubbleFactor)
 				taxHero = int(round(taxHero*100, 0))
@@ -382,12 +389,12 @@ td{text-align: center;vertical-align: text-top;}
 				taxVillain = int(round(taxVillain*100, 0))
 				tr1 += '<td class="roleVillain">%s</td>' % role
 				tr2 += '<td class="taxVillain">%s/%s</td>' % (taxHero, taxVillain)
-					
+
 			tr1 += '</tr>'
 			tr2 += '</tr>'
 			html += tr1
 			html += tr2
-			
+
 		html += '</table>'
 		html += '</table></body></html>'
 		self._browser.setHtml(html)
@@ -406,7 +413,7 @@ td{text-align: center;vertical-align: text-top;}
 
 	def onCloseEvent(self, event):
 		Tc2Config.settingsSetValue(self.SettingsKeyPayoutStructureCurrent, self.comboBox.currentIndex())
-	
+
 	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		self.layout()
 		self.comboBox.currentIndexChanged.connect(self.onComboBoxCurrentIndexChanged)
@@ -618,7 +625,7 @@ class FrameHandViewer(QtGui.QFrame):
 		if data and fileName is None:
 			m = hashlib.sha256()
 			m.update(data)
-			#NOTE: have to use single slash here. no idea why but tripple slash gets 
+			#NOTE: have to use single slash here. no idea why but tripple slash gets
 			# truncated to single slash in NetworkReply. file:/// urls work as expected
 			# (PyQt: 4.8.3)
 			myUrl  = QtCore.QUrl('cache:/' + m.hexdigest() )
