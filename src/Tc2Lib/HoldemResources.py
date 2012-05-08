@@ -121,38 +121,6 @@ class NashFetcher(QtNetwork.QNetworkAccessManager):
 			p = QtCore.QString.fromUtf8(arr.data())
 			self.requestCompleted.emit(url, p)
 
-
-def test():
-	import time
-	from PyQt4 import QtGui
-
-	class W(QtGui.QMainWindow):
-		def __init__(self):
-			QtGui.QMainWindow.__init__(self)
-			self.show()
-			self.f = NashFetcher()
-			self.f.requestCompleted.connect(self.onRequestCompleted)
-			self.f.requestFailed.connect(self.onRequestFailed)
-			url = self.f.createRequestUrl(
-					bigBlind=200,
-					smallBlind=100,
-					ante=25,
-					payouts=(0.5, 0.3, 0.2),
-					stacks=(1000, 1000, 2000)
-					)
-			self.f.requestHandData(url, timeout=1000)
-		def onRequestCompleted(self, url, data):
-			print '>>request completed'
-			print repr(data)
-		def onRequestFailed(self, url, msg):
-			print '>>request failed'
-			print msg
-	app = QtGui.QApplication([])
-	w = W()
-	app.exec_()
-
-#test()
-
 #************************************************************************************
 #
 #************************************************************************************
@@ -175,9 +143,9 @@ td{text-align: left;vertical-align: text-top;}
 .cellActionCallPercentage{}
 .cellActionCallRange{}
 '''
-	PatTable = re.compile('<table\s?.*?> (.*?) </table>', re.X|re.I|re.S)
-	PatTr = re.compile('<tr\s?.*?> (.*?) </tr>', re.X|re.I|re.S)
-	PatTd = re.compile('<td\s?.*?> (.*?) </td>', re.X|re.I|re.S)
+	PatTable = re.compile('<table\s?.*?> (.*?) </table>', re.X|re.I|re.S|re.U)
+	PatTr = re.compile('<tr\s?.*?> (.*?) </tr>', re.X|re.I|re.S|re.U)
+	PatTd = re.compile('<td\s?.*?> (.*?) </td>', re.X|re.I|re.S|re.U)
 
 	def __init__(self):
 		self.seats = None
@@ -192,7 +160,7 @@ td{text-align: left;vertical-align: text-top;}
 		seats = []
 
 		# gather sall seats from top table
-		trs = self.PatTr.findall(tables[-2])
+		trs = self.PatTr.findall(tables[-3])
 		for tr in trs:
 			tds = self.PatTd.findall(tr)
 			if not tds: continue
@@ -310,3 +278,40 @@ td{text-align: left;vertical-align: text-top;}
 		p += '</body></html>'
 		return p
 
+#************************************************************************************
+#
+#************************************************************************************
+def test():
+	import time
+	from PyQt4 import QtGui
+
+	class W(QtGui.QMainWindow):
+		def __init__(self):
+			QtGui.QMainWindow.__init__(self)
+			self.show()
+			self.f = NashFetcher()
+			self.f.requestCompleted.connect(self.onRequestCompleted)
+			self.f.requestFailed.connect(self.onRequestFailed)
+			url = self.f.createRequestUrl(
+					bigBlind=200,
+					smallBlind=100,
+					ante=25,
+					payouts=(0.5, 0.3, 0.2),
+					stacks=(1000, 1000, 2000)
+					)
+			print url
+			self.f.requestHandData(url, timeout=1000)
+		def onRequestCompleted(self, url, data):
+			print '>>request completed'
+			##print data.toUtf8()
+			formatter = NashFormatter()
+			formatter.parse(data, 3)
+
+		def onRequestFailed(self, url, msg):
+			print '>>request failed'
+			print msg
+	app = QtGui.QApplication([])
+	w = W()
+	app.exec_()
+
+if __name__ == '__main__': test()
