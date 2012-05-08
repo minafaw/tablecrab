@@ -128,6 +128,7 @@ class HandParser(object):
 					'gameType': Hand.GameTypeHoldem | Hand.GameLimitLimit,
 					'numPlayerCards': 2,
 					},
+
 			'Omaha Limit': {
 					'gameType': Hand.GameTypeOmaha | Hand.GameLimitLimit,
 					'numPlayerCards': 4,
@@ -140,21 +141,54 @@ class HandParser(object):
 					'gameType': Hand.GameTypeOmaha | Hand.GameSubTypeHiLo | Hand.GameLimitLimit,
 					'numPlayerCards': 4,
 					},
-			'Omaha Hi/Lo Pot Limit':	{
-					'gameType': Hand.GameTypeOmaha | Hand.GameSubTypeHiLo | Hand.GameLimitLimit,
+			'Omaha Hi/Lo Pot Limit': {
+					'gameType': Hand.GameTypeOmaha | Hand.GameSubTypeHiLo | Hand.GameLimitPotLimit,
 					'numPlayerCards': 4,
 					},
-			'7 Card Stud Limit':	{
+
+			'7 Card Stud Limit': {
 					'gameType': Hand.GameTypeStud | Hand.GameLimitLimit,
 					'numPlayerCards': 7,
 					},
-			'7 Card Stud Hi/Lo Limit':	{
+			'7 Card Stud Hi/Lo Limit': {
 					'gameType': Hand.GameTypeStud | Hand.GameSubTypeHiLo | Hand.GameLimitLimit,
 					'numPlayerCards': 7,
 					},
+
 			'Razz Limit':	{
 					'gameType': Hand.GameTypeRazz | Hand.GameLimitLimit,
 					'numPlayerCards': 7,
+					},
+
+
+			"HORSE (Hold'em Limit,": {
+					'gameType': Hand.GameTypeHoldem | Hand.GameLimitNoLimit,
+					'numPlayerCards': 2,
+					},
+			'HORSE (Omaha Hi/Lo Limit,': {
+					'gameType': Hand.GameTypeOmaha | Hand.GameSubTypeHiLo | Hand.GameLimitLimit,
+					'numPlayerCards': 4,
+					},
+			'HORSE (7 Card Stud Limit,': {
+					'gameType': Hand.GameTypeStud | Hand.GameLimitLimit,
+					'numPlayerCards': 7,
+					},
+			'HORSE (7 Card Stud Hi/Lo Limit,':	{
+					'gameType': Hand.GameTypeStud | Hand.GameSubTypeHiLo | Hand.GameLimitLimit,
+					'numPlayerCards': 7,
+					},
+			'HORSE (Razz Limit,': {
+					'gameType': Hand.GameTypeRazz | Hand.GameLimitLimit,
+					'numPlayerCards': 7,
+					},
+
+			"Mixed NLH/PLO (Hold'em No Limit,": {
+					'gameType': Hand.GameTypeHoldem | Hand.GameLimitNoLimit,
+					'numPlayerCards': 2,
+					},
+			'Mixed NLH/PLO (Omaha Pot Limit,': {
+					'gameType': Hand.GameTypeOmaha | Hand.GameLimitPotLimit,
+					'numPlayerCards': 4,
 					},
 			}
 
