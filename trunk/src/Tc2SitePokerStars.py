@@ -620,7 +620,7 @@ class InstantHandHistory(PokerStarsWindow):
 			handData = ''
 			hand = Tc2SitePokerStarsHandGrabber.Hand()
 			#TODO: very sloppy test to minimize risk we are grabbing 'show summary only' in instant hand history
-			if not ('*** HOLE CARDS ***' in data or '*** 3rd STREET ***' in data):
+			if not ('*** HOLE CARDS ***' in data or '*** 3rd STREET ***' in data or '*** DEALING HANDS ***' in data):
 				pass
 			else:
 				#NOTE: we are let Tc2Config handle errors because we are maybe working with arbitrary data
