@@ -348,14 +348,7 @@ class HandParser(object):
 				i = cards.index('[')
 				cards = cards[i+1:]
 			if hand.gameType & hand.GameTypeStud or hand.gameType & hand.GameTypeRazz:
-				if  streetCurrent == hand.StreetFirst:
-					hand.playerFromName(result.group('player')).cards += self.stringToCards(cards)
-				elif  streetCurrent == hand.StreetSecond:
-					hand.playerFromName(result.group('player')).cards += self.stringToCards(cards)
-				elif  streetCurrent == hand.StreetFhird:
-					hand.playerFromName(result.group('player')).cards += self.stringToCards(cards)
-				elif  streetCurrent == hand.StreetRiver:
-					hand.playerFromName(result.group('player')).cards[5] += self.stringToCards(cards)
+				hand.playerFromName(result.group('player')).cards += self.stringToCards(cards)
 			else:
 				hand.playerFromName(result.group('player')).cards = self.stringToCards(cards)
 		return result is not None
