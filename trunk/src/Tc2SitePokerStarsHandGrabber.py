@@ -476,7 +476,7 @@ class HandParser(object):
 
 	#TODO: test. stars introduced "fold + show", so we may get to see some cards here. have only seen
 	# show both so far. hope it works for show one as well.
-	PatternFold = re.compile('^(?P<player>.+?) \:\s folds (\s \[  (?P<cards>.+?) \])', re.X)
+	PatternFold = re.compile('^(?P<player>.+?) \:\s folds (\s \[  (?P<cards>.+?) \])?', re.X)
 	def matchFold(self, hand, streetCurrent, line):
 		result = self.PatternFold.match(line)
 		if result is not None:
@@ -925,9 +925,11 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		nActions = None
 		for nActions, action in enumerate(actions):
 			if action.type == action.TypeFold:
-				p | '<div class="playerActionFold">%s</div>' % self.settingsHandViewer.actionPrefix('Fold')
+				prefix = self.settingsHandViewer.actionPrefix('Fold')
+				p | '<div class="playerActionFold">%s</div>' % (prefix if prefix else '&nbsp;')
 			elif action.type == action.TypeCheck:
-				p |  '<div class="playerActionCheck">%s</div>' % self.settingsHandViewer.actionPrefix('Check')
+				prefix = self.settingsHandViewer.actionPrefix('Check')
+				p |  '<div class="playerActionCheck">%s</div>' % (prefix if prefix else '&nbsp;')
 			elif action.type == action.TypeBet:
 				p | '<div class="playerActionBet">%s%s%s</div>' % (
 						self.settingsHandViewer.actionPrefix('Bet'),
