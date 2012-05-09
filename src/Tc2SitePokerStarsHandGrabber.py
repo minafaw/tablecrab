@@ -1201,6 +1201,10 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			p >> '<td class="playerCardsCell">'
 			# pad player cards if necessary
 			cards = player.cards
+			# if player has river actions we must append a card if not already present
+			if [i for i in hand.actions[hand.StreetRiver] if i.player is player]:
+				if len(cards) == 6:
+					cards.append('')
 			while len(cards) < len(streets) + 2:
 				cards.append(None)
 			self.htmlFormatCards(p, 'playerCards', *cards)
