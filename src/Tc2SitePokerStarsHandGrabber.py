@@ -1095,6 +1095,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 				break
 		p | '<tr><td class="gameName" colspan="99">%s</th></td>' % gameName
 
+		streets = [street for street in (hand.StreetFirst, hand.StreetSecond, hand.StreetFhird, hand.StreetRiver) if hand.actions[street]]
 		for player in hand.seats:
 			if player is None: continue
 
@@ -1114,7 +1115,9 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			p << '</td>'
 
 			# add player actions
-			for street in (hand.StreetBlinds, hand.StreetFirst, hand.StreetSecond, hand.StreetFhird, hand.StreetRiver):
+			actions = [action for action in hand.actions[hand.StreetBlinds] if action.player is player]
+			self.formattPlayerActions(p, hand, actions)
+			for street in streets:
 				actions = [action for action in hand.actions[street] if action.player is player]
 				self.formattPlayerActions(p, hand, actions)
 
@@ -1136,29 +1139,25 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			p | '<td colspan="2" class="potCellExtra">&nbsp;</td>'
 		p | '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetBlinds])
 		p | '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetFirst])
-		p | '<td class="potCell">%s</td>' % (self.formatNum(hand, pot[hand.StreetSecond]) if len(hand.cards) > 2 else '&nbsp;')
-		p | '<td class="potCell">%s</td>' % (self.formatNum(hand, pot[hand.StreetFhird]) if len(hand.cards) > 3 else '&nbsp;')
-		p | '<td class="potCell">%s</td>' % (self.formatNum(hand, pot[hand.StreetRiver]) if len(hand.cards) > 4 else '&nbsp;')
+		for street in streets[1:]:
+				p | '<td class="potCell">%s</td>' % (self.formatNum(hand, pot[street]))
 		p << '</tr>'
 
-		# add board cards + hand history source
+		# add board cards
 		p >> '<tr>'
 		p | '<td class="boardCardCellExtra" colspan="4">&nbsp;</td>'
-		p >> '<td class="boardCardCell">'
-		self.htmlFormatCards(
-				p,
-				'boardCards',
-				hand.cards[0] if len(hand.cards) > 0 else None,
-				hand.cards[1] if len(hand.cards) > 1 else None,
-				hand.cards[2] if len(hand.cards) > 2 else None
-				)
-		p << '</td>'
-		p >> '<td class="boardCardCell">'
-		self.htmlFormatCards(p, 'boardCards', hand.cards[3] if len(hand.cards) > 3 else None)
-		p << '</td>'
-		p >> '<td class="boardCardCell">'
-		self.htmlFormatCards(p, 'boardCards', hand.cards[4] if len(hand.cards) > 4 else None)
-		p << '</td>'
+		if len(hand.cards) > 2:
+			p >> '<td class="boardCardCell">'
+			self.htmlFormatCards(p, 'boardCards', *hand.cards[:3])
+			p << '</td>'
+			if len(hand.cards) > 3:
+				p >> '<td class="boardCardCell">'
+				self.htmlFormatCards(p, 'boardCards', hand.cards[3])
+				p << '</td>'
+				if len(hand.cards) > 4:
+					p >> '<td class="boardCardCell">'
+					self.htmlFormatCards(p, 'boardCards', hand.cards[4])
+					p << '</td>'
 		p << '</tr>'
 
 		# dump html to file
