@@ -15,6 +15,7 @@ class FrameSettings(QtGui.QFrame):
 	SettingsKeyStyleSheet = SettingsKeyBase + '/StyleSheet'
 	SettingsKeyMaxPlayerName = SettingsKeyBase + '/MaxPlayerName'
 	SettingsKeyNoFloatingPoint = SettingsKeyBase + '/NoFloatingPoint'
+	SettingsKeyDeckStyle = SettingsKeyBase + '/DeckStyle'
 	SettingsKeyPrefixFold = SettingsKeyBase + '/PrefixFold'
 	SettingsKeyPrefixCheck = SettingsKeyBase + '/PrefixCheck'
 	SettingsKeyPrefixBet = SettingsKeyBase + '/PrefixBet'
@@ -41,6 +42,7 @@ class FrameSettings(QtGui.QFrame):
 	maxPlayerNameChanged = QtCore.pyqtSignal(int)
 	noFloatingPointChanged = QtCore.pyqtSignal(bool)
 	sideBarPositionChanged = QtCore.pyqtSignal(QtCore.QString)
+	deckStyleChanged = QtCore.pyqtSignal(QtCore.QString)
 
 	ActionPrefixes = (
 			('Bet', SettingsKeyPrefixBet, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixBet, SettingsKeyPostfixBet, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PostfixBet),
@@ -86,6 +88,11 @@ class FrameSettings(QtGui.QFrame):
 		self.labelSideBarPosition = QtGui.QLabel('&Side bar position:', self)
 		self.labelSideBarPosition.setBuddy(self.comboSideBarPosition)
 
+		self.comboDeckStyle = QtGui.QComboBox(self)
+		self.comboDeckStyle.addItems(Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.DeckStyles)
+		self.labelDeckStyle = QtGui.QLabel('Deck st&yle:', self)
+		self.labelDeckStyle.setBuddy(self.comboDeckStyle)
+
 		self.spinMaxPlayerName = QtGui.QSpinBox(self)
 		self.spinMaxPlayerName.setRange(Tc2Config.HandViewerMaxPlayerNameMin, Tc2Config.HandViewerMaxPlayerNameMax)
 		self.labelMaxPlayerName = QtGui.QLabel('Ma&x Player Name:', self)
@@ -122,6 +129,8 @@ class FrameSettings(QtGui.QFrame):
 		grid.col(Tc2Config.HLine(self), colspan=3)
 		grid.row()
 		grid.col(self.labelSideBarPosition).col(self.comboSideBarPosition)
+		grid.row()
+		grid.col(self.labelDeckStyle).col(self.comboDeckStyle)
 		grid.row()
 		grid.col(self.labelMaxPlayerName).col(self.spinMaxPlayerName)
 		grid.row()
@@ -178,6 +187,13 @@ class FrameSettings(QtGui.QFrame):
 		Tc2Config.settingsSetValue(edit.settingsKey, value)
 		self.actionPostfixChanged.emit(actionName)
 
+	def deckStyle(self):
+		return self.comboDeckStyle.currentText()
+
+	def setDeckStyle(self, value):
+		Tc2Config.settingsSetValue(self.SettingsKeyDeckStyle, value)
+		self.deckStyleChanged.emit(value)
+
 	def maxPlayerName(self):
 		return self.spinMaxPlayerName.value()
 
@@ -208,6 +224,13 @@ class FrameSettings(QtGui.QFrame):
 		self.comboSideBarPosition.setCurrentIndex( self.comboSideBarPosition.findText(value, QtCore.Qt.MatchExactly) )
 		#NOTE: pySlot decorator does not work as expected so we have to connect slot the old fashioned way
 		self.connect(self.comboSideBarPosition, QtCore.SIGNAL('currentIndexChanged(QString)'), self.setSideBarPosition)
+
+		value = Tc2Config.settingsValue(self.SettingsKeyDeckStyle, '').toString()
+		if value not in Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.DeckStyles:
+			value = Tc2Config.HandViewerDeckStyleDefault
+		self.comboDeckStyle.setCurrentIndex( self.comboDeckStyle.findText(value, QtCore.Qt.MatchExactly) )
+		#NOTE: pySlot decorator does not work as expected so we have to connect slot the old fashioned way
+		self.connect(self.comboDeckStyle, QtCore.SIGNAL('currentIndexChanged(QString)'), self.setDeckStyle)
 
 		value, ok = Tc2Config.settingsValue(self.SettingsKeyMaxPlayerName, Tc2Config.HandViewerMaxPlayerNameDefault).toInt()
 		if not ok or value < Tc2Config.HandViewerMaxPlayerNameMin or value > Tc2Config.HandViewerMaxPlayerNameMax:
