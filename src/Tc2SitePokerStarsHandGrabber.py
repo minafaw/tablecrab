@@ -801,10 +801,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
         color: #355b73;
         background-color: #355b73;
         }
-.cardNone{
-        color: #355b73;
-        background-color: #355b73;
-        }
+.cardNone{}
 
 
 '''
