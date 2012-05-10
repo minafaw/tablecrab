@@ -665,11 +665,21 @@ class HandParser(object):
 # hand formatters
 #************************************************************************************
 HtmlCardSuitMapping = {		# suit --> (entity, htmlKlass)
-		's': ('&spades;', 'cardSuitSpade'),
-		'c': ('&clubs;', 'cardSuitClub'),
-		'd': ('&diams;', 'cardSuitDiamond'),
-		'h': ('&hearts;', 'cardSuitHeart'),
-		}
+			'Default': {
+				's': ('&spades;', 'cardRank cardRankSpade', 'cardSuit cardSuitSpade'),
+				'c': ('&clubs;', 'cardRank cardRankClub', 'cardSuit cardSuitClub'),
+				'd': ('&diams;', 'cardRank cardrankDiamond', 'cardSuit cardSuitDiamond'),
+				'h': ('&hearts;', 'cardRank cardRankHeart', 'cardSuit cardSuitHeart'),
+				'': ('&nbsp;', 'cardRank cardRankBack', 'cardSuit cardSuitBack'),
+				},
+			'FourColor': {
+				's': ('&spades;', 'cardRank4 cardRankSpade4', 'cardSuit4 cardSuitSpade4'),
+				'c': ('&clubs;', 'cardRank4 cardRankClub4', 'cardSuit4 cardSuitClub4'),
+				'd': ('&diams;', 'cardRank4 cardrankDiamond4', 'cardSuit4 cardSuitDiamond4'),
+				'h': ('&hearts;', 'cardRank4 cardRankHeart4', 'cardSuit4 cardSuitHeart4'),
+				'': ('&nbsp;', 'cardRank4 cardRankBack4', 'cardSuit4 cardSuitBack4'),
+				},
+			}
 
 HandFormatters = {}
 class HandFormatterMeta(type):
@@ -708,6 +718,10 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	PostfixBringIn = ''
 	PrefixCheck = 'ck'
 	PrefixFold = 'f'
+
+	DecKStyleDefault = 'Default'
+	DeckStyleFourColor = 'FourColor'
+	DeckStyles = (DecKStyleDefault, DeckStyleFourColor)
 
 	MaxPlayerName = -1
 	# and this is the css for the html file
@@ -765,43 +779,173 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 .boardCardCellExtra{border: 1px solid black; }
 .boardCardCell{
         border:1px solid black;
-        margin-left: auto;        /* centers contents of the cell */
-        margin-right: auto;    /* centers contents of the cell */
+        margin-left: auto;        /* centers contents of the cell, seems broken now */
+        margin-right: auto;    /* centers contents of the cell, seems broken now */
         }
 .boardCards{
         border: 0px;
         border-spacing: 0px;
-        margin-left: auto;        /* centers contents of the cell */
-        margin-right: auto;    /* centers contents of the cell */
+        margin-left: auto;        /* centers contents of the cell, seems broken now */
+        margin-right: auto;    /* centers contents of the cell, seems broken now */
         }
 
 
-.cardCell{padding: 0px;}
-.card{
-        border: solid 1px;
-        background-color: red;
-        border-spacing: 0px;
-        margin-left: auto;        /* centers contents of the cell */
-        margin-right: auto;    /* centers contents of the cell */
-        }
-.cardShape{
-        padding: 0px 0px 0px 0px;
-        background-color: white;
-        }
+.cards{
+	border-spacing: 0px;
+	padding: 0px;
+	empty-cells: show;
+	}
+.cardRank{
+	text-align: center;
+	color: white;
+
+	padding: 0em 0em 0em 0em;
+	border-top: 1px solid black;
+	border-left: 1px solid black;
+	border-bottom: none;
+	border-right: 1px solid black;
+	}
 .cardSuit{
-        text-indent:0.3em;
-        padding: 0px 0px 0px 0px;
-        background-color: white;
-        }
-.cardSuitSpade{color: black;}
-.cardSuitClub{color: black;}
-.cardSuitHeart{color: red;}
-.cardSuitDiamond{color: red;}
-.cardBack{
-        color: #355b73;
-        background-color: #355b73;
-        }
+	text-align: center;
+	color: white;
+	/*font-size: 0pt;*/    /* uncomment to hide card suit */
+
+	padding: 0em 0em 0em 0em;
+	border-top: none;
+	border-left: 1px solid black;
+	border-bottom: 1px solid black;
+	border-right: 1px solid black;
+	}
+.cardWidth{
+	padding-left: 1.2em;	/* adjust card width via this padding */
+
+	padding-top: 0em;
+	padding-right: 0em;
+	padding-bottom: 0em;
+	height: 0px;
+	border-top: none;
+	border-bottom: none;
+	}
+
+.cardRankSpade{
+	color: black;
+	background-color: white;
+	}
+.cardSuitSpade{
+	color: black;
+	background-color: white;
+	}
+.cardRankClub{
+	color: black;
+	background-color: white;
+	}
+.cardSuitClub{
+	color: black;
+	background-color: white;
+	}
+.cardRankHeart{
+	color: red;
+	background-color: white;
+	}
+.cardSuitHeart{
+	color: red;
+	background-color: white;
+	}
+.cardRankDiamond{
+	color: red;
+	background-color: white;
+	}
+.cardSuitDiamond{
+	color: red;
+	background-color: white;
+	}
+.cardRankBack{
+	color: #355b73;
+	background-color: #355b73;
+	}
+.cardSuitBack{
+	color: #355b73;
+	background-color: #355b73;
+	}
 .cardNone{}
+
+/* four color deck */
+.cardRank4{
+	text-align: center;
+	color: white;
+
+	padding: 0.2em 0em 0.2em 0em;
+	border-top: 1px solid black;
+	border-left: 1px solid black;
+	border-bottom: none;
+	border-right: 1px solid black;
+	}
+.cardSuit4{
+	text-align: center;
+	color: white;
+	font-size: 0pt;    /* uncomment to hide card suit */
+
+	padding: 0em 0em 0em 0em;
+	border-top: none;
+	border-left: 1px solid black;
+	border-bottom: 1px solid black;
+	border-right: 1px solid black;
+	}.cardWidth4{
+	padding-left: 2.4em;	/* adjust card width via this padding */
+
+	padding-top: 0em;
+	padding-right: 0em;
+	padding-bottom: 0em;
+	height: 0px;
+	border-top: none;
+	border-bottom: none;
+	}
+
+.cardRankSpade4{
+	font-size: large;
+	font-weight: bold;
+	color: white;
+	background-color: #8D8F8F;
+	}
+.cardSuitSpade4{
+	background-color: #8D8F8F;
+	}
+.cardRankClub4{
+	font-size: large;
+	font-weight: bold;
+	color: white;
+	background-color: #5A9057;
+	}
+.cardSuitClub4{
+	background-color: #5A9057;
+	}
+.cardRankHeart4{
+	font-size: large;
+	font-weight: bold;
+	color: white;
+	background-color: #C46953;
+	}
+.cardSuitHeart4{
+	background-color: #C46953;
+	}
+.cardRankDiamond4{
+	font-size: large;
+	font-weight: bold;
+	color: white;
+	background-color: #587DC2;
+	}
+.cardSuitDiamond4{
+	background-color: #587DC2;
+	}
+.cardRankBack4{
+	font-size: large;
+	font-weight: bold;
+	color: white;
+	background-color: white;
+	}
+.cardSuitBack4{
+	background-color: white;
+	}
 
 
 '''
@@ -861,6 +1005,44 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		return string
 
 	def htmlFormatCards(self, p, cardsType, *cards):
+		"""
+		@param cards: one or more cards (like 'Ad'). if a card is '' a card back is
+		formatted, if card is None a placeholder is formatted
+		"""
+
+		deckStyle = str(self.settingsHandViewer.deckStyle())
+		p >> '<table class="cards">'
+		trRank = '<tr>'
+		trSuit = '<tr>'
+		trWidth = '<tr>'
+		for card in cards:
+			if card is None:
+				trRank += '<td class="cardNone"></td>'
+				trSuit += '<td class="cardNone"></td>'
+				trWidth += '<td class="cardWidth"></td>'
+			elif card == '':
+				rank = '&nbsp;'
+				suit, rankKlass, suitKlass = HtmlCardSuitMapping[deckStyle]['']
+				trRank += '<td class="%s">%s</td>' % (rankKlass, rank)
+				trSuit += '<td class=" %s">%s</td>' % (suitKlass, suit)
+				trWidth += '<td class="cardWidth"></td>'
+			else:
+				rank = card[0]
+				suit, rankKlass, suitKlass = HtmlCardSuitMapping[deckStyle][card[1]]
+				trRank += '<td class="%s">%s</td>' % (rankKlass, rank)
+				trSuit += '<td class="%s">%s</td>' % (suitKlass, suit)
+				trWidth += '<td class="cardWidth"></td>'
+		trRank += '</tr>'
+		trSuit += '</tr>'
+		trWidth += '</tr>'
+		p | trRank
+		p | trSuit
+		p | trWidth
+
+		p << '</table>'
+
+
+		return
 		if cardsType == 'playerCards':
 			p >> '<table class="playerCards">'
 		elif  cardsType == 'boardCards':
@@ -1002,7 +1184,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			if d['gameType'] == hand.gameType:
 				gameName = d['gameName']
 				break
-		p | '<tr><td class="gameName" colspan="99">%s</th></td>' % gameName
+		p | '<tr><td class="gameName" colspan="99">%s</td></tr>' % gameName
 
 		streets = [street for street in (hand.StreetFirst, hand.StreetSecond, hand.StreetThird, hand.StreetRiver) if hand.actions[street]]
 		for player in hand.seats:
@@ -1092,9 +1274,8 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			if d['gameType'] == hand.gameType:
 				gameName = d['gameName']
 				break
-		p | '<tr><td class="gameName" colspan="99">%s</th></td>' % gameName
+		p | '<tr><td class="gameName" colspan="99">%s</td></tr>' % gameName
 
-		streets = [street for street in (hand.StreetFirst, hand.StreetSecond, hand.StreetThird, hand.StreetRiver) if hand.actions[street]]
 		for player in hand.seats:
 			if player is None: continue
 
@@ -1114,10 +1295,10 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			p << '</td>'
 
 			# add player actions
-			actions = [action for action in hand.actions[hand.StreetBlinds] if action.player is player]
-			self.formattPlayerActions(p, hand, actions)
-			for street in streets:
+			for street in hand.streets:
 				actions = [action for action in hand.actions[street] if action.player is player]
+				if not actions:
+					actions = []
 				self.formattPlayerActions(p, hand, actions)
 
 			p << '</tr>'
@@ -1138,8 +1319,8 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			p | '<td colspan="2" class="potCellExtra">&nbsp;</td>'
 		p | '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetBlinds])
 		p | '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetFirst])
-		for street in streets[1:]:
-				p | '<td class="potCell">%s</td>' % (self.formatNum(hand, pot[street]))
+		for street in hand.streets[2:]:
+			p | '<td class="potCell">%s</td>' % (self.formatNum(hand, pot[street]))
 		p << '</tr>'
 
 		# add board cards
@@ -1150,11 +1331,11 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			self.htmlFormatCards(p, 'boardCards', *hand.cards[:3])
 			p << '</td>'
 			if len(hand.cards) > 3:
-				p >> '<td class="boardCardCell">'
+				p >> '<td class="boardCardCell" align="center">'
 				self.htmlFormatCards(p, 'boardCards', hand.cards[3])
 				p << '</td>'
 				if len(hand.cards) > 4:
-					p >> '<td class="boardCardCell">'
+					p >> '<td class="boardCardCell" align="center">'
 					self.htmlFormatCards(p, 'boardCards', hand.cards[4])
 					p << '</td>'
 		p << '</tr>'
@@ -1185,7 +1366,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			if d['gameType'] == hand.gameType:
 				gameName = d['gameName']
 				break
-		p | '<tr><td class="gameName" colspan="99">%s</th></td>' % gameName
+		p | '<tr><td class="gameName" colspan="99">%s</td></tr>' % gameName
 
 		streets = [street for street in (hand.StreetFirst, hand.StreetSecond, hand.StreetThird, hand.StreetFourth, hand.StreetRiver) if hand.actions[street]]
 		maxCards = max([len(player.cards) for player in hand.seats if player is not None])

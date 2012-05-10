@@ -183,6 +183,7 @@ HandViewerSideBarPositions = (
 HandViewerMaxPlayerNameMin = -1
 HandViewerMaxPlayerNameMax = 999
 HandViewerMaxPlayerNameDefault = -1
+HandViewerDeckStyleDefault = 'Default'
 
 HoldemResourcesHandHistoryViewerRequestDelay = 0.2
 
