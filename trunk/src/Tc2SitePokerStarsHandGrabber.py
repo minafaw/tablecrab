@@ -664,23 +664,6 @@ class HandParser(object):
 #************************************************************************************
 # hand formatters
 #************************************************************************************
-HtmlCardSuitMapping = {		# suit --> (entity, htmlKlass)
-			'Default': {
-				's': ('&spades;', 'cardRank cardRankSpade', 'cardSuit cardSuitSpade'),
-				'c': ('&clubs;', 'cardRank cardRankClub', 'cardSuit cardSuitClub'),
-				'd': ('&diams;', 'cardRank cardrankDiamond', 'cardSuit cardSuitDiamond'),
-				'h': ('&hearts;', 'cardRank cardRankHeart', 'cardSuit cardSuitHeart'),
-				'': ('&nbsp;', 'cardRank cardRankBack', 'cardSuit cardSuitBack'),
-				},
-			'FourColor': {
-				's': ('&spades;', 'cardRank4 cardRankSpade4', 'cardSuit4 cardSuitSpade4'),
-				'c': ('&clubs;', 'cardRank4 cardRankClub4', 'cardSuit4 cardSuitClub4'),
-				'd': ('&diams;', 'cardRank4 cardrankDiamond4', 'cardSuit4 cardSuitDiamond4'),
-				'h': ('&hearts;', 'cardRank4 cardRankHeart4', 'cardSuit4 cardSuitHeart4'),
-				'': ('&nbsp;', 'cardRank4 cardRankBack4', 'cardSuit4 cardSuitBack4'),
-				},
-			}
-
 HandFormatters = {}
 class HandFormatterMeta(type):
 	"""meta class for hand formatters"""
@@ -722,6 +705,23 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	DecKStyleDefault = 'Default'
 	DeckStyleFourColor = 'FourColor'
 	DeckStyles = (DecKStyleDefault, DeckStyleFourColor)
+
+	HtmlCardSuitMapping = {		# suit --> (entity, htmlKlass)
+			DecKStyleDefault: {
+				's': ('&spades;', 'cardRank cardRankSpade', 'cardSuit cardSuitSpade'),
+				'c': ('&clubs;', 'cardRank cardRankClub', 'cardSuit cardSuitClub'),
+				'd': ('&diams;', 'cardRank cardrankDiamond', 'cardSuit cardSuitDiamond'),
+				'h': ('&hearts;', 'cardRank cardRankHeart', 'cardSuit cardSuitHeart'),
+				'': ('&nbsp;', 'cardRank cardRankBack', 'cardSuit cardSuitBack'),
+				},
+			DeckStyleFourColor: {
+				's': ('&spades;', 'cardRank4 cardRankSpade4', 'cardSuit4 cardSuitSpade4'),
+				'c': ('&clubs;', 'cardRank4 cardRankClub4', 'cardSuit4 cardSuitClub4'),
+				'd': ('&diams;', 'cardRank4 cardrankDiamond4', 'cardSuit4 cardSuitDiamond4'),
+				'h': ('&hearts;', 'cardRank4 cardRankHeart4', 'cardSuit4 cardSuitHeart4'),
+				'': ('&nbsp;', 'cardRank4 cardRankBack4', 'cardSuit4 cardSuitBack4'),
+				},
+			}
 
 	MaxPlayerName = -1
 	# and this is the css for the html file
@@ -1022,13 +1022,13 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 				trWidth += '<td class="cardWidth"></td>'
 			elif card == '':
 				rank = '&nbsp;'
-				suit, rankKlass, suitKlass = HtmlCardSuitMapping[deckStyle]['']
+				suit, rankKlass, suitKlass = self.HtmlCardSuitMapping[deckStyle]['']
 				trRank += '<td class="%s">%s</td>' % (rankKlass, rank)
 				trSuit += '<td class=" %s">%s</td>' % (suitKlass, suit)
 				trWidth += '<td class="cardWidth"></td>'
 			else:
 				rank = card[0]
-				suit, rankKlass, suitKlass = HtmlCardSuitMapping[deckStyle][card[1]]
+				suit, rankKlass, suitKlass = self.HtmlCardSuitMapping[deckStyle][card[1]]
 				trRank += '<td class="%s">%s</td>' % (rankKlass, rank)
 				trSuit += '<td class="%s">%s</td>' % (suitKlass, suit)
 				trWidth += '<td class="cardWidth"></td>'
