@@ -15,7 +15,7 @@ class Hand(QtCore.QObject):
 	StreetBlinds = 1
 	StreetFirst = 2
 	StreetSecond  = 3
-	StreetFhird = 4
+	StreetThird = 4
 	StreetFourth = 5
 	StreetRiver = 6
 	StreetShowdown = 7
@@ -65,19 +65,20 @@ class Hand(QtCore.QObject):
 		self.blindSmall = 0.0
 		self.blindBig = 0.0
 		self.hasCents = True		# flag indicating if bet cents is discovered or not
-		self.seatNoButton = None
+		self.seatNoButton = None	# games with blinds only
 		self.tableName = ''
+		self.streets = []
 		self.actions = {
 				self.StreetBlinds: [],
 				self.StreetFirst: [],
 				self.StreetSecond: [],
-				self.StreetFhird: [],
+				self.StreetThird: [],
 				self.StreetFourth: [],
 				self.StreetRiver: [],
 				}
 
 	def calcPotSizes(self):
-		streets = (self.StreetBlinds, self.StreetFirst, self.StreetSecond, self.StreetFhird, self.StreetFourth, self.StreetRiver)
+		streets = (self.StreetBlinds, self.StreetFirst, self.StreetSecond, self.StreetThird, self.StreetFourth, self.StreetRiver)
 		result = dict([(street, 0.0) for street in streets])
 		players = [player for player in self.seats if player is not None]
 		bets = dict( [(player, 0.0) for player in players])
@@ -105,7 +106,10 @@ class Hand(QtCore.QObject):
 
 	def seatsButtonOrdered(self):
 		"""returns seats of hand orderd button player first, excluding empty seats"""
-		seats = self.seats[self.seatNoButton:] + self.seats[:self.seatNoButton]
+		if self.seatNoButton is None:
+			seats = self.seats
+		else:
+			seats = self.seats[self.seatNoButton:] + self.seats[:self.seatNoButton]
 		return [seat for seat in seats if seat is not None]
 
 	def __nonzero__(self):
@@ -390,7 +394,6 @@ class HandParser(object):
 		return result is not None
 
 	PatternBringsIn = re.compile('^(?P<player>.*?)\: \s brings \s in \s for \s [%s]? (?P<amount>[0-9\.\,]+ )' % Currencies, re.X)
-	s = 'snii: brings in for 50'
 	def matchBringsIn(self, hand, streetCurrent, line):
 		result = self.PatternBringsIn.match(line)
 		if result is not None:
@@ -517,6 +520,7 @@ class HandParser(object):
 		hand = Hand()
 		hand.handHistory = handHistory.strip().replace('\r', '')
 		streetCurrent = hand.StreetBlinds
+		hand.streets.append(hand.StreetBlinds)
 
 		# clean handHistory up a bit to make it easier on us..
 		handHistory = hand.handHistory.replace('(small blind) ', '').replace('(big blind) ', '').replace('(button) ', '').replace('(Play Money) ', '')
@@ -534,22 +538,27 @@ class HandParser(object):
 					line.startswith('*** 3rd STREET ***') or \
 					line.startswith('*** DEALING HANDS ***'):
 				streetCurrent = hand.StreetFirst
+				hand.streets.append(hand.StreetFirst)
 				continue
 			elif line.startswith('*** FLOP ***') or \
 					line.startswith('*** 4th STREET ***') or \
 					line.startswith('*** FIRST DRAW ***'):
 				streetCurrent = hand.StreetSecond
+				hand.streets.append(hand.StreetSecond)
 				continue
 			elif line.startswith('*** TURN ***') or \
 					line.startswith('*** 5th STREET ***') or \
 					line.startswith('*** SECOND DRAW ***'):
-				streetCurrent = hand.StreetFhird
+				streetCurrent = hand.StreetThird
+				hand.streets.append(hand.StreetThird)
 				continue
 			elif line.startswith('*** 6th STREET ***'):
 				streetCurrent = hand.StreetFourth
+				hand.streets.append(hand.StreetFourth)
 				continue
 			elif line.startswith('*** RIVER ***') or line.startswith('*** THIRD DRAW ***'):
 				streetCurrent = hand.StreetRiver
+				hand.streets.append(hand.StreetRiver)
 				continue
 			elif line.startswith('*** SHOWDOWN ***'):
 				streetCurrent = hand.StreetShowdown
@@ -602,55 +611,54 @@ class HandParser(object):
 		# postprocess hand
 		hand.hasCents = (hand.blindAnte, hand.blindSmall, hand.blindBig) != (int(hand.blindAnte), int(hand.blindSmall), int(hand.blindBig))
 
-		#NOTE: when introducing zoom poker stars missed indicating button player in
-		# hand histories. following lines try our best to determine this player
-		if hand.seatNoButton is None and hand.actions[hand.StreetBlinds]:
+		if hand.gameType & hand.GameTypeStud or hand.gameType & hand.GameTypeRazz:
+			# we get no notification on river card, so patch here. if a player
+			# has not folded until the river he has been dealt final card
+			if hand.StreetRiver in hand.streets:
+				for player in hand.seats:
+					if player is None: continue
+					if len(player.cards) != 6: continue
+					actions = [action.type for action in hand.actions[hand.StreetFourth] if action.player is player]
+					if not hand.Action.TypeFold in actions:
+						player.cards.append('')
 
-			players = [player for player in hand.seats if player is not None]
-			if len(players) < 2:
-				raise ValueError('too bad, we can not handle this case :-)')
+		else: # Draw / Holdem
 
-			# try to find small blind player
-			for action in hand.actions[hand.StreetBlinds]:
-				if action.type == action.TypePostBlindSmall:
-					i = players.index(action.player)
-					if len(players) == 2:
-						hand.seatNoButton = i
-					else:
-						player = players[i-1]
-						hand.seatNoButton = hand.seats.index(player)
-					break
+			#NOTE: when introducing zoom poker stars missed indicating button player in
+			# hand histories. following lines try our best to determine this player
+			if hand.seatNoButton is None and hand.actions[hand.StreetBlinds]:
 
-			if hand.seatNoButton is None:
-				# try to find big blind player
+				players = [player for player in hand.seats if player is not None]
+				if len(players) < 2:
+					raise ValueError('too bad, we can not handle this case :-)')
+
+				# try to find small blind player
 				for action in hand.actions[hand.StreetBlinds]:
-					if action.type == action.TypePostBlindBig:
+					if action.type == action.TypePostBlindSmall:
 						i = players.index(action.player)
 						if len(players) == 2:
-							hand.seatNoButton = i-1
+							hand.seatNoButton = i
 						else:
-							player = players[i-2]
+							player = players[i-1]
 							hand.seatNoButton = hand.seats.index(player)
 						break
 
-			if hand.seatNoButton is None:
-				if hand.gameType & hand.GameTypeStud or hand.gameType & hand.GameTypeRazz:
-					# we take player seated before player who posted bring in as button
-					for action in hand.actions[hand.StreetFirst]:
-						if action.type == action.TypePostBringIn:
-							i = hand.seats.index(action.player) -1
-							if i < 0:
-								i = 0
-							hand.seatNoButton = i
+				if hand.seatNoButton is None:
+					# try to find big blind player
+					for action in hand.actions[hand.StreetBlinds]:
+						if action.type == action.TypePostBlindBig:
+							i = players.index(action.player)
+							if len(players) == 2:
+								hand.seatNoButton = i-1
+							else:
+								player = players[i-2]
+								hand.seatNoButton = hand.seats.index(player)
 							break
 
 				if hand.seatNoButton is None:
 					# out of luck, hand may be ante only so we set random player as button
 					hand.seatNoButton = hand.seats.index(players[0])
 
-		# errorcheck
-		if hand.seatNoButton is None:
-			raise ValueError('Could not determine button player')
 		return hand
 
 #************************************************************************************
@@ -999,7 +1007,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 				break
 		p | '<tr><td class="gameName" colspan="99">%s</th></td>' % gameName
 
-		streets = [street for street in (hand.StreetFirst, hand.StreetSecond, hand.StreetFhird, hand.StreetRiver) if hand.actions[street]]
+		streets = [street for street in (hand.StreetFirst, hand.StreetSecond, hand.StreetThird, hand.StreetRiver) if hand.actions[street]]
 		for player in hand.seats:
 			if player is None: continue
 
@@ -1032,7 +1040,6 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 						self.formattDiscardAction(p, hand, actions.pop(0))
 					self.formattPlayerActions(p, hand, actions)
 				else:
-					#if street != hand.StreetRiver:
 					self.formattDiscardAction(p, hand, None)
 					self.formattPlayerActions(p, hand, [])
 
@@ -1090,7 +1097,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 				break
 		p | '<tr><td class="gameName" colspan="99">%s</th></td>' % gameName
 
-		streets = [street for street in (hand.StreetFirst, hand.StreetSecond, hand.StreetFhird, hand.StreetRiver) if hand.actions[street]]
+		streets = [street for street in (hand.StreetFirst, hand.StreetSecond, hand.StreetThird, hand.StreetRiver) if hand.actions[street]]
 		for player in hand.seats:
 			if player is None: continue
 
@@ -1183,7 +1190,8 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 				break
 		p | '<tr><td class="gameName" colspan="99">%s</th></td>' % gameName
 
-		streets = [street for street in (hand.StreetFirst, hand.StreetSecond, hand.StreetFhird, hand.StreetFourth, hand.StreetRiver) if hand.actions[street]]
+		streets = [street for street in (hand.StreetFirst, hand.StreetSecond, hand.StreetThird, hand.StreetFourth, hand.StreetRiver) if hand.actions[street]]
+		maxCards = max([len(player.cards) for player in hand.seats if player is not None])
 		for player in hand.seats:
 			if player is None: continue
 
@@ -1200,12 +1208,8 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			# add cards column
 			p >> '<td class="playerCardsCell">'
 			# pad player cards if necessary
-			cards = player.cards
-			# if player has river actions we must append a card if not already present
-			if [i for i in hand.actions[hand.StreetRiver] if i.player is player]:
-				if len(cards) == 6:
-					cards.append('')
-			while len(cards) < len(streets) + 2:
+			cards = player.cards[:]
+			while len(cards) < maxCards:
 				cards.append(None)
 			self.htmlFormatCards(p, 'playerCards', *cards)
 			p << '</td>'
