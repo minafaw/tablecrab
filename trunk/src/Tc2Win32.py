@@ -561,7 +561,7 @@ def windowGetText(hwnd, maxSize=-1):
 			return  ''
 		p = create_unicode_buffer(nChars +1)
 		if user32.GetWindowTextW(hwnd, p, sizeof(p)):
-			return p.value.encode('utf-8')
+			return p.value
 	# some text can only be retrieved by WM_GETTEXT, so here we go
 	nChars = DWORD()
 	result = user32.SendMessageTimeoutW(
@@ -588,7 +588,7 @@ def windowGetText(hwnd, maxSize=-1):
 			MY_SMTO_TIMEOUT,
 			byref(nChars)
 			)
-		return p.value.encode('utf-8')
+		return p.value
 	return ''
 
 def windowGetClassName(hwnd):
