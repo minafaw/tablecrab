@@ -59,6 +59,7 @@ class Hand(QtCore.QObject):
 		QtCore.QObject.__init__(self)
 		self.handHistory = ''
 		self.gameType = self.GameTypeNone
+		self.gameName = ''
 		self.seats = []					# len(seats) == maxPlayers. empty seat is set to None
 		self.cards = []
 		self.blindAnte = 0.0
@@ -128,142 +129,162 @@ class HandParser(object):
 	GameTypeMapping = {
 			"Hold'em No Limit": {
 					'gameType': Hand.GameTypeHoldem | Hand.GameLimitNoLimit,
-					'gameName': 'Holdem No Limt',
+					'gameName': 'Holdem (No Limt)',
 					},
 			"Hold'em Pot Limit": {
 					'gameType': Hand.GameTypeHoldem | Hand.GameLimitPotLimit,
-					'gameName': 'Holdem Pot Limt',
+					'gameName': 'Holdem (Pot Limt)',
 					},
 			"Hold'em Limit": {
 					'gameType': Hand.GameTypeHoldem | Hand.GameLimitLimit,
-					'gameName': 'Holdem Limt',
+					'gameName': 'Holdem (Limt)',
 					},
 
 			'Omaha Limit': {
 					'gameType': Hand.GameTypeOmaha | Hand.GameLimitLimit,
-					'gameName': 'Omaha Limt',
+					'gameName': 'Omaha (Limt)',
 					},
 			'Omaha Pot Limit': {
 					'gameType': Hand.GameTypeOmaha | Hand.GameLimitPotLimit,
-					'gameName': 'Omaha Pot Limt',
+					'gameName': 'Omaha Pot (Limt)',
 					},
 			'Omaha Hi/Lo Limit': {
 					'gameType': Hand.GameTypeOmaha | Hand.GameSubTypeHiLo | Hand.GameLimitLimit,
-					'gameName': 'Omaha Hi/Lo Limt',
+					'gameName': 'Omaha Hi/Lo (Limt)',
 					},
 			'Omaha Hi/Lo Pot Limit': {
 					'gameType': Hand.GameTypeOmaha | Hand.GameSubTypeHiLo | Hand.GameLimitPotLimit,
-					'gameName': 'Omaha Hi/Lo Pot Limt',
+					'gameName': 'Omaha Hi/Lo Pot (Limt)',
 					},
 
 			'7 Card Stud Limit': {
 					'gameType': Hand.GameTypeStud | Hand.GameLimitLimit,
-					'gameName': '7 Card Stud Limt',
+					'gameName': '7 Card Stud (Limt)',
 					},
 			'7 Card Stud Hi/Lo Limit': {
 					'gameType': Hand.GameTypeStud | Hand.GameSubTypeHiLo | Hand.GameLimitLimit,
-					'gameName': '7 Card Stud Hi/Lo Limt',
+					'gameName': '7 Card Stud Hi/Lo (Limt)',
 					},
 
 			'Razz Limit': {
 					'gameType': Hand.GameTypeRazz | Hand.GameLimitLimit,
-					'gameName': 'Razz Limt',
+					'gameName': 'Razz (Limt)',
 					},
 
+			'5 Card Draw No Limit': {
+					'gameType': Hand.GameTypeFiveCardDraw | Hand.GameLimitNoLimit,
+					'numPlayerCards': 5,
+					'gameName': '5 Crad Draw (No Limt)',
+					},
+			'5 Card Draw Pot Limit': {
+					'gameType': Hand.GameTypeFiveCardDraw | Hand.GameLimitPotLimit,
+					'numPlayerCards': 5,
+					'gameName': '5 Crad Draw (Pot Limt)',
+					},
 			'5 Card Draw Limit': {
 					'gameType': Hand.GameTypeFiveCardDraw | Hand.GameLimitLimit,
 					'numPlayerCards': 5,
-					'gameName': '5 Crad Draw Limt',
+					'gameName': '5 Crad Draw (Limt)',
 					},
+
 			'Single Draw 2-7 Lowball No Limit': {
 					'gameType': Hand.GameTypeFiveCardDraw | Hand.GameSubTypeLo | Hand.GameLimitNoLimit,
-					'gameName': 'Single Draw 2-7 Lowball No Limit',
+					'gameName': 'Single Draw 2-7 Lowball (No Limit)',
+					},
+
+			'Triple Draw 2-7 Lowball No Limit': {
+					'gameType': Hand.GameTypeTrippleDraw | Hand.GameSubTypeLo | Hand.GameLimitNoLimit,
+					'gameName': 'Triple Draw 2-7 Lowball (No Limit)',
+					},
+			'Triple Draw 2-7 Lowball Pot Limit': {
+					'gameType': Hand.GameTypeTrippleDraw | Hand.GameSubTypeLo | Hand.GameLimitPotLimit,
+					'gameName': 'Triple Draw 2-7 Lowball (Pot Limit)',
 					},
 			'Triple Draw 2-7 Lowball Limit': {
 					'gameType': Hand.GameTypeTrippleDraw | Hand.GameSubTypeLo | Hand.GameLimitLimit,
-					'gameName': 'Triple Draw 2-7 Lowball Limit',
+					'gameName': 'Triple Draw 2-7 Lowball (Limit)',
 					},
 
 			'Badugi Limit': {
 					'gameType': Hand.GameTypeBadugi | Hand.GameLimitLimit,
-					'gameName': 'Badugi Limit',
+					'gameName': 'Badugi (Limit)',
 					},
 
 
 			"HORSE (Hold'em Limit,": {
 					'gameType': Hand.GameTypeHoldem | Hand.GameLimitNoLimit,
-					'gameName': 'Holdem Limit',
+					'gameName': 'Holdem (Limit)',
 					},
 			'HORSE (Omaha Hi/Lo Limit,': {
 					'gameType': Hand.GameTypeOmaha | Hand.GameSubTypeHiLo | Hand.GameLimitLimit,
-					'gameName': 'Omaha Hi/Lo Limit',
+					'gameName': 'Omaha Hi/Lo (Limit)',
 					},
 			'HORSE (7 Card Stud Limit,': {
 					'gameType': Hand.GameTypeStud | Hand.GameLimitLimit,
-					'gameName': '7 Card Stud Limit',
+					'gameName': '7 Card Stud (Limit)',
 					},
 			'HORSE (7 Card Stud Hi/Lo Limit,':	{
 					'gameType': Hand.GameTypeStud | Hand.GameSubTypeHiLo | Hand.GameLimitLimit,
-					'gameName': '7 Card Stud Hi/Lo Limit',
+					'gameName': '7 Card Stud Hi/Lo (Limit)',
 					},
 			'HORSE (Razz Limit,': {
 					'gameType': Hand.GameTypeRazz | Hand.GameLimitLimit,
-					'gameName': 'Razz Limit',
+					'gameName': 'Razz (Limit)',
 					},
 
 			"Mixed NLH/PLO (Hold'em No Limit,": {
 					'gameType': Hand.GameTypeHoldem | Hand.GameLimitNoLimit,
-					'gameName': 'Holdem No Limit',
+					'gameName': 'Holdem (No Limit)',
 					},
 			'Mixed NLH/PLO (Omaha Pot Limit,': {
 					'gameType': Hand.GameTypeOmaha | Hand.GameLimitPotLimit,
-					'gameName': 'Omaha Pot Limit',
+					'gameName': 'Omaha (Pot Limit)',
 					},
 
 			'8-Game (Razz Limit,': {
 					'gameType': Hand.GameTypeRazz | Hand.GameLimitLimit,
-					'gameName': 'Razz Limit',
+					'gameName': 'Razz (Limit)',
 					},
 			'8-Game (Omaha Hi/Lo Limit,': {
 					'gameType': Hand.GameTypeOmaha | Hand.GameSubTypeHiLo | Hand.GameLimitLimit,
-					'gameName': 'Omaha Hi/Lo Limit',
+					'gameName': 'Omaha Hi/Lo (Limit)',
 					},
 			'8-Game (7 Card Stud Limit,': {
 					'gameType': Hand.GameTypeStud | Hand.GameLimitLimit,
-					'gameName': '7 Card Stud Limit',
+					'gameName': '7 Card Stud (Limit)',
 					},
 			'8-Game (7 Card Stud Hi/Lo Limit,': {
 					'gameType': Hand.GameTypeStud | Hand.GameSubTypeHiLo | Hand.GameLimitLimit,
-					'gameName': '7 Card Stud Hi/Lo Limit',
+					'gameName': '7 Card Stud Hi/Lo (Limit)',
 					},
 			"8-Game (Hold'em No Limit,": {
 					'gameType': Hand.GameTypeHoldem | Hand.GameLimitNoLimit,
-					'gameName': 'Holdem No Limt',
+					'gameName': 'Holdem (No Limt)',
 					},
 			"8-Game (Hold'em Limit,": {
 					'gameType': Hand.GameTypeHoldem | Hand.GameLimitLimit,
-					'gameName': 'Holdem Limt',
+					'gameName': 'Holdem (Limt)',
 					},
 			'8-Game (Omaha Pot Limit,': {
 					'gameType': Hand.GameTypeOmaha | Hand.GameLimitPotLimit,
-					'gameName': 'Omaha Pot Limt',
+					'gameName': 'Omaha (Pot Limt)',
 					},
 			'8-Game (Triple Draw 2-7 Lowball Limit,': {
 					'gameType': Hand.GameTypeTrippleDraw | Hand.GameSubTypeLo | Hand.GameLimitLimit,
-					'gameName': 'Triple Draw 2-7 Lowball Limit',
+					'gameName': 'Triple Draw 2-7 Lowball (Limit)',
 					},
 
 			'Triple Stud (7 Card Stud Limit,': {
 					'gameType': Hand.GameTypeStud | Hand.GameLimitLimit,
-					'gameName': '7 Card Stud Limit',
+					'gameName': '7 Card Stud (Limit)',
 					},
 			'Triple Stud (Razz Limit,': {
 					'gameType': Hand.GameTypeRazz | Hand.GameLimitLimit,
-					'gameName': 'Razz Limit',
+					'gameName': 'Razz (Limit)',
 					},
 			'Triple Stud (7 Card Stud Hi/Lo Limit,': {
 					'gameType': Hand.GameTypeStud | Hand.GameSubTypeHiLo | Hand.GameLimitLimit,
-					'gameName': '7 Card Stud Hi/Lo Limit',
+					'gameName': '7 Card Stud Hi/Lo (Limit)',
 					},
 			}
 
@@ -291,8 +312,9 @@ class HandParser(object):
 			if result is None:
 				result = self.PatGameHeader3.match(line)
 		if result is not None:
-			gameType = self.GameTypeMapping[result.group('gameType')]
-			hand.gameType = gameType['gameType']
+			gameData = self.GameTypeMapping[result.group('gameType')]
+			hand.gameType = gameData['gameType']
+			hand.gameName = gameData['gameName']
 		return result is not None
 
 	#NOTE: in tourneys <tableName> is composed of 'tourneyID tableNo'. no idea if this is of any relevance to us
@@ -531,7 +553,7 @@ class HandParser(object):
 
 			if lineno == 0:
 				if self.matchGameHeader(hand, streetCurrent, line): continue
-				raise NoGameHeaderError('No gane header found')
+				raise NoGameHeaderError('No game header found')
 
 			# determine street we are in
 			if line.startswith('*** HOLE CARDS ***') or \
@@ -764,6 +786,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 .playerActionPostBuyIn{}
 .playerActionPostBringIn{}
 .playerActionDiscardCards{font-size: x-large;}
+.playerActionNone{}
 
 
 .potCellExtra{
@@ -891,7 +914,7 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 	border-bottom: 1px solid black;
 	border-right: 1px solid black;
 	}.cardWidth4{
-	padding-left: 2.4em;	/* adjust card width via this padding */
+	padding-left: 2.8em;	/* adjust card width via this padding */
 
 	padding-top: 0em;
 	padding-right: 0em;
@@ -1004,12 +1027,11 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			string = string.replace(' ', '&nbsp;')
 		return string
 
-	def htmlFormatCards(self, p, cardsType, *cards):
+	def htmlFormatCards(self, p, cards):
 		"""
 		@param cards: one or more cards (like 'Ad'). if a card is '' a card back is
 		formatted, if card is None a placeholder is formatted
 		"""
-
 		deckStyle = str(self.settingsHandViewer.deckStyle())
 		p >> '<table class="cards">'
 		trRank = '<tr>'
@@ -1038,40 +1060,6 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		p | trRank
 		p | trSuit
 		p | trWidth
-
-		p << '</table>'
-
-
-		return
-		if cardsType == 'playerCards':
-			p >> '<table class="playerCards">'
-		elif  cardsType == 'boardCards':
-			p >> '<table class="boardCards">'
-		else:
-			raise ValueError('unknown cardsType: %s' % cardsType)
-		p >> '<tr>'
-		for card in cards:
-			if card is None:
-				shape = '&nbsp;'
-				htmlSuit = '&nbsp;&nbsp;'
-				htmlKlass = 'cardNone'
-				div = '<div class="cardNone"><div class="cardShape %s">%s</div><div class="cardSuit %s">%s</div></div>' % (htmlKlass, shape, htmlKlass, htmlSuit)
-			elif card == '':
-				#TODO: == card back. dont realy know what to return in this case - i am not not a Css guru.
-				shape = '&nbsp;'
-				htmlSuit = '&nbsp;&nbsp;'
-				htmlKlass = 'cardBack'
-				div = '<div class="card"><div class="cardShape %s">%s</div><div class="cardSuit %s">%s</div></div>' % (htmlKlass, shape, htmlKlass, htmlSuit)
-			else:
-				shape = card[0]
-				htmlSuit, htmlKlass = HtmlCardSuitMapping[card[1]]
-				div = '<div class="card"><div class="cardShape %s">%s</div><div class="cardSuit %s">%s</div></div>' % (htmlKlass, shape, htmlKlass, htmlSuit)
-			p >> '<td class="cardCell">'
-			#p >> '<div class="card">'
-			p | div
-			#p << '</div>'
-			p <<  '</td>'
-		p << '</tr>'
 		p << '</table>'
 
 	#TODO: use Tc2Config.truncateString()
@@ -1087,19 +1075,46 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 		return self.htmlEscapeString(playerName, spaces=True)
 
 	def dump(self, hand):
+
+		p = self.IndentBuffer()
+		# setup html page
+		p >> '<html>'
+		p >> '<head>'
+		p | '<meta name="author" content="TableCrab">'
+		p | '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
+		p | '<style type="text/css"><!-- %s --></style>' % self.settingsHandViewerStyleSheet.styleSheet()
+		p << '</head>'
+		p >> '<body class="handBody">'
+		p >> '<table class="handTable">'
+		p | '<tr><td class="gameName" colspan="99">%s</td></tr>' % hand.gameName
+
 		if hand.gameType & hand.GameTypeHoldem or hand.gameType & hand.GameTypeOmaha:
-			return self.formattHandHoldem(hand)
+			self.formattHandHoldem(p, hand)
 		elif hand.gameType & hand.GameTypeStud or hand.gameType & hand.GameTypeRazz:
-			return self.formattHandStud(hand)
+			self.formattHandStud(p, hand)
 		elif hand.gameType & hand.GameTypeFiveCardDraw or \
 				hand.gameType & hand.GameTypeTrippleDraw or \
 				hand.gameType & hand.GameTypeBadugi:
-			return self.formattHandDraw(hand)
+			self.formattHandDraw(p, hand)
 		else:
 			raise ValueError('unsupported game type: %s' % hand.gameType)
 
+		# dump html to file
+		p << '</table>'
+		p | '<pre class="handSource">%s</pre>' % self.htmlEscapeString(hand.handHistory, spaces=False)
+		p << '</body>'
+		p << '</html>'
+		return p.data.encode('utf-8')
 
-	def formattPlayerActions(self, p, hand, actions):
+
+	def formattPlayerStart(self, p, hand, player):
+		p >> '<tr>'
+
+	def formattPlayerEnd(self, p, hand, player):
+		p << '</tr>'
+
+
+	def formattPlayerActions(self, p, hand, player, actions):
 
 		p >> '<td class="playerActionsCell">'
 		nActions = None
@@ -1152,79 +1167,16 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 						self.formatNum(hand, action.amount),
 						self.settingsHandViewer.actionPostfix('BringIn')
 						)
-		if nActions is None:
-			p | '&nbsp;'
-		p << '</td>'
-
-
-	def formattDiscardAction(self, p, hand, action):
-		p >> '<td class="playerActionsCell">'
-		if action:
-			p | '<div class="playerActionDiscardCards">%i</div>' % action.amount
-		else:
-			p | '<div class="playerActionDiscardCards">&nbsp;</div>'
-		p << '</td>'
-
-	def formattHandDraw(self, hand):
-
-		p = self.IndentBuffer()
-
-		# setup html page
-		p >> '<html>'
-		p >> '<head>'
-		p | '<meta name="author" content="TableCrab">'
-		p | '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
-		p | '<style type="text/css"><!-- %s --></style>' % self.settingsHandViewerStyleSheet.styleSheet()
-		p << '</head>'
-
-		p >> '<body class="handBody">'
-		p >> '<table class="handTable">'
-		gameName = '(err) could not find game name'
-		for d in HandParser.GameTypeMapping.values():
-			if d['gameType'] == hand.gameType:
-				gameName = d['gameName']
-				break
-		p | '<tr><td class="gameName" colspan="99">%s</td></tr>' % gameName
-
-		streets = [street for street in (hand.StreetFirst, hand.StreetSecond, hand.StreetThird, hand.StreetRiver) if hand.actions[street]]
-		for player in hand.seats:
-			if player is None: continue
-
-			p >> '<tr>'
-
-			# add player summary column
-			p >> '<td class="playerCell">'
-			p | '<div class="playerName">%s</div><div class="playerStack">%s</div>' % (
-						self.formatPlayerName(player.name),
-						self.formatNum(hand, player.stack)
-						)
-			p << '</td>'
-
-			# add pocket cards column
-			p >> '<td class="playerCardsCell">'
-			self.htmlFormatCards(p, 'playerCards', *player.cards)
-			p << '</td>'
-
-			# add player blind actions
-			actions = [action for action in hand.actions[hand.StreetBlinds] if action.player is player]
-			self.formattPlayerActions(p, hand, actions)
-
-			# add player preflop actions
-			actions = [action for action in hand.actions[hand.StreetFirst] if action.player is player]
-			self.formattPlayerActions(p, hand, actions)
-			for street in streets[1:]:
-				actions = [action for action in hand.actions[street] if action.player is player]
-				if actions:
-					if actions[0].type == action.TypeDiscardCards:
-						self.formattDiscardAction(p, hand, actions.pop(0))
-					self.formattPlayerActions(p, hand, actions)
+			elif action.type == action.TypeDiscardCards:
+				if action.amount < 0:
+					p | '<div class="playerActionDiscardCards">&nbsp;</div>'
 				else:
-					self.formattDiscardAction(p, hand, None)
-					self.formattPlayerActions(p, hand, [])
+					p | '<div class="playerActionDiscardCards">%i</div>' % action.amount
+		if nActions is None:
+			p | '<div class="playerActionNone">&nbsp;</div>'
+		p << '</td>'
 
-			p << '</tr>'
-
-		# add pot size
+	def formattPot(self, p, hand, amounts):
 		p >> '<tr>'
 		pot = hand.calcPotSizes()
 		#TODO: to save some space we don't display ante for individual player. good idea or not?
@@ -1238,184 +1190,133 @@ class HandFormatterHtmlTabular(HandFormatterBase):
 			p | '<td colspan="2" class="potCellExtra">%s (%s)</td>' % (potCellExtra, self.formatNum(hand, sumAnte))
 		else:
 			p | '<td colspan="2" class="potCellExtra">&nbsp;</td>'
-		p | '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetBlinds])
-		for street in streets:
-			if street != hand.StreetFirst:
+		for amount in amounts:
+			if amount < 0:
 				p | '<td class="potCell">&nbsp;</td>'
-			p | '<td class="potCell">%s</td>' % self.formatNum(hand, pot[street])
-
+			else:
+				p | '<td class="potCell">%s</td>' % self.formatNum(hand, amount)
 		p << '</tr>'
 
-		# dump html to file
-		p << '</table>'
-		p | '<pre class="handSource">%s</pre>' % self.htmlEscapeString(hand.handHistory, spaces=False)
-		p << '</body>'
-		p << '</html>'
+	def formattPlayer(self, p, hand, player):
+		# add player summary column
+		p >> '<td class="playerCell">'
+		p | '<div class="playerName">%s</div><div class="playerStack">%s</div>' % (
+					self.formatPlayerName(player.name),
+					self.formatNum(hand, player.stack)
+					)
+		p << '</td>'
 
-		return p.data.encode('utf-8')
+	def formattPlayerCards(self, p, hand, player, cards):
+		p >> '<td class="playerCardsCell" valign="top">'
+		self.htmlFormatCards(p, cards)
+		p << '</td>'
 
 
-	def formattHandHoldem(self, hand):
-
-		p = self.IndentBuffer()
-
-		# setup html page
-		p >> '<html>'
-		p >> '<head>'
-		p | '<meta name="author" content="TableCrab">'
-		p | '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
-		p | '<style type="text/css"><!-- %s --></style>' % self.settingsHandViewerStyleSheet.styleSheet()
-		p << '</head>'
-
-		p >> '<body class="handBody">'
-		p >> '<table class="handTable">'
-		gameName = '(err) could not find game name'
-		for d in HandParser.GameTypeMapping.values():
-			if d['gameType'] == hand.gameType:
-				gameName = d['gameName']
-				break
-		p | '<tr><td class="gameName" colspan="99">%s</td></tr>' % gameName
-
+	def formattHandDraw(self, p, hand):
 		for player in hand.seats:
 			if player is None: continue
 
-			p >> '<tr>'
+			self.formattPlayerStart(p, hand, player)
 
-			# add player summary column
-			p >> '<td class="playerCell">'
-			p | '<div class="playerName">%s</div><div class="playerStack">%s</div>' % (
-						self.formatPlayerName(player.name),
-						self.formatNum(hand, player.stack)
-						)
-			p << '</td>'
+			# add player name, stack and cards
+			self.formattPlayer(p, hand, player)
+			self.formattPlayerCards(p, hand, player, player.cards)
 
-			# add pocket cards column
-			p >> '<td class="playerCardsCell">'
-			self.htmlFormatCards(p, 'playerCards', *player.cards)
-			p << '</td>'
+			# add player actions
+			streetActions = []
+			for street in hand.streets:
+				actions = [action for action in hand.actions[street] if action.player is player]
+				if street == hand.StreetBlinds:
+					streetActions.append(actions)
+				elif street == hand.StreetFirst:
+					streetActions.append(actions)
+				else:
+					if actions:
+						streetActions.append([actions.pop(0), ])	# discard cards action
+						streetActions.append(actions)
+					else:
+						action = hand.Action(player, hand.Action.TypeDiscardCards, -1)
+						streetActions.append([action, ])	# dummy discard cards action
+						streetActions.append([])
+			for actions in streetActions:
+				self.formattPlayerActions(p, hand, player, actions)
+
+			self.formattPlayerEnd(p, hand, player)
+
+		# add pot
+		pot = hand.calcPotSizes()
+		amounts = []
+		for street in hand.streets:
+			if street != hand.StreetBlinds and street != hand.StreetFirst:
+				amounts.append(-1)
+			amounts.append(pot[street])
+		self.formattPot(p, hand, amounts)
+
+
+	def formattHandHoldem(self, p, hand):
+		for player in hand.seats:
+			if player is None: continue
+
+			self.formattPlayerStart(p, hand, player)
+
+			# add player name, stack and cards
+			self.formattPlayer(p, hand, player)
+			self.formattPlayerCards(p, hand, player, player.cards)
 
 			# add player actions
 			for street in hand.streets:
 				actions = [action for action in hand.actions[street] if action.player is player]
 				if not actions:
 					actions = []
-				self.formattPlayerActions(p, hand, actions)
+				self.formattPlayerActions(p, hand, player, actions)
 
-			p << '</tr>'
+			self.formattPlayerEnd(p, hand, player)
 
 		# add pot size
-		p >> '<tr>'
 		pot = hand.calcPotSizes()
-		#TODO: to save some space we don't display ante for individual player. good idea or not?
-		potCellExtra = (
-				self.settingsHandViewer.actionPrefix('Ante') +
-				self.formatNum(hand, hand.blindAnte) +
-				self.settingsHandViewer.actionPostfix('Ante')
-				) if hand.blindAnte else '&nbsp;'
-		sumAnte = sum([i.amount for i in hand.actions[hand.StreetBlinds] if i.type == i.TypePostBlindAnte])
-		if sumAnte:
-			p | '<td colspan="2" class="potCellExtra">%s (%s)</td>' % (potCellExtra, self.formatNum(hand, sumAnte))
-		else:
-			p | '<td colspan="2" class="potCellExtra">&nbsp;</td>'
-		p | '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetBlinds])
-		p | '<td class="potCell">%s</td>' % self.formatNum(hand, pot[hand.StreetFirst])
-		for street in hand.streets[2:]:
-			p | '<td class="potCell">%s</td>' % (self.formatNum(hand, pot[street]))
-		p << '</tr>'
+		amounts = [pot[street] for street in hand.streets]
+		self.formattPot(p, hand, amounts)
 
 		# add board cards
 		p >> '<tr>'
 		p | '<td class="boardCardCellExtra" colspan="4">&nbsp;</td>'
-		if len(hand.cards) > 2:
-			p >> '<td class="boardCardCell">'
-			self.htmlFormatCards(p, 'boardCards', *hand.cards[:3])
+		for street in hand.streets[2:]:
+			p >> '<td class="boardCardCell" align="center">'
+			if street == hand.StreetSecond:
+				self.htmlFormatCards(p, hand.cards[:3])
+			elif street == hand.StreetThird:
+				self.htmlFormatCards(p, [hand.cards[3], ])
+			elif street == hand.StreetRiver:
+				self.htmlFormatCards(p, [hand.cards[4], ])
 			p << '</td>'
-			if len(hand.cards) > 3:
-				p >> '<td class="boardCardCell" align="center">'
-				self.htmlFormatCards(p, 'boardCards', hand.cards[3])
-				p << '</td>'
-				if len(hand.cards) > 4:
-					p >> '<td class="boardCardCell" align="center">'
-					self.htmlFormatCards(p, 'boardCards', hand.cards[4])
-					p << '</td>'
 		p << '</tr>'
 
-		# dump html to file
-		p << '</table>'
-		p | '<pre class="handSource">%s</pre>' % self.htmlEscapeString(hand.handHistory, spaces=False)
-		p << '</body>'
-		p << '</html>'
 
-		return p.data.encode('utf-8')
-
-	def formattHandStud(self, hand):
-		p = self.IndentBuffer()
-
-		# setup html page
-		p >> '<html>'
-		p >> '<head>'
-		p | '<meta name="author" content="TableCrab">'
-		p | '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
-		p | '<style type="text/css"><!-- %s --></style>' % self.settingsHandViewerStyleSheet.styleSheet()
-		p << '</head>'
-
-		p >> '<body class="handBody">'
-		p >> '<table class="handTable">'
-		gameName = '(err) could not find game name'
-		for d in HandParser.GameTypeMapping.values():
-			if d['gameType'] == hand.gameType:
-				gameName = d['gameName']
-				break
-		p | '<tr><td class="gameName" colspan="99">%s</td></tr>' % gameName
-
-		streets = [street for street in (hand.StreetFirst, hand.StreetSecond, hand.StreetThird, hand.StreetFourth, hand.StreetRiver) if hand.actions[street]]
+	def formattHandStud(self, p, hand):
 		maxCards = max([len(player.cards) for player in hand.seats if player is not None])
 		for player in hand.seats:
 			if player is None: continue
 
-			p >> '<tr>'
+			self.formattPlayerStart(p, hand, player)
 
-			# add player summary column
-			p >> '<td class="playerCell">'
-			p | '<div class="playerName">%s</div><div class="playerStack">%s</div>' % (
-						self.formatPlayerName(player.name),
-						self.formatNum(hand, player.stack)
-						)
-			p << '</td>'
-
-			# add cards column
-			p >> '<td class="playerCardsCell">'
-			# pad player cards if necessary
+			# add player name, stack and cards
+			self.formattPlayer(p, hand, player)
 			cards = player.cards[:]
 			while len(cards) < maxCards:
 				cards.append(None)
-			self.htmlFormatCards(p, 'playerCards', *cards)
-			p << '</td>'
-			for street in streets:
+			self.formattPlayerCards(p, hand, player, cards)
+
+			# add player actions
+			for street in hand.streets[1:]:
 				actions = [action for action in hand.actions[street] if action.player is player]
-				self.formattPlayerActions(p, hand, actions)
+				self.formattPlayerActions(p, hand, player, actions)
+
+			self.formattPlayerEnd(p, hand, player)
 
 		# add pot size
-		p >> '<tr>'
 		pot = hand.calcPotSizes()
-		#TODO: to save some space we don't display ante for individual player. good idea or not?
-		potCellExtra = (
-				self.settingsHandViewer.actionPrefix('Ante') +
-				self.formatNum(hand, hand.blindAnte) +
-				self.settingsHandViewer.actionPostfix('Ante')
-				) if hand.blindAnte else '&nbsp;'
-		p | '<td colspan="2" class="potCellExtra">%s (%s)</td>' % (potCellExtra, self.formatNum(hand, pot[hand.StreetBlinds]))
-		for street in streets:
-			p | '<td class="potCell">%s</td>' % self.formatNum(hand, pot[street])
-		p << '</tr>'
-
-		# dump html to file
-		p << '</table>'
-		p | '<pre class="handSource">%s</pre>' % self.htmlEscapeString(hand.handHistory, spaces=False)
-		p << '</body>'
-		p << '</html>'
-
-		return p.data.encode('utf-8')
+		amounts = [pot[street] for street in hand.streets[1:]]
+		self.formattPot(p, hand, amounts)
 
 	PatternHand = re.compile('.*\<pre \s+ class=\"HandSource\"\>(.+)\<\/pre\>', re.X|re.I|re.M|re.S)
 	def handFromHtml(self, html):
