@@ -8,6 +8,7 @@ import Tc2Config
 import Tc2Win32
 import Tc2ConfigHotkeys
 import Tc2ConfigTemplates
+import Tc2HandTypes
 import Tc2SitePokerStarsHandGrabber
 from Tc2Lib.gocr import gocr
 
@@ -592,8 +593,7 @@ class InstantHandHistory(PokerStarsWindow):
 		#self._timer.setSingleShot(True)
 
 		self._handParser = Tc2SitePokerStarsHandGrabber.HandParser()
-		self._handFormatter = Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular()
-		self._handFormatter.onGlobalObjectInitSettingsFinished(Tc2Config.globalObject)	#NOTE: have to init here
+		self._handFormatter = Tc2Config.handFormatter('HtmlTabular')
 		self._data = ''
 		self._hwndEdit = None
 		for hwnd in Tc2Win32.windowChildren(self.hwnd):
@@ -618,7 +618,7 @@ class InstantHandHistory(PokerStarsWindow):
 		if data and data != self._data:
 			self._data = data
 			handData = ''
-			hand = Tc2SitePokerStarsHandGrabber.Hand()
+			hand = Tc2HandTypes.PokerHand()
 			#TODO: very sloppy test to minimize risk we are grabbing 'show summary only' in instant hand history
 			if not ('*** HOLE CARDS ***' in data or '*** 3rd STREET ***' in data or '*** DEALING HANDS ***' in data):
 				pass
@@ -654,7 +654,7 @@ class SiteHandler(QtCore.QObject):
 		return True
 
 	def handFromHtml(self, html):
-		handFormatter = Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular()
+		handFormatter = Tc2Config.handFormatter('HtmlTabular')
 		hand = handFormatter.handFromHtml(html)
 		return hand
 

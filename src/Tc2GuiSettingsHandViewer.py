@@ -1,7 +1,7 @@
 
 import Tc2Config
 import Tc2GuiHelp
-import Tc2SitePokerStarsHandGrabber
+import Tc2HandTypes
 from PyQt4 import QtCore, QtGui
 import operator
 
@@ -12,57 +12,33 @@ class FrameSettings(QtGui.QFrame):
 
 	#TODO: typo in settings key. should be "Formatter" not "Fornmatter"
 	SettingsKeyBase = 'PokerStarsHandGrabber/HandFornmatterHtmlTabular'
-	SettingsKeyStyleSheet = SettingsKeyBase + '/StyleSheet'
+	SettingsKeyDeckStyle = SettingsKeyBase + '/DeckStyle'
 	SettingsKeyMaxPlayerName = SettingsKeyBase + '/MaxPlayerName'
 	SettingsKeyNoFloatingPoint = SettingsKeyBase + '/NoFloatingPoint'
-	SettingsKeyDeckStyle = SettingsKeyBase + '/DeckStyle'
-	SettingsKeyPrefixFold = SettingsKeyBase + '/PrefixFold'
-	SettingsKeyPrefixCheck = SettingsKeyBase + '/PrefixCheck'
-	SettingsKeyPrefixBet = SettingsKeyBase + '/PrefixBet'
-	SettingsKeyPostfixBet = SettingsKeyBase + '/PostfixBet'
-	SettingsKeyPrefixRaise = SettingsKeyBase + '/PrefixRaise'
-	SettingsKeyPostfixRaise = SettingsKeyBase + '/PostfixRaise'
-	SettingsKeyPrefixCall = SettingsKeyBase + '/PrefixCall'
-	SettingsKeyPostfixCall = SettingsKeyBase + '/PotfixCall'
-	SettingsKeyPrefixAnte = SettingsKeyBase + '/PrefixAnte'
-	SettingsKeyPostfixAnte = SettingsKeyBase + '/PostfixAnte'
-	SettingsKeyPrefixBigBlind = SettingsKeyBase + '/PrefixBigBlind'
-	SettingsKeyPostfixBigBlind = SettingsKeyBase + '/PostfixBigBlind'
-	SettingsKeyPrefixSmallBlind = SettingsKeyBase + '/PrefixSmallBlind'
-	SettingsKeyPostfixSmallBlind = SettingsKeyBase + '/PostfixSmallBlind'
-	SettingsKeyPrefixBuyIn = SettingsKeyBase + '/PrefixBuyIn'
-	SettingsKeyPostfixBuyIn = SettingsKeyBase + '/PostfixBuyIn'
-	SettingsKeyPrefixBringIn = SettingsKeyBase + '/PrefixBringIn'
-	SettingsKeyPostfixBringIn = SettingsKeyBase + '/PostfixBringIn'
 
 	SettingsKeySideBarPosition = 'Gui/HandViewer/SideBarPosition'
 
-	actionPrefixChanged = QtCore.pyqtSignal(QtCore.QString)
-	actionPostfixChanged = QtCore.pyqtSignal(QtCore.QString)
-	maxPlayerNameChanged = QtCore.pyqtSignal(int)
-	noFloatingPointChanged = QtCore.pyqtSignal(bool)
-	sideBarPositionChanged = QtCore.pyqtSignal(QtCore.QString)
-	deckStyleChanged = QtCore.pyqtSignal(QtCore.QString)
 
-	ActionPrefixes = (
-			('Bet', SettingsKeyPrefixBet, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixBet, SettingsKeyPostfixBet, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PostfixBet),
-			('Call', SettingsKeyPrefixCall, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixCall, SettingsKeyPostfixCall, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PostfixCall),
-			('Check', SettingsKeyPrefixCheck, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixCheck, None, None),
-			('Fold', SettingsKeyPrefixFold, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixFold, None, None),
-			('Raise', SettingsKeyPrefixRaise, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixRaise, SettingsKeyPostfixRaise, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PostfixRaise),
-			('Ante', SettingsKeyPrefixAnte, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixAnte, SettingsKeyPostfixAnte, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PostfixAnte),
-			('BigBlind', SettingsKeyPrefixBigBlind, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixBigBlind, SettingsKeyPostfixBigBlind, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PostfixBigBlind),
-			('SmallBlind', SettingsKeyPrefixSmallBlind, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixSmallBlind, SettingsKeyPostfixSmallBlind, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PostfixSmallBlind),
-			('BuyIn', SettingsKeyPrefixBuyIn, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixBuyIn, SettingsKeyPostfixBuyIn, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PostfixBuyIn),
-			('BringIn', SettingsKeyPrefixBringIn, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PrefixBringIn, SettingsKeyPostfixBringIn, Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.PostfixBringIn),
-			)
+	sideBarPositionChanged = QtCore.pyqtSignal(QtCore.QString)
+
+	HandActionsMapping = {	# action --> (name, settingsKeyPrefix, settingsKeyPostfix)
+			Tc2HandTypes.PokerHand.Action.TypeCheck: ('Check', SettingsKeyBase + '/PrefixCheck', None),
+			Tc2HandTypes.PokerHand.Action.TypeFold: ('Fold', SettingsKeyBase + '/PrefixFold', None),
+			Tc2HandTypes.PokerHand.Action.TypeBet: ('Bet', SettingsKeyBase + '/PrefixBet', SettingsKeyBase + '/PostfixBet'),
+			Tc2HandTypes.PokerHand.Action.TypeCall: ('Call', SettingsKeyBase + '/PrefixCall', SettingsKeyBase + '/PostfixCall'),
+			Tc2HandTypes.PokerHand.Action.TypeRaise: ('Raise', SettingsKeyBase + '/PrefixRaise', SettingsKeyBase + '/PostfixRaise'),
+			Tc2HandTypes.PokerHand.Action.TypePostBlindAnte: ('Ante', SettingsKeyBase + '/PrefixAnte', SettingsKeyBase + '/PostfixAnte'),
+			Tc2HandTypes.PokerHand.Action.TypePostBlindSmall: ('SmallBlind', SettingsKeyBase + '/PrefixSmallBlind', SettingsKeyBase + '/PostfixSmallBlind'),
+			Tc2HandTypes.PokerHand.Action.TypePostBlindBig: ('BigBlind', SettingsKeyBase + '/PrefixBigBlind', SettingsKeyBase + '/PostfixBigBlind'),
+			Tc2HandTypes.PokerHand.Action.TypePostBuyIn: ('BuyIn', SettingsKeyBase + '/PrefixBuyIn', SettingsKeyBase + '/PostfixBuyIn'),
+			Tc2HandTypes.PokerHand.Action.TypePostBringIn: ('BringIn', SettingsKeyBase + '/PrefixBringIn', SettingsKeyBase + '/PostfixBringIn'),
+			}
 
 	class ActionLineEdit(QtGui.QLineEdit):
-		def __init__(self, parent=None, actionName='', text='', settingsKey=None, default=None):
-			QtGui.QLineEdit.__init__(self, text, parent)
-			self.settingsKey = settingsKey
-			self.default = default
-			self.actionName = actionName
+		def __init__(self, parent, action, isPrefix=True):
+			QtGui.QLineEdit.__init__(self, parent)
+			self.action = action
+			self.isPrefix = isPrefix
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -71,17 +47,17 @@ class FrameSettings(QtGui.QFrame):
 		self.labelPostfix = QtGui.QLabel('<i>Postfix</i>', self)
 
 		self.actionWidgets = {}
-		for i,(actionName, settingsKeyPrefix, defaultPrefix, settingsKeyPostfix, defaultPostfix) in enumerate(self.ActionPrefixes):
-			editPrefix = self.ActionLineEdit(parent=self, actionName=actionName, settingsKey= settingsKeyPrefix, default=defaultPrefix)
+		formatter = Tc2Config.handFormatter('HtmlTabular')
+		for i, action in enumerate(formatter.listHandActions()):
+			prefix, postfix = formatter.actionPrefix(action), formatter.actionPostfix(action)
+			editPrefix = self.ActionLineEdit(self, action, isPrefix=True)
 			editPrefix.setMaxLength(Tc2Config.MaxHandGrabberPrefix)
-			labelAction = QtGui.QLabel('<i>' + actionName + '</i>', self)
-			labelAction.setBuddy(editPrefix)
-			if settingsKeyPostfix is not None:
-				editPostfix =  self.ActionLineEdit(parent=self, actionName=actionName, settingsKey= settingsKeyPostfix, default=defaultPostfix)
+			labelAction = QtGui.QLabel('<i>%s</i>' % self.HandActionsMapping[action][0], self)
+			editPostfix = None
+			if postfix is not None:
+				editPostfix =  self.ActionLineEdit(self, action, isPrefix=False)
 				editPostfix.setMaxLength(Tc2Config.MaxHandGrabberPrefix)
-			else:
-				editPostfix = None
-			self.actionWidgets[actionName] = {'EditPrefix': editPrefix, 'LabelAction': labelAction, 'EditPostfix': editPostfix, 'no': i}
+			self.actionWidgets[action] = {'EditPrefix': editPrefix, 'LabelAction': labelAction, 'EditPostfix': editPostfix, 'no': i}
 
 		self.comboSideBarPosition = QtGui.QComboBox(self)
 		self.comboSideBarPosition.addItems(Tc2Config.HandViewerSideBarPositions)
@@ -89,7 +65,7 @@ class FrameSettings(QtGui.QFrame):
 		self.labelSideBarPosition.setBuddy(self.comboSideBarPosition)
 
 		self.comboDeckStyle = QtGui.QComboBox(self)
-		self.comboDeckStyle.addItems(Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.DeckStyles)
+		self.comboDeckStyle.addItems(formatter.deckStyles())
 		self.labelDeckStyle = QtGui.QLabel('Deck st&yle:', self)
 		self.labelDeckStyle.setBuddy(self.comboDeckStyle)
 
@@ -154,59 +130,19 @@ class FrameSettings(QtGui.QFrame):
 		grid.col(self.buttonBox, colspan=3)
 
 	def onRestoreDefault(self, *args):
+		formatter = Tc2Config.handFormatter('HtmlTabular')
+		formatter.resetHandActions()
 		for data in self.actionWidgets.values():
 			editPrefix = data['EditPrefix']
-			editPrefix.setText(editPrefix.default)
+			editPrefix.setText(formatter.actionPrefix(editPrefix.action))
 			editPrefix.editingFinished.emit()
 			editPostfix = data['EditPostfix']
 			if editPostfix is not None:
-				editPostfix.setText(editPostfix.default)
+				editPostfix.setText(formatter.actionPostfix(editPostfix.action))
 				editPostfix.editingFinished.emit()
 
 	def onHelp(self, *args):
 		Tc2GuiHelp.dialogHelp('settingsHandViewer', parent=self)
-
-	def actionPrefix(self, actionName):
-		return self.actionWidgets[actionName]['EditPrefix'].text()
-
-	def actionPostfix(self, actionName):
-		edit = self.actionWidgets[actionName]['EditPostfix']
-		if edit is None:
-			raise ValueError('no postfix for action: %s' % actionName)
-		return edit.text()
-
-	def setActionPrefix(self, actionName, value):
-		edit = self.actionWidgets[actionName]['EditPrefix']
-		Tc2Config.settingsSetValue(edit.settingsKey, value)
-		self.actionPrefixChanged.emit(actionName)
-
-	def setActionPostfix(self, actionName, value):
-		edit = self.actionWidgets[actionName]['EditPostfix']
-		if edit is None:
-			raise ValueError('no postfix for action: %s' % actionName)
-		Tc2Config.settingsSetValue(edit.settingsKey, value)
-		self.actionPostfixChanged.emit(actionName)
-
-	def deckStyle(self):
-		return self.comboDeckStyle.currentText()
-
-	def setDeckStyle(self, value):
-		Tc2Config.settingsSetValue(self.SettingsKeyDeckStyle, value)
-		self.deckStyleChanged.emit(value)
-
-	def maxPlayerName(self):
-		return self.spinMaxPlayerName.value()
-
-	def setMaxPlayerName(self, value):
-		Tc2Config.settingsSetValue(self.SettingsKeyMaxPlayerName, value)
-		self.maxPlayerNameChanged.emit(value)
-
-	def noFloatingPoint(self):
-		return self.checkNoFloatingPoint.checkState() == QtCore.Qt.Checked
-
-	def setNoFloatingPoint(self, value):
-		Tc2Config.settingsSetValue(self.SettingsKeyNoFloatingPoint, value)
-		self.noFloatingPointChanged.emit(value)
 
 	def sideBarPosition(self):
 		return self.comboSideBarPosition.currentText()
@@ -217,6 +153,7 @@ class FrameSettings(QtGui.QFrame):
 
 	def onInitSettings(self):
 		self.layout()
+		formatter = Tc2Config.handFormatter('HtmlTabular')
 
 		value = Tc2Config.settingsValue(self.SettingsKeySideBarPosition, '').toString()
 		if value not in Tc2Config.HandViewerSideBarPositions:
@@ -226,40 +163,76 @@ class FrameSettings(QtGui.QFrame):
 		self.connect(self.comboSideBarPosition, QtCore.SIGNAL('currentIndexChanged(QString)'), self.setSideBarPosition)
 
 		value = Tc2Config.settingsValue(self.SettingsKeyDeckStyle, '').toString()
-		if value not in Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.DeckStyles:
+		if value not in formatter.deckStyles():
 			value = Tc2Config.HandViewerDeckStyleDefault
+		formatter.setDeckStyle(unicode(value.toUtf8(), 'utf-8'))
 		self.comboDeckStyle.setCurrentIndex( self.comboDeckStyle.findText(value, QtCore.Qt.MatchExactly) )
 		#NOTE: pySlot decorator does not work as expected so we have to connect slot the old fashioned way
-		self.connect(self.comboDeckStyle, QtCore.SIGNAL('currentIndexChanged(QString)'), self.setDeckStyle)
+		self.connect(self.comboDeckStyle, QtCore.SIGNAL('currentIndexChanged(QString)'), self.onDeckStyleChanged)
 
 		value, ok = Tc2Config.settingsValue(self.SettingsKeyMaxPlayerName, Tc2Config.HandViewerMaxPlayerNameDefault).toInt()
 		if not ok or value < Tc2Config.HandViewerMaxPlayerNameMin or value > Tc2Config.HandViewerMaxPlayerNameMax:
 			value = Tc2Config.WebView.HandViewerMaxPlayerNameDefault
+		formatter.setMaxPlayerName(value)
 		self.spinMaxPlayerName.setValue(value)
-		self.spinMaxPlayerName.valueChanged.connect(self.setMaxPlayerName)
+		self.spinMaxPlayerName.valueChanged.connect(self.onMaxPlayerNameChanged)
 
-		value = QtCore.Qt.Checked if Tc2Config.settingsValue(self.SettingsKeyNoFloatingPoint, False).toBool() else QtCore.Qt.Unchecked
+		value = Tc2Config.settingsValue(self.SettingsKeyNoFloatingPoint, Tc2Config.HandViewerNoFloatingPointDefault).toBool()
+		formatter.setNoFloatingPoint(value)
 		self.checkNoFloatingPoint.setCheckState(value)
-		self.checkNoFloatingPoint.stateChanged.connect(
-				lambda value, self=self: self.setNoFloatingPoint(self.checkNoFloatingPoint.checkState() == QtCore.Qt.Checked)
-				)
+		self.checkNoFloatingPoint.stateChanged.connect(self.onNoFloatingPointChanged)
 
 		for data in self.actionWidgets.values():
 			editPrefix = data['EditPrefix']
-			text = Tc2Config.settingsValue(editPrefix.settingsKey, editPrefix.default).toString()
+			settingsKey = self.HandActionsMapping[editPrefix.action][1]
+			text = Tc2Config.settingsValue(settingsKey, formatter.actionPrefix(editPrefix.action)).toString()
 			editPrefix.setText(text)
+			formatter.setActionPrefix(editPrefix.action, text)
 			editPrefix.textChanged.connect(
-					lambda text, edit=editPrefix: self.setActionPrefix(edit.actionName, text)
-					)
-			editPostfix = data['EditPostfix']
-			if editPostfix is not None:
-				text = Tc2Config.settingsValue(editPostfix.settingsKey, editPostfix.default).toString()
-				editPostfix.setText(text)
-				editPostfix.textChanged.connect(
-					lambda text, edit=editPostfix: self.setActionPostfix(edit.actionName, text)
+					lambda text, edit=editPrefix: self.onActionValueChanged(edit, text)
 					)
 
+			editPostfix = data['EditPostfix']
+			if editPostfix is not None:
+				settingsKey = self.HandActionsMapping[editPrefix.action][2]
+				text = Tc2Config.settingsValue(settingsKey, formatter.actionPostfix(editPostfix.action)).toString()
+				editPostfix.setText(text)
+				formatter.setActionPostfix(editPostfix.action, text)
+				editPostfix.textChanged.connect(
+					lambda text, edit=editPostfix: self.onActionValueChanged(edit, text)
+					)
 		Tc2Config.globalObject.objectCreatedSettingsHandViewer.emit(self)
+
+
+	def onActionValueChanged(self, edit, text):
+		formatter = Tc2Config.handFormatter('HtmlTabular')
+		if edit.isPrefix:
+			formatter.setActionPrefix(edit.action, text)
+			settingsKey = self.HandActionsMapping[edit.action][1]
+		else:
+			formatter.setActionPostfix(edit.action, text)
+			settingsKey = self.HandActionsMapping[edit.action][2]
+		Tc2Config.settingsSetValue(settingsKey, text)
+
+	def onDeckStyleChanged(self, value):
+		Tc2Config.settingsSetValue(self.SettingsKeyDeckStyle, value)
+		formatter = Tc2Config.handFormatter('HtmlTabular')
+		formatter.setDeckStyle(unicode(value.toUtf8(), 'utf-8'))
+
+	def onMaxPlayerNameChanged(self, value):
+		Tc2Config.settingsSetValue(self.SettingsKeyMaxPlayerName, value)
+		formatter = Tc2Config.handFormatter('HtmlTabular')
+		formatter.setMaxPlayerName(value)
+
+	def onNoFloatingPointChanged(self, state):
+		flag = state == QtCore.Qt.Checked
+		Tc2Config.settingsSetValue(self.SettingsKeyNoFloatingPoint, flag)
+		formatter = Tc2Config.handFormatter('HtmlTabular')
+		formatter.setNoFloatingPoint(flag)
+
+
+
+
 
 
 

@@ -183,6 +183,7 @@ HandViewerSideBarPositions = (
 HandViewerMaxPlayerNameMin = -1
 HandViewerMaxPlayerNameMax = 999
 HandViewerMaxPlayerNameDefault = -1
+HandViewerNoFloatingPointDefault = False
 HandViewerDeckStyleDefault = 'Default'
 
 HoldemResourcesHandHistoryViewerRequestDelay = 0.2
@@ -195,6 +196,19 @@ CardProtectorAutoToggleDefault = False
 CardProtectorAutoToggleTimeoutMin = 0.1
 CardProtectorAutoToggleTimeoutMax = 20.0
 CardProtectorAutoToggleTimeoutDefault = 3.0
+
+#NOTE: we handle hand formatters as shared resource
+HandFormatters = {}	# filled in lazy
+def handFormatter(name):
+	instance = HandFormatters.get(name, None)
+	if instance is None:
+		import Tc2HandFormatters
+		if name == 'HtmlTabular':
+			instance = Tc2HandFormatters.HandFormatterHtmlTabular()
+			HandFormatters[name] = instance
+		else:
+			raise ValueError('no such hand formatter: %s'  % name)
+	return instance
 
 HelpTopics = [
 		('index', 'TableCrab'), [
