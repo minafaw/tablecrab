@@ -1,7 +1,6 @@
 
 import Tc2Config
 import Tc2GuiHelp
-import Tc2SitePokerStarsHandGrabber
 from PyQt4 import QtCore, QtGui
 
 #************************************************************************************
@@ -14,8 +13,6 @@ class FrameSettings(QtGui.QFrame):
 	SettingsKeyDialogSaveState = SettingsKeyBase + '/DialogSave/State'
 
 	SettingsKeyStyleSheet = SettingsKeyBase +  'PokerStarsHandGrabber/HandFornmatterHtmlTabular/StyleSheet'
-
-	styleSheetChanged = QtCore.pyqtSignal(QtCore.QString)
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -77,22 +74,26 @@ class FrameSettings(QtGui.QFrame):
 
 	def setStyleSheet(self, value):
 		if Tc2Config.MaxHandStyleSheet >= 0:
-			if value.length() > Tc2Config.MaxHandStyleSheet:
+			if len(value) > Tc2Config.MaxHandStyleSheet:
 				Tc2Config.globalObject.feedback.emit(self, 'Style sheet too big -- maximum Is %s chars' % Tc2Config.MaxHandStyleSheet)
 				return
 		Tc2Config.globalObject.feedback.emit(self, '')
 		Tc2Config.settingsSetValue(self.SettingsKeyStyleSheet, value)
-		self.styleSheetChanged.emit(value)
+		formatter = Tc2Config.handFormatter('HtmlTabular')
+		formatter.setStyleSheet(value)
+
 
 	def onInitSettings(self):
 		self.layout()
 
+		formatter = Tc2Config.handFormatter('HtmlTabular')
 		#NOTE: style sheet can not be ''
 		#NOTE: have to connect before setText so we can catch MaxCharsExceeded
 		value = Tc2Config.settingsValue(self.SettingsKeyStyleSheet, '').toString()
 		if not value:
-			value = Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.StyleSheet
+			value = formatter.StyleSheet()
 		self.edit.setPlainText(value)
+		formatter.setStyleSheet(value)
 		self.edit.textChanged.connect(
 				lambda self=self: self.setStyleSheet(self.edit.toPlainText())
 				)
@@ -113,9 +114,12 @@ class FrameSettings(QtGui.QFrame):
 		fp = None
 		try:
 			fp = open(fileName, 'r')
-			self.edit.setPlainText(fp.read() )
 		except Exception, d:
 			Tc2Config.msgWarning(self, 'Could Not Open Style sheet\n\n%s' % d)
+		else:
+			text = fp.read()
+			self.edit.setPlainText(text)
+			self.setStyleSheet(text)
 		finally:
 			if fp is not None: fp.close()
 
@@ -145,5 +149,7 @@ class FrameSettings(QtGui.QFrame):
 
 	#TODO: resetting document jumps to top of widget. store/restore position would be nice
 	def onRestoreDefault(self):
-		self.edit.setPlainText(Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular.StyleSheet)
+		formatter = Tc2Config.handFormatter('HtmlTabular')
+		formatter.resetStyleSheet()
+		self.edit.setPlainText(formatter.styleSheet())
 

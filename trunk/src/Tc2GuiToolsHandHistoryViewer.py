@@ -24,7 +24,6 @@ class FrameTool(QtGui.QFrame):
 
 		self.handHistoryFile = None
 		self.handParser = Tc2SitePokerStarsHandGrabber.HandParser()
-		self.handFormatter = Tc2SitePokerStarsHandGrabber.HandFormatterHtmlTabular()
 
 		self._frame = QtGui.QFrame(self)
 		self._splitter = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
@@ -173,7 +172,7 @@ class FrameTool(QtGui.QFrame):
 			self._spinBox.setRange(0, 0)
 			self._spinBox.setSuffix(' /0' )
 			self._spinBox.setValue(0)
-		
+
 		self._browser.clearHistory()
 		self.adjustActions()
 
@@ -242,7 +241,8 @@ class FrameTool(QtGui.QFrame):
 					Tc2Config.handleException('\n' + data)
 					#TODO: data = ?
 				else:
-					data = self.handFormatter.dump(hand)
+					formatter = Tc2Config.handFormatter('HtmlTabular')
+					data = formatter.dump(hand)
 					self.sideBarContainer.handleHandSet(hand)
 				networkReply.setData(data, 'text/html; charset=UTF-8')
 
