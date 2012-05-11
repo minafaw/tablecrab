@@ -170,7 +170,6 @@ def get_window_title(handle):
 	#NOTE: see: [ http://blogs.msdn.com/b/oldnewthing/archive/2003/08/21/54675.aspx ] "the secret live of GetWindowtext" for details
 	# try GetWindowText first
 	nChars = user32.GetWindowTextLengthW(handle)
-	nChars = 0
 	if nChars:
 		p = create_unicode_buffer(nChars +1)
 		if user32.GetWindowTextW(handle, p, sizeof(p)):
