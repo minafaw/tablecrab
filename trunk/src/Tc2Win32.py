@@ -554,28 +554,41 @@ def windowGetText(hwnd, maxSize=-1):
 	if not hwnd or maxSize == 0: return ''
 
 	#NOTE: see: [ http://blogs.msdn.com/b/oldnewthing/archive/2003/08/21/54675.aspx ] "the secret live of GetWindowtext" for details
-
 	# try GetWindowText first
 	nChars = user32.GetWindowTextLengthW(hwnd)
-	#nChars = nChars if maxSize < 0 else min(nChars, maxSize)		## this segfaults in TableCrab
 	if nChars:
 		if maxSize > 0 and nChars > maxSize:
 			return  ''
 		p = create_unicode_buffer(nChars +1)
 		if user32.GetWindowTextW(hwnd, p, sizeof(p)):
-			return p.value
-
+			return p.value.encode('utf-8')
 	# some text can only be retrieved by WM_GETTEXT, so here we go
-	nChars = sendMessageTimeout(hwnd, WM_GETTEXTLENGTH, 0, 0)
-	# WM_GETTEXTLENGTH returns LRESULT so we have to cast here
-	nChars = LRESULT(nChars).value
-	##nChars = nChars if maxSize < 0 else min(nChars, maxSize)		## this segfaults in TableCrab
+	nChars = DWORD()
+	result = user32.SendMessageTimeoutW(
+			hwnd,
+			WM_GETTEXTLENGTH,
+			0,
+			0,
+			SMTO_ABORTIFHUNG,
+			MY_SMTO_TIMEOUT,
+			byref(nChars)
+			)
+	#NOTE: WM_GETTEXTLENGTH returns LRESULT so we have to cast here
+	nChars = c_long(nChars.value)
 	if nChars > 0:
-		if maxSize > 0 and nChars > maxSize:
-			return ''
-		p = create_unicode_buffer(nChars +1)
-		sendMessageTimeout(hwnd, WM_GETTEXT, sizeof(p), p)
-		return p.value
+		if maxSize > 0 and nChars.value > maxSize:
+			return  ''
+		p = create_unicode_buffer(nChars.value +1)
+		result = user32.SendMessageTimeoutW(
+			hwnd,
+			WM_GETTEXT,
+			sizeof(p),
+			p,
+			SMTO_ABORTIFHUNG,
+			MY_SMTO_TIMEOUT,
+			byref(nChars)
+			)
+		return p.value.encode('utf-8')
 	return ''
 
 def windowGetClassName(hwnd):
