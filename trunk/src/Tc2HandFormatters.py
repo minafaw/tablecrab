@@ -539,9 +539,9 @@ class HandFormatterHtmlTabular(object):
 		pot = hand.calcPotSizes()
 		#TODO: to save some space we don't display ante for individual player. good idea or not?
 		potCellExtra = (
-				self.actionPrefix('Ante') +
+				self.actionPrefix(Tc2HandTypes.PokerHand.Action.TypePostBlindAnte) +
 				self.formatNum(hand, hand.blindAnte) +
-				self.settingsHandViewer.actionPostfix(Tc2.HandTypes.PokerHand.TypePostBlindAnte)
+				self.actionPostfix(Tc2HandTypes.PokerHand.Action.TypePostBlindAnte)
 				) if hand.blindAnte else '&nbsp;'
 		sumAnte = sum([i.amount for i in hand.actions[hand.StreetBlinds] if i.type == i.TypePostBlindAnte])
 		if sumAnte:
