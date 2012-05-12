@@ -166,9 +166,11 @@ class FrameSettings(QtGui.QFrame):
 		self.connect(self.comboSideBarPosition, QtCore.SIGNAL('currentIndexChanged(QString)'), self.setSideBarPosition)
 
 		value = Tc2Config.settingsValue(self.SettingsKeyDeckStyle, '').toString()
-		if value not in formatter.deckStyles():
+		if value in formatter.deckStyles():
+			value = unicode(value.toUtf8(), 'utf-8')
+		else:
 			value = Tc2Config.HandViewerDeckStyleDefault
-		formatter.setDeckStyle(unicode(value.toUtf8(), 'utf-8'))
+		formatter.setDeckStyle(value)
 		self.comboDeckStyle.setCurrentIndex( self.comboDeckStyle.findText(value, QtCore.Qt.MatchExactly) )
 		#NOTE: pySlot decorator does not work as expected so we have to connect slot the old fashioned way
 		self.connect(self.comboDeckStyle, QtCore.SIGNAL('currentIndexChanged(QString)'), self.onDeckStyleChanged)

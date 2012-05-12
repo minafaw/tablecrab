@@ -91,7 +91,7 @@ class FrameSettings(QtGui.QFrame):
 		#NOTE: have to connect before setText so we can catch MaxCharsExceeded
 		value = Tc2Config.settingsValue(self.SettingsKeyStyleSheet, '').toString()
 		if not value:
-			value = formatter.StyleSheet()
+			value = formatter.styleSheet()
 		self.edit.setPlainText(value)
 		formatter.setStyleSheet(value)
 		self.edit.textChanged.connect(
