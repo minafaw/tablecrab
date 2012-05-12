@@ -58,7 +58,6 @@ class FrameSettings(QtGui.QFrame):
 			if postfix is not None:
 				editPostfix =  self.ActionLineEdit(self, action, isPrefix=False)
 				editPostfix.setMaxLength(Tc2Config.MaxHandGrabberPrefix)
-
 			self.actionWidgets[action] = {'EditPrefix': editPrefix, 'LabelAction': labelAction, 'EditPostfix': editPostfix, 'no': i}
 
 		self.comboSideBarPosition = QtGui.QComboBox(self)
