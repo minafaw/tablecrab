@@ -272,8 +272,7 @@ class HandFormatterHtmlTabular(object):
 	background-color: white;
 	}
 
-
-'''
+'''.replace('\t', '\x20'*4)
 
 	class IndentBuffer(object):
 		"""write buffer with indentation support"""

@@ -40,6 +40,7 @@ class FrameSettings(QtGui.QFrame):
 			self.action = action
 			self.isPrefix = isPrefix
 
+
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 		self.labelPrefix = QtGui.QLabel('<i>Prefix</i>', self)
@@ -57,6 +58,7 @@ class FrameSettings(QtGui.QFrame):
 			if postfix is not None:
 				editPostfix =  self.ActionLineEdit(self, action, isPrefix=False)
 				editPostfix.setMaxLength(Tc2Config.MaxHandGrabberPrefix)
+
 			self.actionWidgets[action] = {'EditPrefix': editPrefix, 'LabelAction': labelAction, 'EditPostfix': editPostfix, 'no': i}
 
 		self.comboSideBarPosition = QtGui.QComboBox(self)
@@ -74,7 +76,7 @@ class FrameSettings(QtGui.QFrame):
 		self.labelMaxPlayerName = QtGui.QLabel('Ma&x Player Name:', self)
 		self.labelMaxPlayerName.setBuddy(self.spinMaxPlayerName)
 
-		self.checkNoFloatingPoint = QtGui.QCheckBox('Floating &Point To Integer', self)
+		self.checkNoFloatingPoint = QtGui.QCheckBox('No floating &Point', self)
 
 		self.buttonBox = QtGui.QDialogButtonBox(self)
 
@@ -114,12 +116,14 @@ class FrameSettings(QtGui.QFrame):
 		grid.row()
 		grid.col(Tc2Config.HLine(self), colspan=3)
 		grid.row()
-		grid.col(self.labelPrefix).col(self.labelAction).col(self.labelPostfix)
+		grid.col(self.labelPrefix, align=QtCore.Qt.AlignHCenter).col(self.labelAction, align=QtCore.Qt.AlignHCenter).col(self.labelPostfix, align=QtCore.Qt.AlignHCenter)
+		grid.row()
+		grid.col(Tc2Config.HLine(self), colspan=3)
 
 		actions = sorted(self.actionWidgets.values(), key=operator.itemgetter('no'))
 		for data in actions:
 			grid.row()
-			grid.col(data['EditPrefix']).col(data['LabelAction'])
+			grid.col(data['EditPrefix']).col(data['LabelAction'], align=QtCore.Qt.AlignHCenter)
 			if data['EditPostfix'] is not None:
 				grid.col(data['EditPostfix'])
 		grid.row()
