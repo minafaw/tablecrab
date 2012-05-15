@@ -22,11 +22,11 @@ from PyQt4 import QtCore, QtGui
 #************************************************************************************
 class FrameSettings(QtGui.QFrame):
 
-	settingSplitterState = Tc2Config.settings2.byteArray(
+	settingSplitterState = Tc2Config.settings2.ByteArray(
 			'Gui/Settings/SplitterState',
 			defaultValue=QtCore.QByteArray(),
 			)
-	settingCurrentIndex = Tc2Config.settings2.int(
+	settingCurrentIndex = Tc2Config.settings2.Index(
 			'Gui/Settings/CurrentIndex',
 			defaultValue=0,
 			)
@@ -90,14 +90,11 @@ class FrameSettings(QtGui.QFrame):
 
 	def onCloseEvent(self, event):
 		self.settingSplitterState.setValue(self._splitter.saveState())
-		self.settingCurrentIndex.setValue(self._stack.currentIndex())
 
 	def onInitGui(self, globalObject):
 		self.settingSplitterState.changed.connect(
 				lambda setting: self._splitter.restoreState(setting.value())
 				)
-		self.settingCurrentIndex.changed.connect(
-				lambda setting: self._listWidget.setCurrentRow(setting.value())
-				)
+		self.settingCurrentIndex.setListWidget(self._listWidget)
 		self.layout()
 

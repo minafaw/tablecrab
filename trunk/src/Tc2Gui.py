@@ -34,15 +34,15 @@ class ClickableLabel(QtGui.QLabel):
 #************************************************************************************
 class Gui(QtGui.QMainWindow):
 
-	settingGeometry = Tc2Config.settings2.byteArray(
+	settingGeometry = Tc2Config.settings2.ByteArray(
 			'Gui/Geometry',
 			defaultValue=QtCore.QByteArray()
 			)
-	settingTabCurrent = Tc2Config.settings2.int(
+	settingTabCurrent = Tc2Config.settings2.Index(
 			'Gui/TabCurrent',
 			defaultValue=0
 			)
-	settingDialogExceptionGeometry = Tc2Config.settings2.byteArray(
+	settingDialogExceptionGeometry = Tc2Config.settings2.ByteArray(
 			'Gui/Dialogs/DialogException/Geometry',
 			defaultValue=QtCore.QByteArray()
 			)
@@ -124,7 +124,6 @@ class Gui(QtGui.QMainWindow):
 		Tc2Config.globalObject.keyboardHook.stop()
 		Tc2Config.globalObject.windowHook.stop()
 
-		self.settingTabCurrent.setValue(self._tabWidget.currentIndex())
 		self.settingGeometry.setValue(self.saveGeometry())
 		return QtGui.QMainWindow.closeEvent(self, event)
 
@@ -197,9 +196,7 @@ class Gui(QtGui.QMainWindow):
 		self.settingGeometry.changed.connect(
 				lambda setting: self.restoreGeometry(setting.value())
 				)
-		self.settingTabCurrent.changed.connect(
-				lambda setting:self._tabWidget.setCurrentIndex(setting.value())
-				)
+		self.settingTabCurrent.setTabWidget(self._tabWidget)
 
 	def onLabelFeedbackDoubleClicked(self):
 		lastError = self._feedbackMessages[None]
