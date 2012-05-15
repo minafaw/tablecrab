@@ -260,7 +260,7 @@ class Table(PokerStarsWindow):
 		si.leftClick(point, hwnd=self.hwnd)
 		for vk in modifiers:
 			si.keyUp(vk)
-		si.send(restoreCursor=Tc2Config.globalObject.settingsGlobal.restoreMousePosition())
+		si.send(restoreCursor=Tc2Config.settings2['Sites/RestoreMousePosition'].value())
 		# workaround to send double clicks. this handles checkboxes as expected but may trigger
 		# accidental clicks on unrelated tables. we add an abitrary timeout to check if PS has thrown another
 		# table to the foreground. no way to get this fail save, we have a race condition
@@ -328,7 +328,7 @@ class Table(PokerStarsWindow):
 		if point is None:
 			return
 		si = Tc2Win32.SendInput()
-		si.leftClick(point, hwnd=self.hwnd).send(restoreCursor=Tc2Config.globalObject.settingsGlobal.restoreMousePosition())
+		si.leftClick(point, hwnd=self.hwnd).send(restoreCursor=Tc2Config.settings2['Sites/RestoreMousePosition'].value())
 		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name() , hotkey.action() ))
 
 	def handleMultiplyBlind(self, hotkey, template, inputEvent):
@@ -448,7 +448,7 @@ class Table(PokerStarsWindow):
 		point = QtCore.QPoint(2, 2)
 		si = Tc2Win32.SendInput()
 		si.leftClickDouble(point, hwnd=hwndBetBox)
-		si.send(restoreCursor=Tc2Config.globalObject.settingsGlobal.restoreMousePosition())
+		si.send(restoreCursor=Tc2Config.settings2['Sites/RestoreMousePosition'].value())
 		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name() , hotkey.action() ))
 
 	def clickRestoreFocus(self, point, template):
@@ -459,7 +459,7 @@ class Table(PokerStarsWindow):
 		# replayer gains focus, so we have to wait a bit and send another click to reactivate the table.
 		si = Tc2Win32.SendInput()
 		si.leftClickDouble(template.points['EmptySpace'], hwnd=self.hwnd)
-		si.send(restoreCursor=Tc2Config.globalObject.settingsGlobal.restoreMousePosition())
+		si.send(restoreCursor=Tc2Config.settings2['Sites/RestoreMousePosition'].value())
 
 	def handleReplayer(self, hotkey, template, inputEvent):
 		point = self.point('Replayer', template)

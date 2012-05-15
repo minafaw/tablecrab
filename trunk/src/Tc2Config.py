@@ -285,7 +285,9 @@ def cleanSettings():
 	# renamed in 0.8.2
 	keys = (	# (keyOld, keyNew)
 		('Gui/WebView/ZoomSteps', 'Gui/Browser/ZoomSteps'),
-		('/DialogBackup/State', 'Gui/Dialogs/SaveApplicationSettings/State')
+		('/DialogBackup/State', 'Gui/Dialogs/SaveApplicationSettings/State'),
+		('RestoreMousePosition', 'Sites/RestoreMousePosition'),
+		('Settings/RoundBets', 'Sites/RoundBets'),
 		)
 	for keyOld, keyNew in keys:
 		if qSettings.contains(keyOld):
@@ -543,7 +545,7 @@ def formatedBet(bet, blinds=None):
 		return '0'
 	bet = round(bet, 2)
 	if blinds is not None:
-		roundBets = globalObject.settingsGlobal.roundBets()
+		roundBets = settings2['Sites/RoundBets'].value()
 		if roundBets in (RoundBetsBigBlind, RoundBetsSmallBlind):
 			blind = blinds[1] if roundBets == RoundBetsBigBlind else blinds[0]
 			bet = bet * 100
