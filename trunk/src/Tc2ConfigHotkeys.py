@@ -154,7 +154,6 @@ class HotkeyBase(QtGui.QTreeWidgetItem):
 		self._baseValue = self.BaseValueDefault if baseValue is None else baseValue
 		self.setText(0, self.action() )
 		self.setText(1, self.hotkeyName() if self.hotkeyName() else self.key())
-		self.settingsGlobal = None
 
 	@classmethod
 	def id(klass):
