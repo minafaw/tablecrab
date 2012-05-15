@@ -604,6 +604,10 @@ class FrameHandViewer(QtGui.QFrame):
 		# connect global signals
 		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
+		Tc2Config.settings2['Gui/ToolBar/Position'].changed.connect(self.onToolBarPositionChanged)
+		Tc2Config.settings2['Gui/Browser/ZoomSteps'].changed.connect(
+				lambda setting:self._toolBar.setZoomSteps(setting.value())
+				)
 
 	#----------------------------------------------------------------------------------------------------------------
 	# methods
@@ -736,13 +740,9 @@ class FrameHandViewer(QtGui.QFrame):
 		self.setSideBarPosition(globalObject.settingsHandViewer.sideBarPosition())
 		globalObject.settingsHandViewer.sideBarPositionChanged.connect(self.setSideBarPosition)
 		globalObject.siteHandlerPokerStars.handGrabbed.connect(self.onHandGrabberGrabbedHand)
-		self._browserFrame.layout(globalObject.settingsGlobal.toolBarPosition() == Tc2Config.ToolBarPositionTop)
 		self.layout()
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
 
-		globalObject.settingsGlobal.toolBarPositionChanged.connect(
-				lambda position, frame=self._browserFrame: frame.layout(toolBarTop=position == Tc2Config.ToolBarPositionTop)
-				)
 		value, ok = Tc2Config.settingsValue(self.SettingsKeyZoomFactor, Browser.BrowserToolBar.ZoomFactorDefault).toDouble()
 		if ok:
 			self._toolBar.setZoomFactor(value)
@@ -765,6 +765,9 @@ class FrameHandViewer(QtGui.QFrame):
 			Tc2Config.globalObject.feedback.emit(self, handName)
 		else:
 			Tc2Config.globalObject.feedback.emit(self, 'Grabbed hand')
+
+	def onToolBarPositionChanged(self, setting):
+		self._browserFrame.layout(toolBarTop=setting.value()==Tc2Config.ToolBarPositionTop)
 
 	def onToolBarZoomFactorChanged(self, value):
 		Tc2Config.settingsSetValue(self.SettingsKeyZoomFactor, value)

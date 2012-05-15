@@ -88,6 +88,10 @@ class FrameTool(QtGui.QFrame):
 		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 		self._browser.urlChanged.connect(self.onUrlChanged)
+		Tc2Config.settings2['Gui/ToolBar/Position'].changed.connect(self.onToolBarPositionChanged)
+		Tc2Config.settings2['Gui/Browser/ZoomSteps'].changed.connect(
+				lambda setting:self._toolBar.setZoomSteps(setting.value())
+				)
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self._frame)
@@ -119,13 +123,8 @@ class FrameTool(QtGui.QFrame):
 		self.setSideBarPosition(globalObject.settingsHandViewer.sideBarPosition())
 		globalObject.settingsHandViewer.sideBarPositionChanged.connect(self.setSideBarPosition)
 		self.adjustActions()
-		self._browserFrame.layout(globalObject.settingsGlobal.toolBarPosition() == Tc2Config.ToolBarPositionTop)
 		self.layout()
 		self._splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
-
-		globalObject.settingsGlobal.toolBarPositionChanged.connect(
-				lambda position, frame=self._browserFrame: frame.layout(toolBarTop=position == Tc2Config.ToolBarPositionTop)
-				)
 
 		value, ok = Tc2Config.settingsValue(self.SettingsKeyZoomFactor, Browser.BrowserToolBar.ZoomFactorDefault).toDouble()
 		if ok:
@@ -248,6 +247,9 @@ class FrameTool(QtGui.QFrame):
 
 	def onSpinBoxValueChanged(self, handNo):
 		self._browser.setUrl(QtCore.QUrl('hand:///%s' % handNo))
+
+	def onToolBarPositionChanged(self, setting):
+		self._browserFrame.layout(toolBarTop=setting.value()==Tc2Config.ToolBarPositionTop)
 
 	def onToolBarZoomFactorChanged(self, value):
 		Tc2Config.settingsSetValue(self.SettingsKeyZoomFactor, value)

@@ -56,6 +56,13 @@ class FrameHelp(QtGui.QFrame):
 		self.tree.itemActivated.connect(self.onItemSelectionChanged)
 		self.browser.urlChanged.connect(self.onUrlChanged)
 		self.browser.networkAccessManager().getData.connect(self.onNetworkGetData)
+		Tc2Config.settings2['Gui/ToolBar/Position'].changed.connect(self.onToolBarPositionChanged)
+		Tc2Config.settings2['Gui/AlternatingRowColors'].changed.connect(
+				lambda setting: self.tree.setAlternatingRowColors(setting.value())
+				)
+		Tc2Config.settings2['Gui/Browser/ZoomSteps'].changed.connect(
+				lambda setting:self.toolBar.setZoomSteps(setting.value())
+				)
 
 	#------------------------------------------------------------------------------------------------------------------
 	# methods
@@ -115,6 +122,9 @@ class FrameHelp(QtGui.QFrame):
 		point = self.browser.mapToGlobal(point)
 		menu.exec_(point)
 
+	def onToolBarPositionChanged(self, setting):
+		self.browserFrame.layout(toolBarTop=setting.value()==Tc2Config.ToolBarPositionTop)
+
 	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		self.tree.setUpdatesEnabled(False)
 
@@ -162,15 +172,9 @@ class FrameHelp(QtGui.QFrame):
 
 		self.tree.setUpdatesEnabled(True)
 
-		self.tree.setAlternatingRowColors(globalObject.settingsGlobal.alternatingRowColors())
-		globalObject.settingsGlobal.alternatingRowColorsChanged.connect(self.tree.setAlternatingRowColors)
-		self.browserFrame.layout(globalObject.settingsGlobal.toolBarPosition() == Tc2Config.ToolBarPositionTop)
+
 		self.layout()
 		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
-		globalObject.settingsGlobal.toolBarPositionChanged.connect(
-				lambda position, frame=self.browserFrame: frame.layout(toolBarTop=position == Tc2Config.ToolBarPositionTop)
-				)
-
 		zoomFactor = Tc2Config.settingsValue(self.SettingsKeyZoomFactor, Browser.BrowserToolBar.ZoomFactorDefault).toDouble()[0]
 		self.toolBar.setZoomFactor(zoomFactor)
 

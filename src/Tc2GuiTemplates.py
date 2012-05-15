@@ -106,6 +106,12 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		Tc2Config.globalObject.widgetScreenshotSet.connect(self.onWidgetScreenshotSet)
 		Tc2Config.globalObject.widgetScreenshotDoubleClicked.connect(self.onWidgetScreenshotDoubleClicked)
+		Tc2Config.settings2['Gui/AlternatingRowColors'].changed.connect(
+				lambda setting:self.setAlternatingRowColors(setting.value())
+				)
+		Tc2Config.settings2['Gui/ChildItemIndicators'].changed.connect(
+				lambda setting:self.setRootIsDecorated(setting.value())
+				)
 
 		# connect to TreeWidget signals
 		self.itemDoubleClicked.connect(self.onEditItemInPlace)
@@ -289,10 +295,6 @@ class TemplatesWidget(QtGui.QTreeWidget):
 		self.setUpdatesEnabled(True)
 		self.adjustActions()
 
-		self.setAlternatingRowColors(globalObject.settingsGlobal.alternatingRowColors())
-		globalObject.settingsGlobal.alternatingRowColorsChanged.connect(self.setAlternatingRowColors)
-		self.setRootIsDecorated(globalObject.settingsGlobal.childItemIndicators())
-		globalObject.settingsGlobal.childItemIndicatorsChanged.connect(self.setRootIsDecorated)
 		globalObject.widgetScreenshotQuery.emit()
 
 	def onItemCollapsed(self, item):

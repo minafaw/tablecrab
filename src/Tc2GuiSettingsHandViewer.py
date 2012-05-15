@@ -103,7 +103,7 @@ class FrameSettings(QtGui.QFrame):
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
-		grid.col(Tc2Config.HLine(self), colspan=3)
+		grid.col(Tc2Config.HLine(self), colspan=2)
 		grid.row()
 		grid.col(self.labelSideBarPosition).col(self.comboSideBarPosition)
 		grid.row()
@@ -111,26 +111,29 @@ class FrameSettings(QtGui.QFrame):
 		grid.row()
 		grid.col(self.labelMaxPlayerName).col(self.spinMaxPlayerName)
 		grid.row()
-		grid.col(self.checkNoFloatingPoint, colspan=3)
+		grid.col(self.checkNoFloatingPoint, colspan=2)
 		grid.row()
-		grid.col(Tc2Config.HLine(self), colspan=3)
+		grid.col(Tc2Config.HLine(self), colspan=2)
 		grid.row()
-		grid.col(self.labelPrefix, align=QtCore.Qt.AlignHCenter).col(self.labelAction, align=QtCore.Qt.AlignHCenter).col(self.labelPostfix, align=QtCore.Qt.AlignHCenter)
-		grid.row()
-		grid.col(Tc2Config.HLine(self), colspan=3)
 
+		grid2 = Tc2Config.GridBox(self)
+		grid.col(grid2, colspan=2)
+		grid2.col(self.labelPrefix, align=QtCore.Qt.AlignHCenter).col(self.labelAction, align=QtCore.Qt.AlignHCenter).col(self.labelPostfix, align=QtCore.Qt.AlignHCenter)
+		grid2.row()
+		grid2.col(Tc2Config.HLine(self), colspan=3)
+		grid2.row()
 		actions = sorted(self.actionWidgets.values(), key=operator.itemgetter('no'))
 		for data in actions:
-			grid.row()
-			grid.col(data['EditPrefix']).col(data['LabelAction'], align=QtCore.Qt.AlignHCenter)
+			grid2.row()
+			grid2.col(data['EditPrefix']).col(data['LabelAction'], align=QtCore.Qt.AlignHCenter)
 			if data['EditPostfix'] is not None:
-				grid.col(data['EditPostfix'])
+				grid2.col(data['EditPostfix'])
 		grid.row()
 		grid.col(Tc2Config.VStretch())
 		grid.row()
-		grid.col(Tc2Config.HLine(self), colspan=3)
+		grid.col(Tc2Config.HLine(self), colspan=2)
 		grid.row()
-		grid.col(self.buttonBox, colspan=3)
+		grid.col(self.buttonBox, colspan=2)
 
 	def onRestoreDefault(self, *args):
 		formatter = Tc2Config.handFormatter('HtmlTabular')
