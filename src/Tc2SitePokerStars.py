@@ -267,7 +267,7 @@ class Table(PokerStarsWindow):
 		##time.sleep( min(0.05, Tc2Win32.mouseDoubleClickTime()) )
 		##hwnd2 = Tc2Win32.windowForeground()
 		##if hwnd == hwnd2:
-		##	si.leftClick(point, hwnd=hwnd).send(restoreCursor=self.settingsGlobal.Tc2Config.globalObject.settingsGlobal.())
+		##	si.leftClick(point, hwnd=hwnd).send(restoreCursor=Tc2Config.settings2['Sites/RestoreMousePosition'].value())
 		Tc2Config.globalObject.feedbackMessage.emit('%s: %s' % (template.name() , hotkey.action() ))
 		return
 
