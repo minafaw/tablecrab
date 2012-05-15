@@ -11,57 +11,57 @@ from PyQt4 import QtCore, QtGui, QtWebKit
 #************************************************************************************
 class FrameSettings(QtGui.QFrame):
 
-	settingSingleApplicationScope = Tc2Config.settings2.chooseString(
+	settingSingleApplicationScope = Tc2Config.settings2.ChooseString(
 			'Gui/SingleApplication/Scope',
 			defaultValue=Tc2Config.SingleApplicationScopeDefault,
 			choices=Tc2Win32.SingleApplication.Scopes,
 			)
-	settingGuiStyle = Tc2Config.settings2.chooseString(
+	settingGuiStyle = Tc2Config.settings2.ChooseString(
 			'Gui/Style',
 			defaultValue=None,	# not known at compile time, set later
 			choices=[unicode(i.toUtf8(), 'utf-8') for i in QtGui.QStyleFactory().keys()],
 			)
-	settingGuiFont = Tc2Config.settings2.font(
+	settingGuiFont = Tc2Config.settings2.Font(
 			'Gui/Font',
 			defaultValue=None,	# not known at compile time, set later
 			)
-	settingFixedFont = Tc2Config.settings2.font(
+	settingFixedFont = Tc2Config.settings2.Font(
 			'Gui/FontFixed',
 			defaultValue=None,	# not known at compile time, set later
 			)
-	settingTabPosition = Tc2Config.settings2.chooseString(
+	settingTabPosition = Tc2Config.settings2.ChooseString(
 			'Gui/Tab/Position',
 			defaultValue=Tc2Config.TabPositionDefault,
 			choices=Tc2Config.TabPositions,
 			)
-	settingToolBarPosition = Tc2Config.settings2.chooseString(
+	settingToolBarPosition = Tc2Config.settings2.ChooseString(
 			'Gui/ToolBar/Position',
 			defaultValue=Tc2Config.ToolBarPositionDefault,
 			choices=Tc2Config.ToolBarPositions,
 			)
-	settingAlternatingRowColors = Tc2Config.settings2.bool(
+	settingAlternatingRowColors = Tc2Config.settings2.Bool(
 			'Gui/AlternatingRowColors',
 			defaultValue=True
 			)
-	settingChildItemIndicators = Tc2Config.settings2.bool(
+	settingChildItemIndicators = Tc2Config.settings2.Bool(
 			'Gui/ChildItemIndicators',
 			defaultValue=True
 			)
-	settingsWebViewZoomSteps = Tc2Config.settings2.int(
+	settingsWebViewZoomSteps = Tc2Config.settings2.Int(
 			'Gui/Browser/ZoomSteps',
 			defaultValue=Tc2Config.WebViewZoomStepsDefault,
 			minValue=Tc2Config.WebViewZoomStepsMin,
 			maxValue=Tc2Config.WebViewZoomStepsMax,
 			)
-	settingsDialogBackupState = Tc2Config.settings2.byteArray(
+	settingsDialogBackupState = Tc2Config.settings2.ByteArray(
 			'Gui/Dialogs/SaveApplicationSettings/State',
 			defaultValue=QtCore.QByteArray(),
 			)
-	settingRestoreMousePosition = Tc2Config.settings2.bool(
+	settingRestoreMousePosition = Tc2Config.settings2.Bool(
 			'Sites/RestoreMousePosition',
 			defaultValue=False
 			)
-	settingRoundBets = Tc2Config.settings2.chooseString(
+	settingRoundBets = Tc2Config.settings2.ChooseString(
 			'Sites/RoundBets',
 			defaultValue=Tc2Config.RoundBetsDefault,
 			choices=Tc2Config.RoundBets
