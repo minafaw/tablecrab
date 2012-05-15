@@ -56,7 +56,7 @@ class SettingPersistant(SettingTemp):
 			qSettings = self.settings().qSettings()
 			self.valueToSettings(qSettings, self.key(), value)
 			##qSettings.sync()
-		if self._widget:
+		if self._widget is not None:
 			self._widgetSignal.disconnect(self._widgetSlot)
 			self._widgetValueSetter(value)
 			self._widgetSignal.connect(self._widgetSlot)
@@ -79,8 +79,6 @@ class SettingBool(SettingPersistant):
 	def valueFromSettings(self, qSettings, key):
 		v = qSettings.value(key)
 		return (True, v.toBool()) if v.isValid() else (False, None)
-	def valueToSettings(self, qSettings, key, value):
-		qSettings.setValue(key, QtCore.QVariant(value))
 	def setCheckBox(self, checkBox):
 		self.setWidget(
 				checkBox,
@@ -109,8 +107,6 @@ class SettingInt(SettingPersistant):
 				if value > self._maxValue:
 					ok, value = False, None
 		return ok, value
-	def valueToSettings(self, qSettings, key, value):
-		qSettings.setValue(key, QtCore.QVariant(value))
 	def setSpinBox(self, spinBox):
 		spinBox.setRange(self.minValue(), self.maxValue())
 		self.setWidget(
@@ -154,8 +150,8 @@ class SettingChooseString(SettingPersistant):
 
 class SettingIndex(SettingPersistant):
 	def valueFromSettings(self, qSettings, key):
-		value, ok =qSettings.value(key).toInt()
-		return ok, value
+		value, ok = qSettings.value(key).toInt()
+		return (ok, value) if ok else (False, None)
 	def setTabWidget(self, tabWidget):
 		self.setWidget(
 				tabWidget,
