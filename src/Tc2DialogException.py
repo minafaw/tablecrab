@@ -22,7 +22,11 @@ Notes:
 '''
 class DialogException(QtGui.QDialog):
 
-	SettingsKeyDialogSaveImageState = 'Gui/DialogException/DialogSaveImage/State'
+	settingDialogSaveImageState = Tc2Config.settings2.byteArray(
+			'Gui/Dialogs/DialogExceptionSaveImage/State',
+			defaultValue=QtCore.QByteArray()
+			)
+
 
 	ImagePat = re.compile('.*(?<=$|\n)\<image\>(.+?)\<\/image\>', re.X|re.M|re.S)
 
@@ -96,7 +100,7 @@ class DialogException(QtGui.QDialog):
 				title='Save Screenshot..',
 				fileFilters=('Images (%s)' % ' '.join(['*.%s' % i for i in imageFormats]), 'All Files (*)'),
 				defaultSuffix='png',
-				settingsKey=self.SettingsKeyDialogSaveImageState,
+				setting=self.settingDialogSaveImageState,
 				)
 		if fileName is None:
 			return
