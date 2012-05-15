@@ -294,7 +294,7 @@ def cleanSettings():
 	for keyOld, keyNew in keys:
 		if qSettings.contains(keyOld):
 			qSettings.setValue(keyNew, qSettings.value(keyOld))
-			#qSettings.remove(keyOld)
+			qSettings.remove(keyOld)
 
 	##settings2.clean()
 
