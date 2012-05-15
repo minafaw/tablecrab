@@ -85,6 +85,9 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		self.itemDoubleClicked.connect(self.onHotkeyDoubleClicked)
 		self.itemSelectionChanged.connect(self.adjustActions)
+		Tc2Config.settings2['Gui/AlternatingRowColors'].changed.connect(
+				lambda setting:self.setAlternatingRowColors(setting.value())
+				)
 
 	#----------------------------------------------------------------------------------------------------------------
 	# overwritten methods
@@ -254,9 +257,6 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self.adjustHotkeys()
 		self.adjustActions()
 
-		self.setAlternatingRowColors(globalObject.settingsGlobal.alternatingRowColors())
-		globalObject.settingsGlobal.alternatingRowColorsChanged.connect(self.setAlternatingRowColors)
-
 #**********************************************************************************************
 #
 #**********************************************************************************************
@@ -279,7 +279,9 @@ class FrameHotkeys(QtGui.QFrame):
 		self.toolBar.addAction(self.actionHelp)
 
 		# connect global signals
-		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsfinished)
+		Tc2Config.settings2['Gui/ToolBar/Position'].changed.connect(
+				lambda setting: self.layout(setting.value())
+				)
 
 	#----------------------------------------------------------------------------------------------------------------
 	# methods
@@ -301,10 +303,6 @@ class FrameHotkeys(QtGui.QFrame):
 	#--------------------------------------------------------------------------------------------------------------
 	def onActionHelpTriggered(self):
 		Tc2GuiHelp.dialogHelp('hotkeys', parent=self)
-
-	def onGlobalObjectInitSettingsfinished(self, globalObject):
-		self.layout(globalObject.settingsGlobal.toolBarPosition())
-		globalObject.settingsGlobal.toolBarPositionChanged.connect(self.layout)
 
 
 

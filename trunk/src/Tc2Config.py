@@ -94,6 +94,7 @@ from PyQt4 import QtCore, QtGui
 
 import Tc2Win32
 from Tc2Res import Pixmaps, HtmlPages, StyleSheets
+from Tc2Lib import Settings as Settings2
 
 #************************************************************************************
 # consts
@@ -274,6 +275,28 @@ SiteNamePokerStars = 'PokerStars'
 #***********************************************************************************
 # global QSettings
 #***********************************************************************************
+qSettings = QtCore.QSettings(Author, ApplicationName)
+class Settings:
+	qSettings = qSettings
+settings2 = Settings2.Settings(qSettings)
+
+def cleanSettings():
+	qSettings = settings2.qSettings()
+	# renamed in 0.8.2
+	keys = (	# (keyOld, keyNew)
+		('Gui/WebView/ZoomSteps', 'Gui/Browser/ZoomSteps'),
+		('/DialogBackup/State', 'Gui/Dialogs/SaveApplicationSettings/State')
+		)
+	for keyOld, keyNew in keys:
+		if qSettings.contains(keyOld):
+			qSettings.setValue(keyNew, qSettings.value(keyOld))
+			qSettings.remove(keyOld)
+
+	##settings2.clean()
+
+
+
+
 #TODO: what to do with deprecated settings keys?
 # deprecated: Gui/WebView/ZoomIncrement
 # needs rename: Hotkeys/$Slot$/Hotkey --> Hotkeys/$Slot$/Key
@@ -288,8 +311,6 @@ SiteNamePokerStars = 'PokerStars'
 SettingsKeySingleApplicationScope ='Gui/SingleApplication/Scope'
 
 
-class Settings:
-	qSettings = QtCore.QSettings(Author, ApplicationName)
 
 def settingsKeyJoin(*keys):
 	keys = [(str(key) if isinstance(key, QtCore.QString) else key) for key in keys if key]
@@ -312,10 +333,12 @@ def settingsSetValue(key, value):
 def settingsRemoveKey(key):
 	if isinstance(key, tuple):
 		key = settingsKeyJoin(*key)
-	#TODO: for some reason QSettings.contains(key) always return false here even if the key exists
-	##print key, qSettings.contains(key)
-	#if qSettings.contains(key):
 	Settings.qSettings.remove(key)
+def settingsHasKey(key):
+	if isinstance(key, tuple):
+		#NOTE: Qt does not kow about intermediate keys
+		key = settingsKeyJoin(*key)
+	return Settings.qSettings.contains(key)
 
 #***********************************************************************************
 # global singal handling and messages
@@ -324,6 +347,7 @@ class _GlobalObject(QtCore.QObject):
 
 	# global signals
 
+	initGui = QtCore.pyqtSignal()
 	# settings objects should initialize themselves in response to this signal
 	initSettings = QtCore.pyqtSignal()
 	# emitted when the all settings are up and alive. param is globalObject
