@@ -152,6 +152,7 @@ class SettingInt(SettingTemp):
 	def onSpinBoxValueChanged(self, value):
 		self.setValue(value)
 
+
 class SettingChooseString(SettingTemp):
 
 	def __init__(self, settings, key, defaultValue=None, choices=None):
