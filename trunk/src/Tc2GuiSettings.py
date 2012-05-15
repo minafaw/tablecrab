@@ -22,10 +22,14 @@ from PyQt4 import QtCore, QtGui
 #************************************************************************************
 class FrameSettings(QtGui.QFrame):
 
-	SettingsKeyBase = 'Gui/Settings'
-	SettingsKeySplitterState = SettingsKeyBase + '/SplitterState'
-	SettingsKeyCurrentSettingIndex = SettingsKeyBase + '/CurrentIndex'
-
+	settingSplitterState = Tc2Config.settings2.byteArray(
+			'Gui/Settings/SplitterState',
+			defaultValue=QtCore.QByteArray(),
+			)
+	settingCurrentIndex = Tc2Config.settings2.int(
+			'Gui/Settings/CurrentIndex',
+			defaultValue=0,
+			)
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -50,7 +54,7 @@ class FrameSettings(QtGui.QFrame):
 		self.settingsCardProtector = self.addSetting('CardProtector', Tc2GuiSettingsCardProtector.FrameSettings(parent=self._stack), 'Shift+A', 'Card Protector (Shift+A)')
 		self.settingsClock = self.addSetting('Clock', Tc2GuiSettingsClock.FrameSettings(parent=self._stack), 'Shift+C', 'Clock (Shift+C)')
 
-		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onInitGui)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 		Tc2Config.settings2['Gui/AlternatingRowColors'].changed.connect(
 				lambda setting:self._listWidget.setAlternatingRowColors(setting.value())
@@ -85,14 +89,15 @@ class FrameSettings(QtGui.QFrame):
 		self._stack.setCurrentIndex(row)
 
 	def onCloseEvent(self, event):
-		Tc2Config.settingsSetValue(self.SettingsKeySplitterState, self._splitter.saveState())
-		Tc2Config.settingsSetValue(self.SettingsKeyCurrentSettingIndex, self._stack.currentIndex())
+		self.settingSplitterState.setValue(self._splitter.saveState())
+		self.settingCurrentIndex.setValue(self._stack.currentIndex())
 
-	def onGlobalObjectInitSettingsFinished(self, globalObject):
+	def onInitGui(self, globalObject):
+		self.settingSplitterState.changed.connect(
+				lambda setting: self._splitter.restoreState(setting.value())
+				)
+		self.settingCurrentIndex.changed.connect(
+				lambda setting: self._listWidget.setCurrentRow(setting.value())
+				)
 		self.layout()
-		self._splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
-		self._listWidget.setCurrentRow( Tc2Config.settingsValue(self.SettingsKeyCurrentSettingIndex, 0).toInt()[0] )
-
-
-
 
