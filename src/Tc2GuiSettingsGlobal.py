@@ -11,16 +11,6 @@ from PyQt4 import QtCore, QtGui, QtWebKit
 #************************************************************************************
 class FrameSettings(QtGui.QFrame):
 
-	SettingsKeyBase = 'Gui/Settings'
-	#TODO: site specific. move to /Sites
-	SettingsKeyRestoreMousePosition = 'RestoreMousePosition'
-	#TODO: site specific. move to /Sites
-	SettingsKeyRoundBets = 'Settings/RoundBets'
-
-	restoreMousePositionChanged = QtCore.pyqtSignal(bool)
-	roundBetsChanged = QtCore.pyqtSignal(QtCore.QString)
-
-	# #########################################
 	settingSingleApplicationScope = Tc2Config.settings2.chooseString(
 			'Gui/SingleApplication/Scope',
 			defaultValue=Tc2Config.SingleApplicationScopeDefault,
@@ -67,7 +57,15 @@ class FrameSettings(QtGui.QFrame):
 			'Gui/Dialogs/SaveApplicationSettings/State',
 			defaultValue=QtCore.QByteArray(),
 			)
-
+	settingRestoreMousePosition = Tc2Config.settings2.bool(
+			'Sites/RestoreMousePosition',
+			defaultValue=False
+			)
+	settingRoundBets = Tc2Config.settings2.chooseString(
+			'Sites/RoundBets',
+			defaultValue=Tc2Config.RoundBetsDefault,
+			choices=Tc2Config.RoundBets
+			)
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -114,7 +112,6 @@ class FrameSettings(QtGui.QFrame):
 		self.labelTabPosition.setBuddy(self.comboTabPosition)
 
 		self.comboRoundBets = QtGui.QComboBox(self)
-		self.comboRoundBets.addItems(Tc2Config.RoundBets)
 		self.labelRoundBets = QtGui.QLabel('Round &bets to:', self)
 		self.labelRoundBets.setBuddy(self.comboRoundBets)
 
@@ -212,20 +209,6 @@ class FrameSettings(QtGui.QFrame):
 	def onHelp(self, *args):
 		Tc2GuiHelp.dialogHelp('settingsGlobal', parent=self)
 
-	def restoreMousePosition(self):
-		return self.checkRestoreMousePosition.checkState() == QtCore.Qt.Checked
-
-	def setRestoreMousePosition(self,value):
-		Tc2Config.settingsSetValue(self.SettingsKeyRestoreMousePosition, value)
-		self.restoreMousePositionChanged.emit(value)
-
-	def roundBets(self):
-		return self.comboRoundBets.currentText()
-
-	def setRoundBets(self,value):
-		Tc2Config.settingsSetValue(self.SettingsKeyRoundBets, value)
-		self.roundBetsChanged.emit(value)
-
 	def onInitGui(self):
 		#NOTE: try to find current gui style
 		# - gui style is not known at compile time
@@ -259,6 +242,9 @@ class FrameSettings(QtGui.QFrame):
 		self.settingsWebViewZoomSteps.setSpinBox(self.spinWebViewZoomSteps)
 
 		self.settingSingleApplicationScope.setComboBox(self.comboSingleApplicationScope)
+		self.settingRoundBets.setComboBox(self.comboRoundBets)
+		self.settingRestoreMousePosition.setCheckBox(self.checkRestoreMousePosition)
+
 
 	def onSettingGuiStyleChanged(self, setting):
 		tmpStyle = unicode(QtGui.qApp.style().objectName().toUtf8(), 'utf-8')
@@ -286,20 +272,6 @@ class FrameSettings(QtGui.QFrame):
 
 	def onInitSettings(self):
 		self.layout()
-
-		value = QtCore.Qt.Checked if Tc2Config.settingsValue(self.SettingsKeyRestoreMousePosition, False).toBool() else QtCore.Qt.Unchecked
-		self.checkRestoreMousePosition.setCheckState(value)
-		self.checkRestoreMousePosition.stateChanged.connect(
-				lambda value, self=self: self.setRestoreMousePosition(self.checkRestoreMousePosition.checkState() == QtCore.Qt.Checked)
-				)
-
-		value = Tc2Config.settingsValue(self.SettingsKeyRoundBets, '').toString()
-		if value not in Tc2Config.RoundBets:
-			value = Tc2Config.RoundBetsDefault
-		self.comboRoundBets.setCurrentIndex( self.comboRoundBets.findText(value, QtCore.Qt.MatchExactly) )
-		#NOTE: pySlot decorator does not work as expected so we have to connect slot the old fashioned way
-		self.connect(self.comboRoundBets, QtCore.SIGNAL('currentIndexChanged(QString)'), self.setRoundBets)
-
 
 		Tc2Config.globalObject.objectCreatedSettingsGlobal.emit(self)
 
