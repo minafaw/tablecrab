@@ -127,7 +127,6 @@ class FrameSettings(QtGui.QFrame):
 		self.addAction(action)
 		self.addAction(action)
 
-		Tc2Config.globalObject.initSettings.connect(self.onInitSettings)
 		Tc2Config.globalObject.initGui.connect(self.onInitGui)
 
 
@@ -245,6 +244,8 @@ class FrameSettings(QtGui.QFrame):
 		self.settingRoundBets.setComboBox(self.comboRoundBets)
 		self.settingRestoreMousePosition.setCheckBox(self.checkRestoreMousePosition)
 
+		self.layout()
+
 
 	def onSettingGuiStyleChanged(self, setting):
 		tmpStyle = unicode(QtGui.qApp.style().objectName().toUtf8(), 'utf-8')
@@ -269,11 +270,6 @@ class FrameSettings(QtGui.QFrame):
 		settings = QtWebKit.QWebSettings.globalSettings()
 		settings.setFontFamily(settings.FixedFont, font.family() )
 		settings.setFontSize(settings.DefaultFixedFontSize, font.pointSize() )
-
-	def onInitSettings(self):
-		self.layout()
-
-		Tc2Config.globalObject.objectCreatedSettingsGlobal.emit(self)
 
 
 
