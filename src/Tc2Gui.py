@@ -34,10 +34,18 @@ class ClickableLabel(QtGui.QLabel):
 #************************************************************************************
 class Gui(QtGui.QMainWindow):
 
-	SettingsKeyBase = 'Gui'
-	SettingsKeyGeometry = SettingsKeyBase + '/Geometry'
-	SettingsKeyTabCurrent =  SettingsKeyBase + '/TabCurrent'
-	SettingsKeyDialogExceptionGeometry = SettingsKeyBase + '/DialogException/Geometry'
+	settingGeometry = Tc2Config.settings2.byteArray(
+			'Gui/Geometry',
+			defaultValue=QtCore.QByteArray()
+			)
+	settingTabCurrent = Tc2Config.settings2.int(
+			'Gui/TabCurrent',
+			defaultValue=0
+			)
+	settingDialogExceptionGeometry = Tc2Config.settings2.byteArray(
+			'Gui/Dialogs/DialogException/Geometry',
+			defaultValue=QtCore.QByteArray()
+			)
 
 	def __init__(self):
 		#NOTE: have to init setting here
@@ -62,7 +70,6 @@ class Gui(QtGui.QMainWindow):
 
 		self.setWindowTitle(Tc2Config.ReleaseName)
 		self.setWindowIcon( QtGui.QIcon(Tc2Config.Pixmaps.tableCrab()) )
-		self.restoreGeometry( Tc2Config.settingsValue(self.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray() )
 
 		self._siteManager = Tc2SiteManager.SiteManager(parent=self)
 
@@ -100,11 +107,11 @@ class Gui(QtGui.QMainWindow):
 
 		# connect global signals
 		g = Tc2Config.globalObject
-		g.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		g.feedback.connect(self.onFeedback)
 		g.feedbackException.connect(self.onFeedbackException)
 		g.clearException.connect(self.onClearException)
 		g.feedbackMessage.connect(self.onFeedbackMessage)
+		g.initGui.connect(self.onInitGui)
 		Tc2Config.settings2['Gui/Tab/Position'].changed.connect(self.onSettingTabPositionChanged)
 
 	#--------------------------------------------------------------------------------------------------------------
@@ -117,8 +124,8 @@ class Gui(QtGui.QMainWindow):
 		Tc2Config.globalObject.keyboardHook.stop()
 		Tc2Config.globalObject.windowHook.stop()
 
-		Tc2Config.settingsSetValue(self.SettingsKeyTabCurrent, self._tabWidget.currentIndex())
-		Tc2Config.settingsSetValue(self.SettingsKeyGeometry, self.saveGeometry() )
+		self.settingTabCurrent.setValue(self._tabWidget.currentIndex())
+		self.settingGeometry.setValue(self.saveGeometry())
 		return QtGui.QMainWindow.closeEvent(self, event)
 
 	def show(self):
@@ -186,16 +193,21 @@ class Gui(QtGui.QMainWindow):
 		self.labelFeedback.setText('>>' + qString)
 		self._statusMessageTimer.start(Tc2Config.StatusBarMessageTimeout * 1000)
 
-	def onGlobalObjectInitSettingsFinished(self, globalObject):
-		self._tabWidget.setCurrentIndex( Tc2Config.settingsValue(self.SettingsKeyTabCurrent, QtCore.QVariant()).toInt()[0] )
+	def onInitGui(self):
+		self.settingGeometry.changed.connect(
+				lambda setting: self.restoreGeometry(setting.value())
+				)
+		self.settingTabCurrent.changed.connect(
+				lambda setting:self._tabWidget.setCurrentIndex(setting.value())
+				)
 
 	def onLabelFeedbackDoubleClicked(self):
 		lastError = self._feedbackMessages[None]
 		if lastError:
 			dlg = Tc2DialogException.DialogException(lastError, parent=self)
-			dlg.restoreGeometry( Tc2Config.settingsValue(self.SettingsKeyDialogExceptionGeometry, QtCore.QByteArray()).toByteArray())
+			dlg.restoreGeometry(self.settingDialogExceptionGeometry.value())
 			dlg.exec_()
-			Tc2Config.settingsSetValue(self.SettingsKeyDialogExceptionGeometry, dlg.saveGeometry() )
+			self.settingDialogExceptionGeometry.setValue(dlg.saveGeometry())
 
 	def onSettingTabPositionChanged(self, setting):
 		position = self._tabWidget.South if setting.value()  == Tc2Config.TabPositionBottom else self._tabWidget.North

@@ -288,6 +288,7 @@ def cleanSettings():
 		('/DialogBackup/State', 'Gui/Dialogs/SaveApplicationSettings/State'),
 		('RestoreMousePosition', 'Sites/RestoreMousePosition'),
 		('Settings/RoundBets', 'Sites/RoundBets'),
+		('/DialogException/Geometry', 'Gui/Dialogs/DialogException/Geometry'),
 		)
 	for keyOld, keyNew in keys:
 		if qSettings.contains(keyOld):
