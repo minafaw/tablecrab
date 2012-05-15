@@ -119,7 +119,7 @@ class SettingInt(SettingPersistant):
 
 class SettingByteArray(SettingPersistant):
 	def valueFromSettings(self, qSettings, key):
-		#TODO: no idea if to check for QByteArray.isNull() here
+		#TODO: check for QByteArray.isNull() here?
 		v = qSettings.value(key)
 		return (True, v.toByteArray()) if v.isValid() else (False, None)
 
