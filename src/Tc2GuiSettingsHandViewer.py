@@ -116,7 +116,7 @@ class FrameSettings(QtGui.QFrame):
 		grid.col(Tc2Config.HLine(self), colspan=2)
 		grid.row()
 
-		grid2 = Tc2Config.GridBox(self)
+		grid2 = Tc2Config.GridBox()
 		grid.col(grid2, colspan=2)
 		grid2.col(self.labelPrefix, align=QtCore.Qt.AlignHCenter).col(self.labelAction, align=QtCore.Qt.AlignHCenter).col(self.labelPostfix, align=QtCore.Qt.AlignHCenter)
 		grid2.row()
