@@ -289,6 +289,7 @@ def cleanSettings():
 		('RestoreMousePosition', 'Sites/RestoreMousePosition'),
 		('Settings/RoundBets', 'Sites/RoundBets'),
 		('/DialogException/Geometry', 'Gui/Dialogs/DialogException/Geometry'),
+		('Gui/DialogException/DialogSaveImage/State', 'Gui/Dialogs/DialogExceptionSaveImage/State'),
 		)
 	for keyOld, keyNew in keys:
 		if qSettings.contains(keyOld):
@@ -768,8 +769,10 @@ def dlgOpenSaveFile(
 			openFile=True,
 			title='',
 			fileFilters=None,
+			#TODO: remove kw "settingsKey"
 			settingsKey=None,
 			defaultSuffix=None,
+			setting=None,
 			):
 	dlg = QtGui.QFileDialog(parent)
 	dlg.setAcceptMode(dlg.AcceptOpen if openFile else dlg.AcceptSave)
@@ -785,9 +788,13 @@ def dlgOpenSaveFile(
 		dlg.setDefaultSuffix(defaultSuffix)
 	if settingsKey is not None:
 		dlg.restoreState( settingsValue(settingsKey, QtCore.QByteArray()).toByteArray() )
+	if setting is not None:
+		dlg.restoreState(setting.value())
 	result = dlg.exec_()
 	if settingsKey is not None:
 		settingsSetValue(settingsKey, dlg.saveState() )
+	if setting is not None:
+		setting.setValue(dlg.saveState())
 	if result == dlg.Accepted:
 		return dlg.selectedFiles()[0]
 	return None
