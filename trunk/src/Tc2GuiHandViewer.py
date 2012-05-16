@@ -21,7 +21,7 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 			'Gui/HandViewer/SideBars/NashCalculations/CustomPayoutStructure',
 			defaultValue=QtCore.QString(''),
 			)
-	settingDialogSaveState = Tc2Config.settings2.QString(
+	settingDialogSaveState = Tc2Config.settings2.ByteArray(
 			'Gui/HandViewer/SideBars/NashCalculations/DialogSave/State',
 			defaultValue=QtCore.QByteArray(),
 			)
