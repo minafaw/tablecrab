@@ -150,6 +150,7 @@ WebViewZoomStepsMax = 40
 WebViewZoomStepsMin = 1
 WebViewZoomMin = 0.5
 WebViewZoomMax = 7
+WebViewZoomDefault = 1
 
 SmallBlind = 'SmallBlind'
 BigBlind = 'BigBlind'
@@ -170,16 +171,16 @@ TabPositionTop = 'Top'
 TabPositionDefault= ToolBarPositionTop
 TabPositions = (TabPositionBottom, TabPositionTop)
 
-HandViewerSideBarPositionTop = 'Top'
-HandViewerSideBarPositionBottom = 'Bottom'
-HandViewerSideBarPositionLeft = 'Left'
-HandViewerSideBarPositionRight = 'Right'
-HandViewerSideBarPositionDefault = HandViewerSideBarPositionRight
-HandViewerSideBarPositions = (
-		HandViewerSideBarPositionTop,
-		HandViewerSideBarPositionBottom,
-		HandViewerSideBarPositionLeft,
-		HandViewerSideBarPositionRight,
+SideBarPositionTop = 'Top'
+SideBarPositionBottom = 'Bottom'
+SideBarPositionLeft = 'Left'
+SideBarPositionRight = 'Right'
+SideBarPositionDefault = SideBarPositionRight
+SideBarPositions = (
+		SideBarPositionTop,
+		SideBarPositionBottom,
+		SideBarPositionLeft,
+		SideBarPositionRight,
 		)
 
 HandViewerMaxPlayerNameMin = -1
@@ -289,19 +290,19 @@ def cleanSettings():
 		('/DialogBackup/State', 'Gui/Dialogs/SaveApplicationSettings/State'),
 		('RestoreMousePosition', 'Sites/RestoreMousePosition'),
 		('Settings/RoundBets', 'Sites/RoundBets'),
-		('/DialogException/Geometry', 'Gui/Dialogs/DialogException/Geometry'),
-		('Gui/DialogException/DialogSaveImage/State', 'Gui/Dialogs/DialogExceptionSaveImage/State'),
+		('/DialogException/Geometry', 'Gui/DialogException/Geometry'),
+		('Gui/DialogException/DialogSaveImage/State', 'Gui/DialogException/DialogSaveImage/State'),
 
 		('Gui/DialogOcr/Geometry', 'Gui/OcrEditor/Geometry'),
-		('Gui/DialogOcr/DialogImageOpen/State','Gui/OcrEditor/Dialogs/OpenImage/State'),
-		('Gui/DialogOcr/DialogImageSave/State','Gui/OcrEditor/Dialogs/SaveImage/State'),
-		('Gui/DialogOcr/DialogSettingsOpen/State','Gui/OcrEditor/Dialogs/OpenSettings/State'),
-		('Gui/DialogOcr/DialogSettingsSave/State', 'Gui/OcrEditor/Dialogs/SaveSettings/State'),
+		('Gui/DialogOcr/DialogImageOpen/State','Gui/OcrEditor/DialogOpenImage/State'),
+		('Gui/DialogOcr/DialogImageSave/State','Gui/OcrEditor/DialogSaveImage/State'),
+		('Gui/DialogOcr/DialogSettingsOpen/State','Gui/OcrEditor/DialogOpenSettings/State'),
+		('Gui/DialogOcr/DialogSettingsSave/State', 'Gui/OcrEditor/DialogSaveSettings/State'),
 		('Gui/DialogOcr/SplitterSettingsState', 'Gui/OcrEditor/SplitterSettings/State'),
 		('Gui/DialogOcr/SplitterImageState', 'Gui/OcrEditor/SplitterImage/State'),
 		('Gui/DialogOcr/SplitterOutputState', 'Gui/OcrEditor/SplitterOutput/State'),
 
-		('Gui/Screenshot/DialogScreenshotInfo/Geometry', 'Gui/Dialogs/Screenshot/Geometry'),
+		('Gui/Screenshot/DialogScreenshotInfo/Geometry', 'Gui/DialogScreenshotInfo/Geometry'),
 
 		('Gui/Tools/NashCalculations/CustomPayoutStructure', 'Gui/HandViewer/SideBars/NashCalculations/CustomPayoutStructure'),
 		('Gui/Tools/NashCalculations/DialogSave/State', 'Gui/HandViewer/SideBars/NashCalculations/DialogSave/State'),
@@ -310,6 +311,17 @@ def cleanSettings():
 		('Gui/Tools/ICMTax/PayoutStructureCurrent', 'Gui/HandViewer/SideBars/ICMTax/PayoutStructureCurrent'),
 		('Gui/Tools/ICMTax/CustomPayoutStructure', 'Gui/HandViewer/SideBars/ICMTax/CustomPayoutStructure'),
 		('Gui/Tools/ICMTaxDialogSave/State', 'Gui/HandViewer/SideBars/ICMTax/DialogSave/State'),
+
+		('Gui/HandViewer/SideBarPosition', 'Gui/SideBar/Position'),
+
+		('Gui/Hand/ZoomFactor', 'Gui/HandViewer/ZoomFactor'),
+		('Gui/Hand/DialogOpen/State', 'Gui/HandViewer/DialogOpenHand/State'),
+		('Gui/Hand/DialogSave/State', 'Gui/HandViewer/DialogSaveHand/State'),
+		('Gui/Hand/SplitterState', 'Gui/HandViewer/SplitterState'),
+		('Gui/Hand/SideBarCurrent', 'Gui/HandViewer/SideBarCurrent'),
+
+
+
 
 
 

@@ -23,7 +23,7 @@ Notes:
 class DialogException(QtGui.QDialog):
 
 	settingDialogSaveImageState = Tc2Config.settings2.ByteArray(
-			'Gui/Dialogs/DialogExceptionSaveImage/State',
+			'Gui/DialogException/DialogSaveImage/State',
 			defaultValue=QtCore.QByteArray()
 			)
 

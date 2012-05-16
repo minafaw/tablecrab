@@ -43,7 +43,7 @@ class Gui(QtGui.QMainWindow):
 			defaultValue=0
 			)
 	settingDialogExceptionGeometry = Tc2Config.settings2.ByteArray(
-			'Gui/Dialogs/DialogException/Geometry',
+			'Gui/DialogException/Geometry',
 			defaultValue=QtCore.QByteArray()
 			)
 
