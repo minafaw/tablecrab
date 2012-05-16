@@ -290,6 +290,15 @@ def cleanSettings():
 		('Settings/RoundBets', 'Sites/RoundBets'),
 		('/DialogException/Geometry', 'Gui/Dialogs/DialogException/Geometry'),
 		('Gui/DialogException/DialogSaveImage/State', 'Gui/Dialogs/DialogExceptionSaveImage/State'),
+
+		('Gui/DialogOcr/Geometry', 'Gui/OcrEditor/Geometry'),
+		('Gui/DialogOcr/DialogImageOpen/State','Gui/OcrEditor/Dialogs/OpenImage/State'),
+		('Gui/DialogOcr/DialogImageSave/State','Gui/OcrEditor/Dialogs/SaveImage/State'),
+		('Gui/DialogOcr/DialogSettingsOpen/State','Gui/OcrEditor/Dialogs/OpenSettings/State'),
+		('Gui/DialogOcr/DialogSettingsSave/State', 'Gui/OcrEditor/Dialogs/SaveSettings/State'),
+		('Gui/DialogOcr/SplitterSettingsState', 'Gui/OcrEditor/SplitterSettings/State'),
+		('Gui/DialogOcr/SplitterImageState', 'Gui/OcrEditor/SplitterImage/State'),
+		('Gui/DialogOcr/SplitterOutputState', 'Gui/OcrEditor/SplitterOutput/State'),
 		)
 	for keyOld, keyNew in keys:
 		if qSettings.contains(keyOld):

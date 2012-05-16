@@ -21,15 +21,39 @@ import traceback, time
 #************************************************************************************
 class Dialog(QtGui.QDialog):
 
-	SettingsKeyBase = 'Gui/DialogOcr'
-	SettingsKeyGeometry = SettingsKeyBase + '/Geometry'
-	SettingsKeyDialogImageOpenState = SettingsKeyBase + '/DialogImageOpen/State'
-	SettingsKeyDialogImageSaveState = SettingsKeyBase + '/DialogImageSave/State'
-	SettingsKeySplitterSettingsState = SettingsKeyBase + '/SplitterSettingsState'
-	SettingsKeySplitterImageState = SettingsKeyBase + '/SplitterImageState'
-	SettingsKeySplitterOutputState = SettingsKeyBase + '/SplitteroutputState'
-	SettingsKeyDialogSettingsOpenState = SettingsKeyBase + '/DialogSettingsOpen/State'
-	SettingsKeyDialogSettingsSaveState = SettingsKeyBase + '/DialogSettingsSave/State'
+	settingGeometry = Tc2Config.settings2.ByteArray(
+			'Gui/OcrEditor/Geometry',
+			QtCore.QByteArray()
+			)
+	settingDialogOpenImageState = Tc2Config.settings2.ByteArray(
+			'Gui/OcrEditor/Dialogs/OpenImage/State',
+			QtCore.QByteArray()
+			)
+	settingDialogSaveImageState = Tc2Config.settings2.ByteArray(
+			'Gui/OcrEditor/Dialogs/SaveImage/State',
+			QtCore.QByteArray()
+			)
+	settingDialogOpenSettingsState = Tc2Config.settings2.ByteArray(
+			'Gui/OcrEditor/Dialogs/OpenSettings/State',
+			QtCore.QByteArray()
+			)
+	settingDialogSaveSettingsState = Tc2Config.settings2.ByteArray(
+			'Gui/OcrEditor/Dialogs/SaveSettings/State',
+			QtCore.QByteArray()
+			)
+	settingSplitterSettingsState = Tc2Config.settings2.ByteArray(
+			'Gui/OcrEditor/SplitterSettings/State',
+			QtCore.QByteArray()
+			)
+	settingSplitterImageState = Tc2Config.settings2.ByteArray(
+			'Gui/OcrEditor/SplitterImage/State',
+			QtCore.QByteArray()
+			)
+	settingSplitterOutputState = Tc2Config.settings2.ByteArray(
+			'Gui/OcrEditor/SplitterOutput/State',
+			QtCore.QByteArray()
+			)
+
 
 	def __init__(self, pixmap=None, gocrParams=None, gocrParamsDefault=None):
 		QtGui.QDialog.__init__(self)
@@ -159,6 +183,21 @@ class Dialog(QtGui.QDialog):
 		self.setGocrParams(params=gocrParams)
 		self.setOutput(string='')
 		self.setError(string='')
+
+		#NOTE: we are not integrated into Tc2. so setupstuff by hand
+		self.settingGeometry.changed.connect(
+				lambda setting: self.restoreGeometry(setting.value())
+				)
+		self.settingSplitterSettingsState.changed.connect(
+				lambda setting: self.splitterSettings.restoreState(setting.value())
+				)
+		self.settingSplitterImageState.changed.connect(
+				lambda setting: self.splitterImage.restoreState(setting.value())
+				)
+		self.settingSplitterOutputState.changed.connect(
+				lambda setting: self.splitterOutput.restoreState(setting.value())
+				)
+		Tc2Config.settings2.init()
 		self.layout()
 
 	def layout(self):
@@ -207,18 +246,14 @@ class Dialog(QtGui.QDialog):
 		grid.row()
 		grid.col(self.editOutputPattern, colspan=2)
 
-		self.restoreGeometry( Tc2Config.settingsValue(self.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray())
-		self.splitterSettings.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterSettingsState, QtCore.QByteArray()).toByteArray() )
-		self.splitterImage.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterImageState, QtCore.QByteArray()).toByteArray() )
-		self.splitterOutput.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterOutputState, QtCore.QByteArray()).toByteArray() )
+
 
 
 	def hideEvent(self, event):
-		Tc2Config.settingsSetValue(self.SettingsKeySplitterSettingsState, self.splitterSettings.saveState())
-		Tc2Config.settingsSetValue(self.SettingsKeySplitterImageState, self.splitterImage.saveState())
-		Tc2Config.settingsSetValue(self.SettingsKeySplitterOutputState, self.splitterOutput.saveState())
-		Tc2Config.settingsSetValue(self.SettingsKeyGeometry, self.saveGeometry() )
-
+		self.settingGeometry.setValue(self.saveGeometry())
+		self.settingSplitterSettingsState.setValue(self.splitterSettings.saveState())
+		self.settingSplitterImageState.setValue(self.splitterImage.saveState())
+		self.settingSplitterOutputState.setValue(self.splitterOutput.saveState())
 		QtGui.QDialog.hideEvent(self, event)
 
 	def setPixmap(self, pixmap=None):
@@ -474,7 +509,7 @@ class Dialog(QtGui.QDialog):
 				openFile=True,
 				title='Open Image..',
 				fileFilters=('Images (%s)' % ' '.join(['*.%s' % i for i in imageFormats]), 'All Files (*)'),
-				settingsKey=self.SettingsKeyDialogImageOpenState,
+				setting=self.settingDialogOpenImageState,
 				)
 		if fileName is None:
 			return
@@ -497,7 +532,7 @@ class Dialog(QtGui.QDialog):
 				title='Save Image..',
 				fileFilters=('Images (%s)' % ' '.join(['*.%s' % i for i in imageFormats]), 'All Files (*)'),
 				defaultSuffix='png',
-				settingsKey=self.SettingsKeyDialogImageSaveState,
+				setting=self.settingDialogSaveImageState,
 				)
 		if fileName is None:
 			return
@@ -507,7 +542,9 @@ class Dialog(QtGui.QDialog):
 			Tc2Config.msgWarning(self, 'Could Not Save Image')
 
 	def onActionHelpTriggered(self):
-		Tc2GuiHelp.dialogHelp('ocrEditor', parent=self)
+		pass
+		#TODO: broken currently
+		##Tc2GuiHelp.dialogHelp('ocrEditor', parent=self)
 
 	def onActionOpenSettingsTriggered(self):
 		fileName = Tc2Config.dlgOpenSaveFile(
@@ -516,7 +553,7 @@ class Dialog(QtGui.QDialog):
 				title='Open Settings..',
 				fileFilters=('ConfigFiles (*.cfg *.ini)', 'All Files (*)'),
 				defaultSuffix='cfg',
-				settingsKey=self.SettingsKeyDialogSettingsOpenState,
+				setting=self.settingDialogOpenSettingsState,
 				)
 		if fileName is None:
 			return
@@ -532,7 +569,7 @@ class Dialog(QtGui.QDialog):
 				title='Save Settings..',
 				fileFilters=('ConfigFiles (*.cfg *.ini)', 'All Files (*)'),
 				defaultSuffix='cfg',
-				settingsKey=self.SettingsKeyDialogSettingsSaveState,
+				setting=self.settingDialogSaveSettingsState,
 				)
 		if fileName is None:
 			return
