@@ -287,7 +287,7 @@ def cleanSettings():
 	# renamed in 0.8.2
 	keys = (	# (keyOld, keyNew)
 		('Gui/WebView/ZoomSteps', 'Gui/Browser/ZoomSteps'),
-		('/DialogBackup/State', 'Gui/Dialogs/SaveApplicationSettings/State'),
+		('/DialogBackup/State', 'Gui/DialogSaveApplicationSettings/State'),
 		('RestoreMousePosition', 'Sites/RestoreMousePosition'),
 		('Settings/RoundBets', 'Sites/RoundBets'),
 		('/DialogException/Geometry', 'Gui/DialogException/Geometry'),
@@ -320,18 +320,13 @@ def cleanSettings():
 		('Gui/Hand/SplitterState', 'Gui/HandViewer/SplitterState'),
 		('Gui/Hand/SideBarCurrent', 'Gui/HandViewer/SideBarCurrent'),
 
-
-
-
-
-
 		)
 	for keyOld, keyNew in keys:
 		if qSettings.contains(keyOld):
 			qSettings.setValue(keyNew, qSettings.value(keyOld))
 			qSettings.remove(keyOld)
 
-	##settings2.clean()
+	settings2.clean()
 
 
 
@@ -345,11 +340,6 @@ def cleanSettings():
 # needs rename: Gui/Hand/DialogSave/State --> Gui/HandViewer/DialogSave/State
 # needs rename: Gui/Hand/ZoomFactor --> Gui/HandViewer/ZoomFactor
 # needs rename: typo in: 'PokerStarsHandGrabber/HandFornmatterHtmlTabular' --> should read "For[n]matter"
-
-#TODO: we have to use this key at two places: 1) Gui 2) settingsGlobal
-SettingsKeySingleApplicationScope ='Gui/SingleApplication/Scope'
-
-
 
 def settingsKeyJoin(*keys):
 	keys = [(str(key) if isinstance(key, QtCore.QString) else key) for key in keys if key]
@@ -386,14 +376,23 @@ class _GlobalObject(QtCore.QObject):
 
 	# global signals
 
-	initGui = QtCore.pyqtSignal()
-	# settings objects should initialize themselves in response to this signal
+	# triggered when the gui is about to be created. settings are not yet valid
+	guiInit = QtCore.pyqtSignal()
+	# triggered when the gui has been created. settings are valid now
+	guiInited = QtCore.pyqtSignal()
+	# triggered when the gui is about to be closed
+	guiClose = QtCore.pyqtSignal()
+
+
+	# ###################################################
+
+
 	initSettings = QtCore.pyqtSignal()
 	# emitted when the all settings are up and alive. param is globalObject
 	#NOTE: for dynamically created widgets you may have to call the respective slot
 	initSettingsFinished = QtCore.pyqtSignal(QtCore.QObject)
 	# emitted when the gui is up and alive. param is globalObject
-	initGuiFinished = QtCore.pyqtSignal(QtCore.QObject)
+	guiInitFinished = QtCore.pyqtSignal(QtCore.QObject)
 	# emitted when the gui is about to close
 	closeEvent = QtCore.pyqtSignal(QtCore.QEvent)
 

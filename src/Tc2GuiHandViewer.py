@@ -88,7 +88,7 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 		#self._toolBar.addAction(self.actionSave)
 
 		# connect signals
-		Tc2Config.globalObject.initGui.connect(self.onInitGui)
+		Tc2Config.globalObject.guiInit.connect(self.onInitGui)
 
 	#-----------------------------------------------------------------------------------------
 	# sideBar methods
@@ -340,7 +340,7 @@ class BrowserSideBarICMTax(QtGui.QFrame):
 		#self._toolBar.addAction(self.actionSave)
 
 		# connect signals
-		Tc2Config.globalObject.initGui.connect(self.onInitGui)
+		Tc2Config.globalObject.guiInit.connect(self.onInitGui)
 
 	#-----------------------------------------------------------------------------------------
 	# sideBar methods
@@ -636,7 +636,7 @@ class FrameHandViewer(QtGui.QFrame):
 		self._toolBar.addAction(self.actionHelp)
 
 		# connect global signals
-		Tc2Config.globalObject.initGui.connect(self.onInitGui)
+		Tc2Config.globalObject.guiInit.connect(self.onInitGui)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 		Tc2Config.settings2['Gui/ToolBar/Position'].changed.connect(self.onSettingToolBarPositionChanged)
 		Tc2Config.settings2['Gui/SideBar/Position'].changed.connect(self.onSettingSideBarPositionChanged)

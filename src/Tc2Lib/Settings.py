@@ -37,7 +37,7 @@ class SettingTemp(QtCore.QObject):
 
 class SettingPersistant(SettingTemp):
 	"""base class for persistant settings"""
-	def __init__(self, settings, key, defaultValue=False):
+	def __init__(self, settings, key, defaultValue=None):
 		SettingTemp.__init__(self, settings, key, defaultValue=defaultValue)
 		self._widget = None
 		self._widgetValueSetter = None

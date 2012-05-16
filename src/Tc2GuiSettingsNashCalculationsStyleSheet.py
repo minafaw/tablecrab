@@ -57,7 +57,7 @@ class FrameSettings(QtGui.QFrame):
 		action.triggered.connect(self.onHelp)
 		self.addAction(action)
 
-		Tc2Config.globalObject.initGui.connect(self.onInitGui)
+		Tc2Config.globalObject.guiInit.connect(self.onInitGui)
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)

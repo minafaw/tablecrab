@@ -59,7 +59,7 @@ class FrameSettings(QtGui.QFrame):
 			maxValue=Tc2Config.WebViewZoomStepsMax,
 			)
 	settingsDialogBackupState = Tc2Config.settings2.ByteArray(
-			'Gui/Dialogs/SaveApplicationSettings/State',
+			'Gui/DialogSaveApplicationSettings/State',
 			defaultValue=QtCore.QByteArray(),
 			)
 	settingRestoreMousePosition = Tc2Config.settings2.Bool(
@@ -138,7 +138,7 @@ class FrameSettings(QtGui.QFrame):
 		self.addAction(action)
 		self.addAction(action)
 
-		Tc2Config.globalObject.initGui.connect(self.onInitGui)
+		Tc2Config.globalObject.guiInit.connect(self.onInitGui)
 
 
 	def layout(self):
