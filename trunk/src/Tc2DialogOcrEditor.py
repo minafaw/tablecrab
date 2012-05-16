@@ -23,35 +23,35 @@ class Dialog(QtGui.QDialog):
 
 	settingGeometry = Tc2Config.settings2.ByteArray(
 			'Gui/OcrEditor/Geometry',
-			QtCore.QByteArray()
+			defaultValue=QtCore.QByteArray()
 			)
 	settingDialogOpenImageState = Tc2Config.settings2.ByteArray(
 			'Gui/OcrEditor/Dialogs/OpenImage/State',
-			QtCore.QByteArray()
+			defaultValue=QtCore.QByteArray()
 			)
 	settingDialogSaveImageState = Tc2Config.settings2.ByteArray(
 			'Gui/OcrEditor/Dialogs/SaveImage/State',
-			QtCore.QByteArray()
+			defaultValue=QtCore.QByteArray()
 			)
 	settingDialogOpenSettingsState = Tc2Config.settings2.ByteArray(
 			'Gui/OcrEditor/Dialogs/OpenSettings/State',
-			QtCore.QByteArray()
+			defaultValue=QtCore.QByteArray()
 			)
 	settingDialogSaveSettingsState = Tc2Config.settings2.ByteArray(
 			'Gui/OcrEditor/Dialogs/SaveSettings/State',
-			QtCore.QByteArray()
+			defaultValue=QtCore.QByteArray()
 			)
 	settingSplitterSettingsState = Tc2Config.settings2.ByteArray(
 			'Gui/OcrEditor/SplitterSettings/State',
-			QtCore.QByteArray()
+			defaultValue=QtCore.QByteArray()
 			)
 	settingSplitterImageState = Tc2Config.settings2.ByteArray(
 			'Gui/OcrEditor/SplitterImage/State',
-			QtCore.QByteArray()
+			defaultValue=QtCore.QByteArray()
 			)
 	settingSplitterOutputState = Tc2Config.settings2.ByteArray(
 			'Gui/OcrEditor/SplitterOutput/State',
-			QtCore.QByteArray()
+			defaultValue=QtCore.QByteArray()
 			)
 
 
