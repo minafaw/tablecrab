@@ -177,12 +177,19 @@ class SettingIndex(SettingPersistant):
 	def valueFromSettings(self, qSettings, key):
 		value, ok = qSettings.value(key).toInt()
 		return (ok, value) if ok else (False, None)
+	def setComboBox(self, comboBox):
+		self.setWidget(
+				comboBox,
+				comboBox.setCurrentIndex,
+				comboBox.currentIndexChanged,
+				self.slotSetValue
+				)
 	def setTabWidget(self, tabWidget):
 		self.setWidget(
 				tabWidget,
 				tabWidget.setCurrentIndex,
 				tabWidget.currentChanged,
-				self.setValue
+				self.slotSetValue
 				)
 	def setListWidget(self, listWidget):
 		self.setWidget(

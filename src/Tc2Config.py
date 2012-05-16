@@ -118,6 +118,7 @@ WindowHookTimeout = 0.2
 HandGrabberTimeout = 0.4
 StatusBarMessageTimeout = 3
 MaxHandGrabberPrefix = 16	# + postfix
+#TODO: remove when done refactoring SettingsICMTax
 MaxHandStyleSheet = 9000
 
 #TODO: implement consts
@@ -305,6 +306,11 @@ def cleanSettings():
 		('Gui/Tools/NashCalculations/CustomPayoutStructure', 'Gui/HandViewer/SideBars/NashCalculations/CustomPayoutStructure'),
 		('Gui/Tools/NashCalculations/DialogSave/State', 'Gui/HandViewer/SideBars/NashCalculations/DialogSave/State'),
 		('Gui/Settings/NashCalculationsStyleSheet', 'Gui/HandViewer/SideBars/NashCalculations/StyleSheet'),
+
+		('Gui/Tools/ICMTax/PayoutStructureCurrent', 'Gui/HandViewer/SideBars/ICMTax/PayoutStructureCurrent'),
+		('Gui/Tools/ICMTax/CustomPayoutStructure', 'Gui/HandViewer/SideBars/ICMTax/CustomPayoutStructure'),
+		('Gui/Tools/ICMTaxDialogSave/State', 'Gui/HandViewer/SideBars/ICMTax/DialogSave/State'),
+
 
 
 		)

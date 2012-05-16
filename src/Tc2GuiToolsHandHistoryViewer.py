@@ -9,6 +9,33 @@ import codecs
 #************************************************************************************
 #
 #************************************************************************************
+class BrowserSideBarNashCalculations(Tc2GuiHandViewer.BrowserSideBarNashCalculations):
+	settingCustomPayoutStructure = Tc2Config.settings2.QString(
+			'Gui/HandHistoryViewer/SideBars/NashCalculations/CustomPayoutStructure',
+			defaultValue=QtCore.QString(''),
+			)
+
+
+class BrowserSideBarICMTax(Tc2GuiHandViewer.BrowserSideBarICMTax):
+	settingPayoutStructureCurrent = Tc2Config.settings2.Index(
+			'Gui/HandHistoryViewer/SideBars/ICMTax/PayoutStructureCurrent',
+			defaultValue=0,
+			)
+	settingCustomPayoutStructure = Tc2Config.settings2.QString(
+			'Gui/HandHistoryViewer/SideBars/ICMTax/CustomPayoutStructure',
+			defaultValue=QtCore.QString(''),
+			)
+
+
+class BrowserSideBarContainer(Tc2GuiHandViewer.BrowserSideBarContainer):
+	SideBarsDefault = (
+			BrowserSideBarNashCalculations,
+			BrowserSideBarICMTax,
+			)
+
+#************************************************************************************
+#
+#************************************************************************************
 class FrameTool(QtGui.QFrame):
 
 	SettingsKeyBase = 'Gui/Tools/PHandHistoryViewer'
@@ -45,7 +72,7 @@ class FrameTool(QtGui.QFrame):
 		self._toolBar.actionZoomOut.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierMinus() ) )
 		self._toolBar.zoomFactorChanged.connect(self.onToolBarZoomFactorChanged)
 
-		self.sideBarContainer = Tc2GuiHandViewer.BrowserSideBarContainer(self)
+		self.sideBarContainer = BrowserSideBarContainer(self)
 		self._splitter.addWidget(self.sideBarContainer)
 
 		# set up actions

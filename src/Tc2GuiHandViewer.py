@@ -88,7 +88,7 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 		#self._toolBar.addAction(self.actionSave)
 
 		# connect signals
-		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
+		Tc2Config.globalObject.initGui.connect(self.onInitGui)
 
 	#-----------------------------------------------------------------------------------------
 	# sideBar methods
@@ -216,7 +216,7 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 				userAgent=Tc2Config.ReleaseName,
 				)
 
-	def onGlobalObjectInitSettingsFinished(self, globalObject):
+	def onInitGui(self):
 		self.layout()
 		self.comboBox.currentIndexChanged.connect(self.onComboBoxCurrentIndexChanged)
 		self._browser.setHtml('')
@@ -231,7 +231,6 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 		self.editPayoutStructure.setInputMask(mask)
 		self.editPayoutStructure.setText(payoutStructure)
 		self.editPayoutStructure.setEnabled(bool(mask))
-
 		self.editPayoutStructure.home(False)
 		hand, self.lastHand = self.lastHand, None
 		self.handleHandSet(hand)
@@ -279,23 +278,6 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 #************************************************************************************
 class BrowserSideBarICMTax(QtGui.QFrame):
 
-	SettingsKeyBase = 'Gui/Tools/ICMTax'
-	SettingsKeyCustomPayoutStructure = SettingsKeyBase + '/CustomPayoutStructure'
-	SettingsKeyDialogSaveState = SettingsKeyBase + '/DialogSave/State'
-	SettingsKeyPayoutStructureCurrent = SettingsKeyBase + '/PayoutStructureCurrent'
-
-
-	settingCustomPayoutStructure = Tc2Config.settings2.QString(
-			'Gui/HandViewer/SideBars/ICMTax/CustomPayoutStructure',
-			defaultValue=QtCore.QString(''),
-			)
-	settingDialogSaveState = Tc2Config.settings2.QString(
-			'Gui/HandViewer/SideBars/ICMTax/DialogSave/State',
-			defaultValue=QtCore.QByteArray(),
-			)
-
-
-
 	PayoutStructures = (	# text, payoutStructure, lineEditMask
 			('- Select payout structure -', '', ''),
 			('PokerStars 9 man sitNgo', '50/30/20', '99/99/99'),
@@ -305,15 +287,31 @@ class BrowserSideBarICMTax(QtGui.QFrame):
 			)
 
 	StyleSheet = '''body{}
-table{}
-td{text-align: center;vertical-align: text-top;}
-.title{font-weight: bold;}
-.roleHero{font-weight: bold;background-color:#F0F0F0;}
-.taxHero{}
-.roleVillain{}
-.taxVillain{}
-'''
+			table{}
+			td{text-align: center;vertical-align: text-top;}
+			.title{font-weight: bold;}
+			.roleHero{font-weight: bold;background-color:#F0F0F0;}
+			.taxHero{}
+			.roleVillain{}
+			.taxVillain{}
+			'''.replace('\t', '\x20'*4)
 
+	settingPayoutStructureCurrent = Tc2Config.settings2.Index(
+			'Gui/HandViewer/SideBars/ICMTax/PayoutStructureCurrent',
+			defaultValue=0,
+			)
+	settingCustomPayoutStructure = Tc2Config.settings2.QString(
+			'Gui/HandViewer/SideBars/ICMTax/CustomPayoutStructure',
+			defaultValue=QtCore.QString(''),
+			)
+	settingDialogSaveState = Tc2Config.settings2.ByteArray(
+			'Gui/HandViewer/SideBars/ICMTax/DialogSave/State',
+			defaultValue=QtCore.QByteArray(),
+			)
+	settingStyleSheet = Tc2Config.settings2.UnicodeString(
+			'Gui/HandViewer/SideBars/ICMTax/StyleSheet',
+			defaultValue=StyleSheet,
+			)
 
 	def __init__(self, parent, zoomFactor=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -342,8 +340,7 @@ td{text-align: center;vertical-align: text-top;}
 		#self._toolBar.addAction(self.actionSave)
 
 		# connect signals
-		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
-		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
+		Tc2Config.globalObject.initGui.connect(self.onInitGui)
 
 	#-----------------------------------------------------------------------------------------
 	# sideBar methods
@@ -376,7 +373,7 @@ td{text-align: center;vertical-align: text-top;}
 		stacks = [seat.stack for seat in seats]
 
 		html = '<html><head>'
-		html += '<style type="text/css"><!-- %s --></style>' % Tc2Config.globalObject.settingsICMTaxStyleSheet.styleSheet()
+		html += '<style type="text/css"><!-- %s --></style>' % self.settingStyleSheet.value()
 		html += '</head><body>'
 
 
@@ -438,28 +435,21 @@ td{text-align: center;vertical-align: text-top;}
 		grid.setRowStretch(iRow, 99)
 		grid.col(self._browser, colspan=2)
 
-	def onCloseEvent(self, event):
-		Tc2Config.settingsSetValue(self.SettingsKeyPayoutStructureCurrent, self.comboBox.currentIndex())
-
-	def onGlobalObjectInitSettingsFinished(self, globalObject):
+	def onInitGui(self):
 		self.layout()
-		self.comboBox.currentIndexChanged.connect(self.onComboBoxCurrentIndexChanged)
 		self._browser.setHtml('')
-
-		#NOTE: editingFinished() is only emitted when the whole mask is filled in so we need to connect to textChanged()
+		self.settingPayoutStructureCurrent.setComboBox(self.comboBox)
+		self.settingPayoutStructureCurrent.changed.connect(self.onSettingPayoutStructureChanged)
 		self.editPayoutStructure.textChanged.connect(self.onEditPayoutStructureTextChanged)
-		value, ok = Tc2Config.settingsValue(self.SettingsKeyPayoutStructureCurrent, 0).toInt()
-		if ok:
-			self.comboBox.setCurrentIndex(value)
 
-	def onComboBoxCurrentIndexChanged(self, i):
+	def onSettingPayoutStructureChanged(self, setting):
+		i = setting.value()
 		payoutStructure, mask = self.PayoutStructures[i][1], self.PayoutStructures[i][2]
 		if i == len(self.PayoutStructures) -1:
-			payoutStructure = Tc2Config.settingsValue(self.SettingsKeyCustomPayoutStructure, '').toString()
+			payoutStructure = self.settingCustomPayoutStructure.value()
 		self.editPayoutStructure.setInputMask(mask)
 		self.editPayoutStructure.setText(payoutStructure)
 		self.editPayoutStructure.setEnabled(bool(mask))
-
 		self.editPayoutStructure.home(False)
 		hand, self.lastHand = self.lastHand, None
 		self.handleHandSet(hand)
@@ -470,7 +460,7 @@ td{text-align: center;vertical-align: text-top;}
 	def onEditPayoutStructureTextChanged(self, text):
 		if self.comboBox.currentIndex() == len(self.PayoutStructures) -1:
 			edit = self.sender()
-			Tc2Config.settingsSetValue(self.SettingsKeyCustomPayoutStructure, text)
+			self.settingCustomPayoutStructure.setValue(text)
 
 	def onContextMenuWebView(self, point):
 		menu = QtGui.QMenu(self)
@@ -487,7 +477,7 @@ td{text-align: center;vertical-align: text-top;}
 				title='Save ICM-tax..',
 				fileFilters=('HtmlFiles (*.html *.htm)', 'All Files (*)'),
 				#TODO: rename to Gui/HandViewer/DialogSave/State
-				settingsKey=self.SettingsKeyDialogSaveState,
+				setting=self.settingDialogSaveState,
 				defaultSuffix='html',
 				)
 		if fileName is None:
