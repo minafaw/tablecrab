@@ -147,8 +147,8 @@ class FrameTool(QtGui.QFrame):
 		self._browser.setUrl(QtCore.QUrl(''))
 		self._spinBox.valueChanged.connect(self.onSpinBoxValueChanged)
 
-		self.setSideBarPosition(globalObject.settingsHandViewer.sideBarPosition())
-		globalObject.settingsHandViewer.sideBarPositionChanged.connect(self.setSideBarPosition)
+		Tc2Config.settings2['Gui/SideBar/Position'].changed.connect(self.onSettingSideBarPositionChanged)
+
 		self.adjustActions()
 		self.layout()
 		self._splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
@@ -291,20 +291,21 @@ class FrameTool(QtGui.QFrame):
 			if self._spinBox.value() != handNo:
 				self._spinBox.setValue(handNo)
 
-	def setSideBarPosition(self, position):
-		if position == Tc2Config.HandViewerSideBarPositionTop:
+	def onSettingSideBarPositionChanged(self, setting):
+		position = setting.value()
+		if position == Tc2Config.SideBarPositionTop:
 			self._splitter.setOrientation(QtCore.Qt.Vertical)
 			if self._splitter.widget(0) == self._frame:
 				self._splitter.insertWidget(1, self._frame)
-		elif position == Tc2Config.HandViewerSideBarPositionBottom:
+		elif position == Tc2Config.SideBarPositionBottom:
 			self._splitter.setOrientation(QtCore.Qt.Vertical)
 			if self._splitter.widget(1) == self._frame:
 				self._splitter.insertWidget(0, self._frame)
-		elif position == Tc2Config.HandViewerSideBarPositionLeft:
+		elif position == Tc2Config.SideBarPositionLeft:
 			self._splitter.setOrientation(QtCore.Qt.Horizontal)
 			if self._splitter.widget(0) == self._frame:
 				self._splitter.insertWidget(1, self._frame)
-		elif position == Tc2Config.HandViewerSideBarPositionRight:
+		elif position == Tc2Config.SideBarPositionRight:
 			self._splitter.setOrientation(QtCore.Qt.Horizontal)
 			if self._splitter.widget(1) == self._frame:
 				self._splitter.insertWidget(0, self._frame)

@@ -39,6 +39,11 @@ class FrameSettings(QtGui.QFrame):
 			defaultValue=Tc2Config.ToolBarPositionDefault,
 			choices=Tc2Config.ToolBarPositions,
 			)
+	settingSideBarPosition = Tc2Config.settings2.ChooseString(
+			'Gui/SideBar/Position',
+			defaultValue=Tc2Config.SideBarPositionDefault,
+			choices=Tc2Config.SideBarPositions
+			)
 	settingAlternatingRowColors = Tc2Config.settings2.Bool(
 			'Gui/AlternatingRowColors',
 			defaultValue=True
@@ -66,6 +71,8 @@ class FrameSettings(QtGui.QFrame):
 			defaultValue=Tc2Config.RoundBetsDefault,
 			choices=Tc2Config.RoundBets
 			)
+
+
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -111,6 +118,10 @@ class FrameSettings(QtGui.QFrame):
 		self.labelTabPosition = QtGui.QLabel('&Tab position:', self)
 		self.labelTabPosition.setBuddy(self.comboTabPosition)
 
+		self.comboSideBarPosition = QtGui.QComboBox(self)
+		self.labelSideBarPosition = QtGui.QLabel('&Side bar position:', self)
+		self.labelSideBarPosition.setBuddy(self.comboSideBarPosition)
+
 		self.comboRoundBets = QtGui.QComboBox(self)
 		self.labelRoundBets = QtGui.QLabel('Round &bets to:', self)
 		self.labelRoundBets.setBuddy(self.comboRoundBets)
@@ -147,6 +158,8 @@ class FrameSettings(QtGui.QFrame):
 		grid.col(self.labelTabPosition).col(self.comboTabPosition)
 		grid.row()
 		grid.col(self.labelToolBarPosition).col(self.comboToolBarPosition)
+		grid.row()
+		grid.col(self.labelSideBarPosition).col(self.comboSideBarPosition)
 		grid.row()
 		grid.col(self.labelWebViewZoomSteps).col(self.spinWebViewZoomSteps)
 		grid.row()
@@ -236,6 +249,7 @@ class FrameSettings(QtGui.QFrame):
 
 		self.settingToolBarPosition.setComboBox(self.comboToolBarPosition)
 		self.settingTabPosition.setComboBox(self.comboTabPosition)
+		self.settingSideBarPosition.setComboBox(self.comboSideBarPosition)
 		self.settingAlternatingRowColors.setCheckBox(self.checkAlternatingRowColors)
 		self.settingChildItemIndicators.setCheckBox(self.checkChildItemIndicators)
 		self.settingsWebViewZoomSteps.setSpinBox(self.spinWebViewZoomSteps)

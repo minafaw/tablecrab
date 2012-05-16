@@ -10,7 +10,7 @@ from PyQt4 import QtCore, QtGui
 class DialgScreenshotInfo(QtGui.QDialog):
 
 	settingGeometry = Tc2Config.settings2.ByteArray(
-			'Gui/Dialogs/Screenshot/Geometry',
+			'Gui/DialogScreenshotInfo/Geometry',
 			defaultValue=QtCore.QByteArray()
 			)
 

@@ -498,6 +498,9 @@ class BrowserSideBarICMTax(QtGui.QFrame):
 #
 #************************************************************************************
 class BrowserSideBarContainer(QtGui.QFrame):
+
+	currentIndexChanged = QtCore.pyqtSignal(int)
+
 	SideBarsDefault = (
 			BrowserSideBarNashCalculations,
 			BrowserSideBarICMTax,
@@ -517,6 +520,7 @@ class BrowserSideBarContainer(QtGui.QFrame):
 		self.stack.setCurrentIndex(i)
 		sideBar= self.stack.currentWidget()
 		sideBar.handleHandSet(self.lastHand)
+		currentIndexChanged.emit(i)
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
@@ -555,14 +559,28 @@ class BrowserSideBarContainer(QtGui.QFrame):
 #*******************************************************************************************
 class FrameHandViewer(QtGui.QFrame):
 
-	#TODO: rename to Gui/HandViewer/ZoomFactor
-	SettingsKeyBase = 'Gui/Hand'
-	SettingsKeyZoomFactor = SettingsKeyBase + '/ZoomFactor'
-	SettingsKeyDialogOpenState = SettingsKeyBase + '/DialogOpen/State'
-	SettingsKeyDialogSaveState = SettingsKeyBase + '/DialogSave/State'
-	SettingsKeySplitterState = SettingsKeyBase + '/SplitterState'
-	SettingsKeySideBarCurrent = SettingsKeyBase + '/SideBarCurrent'
-
+	settingZoomFactor = Tc2Config.settings2.Float(
+			'Gui/HandViewer/ZoomFactor',
+			defaultValue=Tc2Config.WebViewZoomDefault,
+			minValue=Tc2Config.WebViewZoomMin,
+			maxValue=Tc2Config.WebViewZoomMax,
+			)
+	settingSidebarCurrent = Tc2Config.settings2.Index(
+			'Gui/HandViewer/SideBarCurrent',
+			defaultValue=0,
+			)
+	settingSplitterState = Tc2Config.settings2.ByteArray(
+			'Gui/HandViewer/SplitterState',
+			defaultValue=QtCore.QByteArray(),
+			)
+	settingDialogOpenHandState = Tc2Config.settings2.ByteArray(
+			'Gui/HandViewer/DialogOpenHand/State',
+			defaultValue=QtCore.QByteArray(),
+			)
+	settingDialogSaveHandState = Tc2Config.settings2.ByteArray(
+			'Gui/HandViewer/DialogSaveHand/State',
+			defaultValue=QtCore.QByteArray(),
+			)
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -584,7 +602,6 @@ class FrameHandViewer(QtGui.QFrame):
 		self._toolBar = self._browserFrame.toolBar()
 		self._toolBar.actionZoomIn.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierPlus() ) )
 		self._toolBar.actionZoomOut.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierMinus() ) )
-		self._toolBar.zoomFactorChanged.connect(self.onToolBarZoomFactorChanged)
 
 		self.sideBarContainer = BrowserSideBarContainer(self)
 		self.splitter.addWidget(self.sideBarContainer)
@@ -619,12 +636,14 @@ class FrameHandViewer(QtGui.QFrame):
 		self._toolBar.addAction(self.actionHelp)
 
 		# connect global signals
-		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
+		Tc2Config.globalObject.initGui.connect(self.onInitGui)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
-		Tc2Config.settings2['Gui/ToolBar/Position'].changed.connect(self.onToolBarPositionChanged)
+		Tc2Config.settings2['Gui/ToolBar/Position'].changed.connect(self.onSettingToolBarPositionChanged)
+		Tc2Config.settings2['Gui/SideBar/Position'].changed.connect(self.onSettingSideBarPositionChanged)
 		Tc2Config.settings2['Gui/Browser/ZoomSteps'].changed.connect(
 				lambda setting:self._toolBar.setZoomSteps(setting.value())
 				)
+
 
 	#----------------------------------------------------------------------------------------------------------------
 	# methods
@@ -678,8 +697,7 @@ class FrameHandViewer(QtGui.QFrame):
 				openFile=True,
 				title='Open Hand..',
 				fileFilters=('HtmlFiles (*.html *.htm)', 'All Files (*)'),
-				#TODO: rename to Gui/HandViewer/DialogOpen/State
-				settingsKey=self.SettingsKeyDialogOpenState,
+				setting=self.settingDialogOpenHandState,
 				)
 		if fileName is None:
 			return
@@ -715,8 +733,7 @@ class FrameHandViewer(QtGui.QFrame):
 				openFile=False,
 				title='Save Hand..',
 				fileFilters=('HtmlFiles (*.html *.htm)', 'All Files (*)'),
-				#TODO: rename to Gui/HandViewer/DialogSave/State
-				settingsKey=self.SettingsKeyDialogSaveState,
+				setting=self.settingDialogSaveHandState,
 				defaultSuffix='html',
 				)
 		if fileName is None:
@@ -732,9 +749,7 @@ class FrameHandViewer(QtGui.QFrame):
 		#TODO: can we rename hand in cache? i font think so. no way to inform WebKit
 
 	def onCloseEvent(self, event):
-		Tc2Config.settingsSetValue(self.SettingsKeySplitterState, self.splitter.saveState())
-		Tc2Config.settingsSetValue(self.SettingsKeySideBarCurrent, self.sideBarContainer.currentIndex())
-
+		self.settingSplitterState.setValue(self.splitter.saveState())
 
 	def onContextMenuWebView(self, point):
 		menu = QtGui.QMenu(self)
@@ -750,22 +765,26 @@ class FrameHandViewer(QtGui.QFrame):
 		else:
 			Tc2Config.globalObject.feedbackMessage.emit('Could not grab hand')
 
-	def onGlobalObjectInitSettingsFinished(self, globalObject):
+	def onInitGui(self):
 		self._browser.setUrl(QtCore.QUrl(''))
 		self.adjustActions()
-
-		self.setSideBarPosition(globalObject.settingsHandViewer.sideBarPosition())
-		globalObject.settingsHandViewer.sideBarPositionChanged.connect(self.setSideBarPosition)
-		globalObject.siteHandlerPokerStars.handGrabbed.connect(self.onHandGrabberGrabbedHand)
+		self.settingZoomFactor.setWidget(
+				self._toolBar,
+				self._toolBar.setZoomFactor,
+				self._toolBar.zoomFactorChanged,
+				self.onToolBarZoomFactorChanged,
+				)
+		self.settingSidebarCurrent.setWidget(
+				self.sideBarContainer,
+				self.sideBarContainer.setCurrentIndex,
+				self.sideBarContainer.currentIndexChanged,
+				self.settingSidebarCurrent.slotSetValue
+				)
+		self.settingSplitterState.changed.connect(
+				lambda setting: self.splitter.restoreState(setting.value())
+				)
+		Tc2Config.globalObject.siteHandlerPokerStars.handGrabbed.connect(self.onHandGrabberGrabbedHand)
 		self.layout()
-		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
-
-		value, ok = Tc2Config.settingsValue(self.SettingsKeyZoomFactor, Browser.BrowserToolBar.ZoomFactorDefault).toDouble()
-		if ok:
-			self._toolBar.setZoomFactor(value)
-		value, ok = Tc2Config.settingsValue(self.SettingsKeySideBarCurrent, 0).toInt()
-		if ok:
-			self.sideBarContainer.setCurrentIndex(value)
 
 	def onNetworkGetData(self, networkReply):
 		url = networkReply.url()
@@ -783,30 +802,31 @@ class FrameHandViewer(QtGui.QFrame):
 		else:
 			Tc2Config.globalObject.feedback.emit(self, 'Grabbed hand')
 
-	def onToolBarPositionChanged(self, setting):
+	def onSettingToolBarPositionChanged(self, setting):
 		self._browserFrame.layout(toolBarTop=setting.value()==Tc2Config.ToolBarPositionTop)
 
 	def onToolBarZoomFactorChanged(self, value):
-		Tc2Config.settingsSetValue(self.SettingsKeyZoomFactor, value)
+		self.settingZoomFactor.setValue(value)
 		self.sideBarContainer.handleZoomFactorChanged(value)
 
 	def zoomFactor(self):
 		return self._toolBar.zoomFactor()
 
-	def setSideBarPosition(self, position):
-		if position == Tc2Config.HandViewerSideBarPositionTop:
+	def onSettingSideBarPositionChanged(self, setting):
+		position = setting.value()
+		if position == Tc2Config.SideBarPositionTop:
 			self.splitter.setOrientation(QtCore.Qt.Vertical)
 			if self.splitter.widget(0) == self._browserFrame:
 				self.splitter.insertWidget(1, self._browserFrame)
-		elif position == Tc2Config.HandViewerSideBarPositionBottom:
+		elif position == Tc2Config.SideBarPositionBottom:
 			self.splitter.setOrientation(QtCore.Qt.Vertical)
 			if self.splitter.widget(1) == self._browserFrame:
 				self.splitter.insertWidget(0, self._browserFrame)
-		elif position == Tc2Config.HandViewerSideBarPositionLeft:
+		elif position == Tc2Config.SideBarPositionLeft:
 			self.splitter.setOrientation(QtCore.Qt.Horizontal)
 			if self.splitter.widget(0) == self._browserFrame:
 				self.splitter.insertWidget(1, self._browserFrame)
-		elif position == Tc2Config.HandViewerSideBarPositionRight:
+		elif position == Tc2Config.SideBarPositionRight:
 			self.splitter.setOrientation(QtCore.Qt.Horizontal)
 			if self.splitter.widget(1) == self._browserFrame:
 				self.splitter.insertWidget(0, self._browserFrame)

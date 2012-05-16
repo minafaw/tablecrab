@@ -143,6 +143,35 @@ class SettingInt(SettingPersistant):
 				)
 
 
+class SettingFloat(SettingPersistant):
+	def __init__(self, settings, key, defaultValue=0, maxValue=None, minValue=None):
+		SettingPersistant.__init__(self, settings, key, defaultValue=defaultValue)
+		self._maxValue = maxValue
+		self._minValue = minValue
+	def minValue(self):
+		return self._minValue
+	def maxValue(self):
+		return self._maxValue
+	def valueFromSettings(self, qSettings, key):
+		value, ok =qSettings.value(key).toDouble()
+		if ok:
+			if self._minValue is not None:
+				if value < self._minValue:
+					ok, value = False, None
+			if self._maxValue is not None:
+				if value > self._maxValue:
+					ok, value = False, None
+		return ok, value
+	def setSpinBox(self, spinBox):
+		spinBox.setRange(self.minValue(), self.maxValue())
+		self.setWidget(
+				spinBox,
+				spinBox.setValue,
+				spinBox.valueChanged,
+				self.slotSetValue
+				)
+
+
 class SettingByteArray(SettingPersistant):
 	def valueFromSettings(self, qSettings, key):
 		v = qSettings.value(key)
@@ -255,6 +284,12 @@ class Settings(QtCore.QObject):
 		if key in self._settings:
 			raise ValueError('setting already present: %s' % key)
 		setting = SettingInt(self, key, defaultValue=defaultValue, maxValue=maxValue, minValue=minValue)
+		self._settings[key] = setting
+		return setting
+	def Float(self, key, defaultValue=0, maxValue=None, minValue=None):
+		if key in self._settings:
+			raise ValueError('setting already present: %s' % key)
+		setting = SettingFloat(self, key, defaultValue=defaultValue, maxValue=maxValue, minValue=minValue)
 		self._settings[key] = setting
 		return setting
 	def Bool(self, key, defaultValue=False):

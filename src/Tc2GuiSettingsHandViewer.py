@@ -16,11 +16,6 @@ class FrameSettings(QtGui.QFrame):
 	SettingsKeyMaxPlayerName = SettingsKeyBase + '/MaxPlayerName'
 	SettingsKeyNoFloatingPoint = SettingsKeyBase + '/NoFloatingPoint'
 
-	SettingsKeySideBarPosition = 'Gui/HandViewer/SideBarPosition'
-
-
-	sideBarPositionChanged = QtCore.pyqtSignal(QtCore.QString)
-
 	HandActionsMapping = {	# action --> (name, settingsKeyPrefix, settingsKeyPostfix)
 			Tc2HandTypes.PokerHand.Action.TypeCheck: ('Check', SettingsKeyBase + '/PrefixCheck', None),
 			Tc2HandTypes.PokerHand.Action.TypeFold: ('Fold', SettingsKeyBase + '/PrefixFold', None),
@@ -59,11 +54,6 @@ class FrameSettings(QtGui.QFrame):
 				editPostfix =  self.ActionLineEdit(self, action, isPrefix=False)
 				editPostfix.setMaxLength(Tc2Config.MaxHandGrabberPrefix)
 			self.actionWidgets[action] = {'EditPrefix': editPrefix, 'LabelAction': labelAction, 'EditPostfix': editPostfix, 'no': i}
-
-		self.comboSideBarPosition = QtGui.QComboBox(self)
-		self.comboSideBarPosition.addItems(Tc2Config.HandViewerSideBarPositions)
-		self.labelSideBarPosition = QtGui.QLabel('&Side bar position:', self)
-		self.labelSideBarPosition.setBuddy(self.comboSideBarPosition)
 
 		self.comboDeckStyle = QtGui.QComboBox(self)
 		self.comboDeckStyle.addItems(formatter.deckStyles())
@@ -104,8 +94,6 @@ class FrameSettings(QtGui.QFrame):
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
 		grid.col(Tc2Config.HLine(self), colspan=2)
-		grid.row()
-		grid.col(self.labelSideBarPosition).col(self.comboSideBarPosition)
 		grid.row()
 		grid.col(self.labelDeckStyle).col(self.comboDeckStyle)
 		grid.row()
@@ -150,23 +138,9 @@ class FrameSettings(QtGui.QFrame):
 	def onHelp(self, *args):
 		Tc2GuiHelp.dialogHelp('settingsHandViewer', parent=self)
 
-	def sideBarPosition(self):
-		return self.comboSideBarPosition.currentText()
-
-	def setSideBarPosition(self, value):
-		Tc2Config.settingsSetValue(self.SettingsKeySideBarPosition, value)
-		self.sideBarPositionChanged.emit(value)
-
 	def onInitSettings(self):
 		self.layout()
 		formatter = Tc2Config.handFormatter('HtmlTabular')
-
-		value = Tc2Config.settingsValue(self.SettingsKeySideBarPosition, '').toString()
-		if value not in Tc2Config.HandViewerSideBarPositions:
-			value = Tc2Config.HandViewerSideBarPositionDefault
-		self.comboSideBarPosition.setCurrentIndex( self.comboSideBarPosition.findText(value, QtCore.Qt.MatchExactly) )
-		#NOTE: pySlot decorator does not work as expected so we have to connect slot the old fashioned way
-		self.connect(self.comboSideBarPosition, QtCore.SIGNAL('currentIndexChanged(QString)'), self.setSideBarPosition)
 
 		value = Tc2Config.settingsValue(self.SettingsKeyDeckStyle, '').toString()
 		if value in formatter.deckStyles():

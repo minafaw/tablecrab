@@ -26,19 +26,19 @@ class Dialog(QtGui.QDialog):
 			defaultValue=QtCore.QByteArray()
 			)
 	settingDialogOpenImageState = Tc2Config.settings2.ByteArray(
-			'Gui/OcrEditor/Dialogs/OpenImage/State',
+			'Gui/OcrEditor/DialogOpenImage/State',
 			defaultValue=QtCore.QByteArray()
 			)
 	settingDialogSaveImageState = Tc2Config.settings2.ByteArray(
-			'Gui/OcrEditor/Dialogs/SaveImage/State',
+			'Gui/OcrEditor/DialogSaveImage/State',
 			defaultValue=QtCore.QByteArray()
 			)
 	settingDialogOpenSettingsState = Tc2Config.settings2.ByteArray(
-			'Gui/OcrEditor/Dialogs/OpenSettings/State',
+			'Gui/OcrEditor/DialogOpenSettings/State',
 			defaultValue=QtCore.QByteArray()
 			)
 	settingDialogSaveSettingsState = Tc2Config.settings2.ByteArray(
-			'Gui/OcrEditor/Dialogs/SaveSettings/State',
+			'Gui/OcrEditor/DialogSaveSettings/State',
 			defaultValue=QtCore.QByteArray()
 			)
 	settingSplitterSettingsState = Tc2Config.settings2.ByteArray(
