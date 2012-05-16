@@ -67,7 +67,8 @@ class SettingPersistant(SettingTemp):
 		@param setter: (func) function to set the value of the setting to the widget
 		@param signal: (QSignal) that the widget emits when its value changes
 		@param slot: (func) slot of this setting to connect the signal to. Note that
-		you may not use L{setValue} as slot, use L{slotSetValue} instead
+		you may not use L{setValue} as slot because it will adjust the widget to the value
+		for the second time. use L{slotSetValue} instead.
 		"""
 		if self._widget is not None:
 			raise ValueError('setting has already a widget assigned')
