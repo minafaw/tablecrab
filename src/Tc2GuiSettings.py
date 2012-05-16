@@ -54,7 +54,7 @@ class FrameSettings(QtGui.QFrame):
 		self.settingsCardProtector = self.addSetting('CardProtector', Tc2GuiSettingsCardProtector.FrameSettings(parent=self._stack), 'Shift+A', 'Card Protector (Shift+A)')
 		self.settingsClock = self.addSetting('Clock', Tc2GuiSettingsClock.FrameSettings(parent=self._stack), 'Shift+C', 'Clock (Shift+C)')
 
-		Tc2Config.globalObject.initSettingsFinished.connect(self.onInitGui)
+		Tc2Config.globalObject.initGui.connect(self.onInitGui)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 		Tc2Config.settings2['Gui/AlternatingRowColors'].changed.connect(
 				lambda setting:self._listWidget.setAlternatingRowColors(setting.value())
@@ -91,7 +91,7 @@ class FrameSettings(QtGui.QFrame):
 	def onCloseEvent(self, event):
 		self.settingSplitterState.setValue(self._splitter.saveState())
 
-	def onInitGui(self, globalObject):
+	def onInitGui(self):
 		self.settingSplitterState.changed.connect(
 				lambda setting: self._splitter.restoreState(setting.value())
 				)
