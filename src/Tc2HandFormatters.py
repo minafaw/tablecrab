@@ -50,229 +50,229 @@ class HandFormatterHtmlTabular(object):
 	MaxPlayerName = -1
 	# and this is the css for the html file
 	StyleSheet = '''.handBody{}
-.handTable{
-    border-spacing: 0px;
-    border-collapse: collapse;
-    }
-.handSource{margin-top: 1em;}
+		.handTable{
+			border-spacing: 0px;
+			border-collapse: collapse;
+			}
+		.handSource{margin-top: 1em;}
 
-.gameName{
-    text-align: center;
-    border: 1px solid black;
-    }
-.playerCell{
-    vertical-align: top;
-    border: 1px solid black;
-    }
-.playerName{}
-.playerStack{}
-.playerCardsCell{border: 1px solid black;}
-.playerCards{
-    border: 0px;
-    border-spacing: 0px;
-    width: 100%;
-    }
-.playerActionsCell{
-    white-space: nowrap;
-    vertical-align: top;
-    padding-left: 0.1em;
-    border: 1px solid black;
-    }
-.playerActionFold{}
-.playerActionCall{background-color: #87CEFA ;}
-.playerActionCheck{background-color: #98FB98;}
-.playerActionBet{background-color: #FFA54F;}
-.playerActionRaise{background-color: #FF6EB4;}
-.playerActionPostBlindBig{}
-.playerActionPostBlindSmall{}
-.playerActionPostBuyIn{}
-.playerActionPostBringIn{}
-.playerActionDiscardCards{font-size: x-large;}
-.playerActionNone{}
-
-
-.potCellExtra{
-    padding-left: 1em;
-    border: 1px solid black;
-    }
-.potCell{
-    text-align: center;
-    border: 1px solid black;
-    }
+		.gameName{
+			text-align: center;
+			border: 1px solid black;
+			}
+		.playerCell{
+			vertical-align: top;
+			border: 1px solid black;
+			}
+		.playerName{}
+		.playerStack{}
+		.playerCardsCell{border: 1px solid black;}
+		.playerCards{
+			border: 0px;
+			border-spacing: 0px;
+			width: 100%;
+			}
+		.playerActionsCell{
+			white-space: nowrap;
+			vertical-align: top;
+			padding-left: 0.1em;
+			border: 1px solid black;
+			}
+		.playerActionFold{}
+		.playerActionCall{background-color: #87CEFA ;}
+		.playerActionCheck{background-color: #98FB98;}
+		.playerActionBet{background-color: #FFA54F;}
+		.playerActionRaise{background-color: #FF6EB4;}
+		.playerActionPostBlindBig{}
+		.playerActionPostBlindSmall{}
+		.playerActionPostBuyIn{}
+		.playerActionPostBringIn{}
+		.playerActionDiscardCards{font-size: x-large;}
+		.playerActionNone{}
 
 
-.boardCardCellExtra{border: 1px solid black; }
-.boardCardCell{
-    border:1px solid black;
-    margin-left: auto;    /* centers contents of the cell, seems broken now */
-    margin-right: auto;    /* centers contents of the cell, seems broken now */
-    }
-.boardCards{
-    border: 0px;
-    border-spacing: 0px;
-    margin-left: auto;    /* centers contents of the cell, seems broken now */
-    margin-right: auto;    /* centers contents of the cell, seems broken now */
-    }
+		.potCellExtra{
+			padding-left: 1em;
+			border: 1px solid black;
+			}
+		.potCell{
+			text-align: center;
+			border: 1px solid black;
+			}
 
 
-.cards{
-	border-spacing: 0px;
-	padding: 0px;
-	empty-cells: show;
-	}
-.cardRank{
-	text-align: center;
-	color: white;
+		.boardCardCellExtra{border: 1px solid black; }
+		.boardCardCell{
+			border:1px solid black;
+			margin-left: auto;    /* centers contents of the cell, seems broken now */
+			margin-right: auto;    /* centers contents of the cell, seems broken now */
+			}
+		.boardCards{
+			border: 0px;
+			border-spacing: 0px;
+			margin-left: auto;    /* centers contents of the cell, seems broken now */
+			margin-right: auto;    /* centers contents of the cell, seems broken now */
+			}
 
-	padding: 0em 0em 0em 0em;
-	border-top: 1px solid black;
-	border-left: 1px solid black;
-	border-bottom: none;
-	border-right: 1px solid black;
-	}
-.cardSuit{
-	text-align: center;
-	color: white;
-	/*font-size: 0pt;*/    /* uncomment to hide card suit */
 
-	padding: 0em 0em 0em 0em;
-	border-top: none;
-	border-left: 1px solid black;
-	border-bottom: 1px solid black;
-	border-right: 1px solid black;
-	}
-.cardWidth{
-	padding-left: 1.2em;	/* adjust card width via this padding */
+		.cards{
+			border-spacing: 0px;
+			padding: 0px;
+			empty-cells: show;
+			}
+		.cardRank{
+			text-align: center;
+			color: white;
 
-	padding-top: 0em;
-	padding-right: 0em;
-	padding-bottom: 0em;
-	height: 0px;
-	border-top: none;
-	border-bottom: none;
-	}
+			padding: 0em 0em 0em 0em;
+			border-top: 1px solid black;
+			border-left: 1px solid black;
+			border-bottom: none;
+			border-right: 1px solid black;
+			}
+		.cardSuit{
+			text-align: center;
+			color: white;
+			/*font-size: 0pt;*/    /* uncomment to hide card suit */
 
-.cardRankSpade{
-	color: black;
-	background-color: white;
-	}
-.cardSuitSpade{
-	color: black;
-	background-color: white;
-	}
-.cardRankClub{
-	color: black;
-	background-color: white;
-	}
-.cardSuitClub{
-	color: black;
-	background-color: white;
-	}
-.cardRankHeart{
-	color: red;
-	background-color: white;
-	}
-.cardSuitHeart{
-	color: red;
-	background-color: white;
-	}
-.cardRankDiamond{
-	color: red;
-	background-color: white;
-	}
-.cardSuitDiamond{
-	color: red;
-	background-color: white;
-	}
-.cardRankBack{
-	color: #355b73;
-	background-color: #355b73;
-	}
-.cardSuitBack{
-	color: #355b73;
-	background-color: #355b73;
-	}
-.cardNone{}
+			padding: 0em 0em 0em 0em;
+			border-top: none;
+			border-left: 1px solid black;
+			border-bottom: 1px solid black;
+			border-right: 1px solid black;
+			}
+		.cardWidth{
+			padding-left: 1.2em;	/* adjust card width via this padding */
 
-/* four color deck */
-.cardRank4{
-	text-align: center;
-	color: white;
+			padding-top: 0em;
+			padding-right: 0em;
+			padding-bottom: 0em;
+			height: 0px;
+			border-top: none;
+			border-bottom: none;
+			}
 
-	padding: 0.2em 0em 0.2em 0em;
-	border-top: 1px solid black;
-	border-left: 1px solid black;
-	border-bottom: none;
-	border-right: 1px solid black;
-	}
-.cardSuit4{
-	text-align: center;
-	color: white;
-	font-size: 0pt;    /* uncomment to hide card suit */
+		.cardRankSpade{
+			color: black;
+			background-color: white;
+			}
+		.cardSuitSpade{
+			color: black;
+			background-color: white;
+			}
+		.cardRankClub{
+			color: black;
+			background-color: white;
+			}
+		.cardSuitClub{
+			color: black;
+			background-color: white;
+			}
+		.cardRankHeart{
+			color: red;
+			background-color: white;
+			}
+		.cardSuitHeart{
+			color: red;
+			background-color: white;
+			}
+		.cardRankDiamond{
+			color: red;
+			background-color: white;
+			}
+		.cardSuitDiamond{
+			color: red;
+			background-color: white;
+			}
+		.cardRankBack{
+			color: #355b73;
+			background-color: #355b73;
+			}
+		.cardSuitBack{
+			color: #355b73;
+			background-color: #355b73;
+			}
+		.cardNone{}
 
-	padding: 0em 0em 0em 0em;
-	border-top: none;
-	border-left: 1px solid black;
-	border-bottom: 1px solid black;
-	border-right: 1px solid black;
-	}.cardWidth4{
-	padding-left: 2.8em;	/* adjust card width via this padding */
+		/* four color deck */
+		.cardRank4{
+			text-align: center;
+			color: white;
 
-	padding-top: 0em;
-	padding-right: 0em;
-	padding-bottom: 0em;
-	height: 0px;
-	border-top: none;
-	border-bottom: none;
-	}
+			padding: 0.2em 0em 0.2em 0em;
+			border-top: 1px solid black;
+			border-left: 1px solid black;
+			border-bottom: none;
+			border-right: 1px solid black;
+			}
+		.cardSuit4{
+			text-align: center;
+			color: white;
+			font-size: 0pt;    /* uncomment to hide card suit */
 
-.cardRankSpade4{
-	font-size: large;
-	font-weight: bold;
-	color: white;
-	background-color: #8D8F8F;
-	}
-.cardSuitSpade4{
-	background-color: #8D8F8F;
-	}
-.cardRankClub4{
-	font-size: large;
-	font-weight: bold;
-	color: white;
-	background-color: #5A9057;
-	}
-.cardSuitClub4{
-	background-color: #5A9057;
-	}
-.cardRankHeart4{
-	font-size: large;
-	font-weight: bold;
-	color: white;
-	background-color: #C46953;
-	}
-.cardSuitHeart4{
-	background-color: #C46953;
-	}
-.cardRankDiamond4{
-	font-size: large;
-	font-weight: bold;
-	color: white;
-	background-color: #587DC2;
-	}
-.cardSuitDiamond4{
-	background-color: #587DC2;
-	}
-.cardRankBack4{
-	font-size: large;
-	font-weight: bold;
-	color: white;
-	background-color: white;
-	}
-.cardSuitBack4{
-	background-color: white;
-	}
+			padding: 0em 0em 0em 0em;
+			border-top: none;
+			border-left: 1px solid black;
+			border-bottom: 1px solid black;
+			border-right: 1px solid black;
+			}.cardWidth4{
+			padding-left: 2.8em;	/* adjust card width via this padding */
 
-'''.replace('\t', '\x20'*4)
+			padding-top: 0em;
+			padding-right: 0em;
+			padding-bottom: 0em;
+			height: 0px;
+			border-top: none;
+			border-bottom: none;
+			}
+
+		.cardRankSpade4{
+			font-size: large;
+			font-weight: bold;
+			color: white;
+			background-color: #8D8F8F;
+			}
+		.cardSuitSpade4{
+			background-color: #8D8F8F;
+			}
+		.cardRankClub4{
+			font-size: large;
+			font-weight: bold;
+			color: white;
+			background-color: #5A9057;
+			}
+		.cardSuitClub4{
+			background-color: #5A9057;
+			}
+		.cardRankHeart4{
+			font-size: large;
+			font-weight: bold;
+			color: white;
+			background-color: #C46953;
+			}
+		.cardSuitHeart4{
+			background-color: #C46953;
+			}
+		.cardRankDiamond4{
+			font-size: large;
+			font-weight: bold;
+			color: white;
+			background-color: #587DC2;
+			}
+		.cardSuitDiamond4{
+			background-color: #587DC2;
+			}
+		.cardRankBack4{
+			font-size: large;
+			font-weight: bold;
+			color: white;
+			background-color: white;
+			}
+		.cardSuitBack4{
+			background-color: white;
+			}
+
+		'''.replace('\t', '\x20'*4)
 
 	class IndentBuffer(object):
 		"""write buffer with indentation support"""
