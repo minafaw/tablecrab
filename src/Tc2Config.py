@@ -299,6 +299,9 @@ def cleanSettings():
 		('Gui/DialogOcr/SplitterSettingsState', 'Gui/OcrEditor/SplitterSettings/State'),
 		('Gui/DialogOcr/SplitterImageState', 'Gui/OcrEditor/SplitterImage/State'),
 		('Gui/DialogOcr/SplitterOutputState', 'Gui/OcrEditor/SplitterOutput/State'),
+
+		('Gui/Screenshot/DialogScreenshotInfo/Geometry', 'Gui/Dialogs/Screenshot/Geometry')
+
 		)
 	for keyOld, keyNew in keys:
 		if qSettings.contains(keyOld):
