@@ -111,7 +111,7 @@ class Gui(QtGui.QMainWindow):
 		g.feedbackException.connect(self.onFeedbackException)
 		g.clearException.connect(self.onClearException)
 		g.feedbackMessage.connect(self.onFeedbackMessage)
-		g.initGui.connect(self.onInitGui)
+		g.guiInit.connect(self.onInitGui)
 		Tc2Config.settings2['Gui/Tab/Position'].changed.connect(self.onSettingTabPositionChanged)
 
 	#--------------------------------------------------------------------------------------------------------------
@@ -137,12 +137,14 @@ class Gui(QtGui.QMainWindow):
 		Tc2Config.globalObject.keyboardHook.start()
 		Tc2Config.globalObject.windowHook.start()
 		#
-		Tc2Config.globalObject.initGuiFinished.emit(Tc2Config.globalObject)
+		Tc2Config.globalObject.guiInitFinished.emit(Tc2Config.globalObject)
 
 		# ##################################
-		Tc2Config.globalObject.initGui.emit()
+		Tc2Config.globalObject.guiInit.emit()
 		Tc2Config.cleanSettings()
 		Tc2Config.settings2.init()
+		Tc2Config.globalObject.guiInited.emit()
+
 
 	#--------------------------------------------------------------------------------------------------------------
 	# methods
