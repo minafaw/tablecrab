@@ -283,6 +283,9 @@ class Settings:
 settings2 = Settings2.Settings(qSettings)
 
 def cleanSettings():
+	return
+
+
 	qSettings = settings2.qSettings()
 	# renamed in 0.8.2
 	keys = (	# (keyOld, keyNew)
