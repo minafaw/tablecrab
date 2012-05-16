@@ -14,9 +14,21 @@ import hashlib, codecs
 #************************************************************************************
 class BrowserSideBarNashCalculations(QtGui.QFrame):
 
-	SettingsKeyBase = 'Gui/Tools/NashCalculations'
-	SettingsKeyCustomPayoutStructure = SettingsKeyBase + '/CustomPayoutStructure'
-	SettingsKeyDialogSaveState = SettingsKeyBase + '/DialogSave/State'
+	#NOTE: we do not save current payout structure by intention to keep queries to
+	# HoldemResources.net to a minimum.
+
+	settingCustomPayoutStructure = Tc2Config.settings2.QString(
+			'Gui/HandViewer/SideBars/NashCalculations/CustomPayoutStructure',
+			defaultValue=QtCore.QString(''),
+			)
+	settingDialogSaveState = Tc2Config.settings2.QString(
+			'Gui/HandViewer/SideBars/NashCalculations/DialogSave/State',
+			defaultValue=QtCore.QByteArray(),
+			)
+	settingStyleSheet = Tc2Config.settings2.UnicodeString(
+			'Gui/HandViewer/SideBars/NashCalculations/StyleSheet',
+			defaultValue=HoldemResources.NashFormatter.StyleSheet,
+			)
 
 	PayoutStructures = (	# text, payoutStructure, lineEditMask
 			('- Select payout structure -', '', ''),
@@ -88,12 +100,15 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 		self._browser.setZoomFactor(value)
 
 	def handleHandSet(self, hand):
-		if hand.gameType & hand.GameTypeHoldem:
-			self.setEnabled(True)
-		else:
+		if hand is None:
+			self._browser.setHtml('')
+			return
+		elif not hand.gameType & hand.GameTypeHoldem:
 			self.setEnabled(False)
 			self._browser.setHtml('<h4>Unsupported game type</h4>')
 			return
+		else:
+			self.setEnabled(True)
 
 		if hand is self.lastHand:
 			return
@@ -170,7 +185,7 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 		#maybe data as returned from HoldemResources is corrupted?
 		html = self.formatter.toHtml(
 				seatSortf=sortf,
-				styleSheet=Tc2Config.globalObject.settingsNashCalculationsStyleSheet.styleSheet(),
+				styleSheet=self.settingStyleSheet.value(),
 				url=url,
 				)
 		self._browser.setHtml(html)
@@ -212,7 +227,7 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 	def onComboBoxCurrentIndexChanged(self, i):
 		payoutStructure, mask = self.PayoutStructures[i][1], self.PayoutStructures[i][2]
 		if i == len(self.PayoutStructures) -1:
-			payoutStructure = Tc2Config.settingsValue(self.SettingsKeyCustomPayoutStructure, '').toString()
+			payoutStructure = self.settingCustomPayoutStructure.value()
 		self.editPayoutStructure.setInputMask(mask)
 		self.editPayoutStructure.setText(payoutStructure)
 		self.editPayoutStructure.setEnabled(bool(mask))
@@ -227,7 +242,7 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 	def onEditPayoutStructureTextChanged(self, text):
 		if self.comboBox.currentIndex() == len(self.PayoutStructures) -1:
 			edit = self.sender()
-			Tc2Config.settingsSetValue(self.SettingsKeyCustomPayoutStructure, text)
+			self.settingCustomPayoutStructure.setValue(text)
 
 	def onContextMenuWebView(self, point):
 		menu = QtGui.QMenu(self)
@@ -244,7 +259,7 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 				title='Save Nash Calculations..',
 				fileFilters=('HtmlFiles (*.html *.htm)', 'All Files (*)'),
 				#TODO: rename to Gui/HandViewer/DialogSave/State
-				settingsKey=self.SettingsKeyDialogSaveState,
+				setting=self.settingDialogSaveState,
 				defaultSuffix='html',
 				)
 		if fileName is None:
@@ -268,6 +283,18 @@ class BrowserSideBarICMTax(QtGui.QFrame):
 	SettingsKeyCustomPayoutStructure = SettingsKeyBase + '/CustomPayoutStructure'
 	SettingsKeyDialogSaveState = SettingsKeyBase + '/DialogSave/State'
 	SettingsKeyPayoutStructureCurrent = SettingsKeyBase + '/PayoutStructureCurrent'
+
+
+	settingCustomPayoutStructure = Tc2Config.settings2.QString(
+			'Gui/HandViewer/SideBars/ICMTax/CustomPayoutStructure',
+			defaultValue=QtCore.QString(''),
+			)
+	settingDialogSaveState = Tc2Config.settings2.QString(
+			'Gui/HandViewer/SideBars/ICMTax/DialogSave/State',
+			defaultValue=QtCore.QByteArray(),
+			)
+
+
 
 	PayoutStructures = (	# text, payoutStructure, lineEditMask
 			('- Select payout structure -', '', ''),

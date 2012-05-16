@@ -300,7 +300,12 @@ def cleanSettings():
 		('Gui/DialogOcr/SplitterImageState', 'Gui/OcrEditor/SplitterImage/State'),
 		('Gui/DialogOcr/SplitterOutputState', 'Gui/OcrEditor/SplitterOutput/State'),
 
-		('Gui/Screenshot/DialogScreenshotInfo/Geometry', 'Gui/Dialogs/Screenshot/Geometry')
+		('Gui/Screenshot/DialogScreenshotInfo/Geometry', 'Gui/Dialogs/Screenshot/Geometry'),
+
+		('Gui/Tools/NashCalculations/CustomPayoutStructure', 'Gui/HandViewer/SideBars/NashCalculations/CustomPayoutStructure'),
+		('Gui/Tools/NashCalculations/DialogSave/State', 'Gui/HandViewer/SideBars/NashCalculations/DialogSave/State'),
+		('Gui/Settings/NashCalculationsStyleSheet', 'Gui/HandViewer/SideBars/NashCalculations/StyleSheet'),
+
 
 		)
 	for keyOld, keyNew in keys:

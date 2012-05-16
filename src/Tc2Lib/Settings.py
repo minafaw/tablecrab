@@ -62,6 +62,13 @@ class SettingPersistant(SettingTemp):
 			self._widgetSignal.connect(self._widgetSlot)
 		self.changed.emit(self)
 	def setWidget(self, widget, setter, signal, slot):
+		"""assigns a widget to the setting
+		@param widget: (QWidget) to assign
+		@param setter: (func) function to set the value of the setting to the widget
+		@param signal: (QSignal) that the widget emits when its value changes
+		@param slot: (func) slot of this setting to connect the signal to. Note that
+		you may not use L{setValue} as slot, use L{slotSetValue} instead
+		"""
 		if self._widget is not None:
 			raise ValueError('setting has already a widget assigned')
 		self._widget = widget
@@ -73,6 +80,13 @@ class SettingPersistant(SettingTemp):
 		return qSettings.value(key)
 	def valueToSettings(self, qSettings, key, value):
 		qSettings.setValue(key, QtCore.QVariant(value))
+	def slotSetValue(self, value, store=True):
+		SettingTemp.setValue(self, value)
+		if store:
+			qSettings = self.settings().qSettings()
+			self.valueToSettings(qSettings, self.key(), value)
+			##qSettings.sync()
+		self.changed.emit(self)
 
 
 class SettingBool(SettingPersistant):
@@ -84,8 +98,20 @@ class SettingBool(SettingPersistant):
 				checkBox,
 				lambda value: checkBox.setCheckState(QtCore.Qt.Checked if value else QtCore.Qt.Unchecked),
 				checkBox.stateChanged,
-				lambda state: self.setValue(state == QtCore.Qt.Checked)
+				lambda state: self.slotSetValue(state == QtCore.Qt.Checked)
 				)
+
+
+class SettingQString(SettingPersistant):
+	def valueFromSettings(self, qSettings, key):
+		v = qSettings.value(key)
+		return (True, v.toString()) if v.isValid() else (False, None)
+
+
+class SettingUnicodeString(SettingPersistant):
+	def valueFromSettings(self, qSettings, key):
+		v = qSettings.value(key)
+		return (True, unicode(v.toString().toUtf8(), 'utf-8') ) if v.isValid() else (False, None)
 
 
 class SettingInt(SettingPersistant):
@@ -113,7 +139,7 @@ class SettingInt(SettingPersistant):
 				spinBox,
 				spinBox.setValue,
 				spinBox.valueChanged,
-				self.setValue
+				self.slotSetValue
 				)
 
 
@@ -143,7 +169,7 @@ class SettingChooseString(SettingPersistant):
 				comboBox,
 				lambda value: comboBox.setCurrentIndex(comboBox.findText(value)),
 				comboBox.currentIndexChanged,
-				lambda index: self.setValue(unicode(comboBox.currentText().toUtf8(), 'utf-8'))
+				lambda index: self.slotSetValue(unicode(comboBox.currentText().toUtf8(), 'utf-8'))
 				)
 
 
@@ -163,7 +189,7 @@ class SettingIndex(SettingPersistant):
 				listWidget,
 				listWidget.setCurrentRow,
 				listWidget.currentRowChanged,
-				self.setValue
+				self.slotSetValue
 				)
 
 class SettingFont(SettingPersistant):
@@ -184,7 +210,7 @@ class SettingFont(SettingPersistant):
 				fontButton,
 				fontButton.setFont,
 				fontButton.fontChanged,
-				self.setValue
+				self.slotSetValue
 				)
 
 #************************************************************************************
@@ -258,6 +284,18 @@ class Settings(QtCore.QObject):
 		if key in self._settings:
 			raise ValueError('setting already present: %s' % key)
 		setting = SettingIndex(self, key, defaultValue=defaultValue)
+		self._settings[key] = setting
+		return setting
+	def QString(self, key, defaultValue=None):
+		if key in self._settings:
+			raise ValueError('setting already present: %s' % key)
+		setting = SettingQString(self, key, defaultValue=defaultValue)
+		self._settings[key] = setting
+		return setting
+	def UnicodeString(self, key, defaultValue=None):
+		if key in self._settings:
+			raise ValueError('setting already present: %s' % key)
+		setting = SettingUnicodeString(self, key, defaultValue=defaultValue)
 		self._settings[key] = setting
 		return setting
 
