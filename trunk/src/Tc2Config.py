@@ -283,7 +283,7 @@ class Settings:
 settings2 = Settings2.Settings(qSettings)
 
 def cleanSettings():
-	return
+	#return
 
 
 	qSettings = settings2.qSettings()
@@ -329,7 +329,22 @@ def cleanSettings():
 			qSettings.setValue(keyNew, qSettings.value(keyOld))
 			qSettings.remove(keyOld)
 
-	settings2.clean()
+	# hotkeys have changed
+	attrsOld = ('ID', 'Hotkey', 'HotkeyName', 'Multiplier', 'BaseValue')
+	attrsNew = ('Id', 'Key', 'HotkeyName', 'Multiplier', 'BaseValue')
+	for i in xrange(MaxHotkeys):
+		baseKeyOld = 'Hotkeys/%s/' % i
+		baseKeyNew = 'Hotkeys/%03i-' % i
+		for i, attrOld in enumerate(attrsOld):
+			attrNew = attrsNew[i]
+			keyOld = baseKeyOld + attrOld
+			keyNew = baseKeyNew + attrNew
+			if qSettings.contains(keyOld):
+				qSettings.setValue(keyNew, qSettings.value(keyOld))
+				qSettings.remove(keyOld)
+
+	#
+	##settings2.clean()
 
 
 
