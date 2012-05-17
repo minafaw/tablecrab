@@ -194,9 +194,9 @@ class HandParser(object):
 			return cards[:zfill]
 		return cards
 
-	PatGameHeader1 = re.compile('^PokerStars\s (Home\s)? Game\s \#[0-9]+\:\s* (?P<gameType>%s)\s.*' % '|'.join([re.escape(i).replace('\ ', '\s') for i in GameTypeMapping]), re.X)
-	PatGameHeader2 = re.compile('^PokerStars\s (Home\sGame\s)? Hand\s \#[0-9]+\:\s* (?P<gameType>%s)\s.*' % '|'.join([re.escape(i).replace('\ ', '\s') for i in GameTypeMapping]), re.X)
-	PatGameHeader3 = re.compile('^PokerStars\s Zoom\s Hand\s \#[0-9]+\:\s* (?P<gameType>%s)\s.*' % '|'.join([re.escape(i).replace('\ ', '\s') for i in GameTypeMapping]), re.X)
+	PatGameHeader1 = re.compile('^PokerStars\s (Home\s)? Game\s \#[0-9]+\:\s* .*? (?P<gameType>%s)\s.*' % '|'.join([re.escape(i).replace('\ ', '\s') for i in GameTypeMapping]), re.X)
+	PatGameHeader2 = re.compile('^PokerStars\s (Home\sGame\s)? Hand\s \#[0-9]+\:\s* .*? (?P<gameType>%s)\s.*' % '|'.join([re.escape(i).replace('\ ', '\s') for i in GameTypeMapping]), re.X)
+	PatGameHeader3 = re.compile('^PokerStars\s Zoom\s Hand\s \#[0-9]+\:\s* .*? (?P<gameType>%s)\s.*' % '|'.join([re.escape(i).replace('\ ', '\s') for i in GameTypeMapping]), re.X)
 	def matchGameHeader(self, hand, streetCurrent, line):
 		result = self.PatGameHeader1.match(line)
 		if result is None:
