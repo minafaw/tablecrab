@@ -59,15 +59,12 @@ def windowGetTextLength(hwnd):
 def windowGetText(hwnd, maxSize=-1):
 	"""returns the window title of the specified window
 	@param hwnd: handle of the window
-	 @param maxSize: (int) maximum size of text to retrieve. if -1 text is retrieved
-	 unconditionally. else only text <= maxSize is retrieved
+	 @param maxSize: (int) maximum size of text to retrieve. if -1 text is retrieved unconditionally. else only text <= maxSize is retrieved
 	@return: (unicode)
 	"""
 	if not hwnd or maxSize == 0: return ''
 
-	#NOTE: see: [ http://blogs.msdn.com/b/oldnewthing/archive/2003/08/21/54675.aspx ]
-	#           "the secret live of GetWindowtext" for details
-
+	#NOTE: see: [ http://blogs.msdn.com/b/oldnewthing/archive/2003/08/21/54675.aspx ] "the secret live of GetWindowtext" for details
 	# try GetWindowText first
 	nChars = user32.GetWindowTextLengthW(hwnd)
 	if nChars:
@@ -76,15 +73,32 @@ def windowGetText(hwnd, maxSize=-1):
 		p = create_unicode_buffer(nChars +1)
 		if user32.GetWindowTextW(hwnd, p, sizeof(p)):
 			return p.value
-
 	# some text can only be retrieved by WM_GETTEXT, so here we go
-	result = DWORD()
-	nChars = sendMessageTimeout(hwnd, WM_GETTEXTLENGTH, 0, 0)
-	if nChars:
-		if maxSize > 0 and nChars > maxSize:
-			return ''
-		p = create_unicode_buffer(nChars +1)
-		sendMessageTimeout(hwnd, WM_GETTEXT, sizeof(p), p)
+	nChars = DWORD()
+	result = user32.SendMessageTimeoutW(
+			hwnd,
+			WM_GETTEXTLENGTH,
+			0,
+			0,
+			SMTO_ABORTIFHUNG,
+			MY_SMTO_TIMEOUT,
+			byref(nChars)
+			)
+	#NOTE: WM_GETTEXTLENGTH returns LRESULT so we have to cast here
+	nChars = c_long(nChars.value)
+	if nChars > 0:
+		if maxSize > 0 and nChars.value > maxSize:
+			return  ''
+		p = create_unicode_buffer(nChars.value +1)
+		result = user32.SendMessageTimeoutW(
+			hwnd,
+			WM_GETTEXT,
+			sizeof(p),
+			p,
+			SMTO_ABORTIFHUNG,
+			MY_SMTO_TIMEOUT,
+			byref(nChars)
+			)
 		return p.value
 	return ''
 
