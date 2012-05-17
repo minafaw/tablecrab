@@ -15,6 +15,39 @@ class HotkeyWidget(QtGui.QTreeWidget):
 	SettingsKeyHotkeyEditorGeometry =SettingsKeyBase + '/DialogHotkeyEditor/Geometry'
 	SettingsKeyHotkeys = 'Hotkeys'
 
+	settingHotkeyEditorGeometry = Tc2Config.settings2.ByteArray(
+			'Gui/DialogHotkeyEditor/Geometry',
+			defaultValue=QtCore.QByteArray()
+			)
+
+	settingsHotkeys = []
+	for i in xrange(Tc2Config.MaxHotkeys):
+		settingsHotkeys.append({
+			'id': Tc2Config.settings2.UnicodeString(
+					'Hotkeys/%03i-Id' % i,
+					defaultValue=''
+					),
+			'key': Tc2Config.settings2.UnicodeString(
+					'Hotkeys/%03i-Key' % i,
+					defaultValue=''
+					),
+			'hotkeyName': Tc2Config.settings2.UnicodeString(
+					'Hotkeys/%03i-HotkeyName' % i,
+					defaultValue=''
+					),
+			'multiplier': Tc2Config.settings2.Float(
+					'Hotkeys/%03i-Multiplier' % i,
+					defaultValue=Tc2ConfigHotkeys.MultiplierDefault,
+					minValue=Tc2ConfigHotkeys.MultiplierMin,
+					maxValue=Tc2ConfigHotkeys.MultiplierMax,
+					),
+			'baseValue': Tc2Config.settings2.ChooseString(
+					'Hotkeys/%03i-BaseValue' % i,
+					defaultValue=Tc2ConfigHotkeys.BaseValueDefault,
+					choices=Tc2ConfigHotkeys.BaseValues
+					),
+			})
+
 	class ActionNewHotkey(QtGui.QAction):
 		def __init__(self, hotkeyProto, parent=None):
 			QtGui.QAction.__init__(self, parent)
@@ -82,7 +115,7 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		self._actions.append(self.actionRemove)
 
 		# connect signals
-		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
+		Tc2Config.globalObject.guiInited.connect(self.onGuiInited)
 		self.itemDoubleClicked.connect(self.onHotkeyDoubleClicked)
 		self.itemSelectionChanged.connect(self.adjustActions)
 		Tc2Config.settings2['Gui/AlternatingRowColors'].changed.connect(
@@ -171,20 +204,25 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		return False
 
 	def createHotkey(self, hotkeyProto):
-		hotkey = hotkeyProto()
+		# find free slot
+		data = None
+		for data in self.settingsHotkeys:
+			if not data['id'].value():
+				break
+		else:
+			raise valueError('no free slot found!')
+		hotkey = hotkeyProto(userData=data)
 		hotkey = hotkey.createEditor(
 				parent=self,
-				settingsKey=self.SettingsKeyHotkeyEditorGeometry,
+				settingGeometry=self.settingHotkeyEditorGeometry,
 				isEdit=False
 				)
 		if hotkey is not None:
+			for attr, setting in data.items():
+				setting.setValue(getattr(hotkey, attr)())
 			self.addTopLevelItem(hotkey)
 			self.setCurrentItem(hotkey)
-			self.dump()
 			self.adjustHotkeys()
-
-	def dump(self):
-		Tc2Config.dumpPersistentItems(self.SettingsKeyHotkeys, self)
 
 	def editHotkey(self):
 		hotkey = self.currentItem()
@@ -193,11 +231,14 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			return
 		hotkey = hotkey.createEditor(
 				parent=self,
-				settingsKey=self.SettingsKeyHotkeyEditorGeometry,
+				settingGeometry=self.settingHotkeyEditorGeometry,
 				isEdit=True
 				)
 		if hotkey is not None:
-			self.dump()
+			data = hotkey.userData()
+			data = hotkey.userData()
+			for attr, setting in data.items():
+				setting.setValue(getattr(hotkey, attr)())
 			self.adjustHotkeys()
 
 	def moveHotkeyDown(self):
@@ -205,22 +246,44 @@ class HotkeyWidget(QtGui.QTreeWidget):
 		if hotkey is None:
 			self.actionDown.setEnabled(False)
 			return
-		index = self.indexOfTopLevelItem(hotkey)
-		self.takeTopLevelItem(index)
-		self.insertTopLevelItem(index +1, hotkey)
+		# move tree item
+		i = self.indexOfTopLevelItem(hotkey)
+		hotkeyOther = self.topLevelItem(i+1)
+		self.takeTopLevelItem(i)
+		self.insertTopLevelItem(i+1, hotkey)
+		# move settings
+		data = hotkey.userData()
+		dataOther = hotkeyOther.userData()
+		hotkeyOther.setUserData(data)
+		hotkey.setUserData(dataOther)
+		for attr, setting in dataOther.items():
+			setting.setValue(getattr(hotkey, attr)())
+		for attr, setting in data.items():
+			setting.setValue(getattr(hotkeyOther, attr)())
+		# finally
 		self.setCurrentItem(hotkey)
-		self.dump()
 
 	def moveHotkeyUp(self):
 		hotkey = self.currentItem()
 		if hotkey is None:
 			self.actionUp.setEnabled(False)
-		else:
-			index = self.indexOfTopLevelItem(hotkey)
-			self.takeTopLevelItem(index)
-			self.insertTopLevelItem(index -1, hotkey)
-			self.setCurrentItem(hotkey)
-			self.dump()
+			return
+		# move tree item
+		i = self.indexOfTopLevelItem(hotkey)
+		hotkeyOther = self.topLevelItem(i-1)
+		self.takeTopLevelItem(i)
+		self.insertTopLevelItem(i-1, hotkey)
+		# move settings
+		data = hotkey.userData()
+		dataOther = hotkeyOther.userData()
+		hotkeyOther.setUserData(data)
+		hotkey.setUserData(dataOther)
+		for attr, setting in dataOther.items():
+			setting.setValue(getattr(hotkey, attr)())
+		for attr, setting in data.items():
+			setting.setValue(getattr(hotkeyOther, attr)())
+		# finally
+		self.setCurrentItem(hotkey)
 
 	def removeHotkey(self):
 		hotkey = self.currentItem()
@@ -228,7 +291,10 @@ class HotkeyWidget(QtGui.QTreeWidget):
 			self.actionRemove.setEnabled(False)
 			return
 		self.takeTopLevelItem(self.indexOfTopLevelItem(hotkey) )
-		self.dump()
+		data = hotkey.userData()
+		for attr, setting in data.items():
+			data[attr].resetValue()
+		self.dumpItems()
 		self.adjustHotkeys()
 
 	#--------------------------------------------------------------------------------------------------------------
@@ -237,21 +303,50 @@ class HotkeyWidget(QtGui.QTreeWidget):
 	def onHotkeyDoubleClicked(self, hotkey):
 		self.editHotkey()
 
-	def onGlobalObjectInitSettingsFinished(self, globalObject):
+	def dumpItems(self):
+		nItems = self.topLevelItemCount()
+		for i, data in enumerate(self.settingsHotkeys):
+			if i < nItems:
+				hotkey = self.topLevelItem(i)
+				dataOld = hotkey.userData()
+				for attr, setting in dataOld.items():
+					data[attr].setValue(setting.value())
+				hotkey.setUserData(data)
+			else:
+				for attr, setting in data.items():
+					data[attr].resetValue()
+
+	def onGuiInited(self):
 		self.setUpdatesEnabled(False)
 		self.clear()
-		hotkey = None
-		for hotkey in Tc2Config.readPersistentItems(
-				self.SettingsKeyHotkeys,
-				maxItems=Tc2Config.MaxHotkeys,
-				itemProtos=Tc2ConfigHotkeys.Hotkeys
-				):
+
+		#NOTE: we run into fragementation problems here if the user edits settings by hand.
+		# so we have to defrag hotkeys if necessary
+		nSlots = 0
+		hotkeyKlasses = dict([(hotkeyKlass.id(), hotkeyKlass) for hotkeyKlass in Tc2ConfigHotkeys.Hotkeys])
+		for iSlot, data in enumerate(self.settingsHotkeys):
+			hotkeyKlass = hotkeyKlasses.get(data['id'].value(), None)
+			if hotkeyKlass is not None:
+				nSlots = iSlot +1
+				tmpData = data.copy()
+				del tmpData['id']
+				kws = dict([(attr, setting.value()) for (attr, setting) in tmpData.items()])
+				kws['userData'] = data
+				hotkey = hotkeyKlass(**kws)
+				self.addTopLevelItem(hotkey)
+
+		# clean up if necessary
+		nItems = self.topLevelItemCount()
+		if nSlots != nItems:
+			self.dumpItems()
+
+		# make shure there is at least one hotkey present
+		if not nItems and self.settingsHotkeys:
+			data = self.settingsHotkeys[0]
+			hotkey = Tc2ConfigHotkeys.HotkeyScreenshot(key='<F1+LeftControl>', userData=data)
+			for attr, setting in data.items():
+				setting.setValue(getattr(hotkey, attr)())
 			self.addTopLevelItem(hotkey)
-		# set at least one hotkey as default
-		if hotkey is None:
-			hotkey = Tc2ConfigHotkeys.HotkeyScreenshot(key='<F1+LeftControl>')
-			self.addTopLevelItem(hotkey)
-		self.setCurrentItem( self.topLevelItem(0) )
 
 		self.setUpdatesEnabled(True)
 		self.adjustHotkeys()
