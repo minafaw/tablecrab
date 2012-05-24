@@ -46,7 +46,7 @@ class FrameSettings(QtGui.QFrame):
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
-		grid.col(Tc2Config.HLine(self), colspan=2)
+		grid.col(Tc2Config.HLine(self), colspan=3)
 		grid.row()
 		grid.col(self.checkAutoClosePopupNews)
 		grid.row()
@@ -60,9 +60,9 @@ class FrameSettings(QtGui.QFrame):
 		grid.row()
 		grid.col(Tc2Config.VStretch())
 		grid.row()
-		grid.col(Tc2Config.HLine(self), colspan=2)
+		grid.col(Tc2Config.HLine(self), colspan=3)
 		grid.row()
-		grid.col(self.buttonBox, colspan=2)
+		grid.col(self.buttonBox, colspan=3)
 
 	def onHelp(self, *args):
 		Tc2GuiHelp.dialogHelp('settingsPokerStars', parent=self)

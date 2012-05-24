@@ -34,26 +34,19 @@ class ClickableLabel(QtGui.QLabel):
 #************************************************************************************
 class Gui(QtGui.QMainWindow):
 
-	settingGeometry = Tc2Config.settings2.ByteArray(
-			'Gui/Geometry',
-			defaultValue=QtCore.QByteArray()
-			)
-	settingTabCurrent = Tc2Config.settings2.Index(
-			'Gui/TabCurrent',
-			defaultValue=0
-			)
-	settingDialogExceptionGeometry = Tc2Config.settings2.ByteArray(
-			'Gui/DialogException/Geometry',
-			defaultValue=QtCore.QByteArray()
-			)
+	SettingsKeyBase = 'Gui'
+	SettingsKeyGeometry = SettingsKeyBase + '/Geometry'
+	SettingsKeyTabCurrent =  SettingsKeyBase + '/TabCurrent'
+	SettingsKeyDialogExceptionGeometry = SettingsKeyBase + '/DialogException/Geometry'
+
 
 	def __init__(self):
-		#NOTE: have to init setting here
-		setting = Tc2Config.settings2['Gui/SingleApplication/Scope']
-		setting.init()
+		scope = Tc2Config.settingsValue(Tc2Config.SettingsKeySingleApplicationScope, '').toString()
+		if scope not in Tc2Win32.SingleApplication.Scopes:
+			scope = Tc2Config.SingleApplicationScopeDefault
 		self.singleApplication = Tc2Win32.SingleApplication(
 				Tc2Config.SingleApplicationMagicString,
-				scope=setting.value(),
+				scope=scope,
 				parent=None
 				)
 		try:
@@ -70,6 +63,7 @@ class Gui(QtGui.QMainWindow):
 
 		self.setWindowTitle(Tc2Config.ReleaseName)
 		self.setWindowIcon( QtGui.QIcon(Tc2Config.Pixmaps.tableCrab()) )
+		self.restoreGeometry( Tc2Config.settingsValue(self.SettingsKeyGeometry, QtCore.QByteArray()).toByteArray() )
 
 		self._siteManager = Tc2SiteManager.SiteManager(parent=self)
 
@@ -107,12 +101,11 @@ class Gui(QtGui.QMainWindow):
 
 		# connect global signals
 		g = Tc2Config.globalObject
+		g.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		g.feedback.connect(self.onFeedback)
 		g.feedbackException.connect(self.onFeedbackException)
 		g.clearException.connect(self.onClearException)
 		g.feedbackMessage.connect(self.onFeedbackMessage)
-		g.guiInit.connect(self.onInitGui)
-		Tc2Config.settings2['Gui/Tab/Position'].changed.connect(self.onSettingTabPositionChanged)
 
 	#--------------------------------------------------------------------------------------------------------------
 	# overwritten methods
@@ -124,7 +117,8 @@ class Gui(QtGui.QMainWindow):
 		Tc2Config.globalObject.keyboardHook.stop()
 		Tc2Config.globalObject.windowHook.stop()
 
-		self.settingGeometry.setValue(self.saveGeometry())
+		Tc2Config.settingsSetValue(self.SettingsKeyTabCurrent, self._tabWidget.currentIndex())
+		Tc2Config.settingsSetValue(self.SettingsKeyGeometry, self.saveGeometry() )
 		return QtGui.QMainWindow.closeEvent(self, event)
 
 	def show(self):
@@ -137,14 +131,7 @@ class Gui(QtGui.QMainWindow):
 		Tc2Config.globalObject.keyboardHook.start()
 		Tc2Config.globalObject.windowHook.start()
 		#
-		Tc2Config.globalObject.guiInitFinished.emit(Tc2Config.globalObject)
-
-		# ##################################
-		Tc2Config.globalObject.guiInit.emit()
-		Tc2Config.cleanSettings()
-		Tc2Config.settings2.init()
-		Tc2Config.globalObject.guiInited.emit()
-
+		Tc2Config.globalObject.initGuiFinished.emit(Tc2Config.globalObject)
 
 	#--------------------------------------------------------------------------------------------------------------
 	# methods
@@ -194,23 +181,21 @@ class Gui(QtGui.QMainWindow):
 		self.labelFeedback.setText('>>' + qString)
 		self._statusMessageTimer.start(Tc2Config.StatusBarMessageTimeout * 1000)
 
-	def onInitGui(self):
-		self.settingGeometry.changed.connect(
-				lambda setting: self.restoreGeometry(setting.value())
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
+		self._tabWidget.setCurrentIndex( Tc2Config.settingsValue(self.SettingsKeyTabCurrent, QtCore.QVariant()).toInt()[0] )
+		position = self._tabWidget.South if globalObject.settingsGlobal.tabPosition() == Tc2Config.TabPositionBottom else self._tabWidget.North
+		self._tabWidget.setTabPosition(position)
+		globalObject.settingsGlobal.tabPositionChanged.connect(
+				lambda value, self=self: self._tabWidget.setTabPosition(self._tabWidget.South if value == Tc2Config.TabPositionBottom else self._tabWidget.North)
 				)
-		self.settingTabCurrent.setTabWidget(self._tabWidget)
 
 	def onLabelFeedbackDoubleClicked(self):
 		lastError = self._feedbackMessages[None]
 		if lastError:
 			dlg = Tc2DialogException.DialogException(lastError, parent=self)
-			dlg.restoreGeometry(self.settingDialogExceptionGeometry.value())
+			dlg.restoreGeometry( Tc2Config.settingsValue(self.SettingsKeyDialogExceptionGeometry, QtCore.QByteArray()).toByteArray())
 			dlg.exec_()
-			self.settingDialogExceptionGeometry.setValue(dlg.saveGeometry())
-
-	def onSettingTabPositionChanged(self, setting):
-		position = self._tabWidget.South if setting.value()  == Tc2Config.TabPositionBottom else self._tabWidget.North
-		self._tabWidget.setTabPosition(position)
+			Tc2Config.settingsSetValue(self.SettingsKeyDialogExceptionGeometry, dlg.saveGeometry() )
 
 	def onTabCurrentChanged(self, index):
 		if index < 0:
@@ -239,9 +224,7 @@ def main(argv=None, run=True):
 		else:
 			del argv[i]
 			if os.path.isfile(fileName) or os.path.islink(fileName):
-				qSettings= QtCore.QSettings(fileName, QtCore.QSettings.IniFormat)
-				Tc2Config.setSettings(qSettings)
-				Tc2Config.settings2.setSettings(qSettings)
+				Tc2Config.setSettings(QtCore.QSettings(fileName, QtCore.QSettings.IniFormat))
 			else:
 				raise ValueError('No such config file: %s' % fileName)
 

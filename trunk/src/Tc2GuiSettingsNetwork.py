@@ -69,23 +69,23 @@ class FrameSettings(QtGui.QFrame):
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
-		grid.col(Tc2Config.HLine(self), colspan=2)
+		grid.col(Tc2Config.HLine(self), colspan=3)
 		grid.row()
-		grid.col(self.labelProxyHostName).col(self.editProxyHostName)
+		grid.col(self.labelProxyHostName).col(self.editProxyHostName).col(Tc2Config.HStretch())
 		grid.row()
-		grid.col(self.labelProxyPort).col(self.spinProxyPort)
+		grid.col(self.labelProxyPort).col(self.spinProxyPort).col(Tc2Config.HStretch())
 		grid.row()
-		grid.col(self.labelProxyUserName).col(self.editProxyUserName)
+		grid.col(self.labelProxyUserName).col(self.editProxyUserName).col(Tc2Config.HStretch())
 		grid.row()
-		grid.col(self.labelProxyPassword).col(self.editProxyPassword)
+		grid.col(self.labelProxyPassword).col(self.editProxyPassword).col(Tc2Config.HStretch())
 		grid.row()
-		grid.col(self.labelFetchTimeout).col(self.spinFetchTimeout)
+		grid.col(self.labelFetchTimeout).col(self.spinFetchTimeout).col(Tc2Config.HStretch())
 		grid.row()
 		grid.col(Tc2Config.VStretch())
 		grid.row()
-		grid.col(Tc2Config.HLine(self), colspan=2)
+		grid.col(Tc2Config.HLine(self), colspan=3)
 		grid.row()
-		grid.col(self.buttonBox, colspan=2)
+		grid.col(self.buttonBox, colspan=3)
 
 
 	def onHelp(self, *args):
