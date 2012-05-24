@@ -266,7 +266,11 @@ class HandParser(object):
 				i = cards.index('[')
 				cards = cards[i+1:]
 			if hand.gameType & hand.GameTypeStud or hand.gameType & hand.GameTypeRazz:
-				hand.playerFromName(result.group('player')).cards += self.stringToCards(cards)
+				cards = self.stringToCards(cards)
+				if len(cards) == 3:
+					hand.playerFromName(result.group('player')).cards = cards
+				else:
+					hand.playerFromName(result.group('player')).cards += cards
 			else:
 				hand.playerFromName(result.group('player')).cards = self.stringToCards(cards)
 		return result is not None
@@ -574,6 +578,107 @@ class HandParser(object):
 					hand.seatNoButton = hand.seats.index(players[0])
 
 		return hand
+
+s = '''PokerStars Hand #80908721832:  7 Card Stud Limit ($0.04/$0.08 USD) - 2012/05/23 23:24:52 CET [2012/05/23 17:24:52 ET]
+Table 'Equinox IV' 8-max
+Seat 1: gugulu300 ($1.52 in chips)
+Seat 2: AMKIreland ($0.97 in chips)
+Seat 3: RomiTu ($0.49 in chips)
+Seat 4: tobberdje ($1.49 in chips)
+Seat 5: Kirilma ($0.61 in chips)
+Seat 6: failertb ($2.85 in chips)
+Seat 7: BNDee ($9.46 in chips)
+Seat 8: raaah73 ($1.45 in chips)
+gugulu300: posts the ante $0.01
+AMKIreland: posts the ante $0.01
+RomiTu: posts the ante $0.01
+tobberdje: posts the ante $0.01
+Kirilma: posts the ante $0.01
+failertb: posts the ante $0.01
+BNDee: posts the ante $0.01
+raaah73: posts the ante $0.01
+*** 3rd STREET ***
+Dealt to gugulu300 [Ah]
+Dealt to AMKIreland [8h]
+Dealt to RomiTu [2d]
+Dealt to tobberdje [As]
+Dealt to Kirilma [Ts]
+Dealt to failertb [6d Jd Jc]
+Dealt to BNDee [9d]
+Dealt to raaah73 [8d]
+RomiTu: brings in for $0.02
+tobberdje: calls $0.02
+Kirilma: calls $0.02
+failertb: raises $0.02 to $0.04
+BNDee: folds
+raaah73: calls $0.04
+gugulu300: calls $0.04
+AMKIreland: folds
+RomiTu: raises $0.04 to $0.08
+tobberdje: folds
+Kirilma: calls $0.06
+failertb: calls $0.04
+raaah73: calls $0.04
+gugulu300: calls $0.04
+*** 4th STREET ***
+Dealt to gugulu300 [Ah] [4h]
+Dealt to RomiTu [2d] [Th]
+Dealt to Kirilma [Ts] [Qd]
+Dealt to failertb [6d Jd Jc] [5s]
+Dealt to raaah73 [8d] [5h]
+gugulu300: checks
+RomiTu: bets $0.04
+Kirilma: raises $0.04 to $0.08
+failertb: folds
+raaah73: folds
+gugulu300: calls $0.08
+RomiTu: raises $0.04 to $0.12
+Kirilma: raises $0.04 to $0.16
+Betting is capped
+gugulu300: calls $0.08
+RomiTu: calls $0.04
+*** 5th STREET ***
+Dealt to gugulu300 [Ah 4h] [Js]
+Dealt to RomiTu [2d Th] [9c]
+Dealt to Kirilma [Ts Qd] [Td]
+Kirilma: bets $0.08
+gugulu300: calls $0.08
+RomiTu: raises $0.08 to $0.16
+Kirilma: raises $0.08 to $0.24
+gugulu300: calls $0.16
+RomiTu: calls $0.08 and is all-in
+*** 6th STREET ***
+Dealt to gugulu300 [Ah 4h Js] [4s]
+Dealt to RomiTu [2d Th 9c] [3s]
+Dealt to Kirilma [Ts Qd Td] [6s]
+Kirilma: bets $0.08
+gugulu300: calls $0.08
+*** RIVER ***
+Kirilma: bets $0.04 and is all-in
+gugulu300: calls $0.04
+*** SHOW DOWN ***
+Kirilma: shows [7h 2h Ts Qd Td 6s 4d] (a pair of Tens)
+gugulu300: shows [5d 4c Ah 4h Js 4s Qs] (three of a kind, Fours)
+gugulu300 collected $0.24 from side pot
+RomiTu: shows [Kh Ks 2d Th 9c 3s Ad] (a pair of Kings)
+gugulu300 collected $1.66 from main pot
+*** SUMMARY ***
+Total pot $1.94 Main pot $1.66. Side pot $0.24. | Rake $0.04
+Seat 1: gugulu300 showed [5d 4c Ah 4h Js 4s Qs] and won ($1.90) with three of a kind, Fours
+Seat 2: AMKIreland folded on the 3rd Street (didn't bet)
+Seat 3: RomiTu showed [Kh Ks 2d Th 9c 3s Ad] and lost with a pair of Kings
+Seat 4: tobberdje folded on the 3rd Street
+Seat 5: Kirilma showed [7h 2h Ts Qd Td 6s 4d] and lost with a pair of Tens
+Seat 6: failertb folded on the 4th Street
+Seat 7: BNDee folded on the 3rd Street (didn't bet)
+Seat 8: raaah73 folded on the 4th Street
+
+'''
+
+h = HandParser()
+hand = h.parse(s)
+for s in hand.seats:
+	print s.name, s.cards
 
 #************************************************************************************
 #
