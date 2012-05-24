@@ -171,6 +171,10 @@ class FrameHelp(QtGui.QFrame):
 				lambda position, frame=self.browserFrame: frame.layout(toolBarTop=position == Tc2Config.ToolBarPositionTop)
 				)
 
+
+		self.toolBar.setZoomSteps(globalObject.settingsGlobal.webViewZoomSteps())
+		globalObject.settingsGlobal.webViewZoomStepsChanged.connect(self.toolBar.setZoomSteps)
+
 		zoomFactor = Tc2Config.settingsValue(self.SettingsKeyZoomFactor, Browser.BrowserToolBar.ZoomFactorDefault).toDouble()[0]
 		self.toolBar.setZoomFactor(zoomFactor)
 

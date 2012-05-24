@@ -743,6 +743,8 @@ class FrameHandViewer(QtGui.QFrame):
 		globalObject.settingsGlobal.toolBarPositionChanged.connect(
 				lambda position, frame=self._browserFrame: frame.layout(toolBarTop=position == Tc2Config.ToolBarPositionTop)
 				)
+		self._toolBar.setZoomSteps(globalObject.settingsGlobal.webViewZoomSteps())
+		globalObject.settingsGlobal.webViewZoomStepsChanged.connect(self._toolBar.setZoomSteps)
 		value, ok = Tc2Config.settingsValue(self.SettingsKeyZoomFactor, Browser.BrowserToolBar.ZoomFactorDefault).toDouble()
 		if ok:
 			self._toolBar.setZoomFactor(value)
