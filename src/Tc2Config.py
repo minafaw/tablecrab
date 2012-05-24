@@ -6,7 +6,7 @@
 # project consts
 #************************************************************************************
 ApplicationName = 'TableCrab2'
-Version = '0.8.3'
+Version = '0.8.2'
 ReleaseName = '%s-%s' % (ApplicationName, Version)
 Author = 'JuergenUrner'
 ErrorLogName = ApplicationName + '-Error.log'
@@ -94,7 +94,6 @@ from PyQt4 import QtCore, QtGui
 
 import Tc2Win32
 from Tc2Res import Pixmaps, HtmlPages, StyleSheets
-from Tc2Lib import Settings as Settings2
 
 #************************************************************************************
 # consts
@@ -118,7 +117,6 @@ WindowHookTimeout = 0.2
 HandGrabberTimeout = 0.4
 StatusBarMessageTimeout = 3
 MaxHandGrabberPrefix = 16	# + postfix
-#TODO: remove when done refactoring SettingsICMTax
 MaxHandStyleSheet = 9000
 
 #TODO: implement consts
@@ -150,7 +148,6 @@ WebViewZoomStepsMax = 40
 WebViewZoomStepsMin = 1
 WebViewZoomMin = 0.5
 WebViewZoomMax = 7
-WebViewZoomDefault = 1
 
 SmallBlind = 'SmallBlind'
 BigBlind = 'BigBlind'
@@ -171,16 +168,16 @@ TabPositionTop = 'Top'
 TabPositionDefault= ToolBarPositionTop
 TabPositions = (TabPositionBottom, TabPositionTop)
 
-SideBarPositionTop = 'Top'
-SideBarPositionBottom = 'Bottom'
-SideBarPositionLeft = 'Left'
-SideBarPositionRight = 'Right'
-SideBarPositionDefault = SideBarPositionRight
-SideBarPositions = (
-		SideBarPositionTop,
-		SideBarPositionBottom,
-		SideBarPositionLeft,
-		SideBarPositionRight,
+HandViewerSideBarPositionTop = 'Top'
+HandViewerSideBarPositionBottom = 'Bottom'
+HandViewerSideBarPositionLeft = 'Left'
+HandViewerSideBarPositionRight = 'Right'
+HandViewerSideBarPositionDefault = HandViewerSideBarPositionRight
+HandViewerSideBarPositions = (
+		HandViewerSideBarPositionTop,
+		HandViewerSideBarPositionBottom,
+		HandViewerSideBarPositionLeft,
+		HandViewerSideBarPositionRight,
 		)
 
 HandViewerMaxPlayerNameMin = -1
@@ -277,78 +274,6 @@ SiteNamePokerStars = 'PokerStars'
 #***********************************************************************************
 # global QSettings
 #***********************************************************************************
-qSettings = QtCore.QSettings(Author, ApplicationName)
-class Settings:
-	qSettings = qSettings
-settings2 = Settings2.Settings(qSettings)
-
-def cleanSettings():
-	#return
-
-
-	qSettings = settings2.qSettings()
-	# renamed in 0.8.2
-	keys = (	# (keyOld, keyNew)
-		('Gui/WebView/ZoomSteps', 'Gui/Browser/ZoomSteps'),
-		('/DialogBackup/State', 'Gui/DialogSaveApplicationSettings/State'),
-		('RestoreMousePosition', 'Sites/RestoreMousePosition'),
-		('Settings/RoundBets', 'Sites/RoundBets'),
-		('/DialogException/Geometry', 'Gui/DialogException/Geometry'),
-		('Gui/DialogException/DialogSaveImage/State', 'Gui/DialogException/DialogSaveImage/State'),
-
-		('Gui/DialogOcr/Geometry', 'Gui/OcrEditor/Geometry'),
-		('Gui/DialogOcr/DialogImageOpen/State','Gui/OcrEditor/DialogOpenImage/State'),
-		('Gui/DialogOcr/DialogImageSave/State','Gui/OcrEditor/DialogSaveImage/State'),
-		('Gui/DialogOcr/DialogSettingsOpen/State','Gui/OcrEditor/DialogOpenSettings/State'),
-		('Gui/DialogOcr/DialogSettingsSave/State', 'Gui/OcrEditor/DialogSaveSettings/State'),
-		('Gui/DialogOcr/SplitterSettingsState', 'Gui/OcrEditor/SplitterSettings/State'),
-		('Gui/DialogOcr/SplitterImageState', 'Gui/OcrEditor/SplitterImage/State'),
-		('Gui/DialogOcr/SplitterOutputState', 'Gui/OcrEditor/SplitterOutput/State'),
-
-		('Gui/Screenshot/DialogScreenshotInfo/Geometry', 'Gui/DialogScreenshotInfo/Geometry'),
-
-		('Gui/Tools/NashCalculations/CustomPayoutStructure', 'Gui/HandViewer/SideBars/NashCalculations/CustomPayoutStructure'),
-		('Gui/Tools/NashCalculations/DialogSave/State', 'Gui/HandViewer/SideBars/NashCalculations/DialogSave/State'),
-		('Gui/Settings/NashCalculationsStyleSheet', 'Gui/HandViewer/SideBars/NashCalculations/StyleSheet'),
-
-		('Gui/Tools/ICMTax/PayoutStructureCurrent', 'Gui/HandViewer/SideBars/ICMTax/PayoutStructureCurrent'),
-		('Gui/Tools/ICMTax/CustomPayoutStructure', 'Gui/HandViewer/SideBars/ICMTax/CustomPayoutStructure'),
-		('Gui/Tools/ICMTaxDialogSave/State', 'Gui/HandViewer/SideBars/ICMTax/DialogSave/State'),
-
-		('Gui/HandViewer/SideBarPosition', 'Gui/SideBar/Position'),
-
-		('Gui/Hand/ZoomFactor', 'Gui/HandViewer/ZoomFactor'),
-		('Gui/Hand/DialogOpen/State', 'Gui/HandViewer/DialogOpenHand/State'),
-		('Gui/Hand/DialogSave/State', 'Gui/HandViewer/DialogSaveHand/State'),
-		('Gui/Hand/SplitterState', 'Gui/HandViewer/SplitterState'),
-		('Gui/Hand/SideBarCurrent', 'Gui/HandViewer/SideBarCurrent'),
-
-		)
-	for keyOld, keyNew in keys:
-		if qSettings.contains(keyOld):
-			qSettings.setValue(keyNew, qSettings.value(keyOld))
-			#qSettings.remove(keyOld)
-
-	# hotkeys have changed
-	attrsOld = ('ID', 'Hotkey', 'HotkeyName', 'Multiplier', 'BaseValue')
-	attrsNew = ('Id', 'Key', 'HotkeyName', 'Multiplier', 'BaseValue')
-	for i in xrange(MaxHotkeys):
-		baseKeyOld = 'Hotkeys/%s/' % i
-		baseKeyNew = 'Hotkeys/%03i-' % i
-		for i, attrOld in enumerate(attrsOld):
-			attrNew = attrsNew[i]
-			keyOld = baseKeyOld + attrOld
-			keyNew = baseKeyNew + attrNew
-			if qSettings.contains(keyOld):
-				qSettings.setValue(keyNew, qSettings.value(keyOld))
-				#qSettings.remove(keyOld)
-
-	#
-	##settings2.clean()
-
-
-
-
 #TODO: what to do with deprecated settings keys?
 # deprecated: Gui/WebView/ZoomIncrement
 # needs rename: Hotkeys/$Slot$/Hotkey --> Hotkeys/$Slot$/Key
@@ -358,6 +283,13 @@ def cleanSettings():
 # needs rename: Gui/Hand/DialogSave/State --> Gui/HandViewer/DialogSave/State
 # needs rename: Gui/Hand/ZoomFactor --> Gui/HandViewer/ZoomFactor
 # needs rename: typo in: 'PokerStarsHandGrabber/HandFornmatterHtmlTabular' --> should read "For[n]matter"
+
+#TODO: we have to use this key at two places: 1) Gui 2) settingsGlobal
+SettingsKeySingleApplicationScope ='Gui/SingleApplication/Scope'
+
+
+class Settings:
+	qSettings = QtCore.QSettings(Author, ApplicationName)
 
 def settingsKeyJoin(*keys):
 	keys = [(str(key) if isinstance(key, QtCore.QString) else key) for key in keys if key]
@@ -380,12 +312,10 @@ def settingsSetValue(key, value):
 def settingsRemoveKey(key):
 	if isinstance(key, tuple):
 		key = settingsKeyJoin(*key)
+	#TODO: for some reason QSettings.contains(key) always return false here even if the key exists
+	##print key, qSettings.contains(key)
+	#if qSettings.contains(key):
 	Settings.qSettings.remove(key)
-def settingsHasKey(key):
-	if isinstance(key, tuple):
-		#NOTE: Qt does not kow about intermediate keys
-		key = settingsKeyJoin(*key)
-	return Settings.qSettings.contains(key)
 
 #***********************************************************************************
 # global singal handling and messages
@@ -394,23 +324,13 @@ class _GlobalObject(QtCore.QObject):
 
 	# global signals
 
-	# triggered when the gui is about to be created. settings are not yet valid
-	guiInit = QtCore.pyqtSignal()
-	# triggered when the gui has been created. settings are valid now
-	guiInited = QtCore.pyqtSignal()
-	# triggered when the gui is about to be closed
-	guiClose = QtCore.pyqtSignal()
-
-
-	# ###################################################
-
-
+	# settings objects should initialize themselves in response to this signal
 	initSettings = QtCore.pyqtSignal()
 	# emitted when the all settings are up and alive. param is globalObject
 	#NOTE: for dynamically created widgets you may have to call the respective slot
 	initSettingsFinished = QtCore.pyqtSignal(QtCore.QObject)
 	# emitted when the gui is up and alive. param is globalObject
-	guiInitFinished = QtCore.pyqtSignal(QtCore.QObject)
+	initGuiFinished = QtCore.pyqtSignal(QtCore.QObject)
 	# emitted when the gui is about to close
 	closeEvent = QtCore.pyqtSignal(QtCore.QEvent)
 
@@ -418,6 +338,7 @@ class _GlobalObject(QtCore.QObject):
 	objectCreatedMainWindow = QtCore.pyqtSignal(QtGui.QWidget)
 	objectCreatedHotkeyManager = QtCore.pyqtSignal(QtGui.QWidget)
 	objectCreatedTemplateManager = QtCore.pyqtSignal(QtGui.QWidget)
+	objectCreatedSettingsGlobal = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsNetwork = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsPokerStars = QtCore.pyqtSignal(QtCore.QObject)
 	objectCreatedSettingsHandViewer = QtCore.pyqtSignal(QtCore.QObject)
@@ -452,6 +373,7 @@ class _GlobalObject(QtCore.QObject):
 		self.keyboardHook = Tc2Win32.KeyboardHook(parent=self)
 		self.hotkeyManager = self.objectCreatedHotkeyManager.connect(lambda obj, self=self: setattr(self, 'hotkeyManager', obj))
 		templateManager = self.objectCreatedTemplateManager.connect(lambda obj, self=self: setattr(self, 'templateManager', obj))
+		self.settingsGlobal = self.objectCreatedSettingsGlobal.connect(lambda obj, self=self: setattr(self, 'settingsGlobal', obj))
 		self.settingsNetwork = self.objectCreatedSettingsNetwork.connect(lambda obj, self=self: setattr(self, 'settingsNetwork', obj))
 		self.settingsPokerStars = self.objectCreatedSettingsPokerStars.connect(lambda obj, self=self: setattr(self, 'settingsPokerStars', obj))
 		self.settingsHandViewer = self.objectCreatedSettingsHandViewer.connect(lambda obj, self=self: setattr(self, 'settingsHandViewer', obj))
@@ -597,7 +519,7 @@ def formatedBet(bet, blinds=None):
 		return '0'
 	bet = round(bet, 2)
 	if blinds is not None:
-		roundBets = settings2['Sites/RoundBets'].value()
+		roundBets = globalObject.settingsGlobal.roundBets()
 		if roundBets in (RoundBetsBigBlind, RoundBetsSmallBlind):
 			blind = blinds[1] if roundBets == RoundBetsBigBlind else blinds[0]
 			bet = bet * 100
@@ -821,10 +743,8 @@ def dlgOpenSaveFile(
 			openFile=True,
 			title='',
 			fileFilters=None,
-			#TODO: remove kw "settingsKey"
 			settingsKey=None,
 			defaultSuffix=None,
-			setting=None,
 			):
 	dlg = QtGui.QFileDialog(parent)
 	dlg.setAcceptMode(dlg.AcceptOpen if openFile else dlg.AcceptSave)
@@ -840,13 +760,9 @@ def dlgOpenSaveFile(
 		dlg.setDefaultSuffix(defaultSuffix)
 	if settingsKey is not None:
 		dlg.restoreState( settingsValue(settingsKey, QtCore.QByteArray()).toByteArray() )
-	if setting is not None:
-		dlg.restoreState(setting.value())
 	result = dlg.exec_()
 	if settingsKey is not None:
 		settingsSetValue(settingsKey, dlg.saveState() )
-	if setting is not None:
-		setting.setValue(dlg.saveState())
 	if result == dlg.Accepted:
 		return dlg.selectedFiles()[0]
 	return None

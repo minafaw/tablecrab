@@ -13,6 +13,9 @@ class FrameSettings(QtGui.QFrame):
 	SettingsKeyBase = 'Gui/Settings/NashCalculationsStyleSheet'
 	SettingsKeyDialogOpenState = SettingsKeyBase + '/DialogOpen/State'
 	SettingsKeyDialogSaveState = SettingsKeyBase + '/DialogSave/State'
+	SettingsKeyStyleSheet = SettingsKeyBase + '/StyleSheet'
+
+	styleSheetChanged = QtCore.pyqtSignal(QtCore.QString)
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -57,7 +60,7 @@ class FrameSettings(QtGui.QFrame):
 		action.triggered.connect(self.onHelp)
 		self.addAction(action)
 
-		Tc2Config.globalObject.guiInit.connect(self.onInitGui)
+		Tc2Config.globalObject.initSettings.connect(self.onInitSettings)
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
@@ -69,15 +72,29 @@ class FrameSettings(QtGui.QFrame):
 		grid.row()
 		grid.col(self.buttonBox)
 
-	def onInitGui(self):
+	def onEditTextChanged(self):
+		text = self.edit.toPlainText()
+		if Tc2Config.MaxHandStyleSheet >= 0:
+			if text.length() > Tc2Config.MaxHandStyleSheet:
+				Tc2Config.globalObject.feedback.emit(self, 'Style sheet too big -- maximum Is %s chars' % Tc2Config.MaxHandStyleSheet)
+				return
+		Tc2Config.globalObject.feedback.emit(self, '')
+		Tc2Config.settingsSetValue(self.SettingsKeyStyleSheet, text)
+
+	def onInitSettings(self):
 		self.layout()
-		setting = Tc2Config.settings2['Gui/HandViewer/SideBars/NashCalculations/StyleSheet']
-		setting.setWidget(
-				self.edit,
-				self.edit.setPlainText,
-				self.edit.textChanged,
-				lambda: setting.slotSetValue(self.edit.toPlainText())
+
+		#NOTE: style sheet can not be ''
+		#NOTE: have to connect before setText so we can catch MaxCharsExceeded
+		value = Tc2Config.settingsValue(self.SettingsKeyStyleSheet, '').toString()
+		if not value:
+			value = HoldemResources.NashFormatter.StyleSheet
+		self.edit.setPlainText(value)
+		self.edit.textChanged.connect(
+				lambda self=self: self.setStyleSheet(self.edit.toPlainText())
 				)
+
+		Tc2Config.globalObject.objectCreatedSettingsNashCalculationsStyleSheet.emit(self)
 
 	def onOpen(self, checked):
 		fileName = Tc2Config.dlgOpenSaveFile(
@@ -85,6 +102,7 @@ class FrameSettings(QtGui.QFrame):
 				openFile=True,
 				title='Open Style Sheet..',
 				fileFilters=('Style sheets (*.css)', 'All Files (*)'),
+				#TODO: rename to HandViewerStyleSheet
 				settingsKey=self.SettingsKeyDialogOpenState,
 				)
 		if fileName is None:
@@ -107,6 +125,7 @@ class FrameSettings(QtGui.QFrame):
 				openFile=False,
 				title='Save Style Sheet..',
 				fileFilters=('Stylesheets (*.css)', 'All Files (*)'),
+				#TODO: rename to HandViewerStyleSheet
 				settingsKey=self.SettingsKeyDialogSaveState,
 				defaultSuffix='css',
 				)
@@ -126,5 +145,23 @@ class FrameSettings(QtGui.QFrame):
 
 	#TODO: resetting document jumps to top of widget. store/restore position would be nice
 	def onRestoreDefault(self):
-		Tc2Config.settings2['Gui/HandViewer/SideBars/NashCalculations/StyleSheet'].resetValue()
+		self.edit.setPlainText(HoldemResources.NashFormatter.StyleSheet)
+
+	def styleSheet(self):
+		return self.edit.toPlainText()
+
+	def setStyleSheet(self, value):
+		if Tc2Config.MaxHandStyleSheet >= 0:
+			if value.length() > Tc2Config.MaxHandStyleSheet:
+				Tc2Config.globalObject.feedback.emit(self, 'Style sheet too big -- maximum Is %s chars' % Tc2Config.MaxHandStyleSheet)
+				return
+		Tc2Config.globalObject.feedback.emit(self, '')
+		Tc2Config.settingsSetValue(self.SettingsKeyStyleSheet, value)
+		self.styleSheetChanged.emit(value)
+
+
+
+
+
+
 

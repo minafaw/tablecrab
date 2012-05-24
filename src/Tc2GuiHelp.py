@@ -8,24 +8,11 @@ from PyQt4 import QtCore, QtGui, QtWebKit
 #************************************************************************************
 class FrameHelp(QtGui.QFrame):
 
-	settingZoomFactor = Tc2Config.settings2.Float(
-			'Gui/Help/ZoomFactor',
-			defaultValue=Tc2Config.WebViewZoomDefault,
-			minValue=Tc2Config.WebViewZoomMin,
-			maxValue=Tc2Config.WebViewZoomMax
-			)
-	settingSplitterState = Tc2Config.settings2.ByteArray(
-			'Gui/Help/SplitterState',
-			defaultValue=QtCore.QByteArray(),
-			)
-	settingTopic = Tc2Config.settings2.UnicodeString(
-			'Gui/Help/Topic',
-			defaultValue='',
-			)
-	settingTopicsCollapsed = Tc2Config.settings2.UnicodeString(
-			'Gui/Help/TopicsCollapsed',
-			defaultValue='',
-			)
+	SettingsKeyBase = 'Gui/Help'
+	SettingsKeyZoomFactor = SettingsKeyBase + '/ZoomFactor'
+	SettingsKeySplitterState = SettingsKeyBase + '/SplitterState'
+	SettingsKeyHelpTopic = SettingsKeyBase + '/Topic'
+	SettingsKeyTopicsCollapsed = SettingsKeyBase + '/TopicsCollapsed'
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -41,6 +28,7 @@ class FrameHelp(QtGui.QFrame):
 		self.toolBar = self.browserFrame.toolBar()
 		self.toolBar.actionZoomIn.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierPlus() ) )
 		self.toolBar.actionZoomOut.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierMinus() ) )
+		self.toolBar.zoomFactorChanged.connect(self.onToolBarZoomFactorChanged)
 
 		self.tree = QtGui.QTreeWidget(self)
 		self.tree.setUniformRowHeights(True)
@@ -62,20 +50,12 @@ class FrameHelp(QtGui.QFrame):
 		self.addAction(self.actionSelectAll)
 
 		# connect signals
-		Tc2Config.globalObject.guiInit.connect(self.onInitGui)
-		Tc2Config.globalObject.guiInited.connect(self.onGuiInited)
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 		self.tree.itemSelectionChanged.connect(self.onItemSelectionChanged)
 		self.tree.itemActivated.connect(self.onItemSelectionChanged)
 		self.browser.urlChanged.connect(self.onUrlChanged)
 		self.browser.networkAccessManager().getData.connect(self.onNetworkGetData)
-		Tc2Config.settings2['Gui/ToolBar/Position'].changed.connect(self.onToolBarPositionChanged)
-		Tc2Config.settings2['Gui/AlternatingRowColors'].changed.connect(
-				lambda setting: self.tree.setAlternatingRowColors(setting.value())
-				)
-		Tc2Config.settings2['Gui/Browser/ZoomSteps'].changed.connect(
-				lambda setting:self.toolBar.setZoomSteps(setting.value())
-				)
 
 	#------------------------------------------------------------------------------------------------------------------
 	# methods
@@ -120,13 +100,13 @@ class FrameHelp(QtGui.QFrame):
 	# event handlers
 	#------------------------------------------------------------------------------------------------------------------
 	def onCloseEvent(self, event):
-		self.settingSplitterState.setValue(self.splitter.saveState())
+		Tc2Config.settingsSetValue(self.SettingsKeySplitterState, self.splitter.saveState() )
 		topicsCollapsed = []
 		for item in Tc2Config.TreeWidgetItemIterator(self.tree):
 			if not item.isExpanded():
 				topic = item.data(0, QtCore.Qt.UserRole).toString()
 				topicsCollapsed.append(topic)
-		self.settingTopicsCollapsed.setValue('\n'.join(topicsCollapsed))
+		Tc2Config.settingsSetValue(self.SettingsKeyTopicsCollapsed, topicsCollapsed)
 
 	def onContextMenuWebView(self, point):
 		menu = QtGui.QMenu(self)
@@ -135,28 +115,13 @@ class FrameHelp(QtGui.QFrame):
 		point = self.browser.mapToGlobal(point)
 		menu.exec_(point)
 
-	def onToolBarPositionChanged(self, setting):
-		self.browserFrame.layout(toolBarTop=setting.value()==Tc2Config.ToolBarPositionTop)
-
-	def onInitGui(self):
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
+		self.tree.setUpdatesEnabled(False)
 
 		self.browser.setUrl(QtCore.QUrl(''))
-		self.layout()
-		self.settingSplitterState.changed.connect(
-				lambda setting: self.splitter.restoreState(setting.value())
-				)
-		self.settingZoomFactor.setWidget(
-				self.toolBar,
-				self.toolBar.setZoomFactor,
-				self.toolBar.zoomFactorChanged,
-				self.settingZoomFactor.slotSetValue,
-				)
-
-	def onGuiInited(self):
-		self.tree.setUpdatesEnabled(False)
 		#
-		lastTopic = self.settingTopic.value()
-		topicsCollapsed = self.settingTopicsCollapsed.value().split('\n')
+		lastTopic = Tc2Config.settingsValue(self.SettingsKeyHelpTopic, '').toString()
+		topicsCollapsed = Tc2Config.settingsValue(self.SettingsKeyTopicsCollapsed, []).toStringList()
 		lastTopicItem = None
 		firstTopicItem = None
 		stack = []
@@ -197,7 +162,17 @@ class FrameHelp(QtGui.QFrame):
 
 		self.tree.setUpdatesEnabled(True)
 
+		self.tree.setAlternatingRowColors(globalObject.settingsGlobal.alternatingRowColors())
+		globalObject.settingsGlobal.alternatingRowColorsChanged.connect(self.tree.setAlternatingRowColors)
+		self.browserFrame.layout(globalObject.settingsGlobal.toolBarPosition() == Tc2Config.ToolBarPositionTop)
+		self.layout()
+		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
+		globalObject.settingsGlobal.toolBarPositionChanged.connect(
+				lambda position, frame=self.browserFrame: frame.layout(toolBarTop=position == Tc2Config.ToolBarPositionTop)
+				)
 
+		zoomFactor = Tc2Config.settingsValue(self.SettingsKeyZoomFactor, Browser.BrowserToolBar.ZoomFactorDefault).toDouble()[0]
+		self.toolBar.setZoomFactor(zoomFactor)
 
 	def onItemSelectionChanged(self):
 		items = self.tree.selectedItems()
@@ -207,7 +182,7 @@ class FrameHelp(QtGui.QFrame):
 		url = QtCore.QUrl('%s.html' % topic)
 		self.browser.setUrl(url)
 		if self._settingsPersistent:
-			self.settingTopic.setValue(topic)
+			Tc2Config.settingsSetValue(self.SettingsKeyHelpTopic, topic)
 
 	def onNetworkGetData(self, networkReply):
 		# serve pages from our resource modules
@@ -256,7 +231,7 @@ class FrameHelp(QtGui.QFrame):
 
 	def onToolBarZoomFactorChanged(self, value):
 		if self._settingsPersistent:
-			self.settingZoomFactor.slotSetValue(value)
+			Tc2Config.settingsSetValue(self.SettingsKeyZoomFactor, value)
 
 	def setTopic(self, topic):
 		for item in Tc2Config.TreeWidgetItemIterator(self.tree):
@@ -267,7 +242,7 @@ class FrameHelp(QtGui.QFrame):
 		else:
 			raise ValueError('no such topic: %s' % topic)
 		if not self._settingsPersistent:
-			self.settingTopic.setValue(topic)
+			Tc2Config.settingsSetValue(self.SettingsKeyHelpTopic, topic)
 
 	def setSettingsPersistent(self, flag):
 		self._settingsPersistent = flag

@@ -16,6 +16,11 @@ class FrameSettings(QtGui.QFrame):
 	SettingsKeyMaxPlayerName = SettingsKeyBase + '/MaxPlayerName'
 	SettingsKeyNoFloatingPoint = SettingsKeyBase + '/NoFloatingPoint'
 
+	SettingsKeySideBarPosition = 'Gui/HandViewer/SideBarPosition'
+
+
+	sideBarPositionChanged = QtCore.pyqtSignal(QtCore.QString)
+
 	HandActionsMapping = {	# action --> (name, settingsKeyPrefix, settingsKeyPostfix)
 			Tc2HandTypes.PokerHand.Action.TypeCheck: ('Check', SettingsKeyBase + '/PrefixCheck', None),
 			Tc2HandTypes.PokerHand.Action.TypeFold: ('Fold', SettingsKeyBase + '/PrefixFold', None),
@@ -55,6 +60,11 @@ class FrameSettings(QtGui.QFrame):
 				editPostfix.setMaxLength(Tc2Config.MaxHandGrabberPrefix)
 			self.actionWidgets[action] = {'EditPrefix': editPrefix, 'LabelAction': labelAction, 'EditPostfix': editPostfix, 'no': i}
 
+		self.comboSideBarPosition = QtGui.QComboBox(self)
+		self.comboSideBarPosition.addItems(Tc2Config.HandViewerSideBarPositions)
+		self.labelSideBarPosition = QtGui.QLabel('&Side bar position:', self)
+		self.labelSideBarPosition.setBuddy(self.comboSideBarPosition)
+
 		self.comboDeckStyle = QtGui.QComboBox(self)
 		self.comboDeckStyle.addItems(formatter.deckStyles())
 		self.labelDeckStyle = QtGui.QLabel('Deck st&yle:', self)
@@ -93,35 +103,34 @@ class FrameSettings(QtGui.QFrame):
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
-		grid.col(Tc2Config.HLine(self), colspan=2)
+		grid.col(Tc2Config.HLine(self), colspan=3)
+		grid.row()
+		grid.col(self.labelSideBarPosition).col(self.comboSideBarPosition)
 		grid.row()
 		grid.col(self.labelDeckStyle).col(self.comboDeckStyle)
 		grid.row()
 		grid.col(self.labelMaxPlayerName).col(self.spinMaxPlayerName)
 		grid.row()
-		grid.col(self.checkNoFloatingPoint, colspan=2)
+		grid.col(self.checkNoFloatingPoint, colspan=3)
 		grid.row()
-		grid.col(Tc2Config.HLine(self), colspan=2)
+		grid.col(Tc2Config.HLine(self), colspan=3)
 		grid.row()
+		grid.col(self.labelPrefix, align=QtCore.Qt.AlignHCenter).col(self.labelAction, align=QtCore.Qt.AlignHCenter).col(self.labelPostfix, align=QtCore.Qt.AlignHCenter)
+		grid.row()
+		grid.col(Tc2Config.HLine(self), colspan=3)
 
-		grid2 = Tc2Config.GridBox()
-		grid.col(grid2, colspan=2)
-		grid2.col(self.labelPrefix, align=QtCore.Qt.AlignHCenter).col(self.labelAction, align=QtCore.Qt.AlignHCenter).col(self.labelPostfix, align=QtCore.Qt.AlignHCenter)
-		grid2.row()
-		grid2.col(Tc2Config.HLine(self), colspan=3)
-		grid2.row()
 		actions = sorted(self.actionWidgets.values(), key=operator.itemgetter('no'))
 		for data in actions:
-			grid2.row()
-			grid2.col(data['EditPrefix']).col(data['LabelAction'], align=QtCore.Qt.AlignHCenter)
+			grid.row()
+			grid.col(data['EditPrefix']).col(data['LabelAction'], align=QtCore.Qt.AlignHCenter)
 			if data['EditPostfix'] is not None:
-				grid2.col(data['EditPostfix'])
+				grid.col(data['EditPostfix'])
 		grid.row()
 		grid.col(Tc2Config.VStretch())
 		grid.row()
-		grid.col(Tc2Config.HLine(self), colspan=2)
+		grid.col(Tc2Config.HLine(self), colspan=3)
 		grid.row()
-		grid.col(self.buttonBox, colspan=2)
+		grid.col(self.buttonBox, colspan=3)
 
 	def onRestoreDefault(self, *args):
 		formatter = Tc2Config.handFormatter('HtmlTabular')
@@ -138,9 +147,23 @@ class FrameSettings(QtGui.QFrame):
 	def onHelp(self, *args):
 		Tc2GuiHelp.dialogHelp('settingsHandViewer', parent=self)
 
+	def sideBarPosition(self):
+		return self.comboSideBarPosition.currentText()
+
+	def setSideBarPosition(self, value):
+		Tc2Config.settingsSetValue(self.SettingsKeySideBarPosition, value)
+		self.sideBarPositionChanged.emit(value)
+
 	def onInitSettings(self):
 		self.layout()
 		formatter = Tc2Config.handFormatter('HtmlTabular')
+
+		value = Tc2Config.settingsValue(self.SettingsKeySideBarPosition, '').toString()
+		if value not in Tc2Config.HandViewerSideBarPositions:
+			value = Tc2Config.HandViewerSideBarPositionDefault
+		self.comboSideBarPosition.setCurrentIndex( self.comboSideBarPosition.findText(value, QtCore.Qt.MatchExactly) )
+		#NOTE: pySlot decorator does not work as expected so we have to connect slot the old fashioned way
+		self.connect(self.comboSideBarPosition, QtCore.SIGNAL('currentIndexChanged(QString)'), self.setSideBarPosition)
 
 		value = Tc2Config.settingsValue(self.SettingsKeyDeckStyle, '').toString()
 		if value in formatter.deckStyles():

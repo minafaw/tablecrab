@@ -8,13 +8,6 @@ from PyQt4 import QtCore, QtGui
 #
 #************************************************************************************
 class DialgScreenshotInfo(QtGui.QDialog):
-
-	settingGeometry = Tc2Config.settings2.ByteArray(
-			'Gui/DialogScreenshotInfo/Geometry',
-			defaultValue=QtCore.QByteArray()
-			)
-
-
 	def __init__(self, info, parent=None):
 		QtGui.QDialog. __init__(self, parent)
 		self.setWindowTitle(Tc2Config.dialogTitle('Screenshot Info') )
@@ -58,14 +51,14 @@ class DialgScreenshotInfo(QtGui.QDialog):
 
 		parent.widgetScreenshotInfo.connect(self.onWidgetScreenshotInfo)
 
-		self.restoreGeometry(self.settingGeometry.value())
 		self.layout()
+		self.restoreGeometry( Tc2Config.settingsValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', QtCore.QByteArray()).toByteArray() )
 
 	#----------------------------------------------------------------------------------------------------------------
 	# overwritten methods
 	#---------------------------------------------------------------------------------------------------------------
 	def hideEvent(self, event):
-		self.settingGeometry.setValue(self.saveGeometry())
+		Tc2Config.settingsSetValue('Gui/Screenshot/DialogScreenshotInfo/Geometry', self.saveGeometry() )
 		QtGui.QDialog.hideEvent(self, event)
 
 	#----------------------------------------------------------------------------------------------------------------

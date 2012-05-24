@@ -9,33 +9,6 @@ import codecs
 #************************************************************************************
 #
 #************************************************************************************
-class BrowserSideBarNashCalculations(Tc2GuiHandViewer.BrowserSideBarNashCalculations):
-	settingCustomPayoutStructure = Tc2Config.settings2.QString(
-			'Gui/HandHistoryViewer/SideBars/NashCalculations/CustomPayoutStructure',
-			defaultValue=QtCore.QString(''),
-			)
-
-
-class BrowserSideBarICMTax(Tc2GuiHandViewer.BrowserSideBarICMTax):
-	settingPayoutStructureCurrent = Tc2Config.settings2.Index(
-			'Gui/HandHistoryViewer/SideBars/ICMTax/PayoutStructureCurrent',
-			defaultValue=0,
-			)
-	settingCustomPayoutStructure = Tc2Config.settings2.QString(
-			'Gui/HandHistoryViewer/SideBars/ICMTax/CustomPayoutStructure',
-			defaultValue=QtCore.QString(''),
-			)
-
-
-class BrowserSideBarContainer(Tc2GuiHandViewer.BrowserSideBarContainer):
-	SideBarsDefault = (
-			BrowserSideBarNashCalculations,
-			BrowserSideBarICMTax,
-			)
-
-#************************************************************************************
-#
-#************************************************************************************
 class FrameTool(QtGui.QFrame):
 
 	SettingsKeyBase = 'Gui/Tools/PHandHistoryViewer'
@@ -72,7 +45,7 @@ class FrameTool(QtGui.QFrame):
 		self._toolBar.actionZoomOut.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierMinus() ) )
 		self._toolBar.zoomFactorChanged.connect(self.onToolBarZoomFactorChanged)
 
-		self.sideBarContainer = BrowserSideBarContainer(self)
+		self.sideBarContainer = Tc2GuiHandViewer.BrowserSideBarContainer(self)
 		self._splitter.addWidget(self.sideBarContainer)
 
 		# set up actions
@@ -115,10 +88,6 @@ class FrameTool(QtGui.QFrame):
 		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 		self._browser.urlChanged.connect(self.onUrlChanged)
-		Tc2Config.settings2['Gui/ToolBar/Position'].changed.connect(self.onToolBarPositionChanged)
-		Tc2Config.settings2['Gui/Browser/ZoomSteps'].changed.connect(
-				lambda setting:self._toolBar.setZoomSteps(setting.value())
-				)
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self._frame)
@@ -147,11 +116,16 @@ class FrameTool(QtGui.QFrame):
 		self._browser.setUrl(QtCore.QUrl(''))
 		self._spinBox.valueChanged.connect(self.onSpinBoxValueChanged)
 
-		Tc2Config.settings2['Gui/SideBar/Position'].changed.connect(self.onSettingSideBarPositionChanged)
-
+		self.setSideBarPosition(globalObject.settingsHandViewer.sideBarPosition())
+		globalObject.settingsHandViewer.sideBarPositionChanged.connect(self.setSideBarPosition)
 		self.adjustActions()
+		self._browserFrame.layout(globalObject.settingsGlobal.toolBarPosition() == Tc2Config.ToolBarPositionTop)
 		self.layout()
 		self._splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
+
+		globalObject.settingsGlobal.toolBarPositionChanged.connect(
+				lambda position, frame=self._browserFrame: frame.layout(toolBarTop=position == Tc2Config.ToolBarPositionTop)
+				)
 
 		value, ok = Tc2Config.settingsValue(self.SettingsKeyZoomFactor, Browser.BrowserToolBar.ZoomFactorDefault).toDouble()
 		if ok:
@@ -275,9 +249,6 @@ class FrameTool(QtGui.QFrame):
 	def onSpinBoxValueChanged(self, handNo):
 		self._browser.setUrl(QtCore.QUrl('hand:///%s' % handNo))
 
-	def onToolBarPositionChanged(self, setting):
-		self._browserFrame.layout(toolBarTop=setting.value()==Tc2Config.ToolBarPositionTop)
-
 	def onToolBarZoomFactorChanged(self, value):
 		Tc2Config.settingsSetValue(self.SettingsKeyZoomFactor, value)
 		self.sideBarContainer.handleZoomFactorChanged(value)
@@ -291,21 +262,20 @@ class FrameTool(QtGui.QFrame):
 			if self._spinBox.value() != handNo:
 				self._spinBox.setValue(handNo)
 
-	def onSettingSideBarPositionChanged(self, setting):
-		position = setting.value()
-		if position == Tc2Config.SideBarPositionTop:
+	def setSideBarPosition(self, position):
+		if position == Tc2Config.HandViewerSideBarPositionTop:
 			self._splitter.setOrientation(QtCore.Qt.Vertical)
 			if self._splitter.widget(0) == self._frame:
 				self._splitter.insertWidget(1, self._frame)
-		elif position == Tc2Config.SideBarPositionBottom:
+		elif position == Tc2Config.HandViewerSideBarPositionBottom:
 			self._splitter.setOrientation(QtCore.Qt.Vertical)
 			if self._splitter.widget(1) == self._frame:
 				self._splitter.insertWidget(0, self._frame)
-		elif position == Tc2Config.SideBarPositionLeft:
+		elif position == Tc2Config.HandViewerSideBarPositionLeft:
 			self._splitter.setOrientation(QtCore.Qt.Horizontal)
 			if self._splitter.widget(0) == self._frame:
 				self._splitter.insertWidget(1, self._frame)
-		elif position == Tc2Config.SideBarPositionRight:
+		elif position == Tc2Config.HandViewerSideBarPositionRight:
 			self._splitter.setOrientation(QtCore.Qt.Horizontal)
 			if self._splitter.widget(1) == self._frame:
 				self._splitter.insertWidget(0, self._frame)

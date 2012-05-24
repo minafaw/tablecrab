@@ -14,21 +14,9 @@ import hashlib, codecs
 #************************************************************************************
 class BrowserSideBarNashCalculations(QtGui.QFrame):
 
-	#NOTE: we do not save current payout structure by intention to keep queries to
-	# HoldemResources.net to a minimum.
-
-	settingCustomPayoutStructure = Tc2Config.settings2.QString(
-			'Gui/HandViewer/SideBars/NashCalculations/CustomPayoutStructure',
-			defaultValue=QtCore.QString(''),
-			)
-	settingDialogSaveState = Tc2Config.settings2.ByteArray(
-			'Gui/HandViewer/SideBars/NashCalculations/DialogSave/State',
-			defaultValue=QtCore.QByteArray(),
-			)
-	settingStyleSheet = Tc2Config.settings2.UnicodeString(
-			'Gui/HandViewer/SideBars/NashCalculations/StyleSheet',
-			defaultValue=HoldemResources.NashFormatter.StyleSheet,
-			)
+	SettingsKeyBase = 'Gui/Tools/NashCalculations'
+	SettingsKeyCustomPayoutStructure = SettingsKeyBase + '/CustomPayoutStructure'
+	SettingsKeyDialogSaveState = SettingsKeyBase + '/DialogSave/State'
 
 	PayoutStructures = (	# text, payoutStructure, lineEditMask
 			('- Select payout structure -', '', ''),
@@ -88,7 +76,7 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 		#self._toolBar.addAction(self.actionSave)
 
 		# connect signals
-		Tc2Config.globalObject.guiInit.connect(self.onInitGui)
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 
 	#-----------------------------------------------------------------------------------------
 	# sideBar methods
@@ -100,15 +88,12 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 		self._browser.setZoomFactor(value)
 
 	def handleHandSet(self, hand):
-		if hand is None:
-			self._browser.setHtml('')
-			return
-		elif not hand.gameType & hand.GameTypeHoldem:
+		if hand.gameType & hand.GameTypeHoldem:
+			self.setEnabled(True)
+		else:
 			self.setEnabled(False)
 			self._browser.setHtml('<h4>Unsupported game type</h4>')
 			return
-		else:
-			self.setEnabled(True)
 
 		if hand is self.lastHand:
 			return
@@ -185,7 +170,7 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 		#maybe data as returned from HoldemResources is corrupted?
 		html = self.formatter.toHtml(
 				seatSortf=sortf,
-				styleSheet=self.settingStyleSheet.value(),
+				styleSheet=Tc2Config.globalObject.settingsNashCalculationsStyleSheet.styleSheet(),
 				url=url,
 				)
 		self._browser.setHtml(html)
@@ -216,7 +201,7 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 				userAgent=Tc2Config.ReleaseName,
 				)
 
-	def onInitGui(self):
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		self.layout()
 		self.comboBox.currentIndexChanged.connect(self.onComboBoxCurrentIndexChanged)
 		self._browser.setHtml('')
@@ -227,10 +212,11 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 	def onComboBoxCurrentIndexChanged(self, i):
 		payoutStructure, mask = self.PayoutStructures[i][1], self.PayoutStructures[i][2]
 		if i == len(self.PayoutStructures) -1:
-			payoutStructure = self.settingCustomPayoutStructure.value()
+			payoutStructure = Tc2Config.settingsValue(self.SettingsKeyCustomPayoutStructure, '').toString()
 		self.editPayoutStructure.setInputMask(mask)
 		self.editPayoutStructure.setText(payoutStructure)
 		self.editPayoutStructure.setEnabled(bool(mask))
+
 		self.editPayoutStructure.home(False)
 		hand, self.lastHand = self.lastHand, None
 		self.handleHandSet(hand)
@@ -241,7 +227,7 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 	def onEditPayoutStructureTextChanged(self, text):
 		if self.comboBox.currentIndex() == len(self.PayoutStructures) -1:
 			edit = self.sender()
-			self.settingCustomPayoutStructure.setValue(text)
+			Tc2Config.settingsSetValue(self.SettingsKeyCustomPayoutStructure, text)
 
 	def onContextMenuWebView(self, point):
 		menu = QtGui.QMenu(self)
@@ -258,7 +244,7 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 				title='Save Nash Calculations..',
 				fileFilters=('HtmlFiles (*.html *.htm)', 'All Files (*)'),
 				#TODO: rename to Gui/HandViewer/DialogSave/State
-				setting=self.settingDialogSaveState,
+				settingsKey=self.SettingsKeyDialogSaveState,
 				defaultSuffix='html',
 				)
 		if fileName is None:
@@ -278,6 +264,11 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 #************************************************************************************
 class BrowserSideBarICMTax(QtGui.QFrame):
 
+	SettingsKeyBase = 'Gui/Tools/ICMTax'
+	SettingsKeyCustomPayoutStructure = SettingsKeyBase + '/CustomPayoutStructure'
+	SettingsKeyDialogSaveState = SettingsKeyBase + '/DialogSave/State'
+	SettingsKeyPayoutStructureCurrent = SettingsKeyBase + '/PayoutStructureCurrent'
+
 	PayoutStructures = (	# text, payoutStructure, lineEditMask
 			('- Select payout structure -', '', ''),
 			('PokerStars 9 man sitNgo', '50/30/20', '99/99/99'),
@@ -287,31 +278,15 @@ class BrowserSideBarICMTax(QtGui.QFrame):
 			)
 
 	StyleSheet = '''body{}
-			table{}
-			td{text-align: center;vertical-align: text-top;}
-			.title{font-weight: bold;}
-			.roleHero{font-weight: bold;background-color:#F0F0F0;}
-			.taxHero{}
-			.roleVillain{}
-			.taxVillain{}
-			'''.replace('\t', '\x20'*4)
+table{}
+td{text-align: center;vertical-align: text-top;}
+.title{font-weight: bold;}
+.roleHero{font-weight: bold;background-color:#F0F0F0;}
+.taxHero{}
+.roleVillain{}
+.taxVillain{}
+'''
 
-	settingPayoutStructureCurrent = Tc2Config.settings2.Index(
-			'Gui/HandViewer/SideBars/ICMTax/PayoutStructureCurrent',
-			defaultValue=0,
-			)
-	settingCustomPayoutStructure = Tc2Config.settings2.QString(
-			'Gui/HandViewer/SideBars/ICMTax/CustomPayoutStructure',
-			defaultValue=QtCore.QString(''),
-			)
-	settingDialogSaveState = Tc2Config.settings2.ByteArray(
-			'Gui/HandViewer/SideBars/ICMTax/DialogSave/State',
-			defaultValue=QtCore.QByteArray(),
-			)
-	settingStyleSheet = Tc2Config.settings2.UnicodeString(
-			'Gui/HandViewer/SideBars/ICMTax/StyleSheet',
-			defaultValue=StyleSheet,
-			)
 
 	def __init__(self, parent, zoomFactor=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -340,7 +315,8 @@ class BrowserSideBarICMTax(QtGui.QFrame):
 		#self._toolBar.addAction(self.actionSave)
 
 		# connect signals
-		Tc2Config.globalObject.guiInit.connect(self.onInitGui)
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
+		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
 
 	#-----------------------------------------------------------------------------------------
 	# sideBar methods
@@ -373,7 +349,7 @@ class BrowserSideBarICMTax(QtGui.QFrame):
 		stacks = [seat.stack for seat in seats]
 
 		html = '<html><head>'
-		html += '<style type="text/css"><!-- %s --></style>' % self.settingStyleSheet.value()
+		html += '<style type="text/css"><!-- %s --></style>' % Tc2Config.globalObject.settingsICMTaxStyleSheet.styleSheet()
 		html += '</head><body>'
 
 
@@ -435,21 +411,28 @@ class BrowserSideBarICMTax(QtGui.QFrame):
 		grid.setRowStretch(iRow, 99)
 		grid.col(self._browser, colspan=2)
 
-	def onInitGui(self):
-		self.layout()
-		self._browser.setHtml('')
-		self.settingPayoutStructureCurrent.setComboBox(self.comboBox)
-		self.settingPayoutStructureCurrent.changed.connect(self.onSettingPayoutStructureChanged)
-		self.editPayoutStructure.textChanged.connect(self.onEditPayoutStructureTextChanged)
+	def onCloseEvent(self, event):
+		Tc2Config.settingsSetValue(self.SettingsKeyPayoutStructureCurrent, self.comboBox.currentIndex())
 
-	def onSettingPayoutStructureChanged(self, setting):
-		i = setting.value()
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
+		self.layout()
+		self.comboBox.currentIndexChanged.connect(self.onComboBoxCurrentIndexChanged)
+		self._browser.setHtml('')
+
+		#NOTE: editingFinished() is only emitted when the whole mask is filled in so we need to connect to textChanged()
+		self.editPayoutStructure.textChanged.connect(self.onEditPayoutStructureTextChanged)
+		value, ok = Tc2Config.settingsValue(self.SettingsKeyPayoutStructureCurrent, 0).toInt()
+		if ok:
+			self.comboBox.setCurrentIndex(value)
+
+	def onComboBoxCurrentIndexChanged(self, i):
 		payoutStructure, mask = self.PayoutStructures[i][1], self.PayoutStructures[i][2]
 		if i == len(self.PayoutStructures) -1:
-			payoutStructure = self.settingCustomPayoutStructure.value()
+			payoutStructure = Tc2Config.settingsValue(self.SettingsKeyCustomPayoutStructure, '').toString()
 		self.editPayoutStructure.setInputMask(mask)
 		self.editPayoutStructure.setText(payoutStructure)
 		self.editPayoutStructure.setEnabled(bool(mask))
+
 		self.editPayoutStructure.home(False)
 		hand, self.lastHand = self.lastHand, None
 		self.handleHandSet(hand)
@@ -460,7 +443,7 @@ class BrowserSideBarICMTax(QtGui.QFrame):
 	def onEditPayoutStructureTextChanged(self, text):
 		if self.comboBox.currentIndex() == len(self.PayoutStructures) -1:
 			edit = self.sender()
-			self.settingCustomPayoutStructure.setValue(text)
+			Tc2Config.settingsSetValue(self.SettingsKeyCustomPayoutStructure, text)
 
 	def onContextMenuWebView(self, point):
 		menu = QtGui.QMenu(self)
@@ -477,7 +460,7 @@ class BrowserSideBarICMTax(QtGui.QFrame):
 				title='Save ICM-tax..',
 				fileFilters=('HtmlFiles (*.html *.htm)', 'All Files (*)'),
 				#TODO: rename to Gui/HandViewer/DialogSave/State
-				setting=self.settingDialogSaveState,
+				settingsKey=self.SettingsKeyDialogSaveState,
 				defaultSuffix='html',
 				)
 		if fileName is None:
@@ -498,9 +481,6 @@ class BrowserSideBarICMTax(QtGui.QFrame):
 #
 #************************************************************************************
 class BrowserSideBarContainer(QtGui.QFrame):
-
-	currentIndexChanged = QtCore.pyqtSignal(int)
-
 	SideBarsDefault = (
 			BrowserSideBarNashCalculations,
 			BrowserSideBarICMTax,
@@ -520,7 +500,6 @@ class BrowserSideBarContainer(QtGui.QFrame):
 		self.stack.setCurrentIndex(i)
 		sideBar= self.stack.currentWidget()
 		sideBar.handleHandSet(self.lastHand)
-		currentIndexChanged.emit(i)
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
@@ -559,28 +538,14 @@ class BrowserSideBarContainer(QtGui.QFrame):
 #*******************************************************************************************
 class FrameHandViewer(QtGui.QFrame):
 
-	settingZoomFactor = Tc2Config.settings2.Float(
-			'Gui/HandViewer/ZoomFactor',
-			defaultValue=Tc2Config.WebViewZoomDefault,
-			minValue=Tc2Config.WebViewZoomMin,
-			maxValue=Tc2Config.WebViewZoomMax,
-			)
-	settingSidebarCurrent = Tc2Config.settings2.Index(
-			'Gui/HandViewer/SideBarCurrent',
-			defaultValue=0,
-			)
-	settingSplitterState = Tc2Config.settings2.ByteArray(
-			'Gui/HandViewer/SplitterState',
-			defaultValue=QtCore.QByteArray(),
-			)
-	settingDialogOpenHandState = Tc2Config.settings2.ByteArray(
-			'Gui/HandViewer/DialogOpenHand/State',
-			defaultValue=QtCore.QByteArray(),
-			)
-	settingDialogSaveHandState = Tc2Config.settings2.ByteArray(
-			'Gui/HandViewer/DialogSaveHand/State',
-			defaultValue=QtCore.QByteArray(),
-			)
+	#TODO: rename to Gui/HandViewer/ZoomFactor
+	SettingsKeyBase = 'Gui/Hand'
+	SettingsKeyZoomFactor = SettingsKeyBase + '/ZoomFactor'
+	SettingsKeyDialogOpenState = SettingsKeyBase + '/DialogOpen/State'
+	SettingsKeyDialogSaveState = SettingsKeyBase + '/DialogSave/State'
+	SettingsKeySplitterState = SettingsKeyBase + '/SplitterState'
+	SettingsKeySideBarCurrent = SettingsKeyBase + '/SideBarCurrent'
+
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -602,6 +567,7 @@ class FrameHandViewer(QtGui.QFrame):
 		self._toolBar = self._browserFrame.toolBar()
 		self._toolBar.actionZoomIn.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierPlus() ) )
 		self._toolBar.actionZoomOut.setIcon(QtGui.QIcon(Tc2Config.Pixmaps.magnifierMinus() ) )
+		self._toolBar.zoomFactorChanged.connect(self.onToolBarZoomFactorChanged)
 
 		self.sideBarContainer = BrowserSideBarContainer(self)
 		self.splitter.addWidget(self.sideBarContainer)
@@ -636,14 +602,8 @@ class FrameHandViewer(QtGui.QFrame):
 		self._toolBar.addAction(self.actionHelp)
 
 		# connect global signals
-		Tc2Config.globalObject.guiInit.connect(self.onInitGui)
+		Tc2Config.globalObject.initSettingsFinished.connect(self.onGlobalObjectInitSettingsFinished)
 		Tc2Config.globalObject.closeEvent.connect(self.onCloseEvent)
-		Tc2Config.settings2['Gui/ToolBar/Position'].changed.connect(self.onSettingToolBarPositionChanged)
-		Tc2Config.settings2['Gui/SideBar/Position'].changed.connect(self.onSettingSideBarPositionChanged)
-		Tc2Config.settings2['Gui/Browser/ZoomSteps'].changed.connect(
-				lambda setting:self._toolBar.setZoomSteps(setting.value())
-				)
-
 
 	#----------------------------------------------------------------------------------------------------------------
 	# methods
@@ -697,7 +657,8 @@ class FrameHandViewer(QtGui.QFrame):
 				openFile=True,
 				title='Open Hand..',
 				fileFilters=('HtmlFiles (*.html *.htm)', 'All Files (*)'),
-				setting=self.settingDialogOpenHandState,
+				#TODO: rename to Gui/HandViewer/DialogOpen/State
+				settingsKey=self.SettingsKeyDialogOpenState,
 				)
 		if fileName is None:
 			return
@@ -733,7 +694,8 @@ class FrameHandViewer(QtGui.QFrame):
 				openFile=False,
 				title='Save Hand..',
 				fileFilters=('HtmlFiles (*.html *.htm)', 'All Files (*)'),
-				setting=self.settingDialogSaveHandState,
+				#TODO: rename to Gui/HandViewer/DialogSave/State
+				settingsKey=self.SettingsKeyDialogSaveState,
 				defaultSuffix='html',
 				)
 		if fileName is None:
@@ -749,7 +711,9 @@ class FrameHandViewer(QtGui.QFrame):
 		#TODO: can we rename hand in cache? i font think so. no way to inform WebKit
 
 	def onCloseEvent(self, event):
-		self.settingSplitterState.setValue(self.splitter.saveState())
+		Tc2Config.settingsSetValue(self.SettingsKeySplitterState, self.splitter.saveState())
+		Tc2Config.settingsSetValue(self.SettingsKeySideBarCurrent, self.sideBarContainer.currentIndex())
+
 
 	def onContextMenuWebView(self, point):
 		menu = QtGui.QMenu(self)
@@ -765,26 +729,26 @@ class FrameHandViewer(QtGui.QFrame):
 		else:
 			Tc2Config.globalObject.feedbackMessage.emit('Could not grab hand')
 
-	def onInitGui(self):
+	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		self._browser.setUrl(QtCore.QUrl(''))
 		self.adjustActions()
-		self.settingZoomFactor.setWidget(
-				self._toolBar,
-				self._toolBar.setZoomFactor,
-				self._toolBar.zoomFactorChanged,
-				self.onToolBarZoomFactorChanged,
-				)
-		self.settingSidebarCurrent.setWidget(
-				self.sideBarContainer,
-				self.sideBarContainer.setCurrentIndex,
-				self.sideBarContainer.currentIndexChanged,
-				self.settingSidebarCurrent.slotSetValue
-				)
-		self.settingSplitterState.changed.connect(
-				lambda setting: self.splitter.restoreState(setting.value())
-				)
-		Tc2Config.globalObject.siteHandlerPokerStars.handGrabbed.connect(self.onHandGrabberGrabbedHand)
+
+		self.setSideBarPosition(globalObject.settingsHandViewer.sideBarPosition())
+		globalObject.settingsHandViewer.sideBarPositionChanged.connect(self.setSideBarPosition)
+		globalObject.siteHandlerPokerStars.handGrabbed.connect(self.onHandGrabberGrabbedHand)
+		self._browserFrame.layout(globalObject.settingsGlobal.toolBarPosition() == Tc2Config.ToolBarPositionTop)
 		self.layout()
+		self.splitter.restoreState( Tc2Config.settingsValue(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray() )
+
+		globalObject.settingsGlobal.toolBarPositionChanged.connect(
+				lambda position, frame=self._browserFrame: frame.layout(toolBarTop=position == Tc2Config.ToolBarPositionTop)
+				)
+		value, ok = Tc2Config.settingsValue(self.SettingsKeyZoomFactor, Browser.BrowserToolBar.ZoomFactorDefault).toDouble()
+		if ok:
+			self._toolBar.setZoomFactor(value)
+		value, ok = Tc2Config.settingsValue(self.SettingsKeySideBarCurrent, 0).toInt()
+		if ok:
+			self.sideBarContainer.setCurrentIndex(value)
 
 	def onNetworkGetData(self, networkReply):
 		url = networkReply.url()
@@ -802,31 +766,27 @@ class FrameHandViewer(QtGui.QFrame):
 		else:
 			Tc2Config.globalObject.feedback.emit(self, 'Grabbed hand')
 
-	def onSettingToolBarPositionChanged(self, setting):
-		self._browserFrame.layout(toolBarTop=setting.value()==Tc2Config.ToolBarPositionTop)
-
 	def onToolBarZoomFactorChanged(self, value):
-		self.settingZoomFactor.setValue(value)
+		Tc2Config.settingsSetValue(self.SettingsKeyZoomFactor, value)
 		self.sideBarContainer.handleZoomFactorChanged(value)
 
 	def zoomFactor(self):
 		return self._toolBar.zoomFactor()
 
-	def onSettingSideBarPositionChanged(self, setting):
-		position = setting.value()
-		if position == Tc2Config.SideBarPositionTop:
+	def setSideBarPosition(self, position):
+		if position == Tc2Config.HandViewerSideBarPositionTop:
 			self.splitter.setOrientation(QtCore.Qt.Vertical)
 			if self.splitter.widget(0) == self._browserFrame:
 				self.splitter.insertWidget(1, self._browserFrame)
-		elif position == Tc2Config.SideBarPositionBottom:
+		elif position == Tc2Config.HandViewerSideBarPositionBottom:
 			self.splitter.setOrientation(QtCore.Qt.Vertical)
 			if self.splitter.widget(1) == self._browserFrame:
 				self.splitter.insertWidget(0, self._browserFrame)
-		elif position == Tc2Config.SideBarPositionLeft:
+		elif position == Tc2Config.HandViewerSideBarPositionLeft:
 			self.splitter.setOrientation(QtCore.Qt.Horizontal)
 			if self.splitter.widget(0) == self._browserFrame:
 				self.splitter.insertWidget(1, self._browserFrame)
-		elif position == Tc2Config.SideBarPositionRight:
+		elif position == Tc2Config.HandViewerSideBarPositionRight:
 			self.splitter.setOrientation(QtCore.Qt.Horizontal)
 			if self.splitter.widget(1) == self._browserFrame:
 				self.splitter.insertWidget(0, self._browserFrame)
