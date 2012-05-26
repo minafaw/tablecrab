@@ -7,16 +7,20 @@ from PyQt4 import QtCore, QtGui, QtWebKit
 #NOTE: mostly taken from: http://lists.qt.nokia.com/pipermail/qt-interest/2009-August/011654.html
 class FilterHeader(QtGui.QHeaderView):
 
+	filterSourcesChanged = QtCore.pyqtSignal()
 	filterSitesChanged = QtCore.pyqtSignal()
 	filterTablesChanged = QtCore.pyqtSignal()
 
 	def __init__(self, parent=None):
 		QtGui.QHeaderView.__init__(self, QtCore.Qt.Horizontal, parent)
+		self._comboSources =  QtGui.QComboBox(self)
+		self._comboSources.currentIndexChanged.connect(self.onFilterSourcesChanged)
 		self._comboSites =  QtGui.QComboBox(self)
 		self._comboSites.currentIndexChanged.connect(self.onFilterSitesChanged)
 		self._comboTables =  QtGui.QComboBox(self)
 		self._comboTables.currentIndexChanged.connect(self.onFilterTablesChanged)
-		self._filterCombos = (self._comboSites, self._comboTables, None)
+
+		self._filterCombos = (self._comboSources, self._comboSites, self._comboTables, None)
 
 		self.sectionResized.connect(self.onSectionResized)
 		self.sectionMoved.connect(self.onSectionMoved)
@@ -62,6 +66,18 @@ class FilterHeader(QtGui.QHeaderView):
 	def onSectionMoved(self, logicalIndex, oldVisualIndex, newVisualIndex):
 		self.repositionFilterRow(0, len(self._filterCombos))
 
+	def filterSourceCurrent(self):
+		return unicode(self._comboSources.currentText().toUtf8(), 'utf-8')
+
+	def setFilterSources(self, filters, filterCurrent):
+		self._comboSources.currentIndexChanged.disconnect(self.onFilterSourcesChanged)
+		self._comboSources.clear()
+		self._comboSources.addItems(filters)
+		i = filters.index(filterCurrent)
+		self._comboSources.setCurrentIndex(i)
+		self._comboSources.currentIndexChanged.connect(self.onFilterSourcesChanged)
+		self.filterSourcesChanged.emit()
+
 	def filterSitesCurrent(self):
 		return unicode(self._comboSites.currentText().toUtf8(), 'utf-8')
 
@@ -86,6 +102,9 @@ class FilterHeader(QtGui.QHeaderView):
 		self._comboTables.currentIndexChanged.connect(self.onFilterTablesChanged)
 		self.filterTablesChanged.emit()
 
+	def onFilterSourcesChanged(self, i):
+		self.filterSourcesChanged.emit()
+
 	def onFilterSitesChanged(self, i):
 		self.filterSitesChanged.emit()
 
@@ -98,10 +117,11 @@ class FilterHeader(QtGui.QHeaderView):
 #NOTE: too lazy to implement an editable model. create a new model every time its
 # contents change instead.
 class HandModel(QtCore.QAbstractTableModel):
-	def __init__(self, hands, headers, parent=None):
+	def __init__(self, hands, parent=None):
 		QtCore.QAbstractTableModel.__init__(self, parent)
 		self._hands = hands
-		self._headers = headers
+		self._headers = ('Source:', 'Site:', 'Table:', 'Hand:')
+		self._handAttrs = ('source', 'site', 'table', 'identifier')
 
 	def rowCount(self, parent):
 		return len(self._hands)
@@ -117,7 +137,9 @@ class HandModel(QtCore.QAbstractTableModel):
 			return QVariant()
 		elif role != DisplayRole:
 			return QVariant()
-		return QVariant(self._hands[index.row()][index.column()])
+		hand = self._hands[index.row()]
+		value = getattr(hand, self._handAttrs[index.column()])
+		return QVariant(value)
 
 	def headerData(self, col, orientation, role,
 					QVariant=QtCore.QVariant,
@@ -143,10 +165,9 @@ class FrameHandViewer(QtGui.QFrame):
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
-
-		self._headerLabels = ('Site:', 'Table:', 'Hand:')
 		self._hands = []
 		self._filtersOld = {
+				'sites': {},
 				'tables': {},
 				}
 
@@ -161,10 +182,11 @@ class FrameHandViewer(QtGui.QFrame):
 		self._tableHands.setHorizontalHeader(self._tableFilter)
 		self._tableFilter.setStretchLastSection(True)
 		self._tableFilter.setDefaultAlignment(QtCore.Qt.AlignLeft)
+		self._tableFilter.setFilterSources((self.FilterAll, ), self.FilterAll)
 		self._tableFilter.setFilterSites((self.FilterAll, ), self.FilterAll)
 		self._tableFilter.setFilterTables((self.FilterAll, ), self.FilterAll)
 
-		handModel = HandModel([], self._headerLabels, self._tableHands)
+		handModel = HandModel([], self._tableHands)
 		self._tableHands.setModel(handModel)
 
 		#
@@ -179,6 +201,7 @@ class FrameHandViewer(QtGui.QFrame):
 
 		# connect signals
 		self._tableHands.selectionModel().currentRowChanged.connect(self.onCurrentRowChanged)
+		self._tableFilter.filterSourcesChanged.connect(self.onFilterSourcesChanged)
 		self._tableFilter.filterSitesChanged.connect(self.onFilterSitesChanged)
 		self._tableFilter.filterTablesChanged.connect(self.onFilterTablesChanged)
 
@@ -191,14 +214,13 @@ class FrameHandViewer(QtGui.QFrame):
 	def addHand(self, site, table, hand):
 		self._hands.append((site, table, hand))
 		self.updateFilters()
-		self.updateHands()
 
 	def addHands(self, hands):
 		self._hands.extend(hands)
 		self.updateFilters()
-		self.updateHands()
 
 	def updateHands(self):
+		filterSource = self._tableFilter.filterSourceCurrent()
 		filterSite = self._tableFilter.filterSitesCurrent()
 		filterTable = self._tableFilter.filterTablesCurrent()
 
@@ -212,15 +234,16 @@ class FrameHandViewer(QtGui.QFrame):
 		# setup new model containig current hand selection
 		hands = []
 		i = 0
-		for site, table, hand in self._hands:
-			 if site == filterSite or filterSite == self.FilterAll:
-				if table == filterTable or filterTable == self.FilterAll:
-					hands.append((site, table, hand))
-					if handSelected is not None:
-						if (site, table, hand) == handSelected:
-							rowSelected = i
-					i += 1
-		handModel = HandModel(hands, self._headerLabels, self._tableHands)
+		for hand in self._hands:
+			 if hand.source == filterSource or filterSource == self.FilterAll:
+				 if hand.site == filterSite or filterSite == self.FilterAll:
+					if hand.table == filterTable or filterTable == self.FilterAll:
+						hands.append(hand)
+						if handSelected is not None:
+							if hand == handSelected:
+								rowSelected = i
+						i += 1
+		handModel = HandModel(hands, self._tableHands)
 		self._tableHands.setModel(handModel)
 		#NOTE: acc to docs each model gets a new selection model assigned so we have to reconnect here
 		self._tableHands.selectionModel().currentRowChanged.connect(self.onCurrentRowChanged)
@@ -236,25 +259,37 @@ class FrameHandViewer(QtGui.QFrame):
 				self._tableHands.scrollTo(indexSelected, self._tableHands.PositionAtCenter)
 
 	def updateFilters(self):
-		filterSite = self._tableFilter.filterSitesCurrent()
+		filterSource = self._tableFilter.filterSourceCurrent()
+		sources = {self.FilterAll: None}
+		for hand in self._hands:
+			sources[hand.source] = None
+		sources = sources.keys()
+		sources.sort()
+		self._tableFilter.setFilterSources(sources, filterSource)
+
+	def onFilterSourcesChanged(self):
+		filterSource = self._tableFilter.filterSourceCurrent()
+		filterSite = self._filtersOld['sites'].get(filterSource, self.FilterAll)
 		sites = {self.FilterAll: None}
-		for site, table, hand in self._hands:
-			sites[site] = None
+		for hand in self._hands:
+			if hand.source == filterSource or filterSource == self.FilterAll:
+				sites[hand.site] = None
 		sites = sites.keys()
 		sites.sort()
 		self._tableFilter.setFilterSites(sites, filterSite)
 
 	def onFilterSitesChanged(self):
+		filterSource = self._tableFilter.filterSourceCurrent()
 		filterSite = self._tableFilter.filterSitesCurrent()
 		filterTable = self._filtersOld['tables'].get(filterSite, self.FilterAll)
 		tables = {self.FilterAll: None}
-		for site, table, hand in self._hands:
-			if site == filterSite or filterSite == self.FilterAll:
-				if table == filterTable or filterTable == self.FilterAll:
-					tables[table] = None
+		for hand in self._hands:
+			if hand.site == filterSite or filterSite == self.FilterAll:
+				tables[hand.table] = None
 		tables = tables.keys()
 		tables.sort()
 		self._tableFilter.setFilterTables(tables, filterTable)
+		self._filtersOld['sites'][filterSource] = filterSite
 
 	def onFilterTablesChanged(self):
 		filterSite = self._tableFilter.filterSitesCurrent()
@@ -271,13 +306,31 @@ class FrameHandViewer(QtGui.QFrame):
 if __name__ == '__main__':
 	application = QtGui.QApplication([])
 	w = FrameHandViewer()
+
+	class Hand(object):
+		def __init__(self, source, site, table, identifier):
+			self.source = source
+			self.site = site
+			self.table = table
+			self.identifier = identifier
+		def __eq__(self, other):
+			if self.source == other.source:
+				if self.site == other.site:
+					if self.table == other.table:
+						if self.identifier == other.identifier:
+							return True
+			return False
+		def __ne__(self, other): return not self.__eq__(other)
+
 	hands = []
 	x = 0
-	for i in range(5):
-		for j in range(5):
-			for k in range(5):
-				x += 1
-				hands.append(('site-%s' % i, 'table-%s' % j, '%s' % x))
+	for h in range(2):
+		for i in range(2):
+			for j in range(2):
+				for k in range(5):
+					x += 1
+					hands.append(Hand('source-%s' % h, 'site-%s' % i, 'table-%s' % j, '%s' % x))
+
 	w.addHands(hands)
 	w.show()
 	application.exec_()
