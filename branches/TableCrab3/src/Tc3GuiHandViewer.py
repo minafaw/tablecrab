@@ -128,6 +128,9 @@ class HandModel(QtCore.QAbstractTableModel):
 			return QVariant(str(col+1))
 		return QVariant()
 
+	def hand(self, i):
+		return self._hands[i]
+
 #************************************************************************************
 #
 #************************************************************************************
@@ -171,6 +174,7 @@ class FrameHandViewer(QtGui.QFrame):
 		b.addWidget(self._splitter)
 
 		# connect signals
+		self._tableHands.selectionModel().currentRowChanged.connect(self.onCurrentRowChanged)
 		self._tableFilter.filterSitesChanged.connect(self.onFilterSitesChanged)
 		self._tableFilter.filterTablesChanged.connect(self.onFilterTablesChanged)
 
@@ -193,14 +197,39 @@ class FrameHandViewer(QtGui.QFrame):
 	def updateHands(self):
 		filterSite = self._tableFilter.filterSitesCurrent()
 		filterTable = self._tableFilter.filterTablesCurrent()
+
+		# check if a hand is selected and if it is present in new model
+		handSelected = None
+		rowSelected = None
+		indexSelected = self._tableHands.selectionModel().currentIndex()
+		if indexSelected.isValid():
+			handSelected = self._tableHands.model().hand(indexSelected.row())
+
+		# setup new model containig current hand selection
 		hands = []
+		i = 0
 		for site, table, hand in self._hands:
 			 if site == filterSite or filterSite == self.FilterAll:
 				if table == filterTable or filterTable == self.FilterAll:
 					hands.append((site, table, hand))
+					if handSelected is not None:
+						if (site, table, hand) == handSelected:
+							rowSelected = i
+					i += 1
 		handModel = HandModel(hands, self._headerLabels, self._tableHands)
 		self._tableHands.setModel(handModel)
-		#TODO: check if we can keep selection and scroll to it
+		#NOTE: acc to docs each model gets a new selection model assigned so we have to reconnect here
+		self._tableHands.selectionModel().currentRowChanged.connect(self.onCurrentRowChanged)
+
+		# reselect hand if possible
+		#NOTE: we lose selection if the last selected hand is not present in the new model
+		# one alternative would be to store selection for every filter combination, but
+		# this may get to confusing.
+		if rowSelected is not None:
+			self._tableHands.selectRow(rowSelected)
+			indexSelected = self._tableHands.selectionModel().currentIndex()
+			if indexSelected.isValid():
+				self._tableHands.scrollTo(indexSelected, self._tableHands.PositionAtCenter)
 
 	def updateFilters(self):
 		filterSite = self._tableFilter.filterSitesCurrent()
@@ -229,18 +258,22 @@ class FrameHandViewer(QtGui.QFrame):
 		self._filtersOld['tables'][filterSite] = filterTable
 		self.updateHands()
 
+	def onCurrentRowChanged(self, indexCurrent, indexPrev):
+		pass
+
 #************************************************************************************
 #
 #************************************************************************************
 if __name__ == '__main__':
 	application = QtGui.QApplication([])
 	w = FrameHandViewer()
-
 	hands = []
+	x = 0
 	for i in range(5):
-		for j in range(50):
-			for k in range(50):
-				hands.append(('foo-%s' % i, 'table-%s' % j, '%s' % (i*j*k)))
+		for j in range(5):
+			for k in range(5):
+				x += 1
+				hands.append(('foo-%s' % i, 'table-%s' % j, '%s' % x))
 	w.addHands(hands)
 	w.show()
 	application.exec_()
