@@ -16,8 +16,10 @@ class FilterHeader(QtGui.QHeaderView):
 		self._comboSites.currentIndexChanged.connect(self.onFilterSitesChanged)
 		self._comboTables =  QtGui.QComboBox(self)
 		self._comboTables.currentIndexChanged.connect(self.onFilterTablesChanged)
+		self._filterCombos = (self._comboSites, self._comboTables, None)
 
 		self.sectionResized.connect(self.onSectionResized)
+		self.sectionMoved.connect(self.onSectionMoved)
 
 	def filterHeight(self):
 		return self._comboSites.sizeHint().height()
@@ -40,16 +42,14 @@ class FilterHeader(QtGui.QHeaderView):
 		self.repositionFilterRow(start, end)
 
 	def repositionFilterRow(self, start, end):
-		combos = (self._comboSites, self._comboTables)
 		for i in xrange(start, end+1):
 			iLogical = self.logicalIndex(i)
 			if self.isSectionHidden(iLogical):
 				continue
-			if i >= len(combos):
-				continue
-			combo = combos[iLogical]
-			combo.move(self.sectionPosition(iLogical) - self.offset(), self.filterHeight())
-			combo.resize(self.sectionSize(iLogical), self.filterHeight())
+			combo = self._filterCombos[iLogical]
+			if combo is not None:
+				combo.move(self.sectionPosition(iLogical) - self.offset(), self.filterHeight())
+				combo.resize(self.sectionSize(iLogical), self.filterHeight())
 
 	def onSectionResized(self, iLogical, sizeOld, sizeNew):
 		vg = self.viewport().geometry()
@@ -58,6 +58,9 @@ class FilterHeader(QtGui.QHeaderView):
 		if end < 0:
 			end = self.count() -1
 		self.repositionFilterRow(start, end)
+
+	def onSectionMoved(self, logicalIndex, oldVisualIndex, newVisualIndex):
+		self.repositionFilterRow(0, len(self._filterCombos))
 
 	def filterSitesCurrent(self):
 		return unicode(self._comboSites.currentText().toUtf8(), 'utf-8')
@@ -154,6 +157,7 @@ class FrameHandViewer(QtGui.QFrame):
 
 		self._tableHands.setSelectionBehavior(self._tableHands.SelectRows)
 		self._tableHands.setSelectionMode(self._tableHands.SingleSelection)
+		self._tableFilter.setMovable(True)
 		self._tableHands.setHorizontalHeader(self._tableFilter)
 		self._tableFilter.setStretchLastSection(True)
 		self._tableFilter.setDefaultAlignment(QtCore.Qt.AlignLeft)
@@ -273,7 +277,7 @@ if __name__ == '__main__':
 		for j in range(5):
 			for k in range(5):
 				x += 1
-				hands.append(('foo-%s' % i, 'table-%s' % j, '%s' % x))
+				hands.append(('site-%s' % i, 'table-%s' % j, '%s' % x))
 	w.addHands(hands)
 	w.show()
 	application.exec_()
