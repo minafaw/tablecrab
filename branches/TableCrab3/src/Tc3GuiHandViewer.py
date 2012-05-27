@@ -7,26 +7,37 @@ from PyQt4 import QtCore, QtGui, QtWebKit
 #NOTE: mostly taken from: http://lists.qt.nokia.com/pipermail/qt-interest/2009-August/011654.html
 class FilterHeader(QtGui.QHeaderView):
 
-	filterSourcesChanged = QtCore.pyqtSignal()
-	filterSitesChanged = QtCore.pyqtSignal()
-	filterTablesChanged = QtCore.pyqtSignal()
+	filterChanged = QtCore.pyqtSignal(QtCore.QString)
 
-	def __init__(self, parent=None):
+	class FilterComboBox(QtGui.QComboBox):
+		def __init__(self, filterName, parent=None):
+			QtGui.QComboBox.__init__(self, parent)
+			self.filterName = filterName
+
+	def __init__(self, filters, parent=None):
 		QtGui.QHeaderView.__init__(self, QtCore.Qt.Horizontal, parent)
-		self._comboSources =  QtGui.QComboBox(self)
-		self._comboSources.currentIndexChanged.connect(self.onFilterSourcesChanged)
-		self._comboSites =  QtGui.QComboBox(self)
-		self._comboSites.currentIndexChanged.connect(self.onFilterSitesChanged)
-		self._comboTables =  QtGui.QComboBox(self)
-		self._comboTables.currentIndexChanged.connect(self.onFilterTablesChanged)
-
-		self._filterCombos = (self._comboSources, self._comboSites, self._comboTables, None)
+		self._filters = filters
+		self._combos = []
+		self._comboDict = {}
+		self._comboForFilterHeight = None	# comboBox to determine filterbar height from
+		for filterData in self._filters:
+			if filterData['hasFilter']:
+				combo =  self.FilterComboBox(filterData['filterName'], parent=self)
+				combo.currentIndexChanged.connect(self.onFilterChanged)
+				self._combos.append(combo)
+				self._comboDict[filterData['filterName']] = combo
+				self._comboForFilterHeight = combo
+			else:
+				self._combos.append(None)
+				self._comboDict[filterData['filterName']] = None
 
 		self.sectionResized.connect(self.onSectionResized)
 		self.sectionMoved.connect(self.onSectionMoved)
 
 	def filterHeight(self):
-		return self._comboSites.sizeHint().height()
+		if self._comboForFilterHeight is None:
+			return 0
+		return self._comboForFilterHeight.sizeHint().height()
 
 	def sizeHint(self):
 		size = QtGui.QHeaderView.sizeHint(self)
@@ -50,7 +61,7 @@ class FilterHeader(QtGui.QHeaderView):
 			iLogical = self.logicalIndex(i)
 			if self.isSectionHidden(iLogical):
 				continue
-			combo = self._filterCombos[iLogical]
+			combo = self._combos[iLogical]
 			if combo is not None:
 				combo.move(self.sectionPosition(iLogical) - self.offset(), self.filterHeight())
 				combo.resize(self.sectionSize(iLogical), self.filterHeight())
@@ -64,52 +75,41 @@ class FilterHeader(QtGui.QHeaderView):
 		self.repositionFilterRow(start, end)
 
 	def onSectionMoved(self, logicalIndex, oldVisualIndex, newVisualIndex):
-		self.repositionFilterRow(0, len(self._filterCombos))
+		self.repositionFilterRow(0, len(self._combos))
 
-	def filterSourceCurrent(self):
-		return unicode(self._comboSources.currentText().toUtf8(), 'utf-8')
+	def filterCurrent(self, filterName):
+		combo = self._comboDict[filterName]
+		if combo is not None:
+			return unicode(self._comboDict[filterName].currentText().toUtf8(), 'utf-8')
 
-	def setFilterSources(self, filters, filterCurrent):
-		self._comboSources.currentIndexChanged.disconnect(self.onFilterSourcesChanged)
-		self._comboSources.clear()
-		self._comboSources.addItems(filters)
-		i = filters.index(filterCurrent)
-		self._comboSources.setCurrentIndex(i)
-		self._comboSources.currentIndexChanged.connect(self.onFilterSourcesChanged)
-		self.filterSourcesChanged.emit()
+	def setFilterCurrent(self, filterName, value):
+		combo = self._comboDict[filterName]
+		if combo is not None:
+			combo.currentIndexChanged.disconnect(self.onFilterChanged)
+			i = combo.findText(value)
+			combo.setCurrentIndex(i)
+			combo.currentIndexChanged.connect(self.onFilterChanged)
 
-	def filterSitesCurrent(self):
-		return unicode(self._comboSites.currentText().toUtf8(), 'utf-8')
+	def filters(self, filterName):
+		filters = []
+		combo =  self._comboDict[filterName]
+		if combo is not None:
+			for i in xrange(combo.count()):
+				text = unicode(combo.itemText(i).toUtf8(), 'utf-8')
+				filters.append(text)
+		return filters
 
-	def setFilterSites(self, filters, filterCurrent):
-		self._comboSites.currentIndexChanged.disconnect(self.onFilterSitesChanged)
-		self._comboSites.clear()
-		self._comboSites.addItems(filters)
-		i = filters.index(filterCurrent)
-		self._comboSites.setCurrentIndex(i)
-		self._comboSites.currentIndexChanged.connect(self.onFilterSitesChanged)
-		self.filterSitesChanged.emit()
+	def setFilters(self, filterName, filters):
+		combo = self._comboDict[filterName]
+		if combo is not None:
+			combo.currentIndexChanged.disconnect(self.onFilterChanged)
+			combo.clear()
+			combo.addItems(filters)
+			combo.currentIndexChanged.connect(self.onFilterChanged)
 
-	def filterTablesCurrent(self):
-		return unicode(self._comboTables.currentText().toUtf8(), 'utf-8')
-
-	def setFilterTables(self, filters,filterCurrent):
-		self._comboTables.currentIndexChanged.disconnect(self.onFilterTablesChanged)
-		self._comboTables.clear()
-		self._comboTables.addItems(filters)
-		i = filters.index(filterCurrent)
-		self._comboTables.setCurrentIndex(i)
-		self._comboTables.currentIndexChanged.connect(self.onFilterTablesChanged)
-		self.filterTablesChanged.emit()
-
-	def onFilterSourcesChanged(self, i):
-		self.filterSourcesChanged.emit()
-
-	def onFilterSitesChanged(self, i):
-		self.filterSitesChanged.emit()
-
-	def onFilterTablesChanged(self, i):
-		self.filterTablesChanged.emit()
+	def onFilterChanged(self):
+		combo = self.sender()
+		self.filterChanged.emit(combo.filterName)
 
 #************************************************************************************
 #
@@ -117,17 +117,16 @@ class FilterHeader(QtGui.QHeaderView):
 #NOTE: too lazy to implement an editable model. create a new model every time its
 # contents change instead.
 class HandModel(QtCore.QAbstractTableModel):
-	def __init__(self, hands, parent=None):
+	def __init__(self, hands, filters, parent=None):
 		QtCore.QAbstractTableModel.__init__(self, parent)
 		self._hands = hands
-		self._headers = ('Source:', 'Site:', 'Table:', 'Hand:')
-		self._handAttrs = ('source', 'site', 'table', 'identifier')
+		self._filters = filters
 
 	def rowCount(self, parent):
 		return len(self._hands)
 
 	def columnCount(self, parent):
-		return len(self._headers)
+		return len(self._filters)
 
 	def data(self, index, role,
 					QVariant=QtCore.QVariant,
@@ -138,7 +137,7 @@ class HandModel(QtCore.QAbstractTableModel):
 		elif role != DisplayRole:
 			return QVariant()
 		hand = self._hands[index.row()]
-		value = getattr(hand, self._handAttrs[index.column()])
+		value = getattr(hand, self._filters[index.column()]['filterName'])
 		return QVariant(value)
 
 	def headerData(self, col, orientation, role,
@@ -148,7 +147,7 @@ class HandModel(QtCore.QAbstractTableModel):
 					Vertical=QtCore.Qt.Vertical
 					):
 		if orientation == Horizontal and role == DisplayRole:
-			return QVariant(self._headers[col])
+			return QVariant(self._filters[col]['headerText'])
 		elif orientation == Vertical and role == DisplayRole:
 			return QVariant(str(col+1))
 		return QVariant()
@@ -166,15 +165,17 @@ class FrameHandViewer(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 		self._hands = []
-		self._filtersOld = {
-				'sites': {},
-				'tables': {},
-				}
+		self._filters = (
+				{'filterName': 'source', 'headerText': 'Source:', 'hasFilter': True},
+				{'filterName': 'site', 'headerText': 'Site:', 'hasFilter': True},
+				{'filterName': 'table', 'headerText': 'Table:', 'hasFilter': True},
+				{'filterName': 'identifier', 'headerText': 'Hand:', 'hasFilter': False},
+				)
 
 		self._splitter = QtGui.QSplitter(QtCore.Qt.Vertical, self)
 
 		self._tableHands = QtGui.QTableView(self)
-		self._tableFilter = FilterHeader(self._tableHands)
+		self._tableFilter = FilterHeader(self._filters, parent=self._tableHands)
 
 		self._tableHands.setSelectionBehavior(self._tableHands.SelectRows)
 		self._tableHands.setSelectionMode(self._tableHands.SingleSelection)
@@ -182,11 +183,10 @@ class FrameHandViewer(QtGui.QFrame):
 		self._tableHands.setHorizontalHeader(self._tableFilter)
 		self._tableFilter.setStretchLastSection(True)
 		self._tableFilter.setDefaultAlignment(QtCore.Qt.AlignLeft)
-		self._tableFilter.setFilterSources((self.FilterAll, ), self.FilterAll)
-		self._tableFilter.setFilterSites((self.FilterAll, ), self.FilterAll)
-		self._tableFilter.setFilterTables((self.FilterAll, ), self.FilterAll)
+		for filterData in self._filters:
+			self._tableFilter.setFilters(filterData['filterName'], (self.FilterAll, ))
 
-		handModel = HandModel([], self._tableHands)
+		handModel = HandModel([], self._filters, self._tableHands)
 		self._tableHands.setModel(handModel)
 
 		#
@@ -201,9 +201,7 @@ class FrameHandViewer(QtGui.QFrame):
 
 		# connect signals
 		self._tableHands.selectionModel().currentRowChanged.connect(self.onCurrentRowChanged)
-		self._tableFilter.filterSourcesChanged.connect(self.onFilterSourcesChanged)
-		self._tableFilter.filterSitesChanged.connect(self.onFilterSitesChanged)
-		self._tableFilter.filterTablesChanged.connect(self.onFilterTablesChanged)
+		self._tableFilter.filterChanged.connect(self.onFilterChanged)
 
 	def saveSettings(self, qSettings):
 		pass
@@ -211,18 +209,30 @@ class FrameHandViewer(QtGui.QFrame):
 	def restoreSettings(self, qSettings):
 		pass
 
-	def addHand(self, site, table, hand):
-		self._hands.append((site, table, hand))
-		self.updateFilters()
+	def addHand(self, hand):
+		return self.addHands((hand, ))
 
 	def addHands(self, hands):
 		self._hands.extend(hands)
-		self.updateFilters()
+		# update our filters
+		filterList = [
+				(filterData['filterName'], self._tableFilter.filters(filterData['filterName']))
+				for	filterData in self._filters
+				if filterData['hasFilter']
+				]
+		for filterName, filters in filterList:
+			for hand in hands:
+				value = getattr(hand, filterName)
+				if value not in filters:
+					filters.append(value)
+			filters.sort()
+			filterCurrent = self._tableFilter.filterCurrent(filterName)
+			self._tableFilter.setFilters(filterName, filters)
+			if filterCurrent in filters:
+				self._tableFilter.setFilterCurrent(filterName, filterCurrent)
+		self.updateHands()
 
 	def updateHands(self):
-		filterSource = self._tableFilter.filterSourceCurrent()
-		filterSite = self._tableFilter.filterSitesCurrent()
-		filterTable = self._tableFilter.filterTablesCurrent()
 
 		# check if a hand is selected and if it is present in new model
 		handSelected = None
@@ -231,19 +241,27 @@ class FrameHandViewer(QtGui.QFrame):
 		if indexSelected.isValid():
 			handSelected = self._tableHands.model().hand(indexSelected.row())
 
-		# setup new model containig current hand selection
+		# setup new model containing currently selected hands
 		hands = []
 		i = 0
+		filtersCurrent = [
+				(data['filterName'], self._tableFilter.filterCurrent(data['filterName']))
+				for data in self._filters
+				]
 		for hand in self._hands:
-			 if hand.source == filterSource or filterSource == self.FilterAll:
-				 if hand.site == filterSite or filterSite == self.FilterAll:
-					if hand.table == filterTable or filterTable == self.FilterAll:
-						hands.append(hand)
-						if handSelected is not None:
-							if hand == handSelected:
-								rowSelected = i
-						i += 1
-		handModel = HandModel(hands, self._tableHands)
+			handIsOk = True
+			for filterName, filterCurrent in filtersCurrent:
+				if filterCurrent is None: continue
+				if filterCurrent == self.FilterAll: continue
+				if filterCurrent == getattr(hand, filterName): continue
+				handIsOk = False
+				break
+			if handIsOk:
+				hands.append(hand)
+				if handSelected is not None and hand == handSelected:
+					rowSelected = i
+				i += 1
+		handModel = HandModel(hands, self._filters, self._tableHands)
 		self._tableHands.setModel(handModel)
 		#NOTE: acc to docs each model gets a new selection model assigned so we have to reconnect here
 		self._tableHands.selectionModel().currentRowChanged.connect(self.onCurrentRowChanged)
@@ -258,43 +276,7 @@ class FrameHandViewer(QtGui.QFrame):
 			if indexSelected.isValid():
 				self._tableHands.scrollTo(indexSelected, self._tableHands.PositionAtCenter)
 
-	def updateFilters(self):
-		filterSource = self._tableFilter.filterSourceCurrent()
-		sources = {self.FilterAll: None}
-		for hand in self._hands:
-			sources[hand.source] = None
-		sources = sources.keys()
-		sources.sort()
-		self._tableFilter.setFilterSources(sources, filterSource)
-
-	def onFilterSourcesChanged(self):
-		filterSource = self._tableFilter.filterSourceCurrent()
-		filterSite = self._filtersOld['sites'].get(filterSource, self.FilterAll)
-		sites = {self.FilterAll: None}
-		for hand in self._hands:
-			if hand.source == filterSource or filterSource == self.FilterAll:
-				sites[hand.site] = None
-		sites = sites.keys()
-		sites.sort()
-		self._tableFilter.setFilterSites(sites, filterSite)
-
-	def onFilterSitesChanged(self):
-		filterSource = self._tableFilter.filterSourceCurrent()
-		filterSite = self._tableFilter.filterSitesCurrent()
-		filterTable = self._filtersOld['tables'].get(filterSite, self.FilterAll)
-		tables = {self.FilterAll: None}
-		for hand in self._hands:
-			if hand.site == filterSite or filterSite == self.FilterAll:
-				tables[hand.table] = None
-		tables = tables.keys()
-		tables.sort()
-		self._tableFilter.setFilterTables(tables, filterTable)
-		self._filtersOld['sites'][filterSource] = filterSite
-
-	def onFilterTablesChanged(self):
-		filterSite = self._tableFilter.filterSitesCurrent()
-		filterTable = self._tableFilter.filterTablesCurrent()
-		self._filtersOld['tables'][filterSite] = filterTable
+	def onFilterChanged(self, name):
 		self.updateHands()
 
 	def onCurrentRowChanged(self, indexCurrent, indexPrev):
