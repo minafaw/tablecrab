@@ -176,6 +176,10 @@ class HandModel(QtCore.QAbstractTableModel):
 #************************************************************************************
 class FrameHandViewer(QtGui.QFrame):
 
+	SettingsKeyBase = 'HandViewer/'
+	SettingsKeySplitterState = SettingsKeyBase + 'SplitterState'
+	SettingsKeyFilterHeaderState = SettingsKeyBase + 'FilterHeaderState'
+
 	FilterAll = '*All'
 
 	def __init__(self, parent=None):
@@ -193,16 +197,16 @@ class FrameHandViewer(QtGui.QFrame):
 		self._splitter = QtGui.QSplitter(QtCore.Qt.Vertical, self)
 
 		self._tableHands = QtGui.QTableView(self)
-		self._tableFilter = FilterHeader(self._filters, parent=self._tableHands)
+		self._filterHeader = FilterHeader(self._filters, parent=self._tableHands)
 
 		self._tableHands.setSelectionBehavior(self._tableHands.SelectRows)
 		self._tableHands.setSelectionMode(self._tableHands.SingleSelection)
-		self._tableFilter.setMovable(True)
-		self._tableHands.setHorizontalHeader(self._tableFilter)
-		self._tableFilter.setStretchLastSection(True)
-		self._tableFilter.setDefaultAlignment(QtCore.Qt.AlignLeft)
+		self._filterHeader.setMovable(True)
+		self._tableHands.setHorizontalHeader(self._filterHeader)
+		self._filterHeader.setStretchLastSection(True)
+		self._filterHeader.setDefaultAlignment(QtCore.Qt.AlignLeft)
 		for filterData in self._filters:
-			self._tableFilter.setFilters(filterData['filterName'], (self.FilterAll, ))
+			self._filterHeader.setFilters(filterData['filterName'], (self.FilterAll, ))
 
 		handModel = HandModel([], self._filters, self._tableHands)
 		self._tableHands.setModel(handModel)
@@ -219,13 +223,17 @@ class FrameHandViewer(QtGui.QFrame):
 
 		# connect signals
 		self._tableHands.selectionModel().currentRowChanged.connect(self.onCurrentRowChanged)
-		self._tableFilter.filterChanged.connect(self.onFilterChanged)
+		self._filterHeader.filterChanged.connect(self.onFilterChanged)
 
 	def saveSettings(self, qSettings):
-		pass
+		qSettings.setValue(self.SettingsKeySplitterState, self._splitter.saveState())
+		qSettings.setValue(self.SettingsKeyFilterHeaderState, self._filterHeader.saveState())
 
 	def restoreSettings(self, qSettings):
-		pass
+		arr = qSettings.value(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray()
+		self._splitter.restoreState(arr)
+		arr = qSettings.value(self.SettingsKeyFilterHeaderState, QtCore.QByteArray()).toByteArray()
+		self._filterHeader.restoreState(arr)
 
 	def addHand(self, hand):
 		return self.addHands((hand, ))
@@ -234,7 +242,7 @@ class FrameHandViewer(QtGui.QFrame):
 		self._hands.extend(hands)
 		# update our filters
 		filterList = [
-				(filterData['filterName'], self._tableFilter.filters(filterData['filterName']))
+				(filterData['filterName'], self._filterHeader.filters(filterData['filterName']))
 				for	filterData in self._filters
 				if filterData['hasFilter']
 				]
@@ -248,10 +256,10 @@ class FrameHandViewer(QtGui.QFrame):
 				if value not in filters:
 					filters.append(value)
 			filters.sort()
-			filterCurrent = self._tableFilter.filterCurrent(filterName)
-			self._tableFilter.setFilters(filterName, filters)
+			filterCurrent = self._filterHeader.filterCurrent(filterName)
+			self._filterHeader.setFilters(filterName, filters)
 			if filterCurrent in filters:
-				self._tableFilter.setFilterCurrent(filterName, filterCurrent)
+				self._filterHeader.setFilterCurrent(filterName, filterCurrent)
 		self.updateHands()
 
 	def registerSource(self, name):
@@ -285,7 +293,7 @@ class FrameHandViewer(QtGui.QFrame):
 		hands = []
 		i = 0
 		filtersCurrent = [
-				(data['filterName'], self._tableFilter.filterCurrent(data['filterName']))
+				(data['filterName'], self._filterHeader.filterCurrent(data['filterName']))
 				for data in self._filters
 				]
 		for hand in self._hands:
@@ -331,8 +339,13 @@ class FrameHandViewer(QtGui.QFrame):
 #
 #************************************************************************************
 if __name__ == '__main__':
+	import os
+	fileNameIni = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test.ini')
+	settings = QtCore.QSettings(fileNameIni, QtCore.QSettings.IniFormat)
+
 	application = QtGui.QApplication([])
 	w = FrameHandViewer()
+	w.restoreSettings(settings)
 
 	class Hand(object):
 		def __init__(self, source, site, table, identifier):
@@ -353,7 +366,6 @@ if __name__ == '__main__':
 	x = 0
 	for h in range(2):
 		source = w.registerSource('file:/foo/bar-%s/source' % h)
-		print source
 		for i in range(2):
 			for j in range(2):
 				for k in range(5):
@@ -363,3 +375,4 @@ if __name__ == '__main__':
 	w.addHands(hands)
 	w.show()
 	application.exec_()
+	w.saveSettings(settings)
