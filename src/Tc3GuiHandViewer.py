@@ -1,11 +1,27 @@
 
+import os
 from PyQt4 import QtCore, QtGui, QtWebKit
+
+#************************************************************************************
+#
+#************************************************************************************
+def uniqueName(names, name):
+	uniqueName = name
+	i = 0
+	while True:
+		if uniqueName not in names:
+			break
+		i += 1
+		uniqueName = '%s (%s)' % (name, i)
+	return uniqueName
 
 #************************************************************************************
 #
 #************************************************************************************
 #NOTE: mostly taken from: http://lists.qt.nokia.com/pipermail/qt-interest/2009-August/011654.html
 class FilterHeader(QtGui.QHeaderView):
+
+	FilterMargin = 1
 
 	filterChanged = QtCore.pyqtSignal(QtCore.QString)
 
@@ -41,7 +57,7 @@ class FilterHeader(QtGui.QHeaderView):
 
 	def sizeHint(self):
 		size = QtGui.QHeaderView.sizeHint(self)
-		size.setHeight(size.height() + self.filterHeight() + 2)
+		size.setHeight(size.height() + self.filterHeight() + 2*self.FilterMargin)
 		return size
 
 	def updateGeometries(self):
@@ -165,6 +181,8 @@ class FrameHandViewer(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 		self._hands = []
+		self._sourceIdentifiers = {}
+		self._sourceNames = {}
 		self._filters = (
 				{'filterName': 'source', 'headerText': 'Source:', 'hasFilter': True},
 				{'filterName': 'site', 'headerText': 'Site:', 'hasFilter': True},
@@ -223,6 +241,10 @@ class FrameHandViewer(QtGui.QFrame):
 		for filterName, filters in filterList:
 			for hand in hands:
 				value = getattr(hand, filterName)
+				if filterName == 'source':
+					myName = self._sourceNames.get(value, None)
+					if myName is not None:
+						value = myName
 				if value not in filters:
 					filters.append(value)
 			filters.sort()
@@ -231,6 +253,24 @@ class FrameHandViewer(QtGui.QFrame):
 			if filterCurrent in filters:
 				self._tableFilter.setFilterCurrent(filterName, filterCurrent)
 		self.updateHands()
+
+	def registerSource(self, name):
+		"""registers a source to the hand viewer
+		@param name: (str) name of the source to register
+		@return: (str) adjusted name
+		@note: registering a source makes shure it is unique in the hand viewer.
+		@note: you should prefix file names to be registered with "file:" to enshure
+		propper	handling in the gui. the prefix is removed from the name returned.
+		"""
+		if name.startswith('file:'):
+			name = name[5:]
+			myName = 'file:' + os.path.basename(name)
+		else:
+			myName = name
+		myName = uniqueName(self._sourceIdentifiers, myName)
+		self._sourceIdentifiers[myName] = name
+		self._sourceNames[name] = myName
+		return name
 
 	def updateHands(self):
 
@@ -253,6 +293,11 @@ class FrameHandViewer(QtGui.QFrame):
 			for filterName, filterCurrent in filtersCurrent:
 				if filterCurrent is None: continue
 				if filterCurrent == self.FilterAll: continue
+				value = getattr(hand, filterName)
+				if filterName == 'source':
+					myName = self._sourceIdentifiers.get(filterCurrent, None)
+					if myName is not None:
+						filterCurrent = myName
 				if filterCurrent == getattr(hand, filterName): continue
 				handIsOk = False
 				break
@@ -307,11 +352,13 @@ if __name__ == '__main__':
 	hands = []
 	x = 0
 	for h in range(2):
+		source = w.registerSource('file:/foo/bar-%s/source' % h)
+		print source
 		for i in range(2):
 			for j in range(2):
 				for k in range(5):
 					x += 1
-					hands.append(Hand('source-%s' % h, 'site-%s' % i, 'table-%s' % j, '%s' % x))
+					hands.append(Hand(source, 'site-%s' % i, 'table-%s' % j, '%s' % x))
 
 	w.addHands(hands)
 	w.show()
