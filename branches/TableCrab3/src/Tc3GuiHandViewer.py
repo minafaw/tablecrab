@@ -382,9 +382,16 @@ class FrameHandViewer(QtGui.QFrame):
 			for hand in hands:
 				value = getattr(hand, filterName)
 				if filterName == 'source':
-					myName = self._sourceNames.get(value, None)
-					if myName is not None:
-						value = myName
+					if hand.sourceType == hand.SourceTypeFile:
+						myName = self._sourceNames.get(value, None)
+						if myName is None:
+							myName = os.path.basename(value)
+							myName = uniqueName(self._sourceIdentifiers, myName)
+							self._sourceIdentifiers[myName] = value
+							self._sourceNames[value] = myName
+							value = myName
+						else:
+							value = myName
 				if value not in filters:
 					filters.append(value)
 			filters.sort()
@@ -393,24 +400,6 @@ class FrameHandViewer(QtGui.QFrame):
 			if filterCurrent in filters:
 				self._filterHeader.setFilterCurrent(filterName, filterCurrent)
 		self.updateHands()
-
-	def registerSource(self, name):
-		"""registers a source to the hand viewer
-		@param name: (str) name of the source to register
-		@return: (str) adjusted name
-		@note: registering a source makes shure it is unique in the hand viewer.
-		@note: you should prefix file names to be registered with "file:" to enshure
-		propper	handling in the gui. the prefix is removed from the name returned.
-		"""
-		if name.startswith('file:'):
-			name = name[5:]
-			myName = 'file:' + os.path.basename(name)
-		else:
-			myName = name
-		myName = uniqueName(self._sourceIdentifiers, myName)
-		self._sourceIdentifiers[myName] = name
-		self._sourceNames[name] = myName
-		return name
 
 	def updateHands(self):
 
@@ -491,8 +480,12 @@ if __name__ == '__main__':
 	handViewer = FrameHandViewer()
 
 	class Hand(object):
-		def __init__(self, source, site, table, identifier):
+		SourceTypeNone = 0
+		SourceTypeFile = 1
+		SourceTypeOther = 99
+		def __init__(self, source, sourceType, site, table, identifier):
 			self.source = source
+			self.sourceType = sourceType
 			self.site = site
 			self.table = table
 			self.identifier = identifier
@@ -508,12 +501,13 @@ if __name__ == '__main__':
 	hands = []
 	x = 0
 	for h in range(2):
-		source = handViewer.registerSource('file:/foo/bar-%s/source' % h)
+		source = '/foo/bar-%s/source' % h
+		sourceType = Hand.SourceTypeFile
 		for i in range(2):
 			for j in range(2):
 				for k in range(5):
 					x += 1
-					hands.append(Hand(source, 'site-%s' % i, 'table-%s' % j, '%s' % x))
+					hands.append(Hand(source, sourceType, 'site-%s' % i, 'table-%s' % j, '%s' % x))
 
 	w = QtGui.QMainWindow()
 	w.setCentralWidget(handViewer)
