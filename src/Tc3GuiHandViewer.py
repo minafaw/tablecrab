@@ -2,6 +2,11 @@
 import os
 from PyQt4 import QtCore, QtGui, QtWebKit
 
+#TODO:
+# - filter history
+# - remove current selection
+# - sort column ascending/descending
+
 #************************************************************************************
 # resources
 #************************************************************************************
@@ -230,8 +235,9 @@ class FilterHeader(QtGui.QHeaderView):
 #NOTE: too lazy to implement an editable model. create a new model every time its
 # contents change instead.
 class HandModel(QtCore.QAbstractTableModel):
-	def __init__(self, hands, filters, parent=None):
-		QtCore.QAbstractTableModel.__init__(self, parent)
+	def __init__(self, hands, filters, tableHands):
+		QtCore.QAbstractTableModel.__init__(self, tableHands)
+		self._tableHands = tableHands
 		self._hands = hands
 		self._filters = filters
 
@@ -262,11 +268,26 @@ class HandModel(QtCore.QAbstractTableModel):
 		if orientation == Horizontal and role == DisplayRole:
 			return QVariant(self._filters[col]['headerText'])
 		elif orientation == Vertical and role == DisplayRole:
-			return QVariant(str(col+1))
+			#NOTE: we want to display hand numbers in the vert header always starting
+			# at 1. what we do here is pretty slow. have not found a cheap way to find
+			# the visual index of a row.
+			##return QVariant(str(col+1))	# Qts default row number handling
+			n = 0
+			isRowHidden = self._tableHands.isRowHidden
+			for i in xrange(0, col+1):
+				if not isRowHidden(i):
+					n += 1
+			return QVariant(str(n))
 		return QVariant()
 
-	def hand(self, i):
-		return self._hands[i]
+	def addHands(self, hands):
+		i = len(self._hands) -1
+		self.beginInsertRows(QtCore.QModelIndex(), i, i + len(hands) -1)
+		self._hands.extend(hands)
+		self.endInsertRows()
+
+	def hands(self):
+		return self._hands
 
 #************************************************************************************
 # hand viewer implementation
@@ -305,8 +326,8 @@ class FrameHandViewer(QtGui.QFrame):
 		for filterData in self._filters:
 			self._filterHeader.setFilters(filterData['filterName'], (self.FilterAll, ))
 
-		handModel = HandModel([], self._filters, self._tableHands)
-		self._tableHands.setModel(handModel)
+		self._handModel = HandModel([], self._filters, self._tableHands)
+		self._tableHands.setModel(self._handModel)
 
 		#
 		self._handViewer = QtWebKit.QWebView(self)
@@ -399,56 +420,36 @@ class FrameHandViewer(QtGui.QFrame):
 			self._filterHeader.setFilters(filterName, filters)
 			if filterCurrent in filters:
 				self._filterHeader.setFilterCurrent(filterName, filterCurrent)
-		self.updateHands()
+		self._handModel.addHands(hands)
+		self.filterHands()
 
-	def updateHands(self):
-
-		# check if a hand is selected and if it is present in new model
-		handSelected = None
-		rowSelected = None
-		indexSelected = self._tableHands.selectionModel().currentIndex()
-		if indexSelected.isValid():
-			handSelected = self._tableHands.model().hand(indexSelected.row())
-
-		# setup new model containing currently selected hands
-		hands = []
-		i = 0
-		filtersCurrent = [
-				(data['filterName'], self._filterHeader.filterCurrent(data['filterName']))
-				for data in self._filters
-				]
-		for hand in self._hands:
-			handIsOk = True
-			for filterName, filterCurrent in filtersCurrent:
-				if filterCurrent is None: continue
-				if filterCurrent == self.FilterAll: continue
-				value = getattr(hand, filterName)
-				if filterName == 'source':
-					myName = self._sourceIdentifiers.get(filterCurrent, None)
-					if myName is not None:
-						filterCurrent = myName
-				if filterCurrent == getattr(hand, filterName): continue
-				handIsOk = False
-				break
-			if handIsOk:
-				hands.append(hand)
-				if handSelected is not None and hand == handSelected:
-					rowSelected = i
-				i += 1
-		handModel = HandModel(hands, self._filters, self._tableHands)
-		self._tableHands.setModel(handModel)
-		#NOTE: acc to docs each model gets a new selection model assigned so we have to reconnect here
-		self._tableHands.selectionModel().currentRowChanged.connect(self.onCurrentRowChanged)
-
-		# reselect hand if possible
-		#NOTE: we lose selection if the last selected hand is not present in the new model
-		# one alternative would be to store selection for every filter combination, but
-		# this may get to confusing.
-		if rowSelected is not None:
-			self._tableHands.selectRow(rowSelected)
-			indexSelected = self._tableHands.selectionModel().currentIndex()
-			if indexSelected.isValid():
-				self._tableHands.scrollTo(indexSelected, self._tableHands.PositionAtCenter)
+	def filterHands(self):
+		self._tableHands.setUpdatesEnabled(False)
+		try:
+			i = 0
+			filtersCurrent = [
+					(data['filterName'], self._filterHeader.filterCurrent(data['filterName']))
+					for data in self._filters
+					]
+			for i, hand in enumerate(self._handModel.hands()):
+				handIsOk = True
+				for filterName, filterCurrent in filtersCurrent:
+					if filterCurrent is None: continue
+					if filterCurrent == self.FilterAll: continue
+					value = getattr(hand, filterName)
+					if filterName == 'source':
+						myName = self._sourceIdentifiers.get(filterCurrent, None)
+						if myName is not None:
+							filterCurrent = myName
+					if filterCurrent == getattr(hand, filterName): continue
+					handIsOk = False
+					break
+				if handIsOk:
+					self._tableHands.showRow(i)
+				else:
+					self._tableHands.hideRow(i)
+		finally:
+			self._tableHands.setUpdatesEnabled(True)
 
 	def nextHand(self):
 		pass
@@ -463,7 +464,7 @@ class FrameHandViewer(QtGui.QFrame):
 		pass
 
 	def onFilterChanged(self, name):
-		self.updateHands()
+		self.filterHands()
 
 	def onCurrentRowChanged(self, indexCurrent, indexPrev):
 		pass
