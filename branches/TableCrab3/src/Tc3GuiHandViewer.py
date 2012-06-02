@@ -406,7 +406,7 @@ class FrameHandViewer(QtGui.QFrame):
 					if hand.sourceType == hand.SourceTypeFile:
 						myName = self._sourceNames.get(value, None)
 						if myName is None:
-							myName = os.path.basename(value)
+							myName = 'file: ' + os.path.basename(value)
 							myName = uniqueName(self._sourceIdentifiers, myName)
 							self._sourceIdentifiers[myName] = value
 							self._sourceNames[value] = myName
