@@ -454,7 +454,7 @@ class FrameHandViewer(QtGui.QFrame):
 								value = myName
 					if value not in filters:
 						filters.append(value)
-			filters.sort()
+				filters.sort()
 			filterCurrent = self._filterHeader.filterCurrent(filterName)
 			self._filterHeader.setFilters(filterName, filters)
 			if filterCurrent in filters:
