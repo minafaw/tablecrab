@@ -326,8 +326,8 @@ class FrameHandViewer(QtGui.QFrame):
 	SettingsKeyFilterHeaderState = SettingsKeyBase + 'FilterHeaderState'
 
 	FilterAll = '*All'
-	FilterReview = '*Review'
-	FilterNoReview = '*NoReview'
+	FilterReview = 'Review'
+	FilterNoReview = 'NoReview'
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -348,7 +348,7 @@ class FrameHandViewer(QtGui.QFrame):
 		self._tableHands.setSelectionBehavior(self._tableHands.SelectRows)
 		self._tableHands.setSelectionMode(self._tableHands.SingleSelection)
 		self._filterHeader = FilterHeader(self._filters, parent=self._tableHands)
-		self._eventFilterTableHands = self.EventFilterTableHands(self._tableHands)
+		self._tableHandsEventFilter = self.EventFilterTableHands(self._tableHands)
 		self._filterHeader.setMovable(True)
 		self._tableHands.setHorizontalHeader(self._filterHeader)
 		self._filterHeader.setStretchLastSection(True)
@@ -407,7 +407,7 @@ class FrameHandViewer(QtGui.QFrame):
 		b.addWidget(self._splitter)
 
 		# connect signals
-		self._eventFilterTableHands.returnPressed.connect(self.onItemDoubleClicked)
+		self._tableHandsEventFilter.returnPressed.connect(self.onItemDoubleClicked)
 		self._tableHands.doubleClicked.connect(self.onItemDoubleClicked)
 		self._tableHands.selectionModel().selectionChanged.connect(self.onSelectionChanged)
 		self._filterHeader.filterChanged.connect(self.onFilterChanged)
@@ -428,17 +428,14 @@ class FrameHandViewer(QtGui.QFrame):
 	def addHands(self, hands):
 		self._hands.extend(hands)
 		# update our filters
-		filterList = [
-				(filterData['filterName'], self._filterHeader.filters(filterData['filterName']))
-				for	filterData in self._filters
-				if filterData['hasFilter']
-				]
+		filterList = [(i['filterName'], [self.FilterAll, ]) for i in self._filters if i['hasFilter']]
 		for filterName, filters in filterList:
 			if filterName == '_handViewer_review':
-				filters = [self.FilterAll, self.FilterReview, self.FilterNoReview]
+				filters.extend((self.FilterReview, self.FilterNoReview))
 				for hand in hands:
 					hand._handViewer_review = ''
 			else:
+				myFilters = []
 				for hand in hands:
 					value = getattr(hand, filterName)
 					if filterName == 'source':
@@ -452,9 +449,10 @@ class FrameHandViewer(QtGui.QFrame):
 								value = myName
 							else:
 								value = myName
-					if value not in filters:
-						filters.append(value)
-				filters.sort()
+					if value not in myFilters:
+						myFilters.append(value)
+				myFilters.sort()
+				filters.extend(myFilters)
 			filterCurrent = self._filterHeader.filterCurrent(filterName)
 			self._filterHeader.setFilters(filterName, filters)
 			if filterCurrent in filters:
@@ -470,17 +468,19 @@ class FrameHandViewer(QtGui.QFrame):
 			for i, hand in enumerate(self._handModel.hands()):
 				handIsOk = True
 				for filterName, filterCurrent in filtersCurrent:
-					if filterCurrent is None: continue
-					if filterCurrent == self.FilterAll: continue
-					value = getattr(hand, filterName)
-					if filterName == '_handViewer_review':
+					if filterCurrent is None:
+						continue
+					elif filterCurrent == self.FilterAll:
+						continue
+					elif filterName == '_handViewer_review':
 						if filterCurrent == self.FilterNoReview and not hand._handViewer_review:
 							continue
 					elif filterName == 'source':
 						myName = self._sourceIdentifiers.get(filterCurrent, None)
 						if myName is not None:
 							filterCurrent = myName
-					if filterCurrent == getattr(hand, filterName): continue
+					if filterCurrent == getattr(hand, filterName):
+						continue
 					handIsOk = False
 					break
 				if handIsOk:
