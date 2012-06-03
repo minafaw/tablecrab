@@ -200,6 +200,12 @@ class FilterHeader(QtGui.QHeaderView):
 		if combo is not None:
 			return unicode(self._comboDict[filterName].currentText().toUtf8(), 'utf-8')
 
+	def filtersCurrent(self):
+		return [
+			(data['filterName'], self.filterCurrent(data['filterName']))
+			for data in self._filters
+			]
+
 	def setFilterCurrent(self, filterName, value):
 		combo = self._comboDict[filterName]
 		if combo is not None:
@@ -232,8 +238,6 @@ class FilterHeader(QtGui.QHeaderView):
 #************************************************************************************
 # hand model implementation
 #************************************************************************************
-#NOTE: too lazy to implement an editable model. create a new model every time its
-# contents change instead.
 class HandModel(QtCore.QAbstractTableModel):
 	def __init__(self, hands, filters, tableHands):
 		QtCore.QAbstractTableModel.__init__(self, tableHands)
@@ -289,16 +293,41 @@ class HandModel(QtCore.QAbstractTableModel):
 	def hands(self):
 		return self._hands
 
+	def hand(self, i):
+		return self._hands[i]
+
+	def indexHand(self, hand):
+		return self._hands.index(hand)
+
 #************************************************************************************
 # hand viewer implementation
 #************************************************************************************
 class FrameHandViewer(QtGui.QFrame):
+
+	class EventFilterTableHands(QtCore.QObject):
+		returnPressed = QtCore.pyqtSignal(QtCore.QModelIndex)
+		def __init__(self, tableHands):
+			QtCore.QObject.__init__(self, tableHands)
+			self._tableHands = tableHands
+			tableHands.installEventFilter(self)
+		def eventFilter(self, obj, event):
+			if event.type() == QtCore.QEvent.KeyPress:
+				if event.key() == QtCore.Qt.Key_Return and not event.modifiers():
+					indexes = self._tableHands.selectionModel().selectedRows()
+					if not indexes:
+						return False
+					self.returnPressed.emit(indexes[0])
+					return True
+			return False
+
 
 	SettingsKeyBase = 'HandViewer/'
 	SettingsKeySplitterState = SettingsKeyBase + 'SplitterState'
 	SettingsKeyFilterHeaderState = SettingsKeyBase + 'FilterHeaderState'
 
 	FilterAll = '*All'
+	FilterReview = '*Review'
+	FilterNoReview = '*NoReview'
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
@@ -306,6 +335,7 @@ class FrameHandViewer(QtGui.QFrame):
 		self._sourceIdentifiers = {}
 		self._sourceNames = {}
 		self._filters = (
+				{'filterName': '_handViewer_review', 'headerText': 'Review:', 'hasFilter': True},
 				{'filterName': 'source', 'headerText': 'Source:', 'hasFilter': True},
 				{'filterName': 'site', 'headerText': 'Site:', 'hasFilter': True},
 				{'filterName': 'table', 'headerText': 'Table:', 'hasFilter': True},
@@ -315,10 +345,10 @@ class FrameHandViewer(QtGui.QFrame):
 		self._splitter = QtGui.QSplitter(QtCore.Qt.Vertical, self)
 
 		self._tableHands = QtGui.QTableView(self)
-		self._filterHeader = FilterHeader(self._filters, parent=self._tableHands)
-
 		self._tableHands.setSelectionBehavior(self._tableHands.SelectRows)
 		self._tableHands.setSelectionMode(self._tableHands.SingleSelection)
+		self._filterHeader = FilterHeader(self._filters, parent=self._tableHands)
+		self._eventFilterTableHands = self.EventFilterTableHands(self._tableHands)
 		self._filterHeader.setMovable(True)
 		self._tableHands.setHorizontalHeader(self._filterHeader)
 		self._filterHeader.setStretchLastSection(True)
@@ -339,16 +369,18 @@ class FrameHandViewer(QtGui.QFrame):
 		action.setToolTip('Back (Alt+-)')
 		action.setIcon(self._handViewer.pageAction(QtWebKit.QWebPage.Back).icon())
 		action.setShortcut(self._handViewer.pageAction(QtWebKit.QWebPage.Back).shortcut())
-		action.triggered.connect(self.previousHand)
+		action.triggered.connect(self.onActionPreviousTriggered)
 		self.addAction(action)
+		self._actionPrevious = action
 
 		action = QtGui.QAction(self)
 		action.setText('Forward')
 		action.setToolTip('Forward (Alt++)')
 		action.setIcon(self._handViewer.pageAction(QtWebKit.QWebPage.Forward).icon())
 		action.setShortcut(self._handViewer.pageAction(QtWebKit.QWebPage.Forward).shortcut())
-		action.triggered.connect(self.nextHand)
+		action.triggered.connect(self.onActionNextTriggered)
 		self.addAction(action)
+		self._actionNext = action
 
 		action = QtGui.QAction(self)
 		action.setText('ZoomIn')
@@ -375,7 +407,9 @@ class FrameHandViewer(QtGui.QFrame):
 		b.addWidget(self._splitter)
 
 		# connect signals
-		self._tableHands.selectionModel().currentRowChanged.connect(self.onCurrentRowChanged)
+		self._eventFilterTableHands.returnPressed.connect(self.onItemDoubleClicked)
+		self._tableHands.doubleClicked.connect(self.onItemDoubleClicked)
+		self._tableHands.selectionModel().selectionChanged.connect(self.onSelectionChanged)
 		self._filterHeader.filterChanged.connect(self.onFilterChanged)
 
 	def saveSettings(self, qSettings):
@@ -400,21 +434,26 @@ class FrameHandViewer(QtGui.QFrame):
 				if filterData['hasFilter']
 				]
 		for filterName, filters in filterList:
-			for hand in hands:
-				value = getattr(hand, filterName)
-				if filterName == 'source':
-					if hand.sourceType == hand.SourceTypeFile:
-						myName = self._sourceNames.get(value, None)
-						if myName is None:
-							myName = 'file: ' + os.path.basename(value)
-							myName = uniqueName(self._sourceIdentifiers, myName)
-							self._sourceIdentifiers[myName] = value
-							self._sourceNames[value] = myName
-							value = myName
-						else:
-							value = myName
-				if value not in filters:
-					filters.append(value)
+			if filterName == '_handViewer_review':
+				filters = [self.FilterAll, self.FilterReview, self.FilterNoReview]
+				for hand in hands:
+					hand._handViewer_review = ''
+			else:
+				for hand in hands:
+					value = getattr(hand, filterName)
+					if filterName == 'source':
+						if hand.sourceType == hand.SourceTypeFile:
+							myName = self._sourceNames.get(value, None)
+							if myName is None:
+								myName = 'file: ' + os.path.basename(value)
+								myName = uniqueName(self._sourceIdentifiers, myName)
+								self._sourceIdentifiers[myName] = value
+								self._sourceNames[value] = myName
+								value = myName
+							else:
+								value = myName
+					if value not in filters:
+						filters.append(value)
 			filters.sort()
 			filterCurrent = self._filterHeader.filterCurrent(filterName)
 			self._filterHeader.setFilters(filterName, filters)
@@ -427,17 +466,17 @@ class FrameHandViewer(QtGui.QFrame):
 		self._tableHands.setUpdatesEnabled(False)
 		try:
 			i = 0
-			filtersCurrent = [
-					(data['filterName'], self._filterHeader.filterCurrent(data['filterName']))
-					for data in self._filters
-					]
+			filtersCurrent = self._filterHeader.filtersCurrent()
 			for i, hand in enumerate(self._handModel.hands()):
 				handIsOk = True
 				for filterName, filterCurrent in filtersCurrent:
 					if filterCurrent is None: continue
 					if filterCurrent == self.FilterAll: continue
 					value = getattr(hand, filterName)
-					if filterName == 'source':
+					if filterName == '_handViewer_review':
+						if filterCurrent == self.FilterNoReview and not hand._handViewer_review:
+							continue
+					elif filterName == 'source':
 						myName = self._sourceIdentifiers.get(filterCurrent, None)
 						if myName is not None:
 							filterCurrent = myName
@@ -451,11 +490,44 @@ class FrameHandViewer(QtGui.QFrame):
 		finally:
 			self._tableHands.setUpdatesEnabled(True)
 
-	def nextHand(self):
+	def onActionNextTriggered(self):
 		pass
 
-	def previousHand(self):
+	def onActionPreviousTriggered(self):
 		pass
+
+	def onCurrentChanged(self, indexCurrent, indexPrevious):
+		pass
+
+	def onSelectionChanged(self, selection):
+		#FIX: QTableView row only selection is broken on Qt4. only available workaround
+		# seems to be to force a redraw by resizing the widget. downside off cause is
+		# that it slows things down noticably.
+		self._tableHands.setUpdatesEnabled(False)
+		try:
+			sizeOld = self._tableHands.geometry().size()
+			sizeNew = QtCore.QSize(sizeOld)
+			sizeNew.setHeight(sizeNew.height()+1)
+			self._tableHands.resize(sizeNew)
+			self._tableHands.resize(sizeOld)
+		finally:
+			self._tableHands.setUpdatesEnabled(True)
+		#/FIX:
+
+		indexes = selection.indexes()
+		if not indexes:
+			return
+		row = indexes[0].row()
+		hand = self._handModel.hand(row)
+		self._handViewer.setHtml('Hand: ' + hand.identifier)
+
+	def onItemDoubleClicked(self, index):
+		hand = self._handModel.hand(index.row())
+		if hand._handViewer_review:
+			hand._handViewer_review = ''
+		else:
+			hand._handViewer_review = self.FilterReview
+		self.filterHands()
 
 	def zoomIn(self):
 		pass
@@ -465,9 +537,6 @@ class FrameHandViewer(QtGui.QFrame):
 
 	def onFilterChanged(self, name):
 		self.filterHands()
-
-	def onCurrentRowChanged(self, indexCurrent, indexPrev):
-		pass
 
 #************************************************************************************
 # test code
