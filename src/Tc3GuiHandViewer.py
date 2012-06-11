@@ -300,6 +300,67 @@ class HandModel(QtCore.QAbstractTableModel):
 		return self._hands.index(hand)
 
 #************************************************************************************
+# history implementation
+#************************************************************************************
+class History(object):
+
+	def __init__(self, maxItems=32):
+		self._items = []
+		self._currentItem = None
+		self._maxItems = maxItems
+
+	def addItem(self, item):
+		if item in self._items:
+			self._items.remove(item)
+		self._items.append(item)
+		self._currentItem = item
+		self._items = self._items[-self._maxItems:]
+
+	def currentItem(self):
+		return self._currentItem
+
+	def canGoBack(self):
+		if self._items:
+			i = self._items.index(self._currentItem)
+			return i > 0
+		return False
+
+	def canGoForward(self):
+		if self._items:
+			i = self._items.index(self._currentItem)
+			return i < len(self._items) -1
+		return False
+
+	def goBack(self):
+		if not self._items:
+			raise ValueError('can not go back in empty history')
+		i = self._items.index(self._currentItem)
+		if i == 0:
+			raise ValueError('can not move beyound first item')
+		self._currentItem = self._items[i-1]
+
+	def goForward(self):
+		if not self._items:
+			raise ValueError('can not go forward in empty history')
+		i = self._items.index(self._currentItem)
+		if i == len(self._items) -1:
+			raise ValueError('can not move beyound last item')
+		self._currentItem = self._items[i+1]
+
+	def maxItems(self):
+		return self._maxItems
+
+	def setMaxItems(self, n):
+		self._maxItems = n
+		self._items = self._items[-self._maxItems:]
+		if self._currentItem is not None:
+			if self._currentItem not in self._items:
+				if self._items:
+					self._currentItem = self._items[-1]
+				else:
+					self._currentItem = None
+
+#************************************************************************************
 # hand viewer implementation
 #************************************************************************************
 class FrameHandViewer(QtGui.QFrame):
@@ -332,6 +393,7 @@ class FrameHandViewer(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 		self._hands = []
+		self._history = History()
 		self._sourceIdentifiers = {}
 		self._sourceNames = {}
 		self._filters = (
@@ -366,18 +428,20 @@ class FrameHandViewer(QtGui.QFrame):
 		# actions
 		action = QtGui.QAction(self)
 		action.setText('Back')
-		action.setToolTip('Back (Alt+-)')
+		keySequence = QtGui.QKeySequence(QtGui.QKeySequence.Back)
+		action.setToolTip('Back (%s)' % keySequence.toString())
 		action.setIcon(self._handViewer.pageAction(QtWebKit.QWebPage.Back).icon())
-		action.setShortcut(self._handViewer.pageAction(QtWebKit.QWebPage.Back).shortcut())
+		action.setShortcut(keySequence)
 		action.triggered.connect(self.onActionPreviousTriggered)
 		self.addAction(action)
 		self._actionPrevious = action
 
 		action = QtGui.QAction(self)
 		action.setText('Forward')
-		action.setToolTip('Forward (Alt++)')
+		keySequence = QtGui.QKeySequence(QtGui.QKeySequence.Forward)
+		action.setToolTip('Forward (%s)' % keySequence.toString())
 		action.setIcon(self._handViewer.pageAction(QtWebKit.QWebPage.Forward).icon())
-		action.setShortcut(self._handViewer.pageAction(QtWebKit.QWebPage.Forward).shortcut())
+		action.setShortcut(keySequence)
 		action.triggered.connect(self.onActionNextTriggered)
 		self.addAction(action)
 		self._actionNext = action
@@ -412,15 +476,7 @@ class FrameHandViewer(QtGui.QFrame):
 		self._tableHands.selectionModel().selectionChanged.connect(self.onSelectionChanged)
 		self._filterHeader.filterChanged.connect(self.onFilterChanged)
 
-	def saveSettings(self, qSettings):
-		qSettings.setValue(self.SettingsKeySplitterState, self._splitter.saveState())
-		qSettings.setValue(self.SettingsKeyFilterHeaderState, self._filterHeader.saveState())
-
-	def restoreSettings(self, qSettings):
-		arr = qSettings.value(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray()
-		self._splitter.restoreState(arr)
-		arr = qSettings.value(self.SettingsKeyFilterHeaderState, QtCore.QByteArray()).toByteArray()
-		self._filterHeader.restoreState(arr)
+		self.adjustActions()
 
 	def addHand(self, hand):
 		return self.addHands((hand, ))
@@ -460,6 +516,10 @@ class FrameHandViewer(QtGui.QFrame):
 		self._handModel.addHands(hands)
 		self.filterHands()
 
+	def adjustActions(self):
+		self._actionPrevious.setEnabled(self._history.canGoBack())
+		self._actionNext.setEnabled(self._history.canGoForward())
+
 	def filterHands(self):
 		self._tableHands.setUpdatesEnabled(False)
 		try:
@@ -490,14 +550,50 @@ class FrameHandViewer(QtGui.QFrame):
 		finally:
 			self._tableHands.setUpdatesEnabled(True)
 
-	def onActionNextTriggered(self):
+	def maxHistoryItems(self):
+		return self._history.maxItems()
+
+	def restoreSettings(self, qSettings):
+		arr = qSettings.value(self.SettingsKeySplitterState, QtCore.QByteArray()).toByteArray()
+		self._splitter.restoreState(arr)
+		arr = qSettings.value(self.SettingsKeyFilterHeaderState, QtCore.QByteArray()).toByteArray()
+		self._filterHeader.restoreState(arr)
+
+	def saveSettings(self, qSettings):
+		qSettings.setValue(self.SettingsKeySplitterState, self._splitter.saveState())
+		qSettings.setValue(self.SettingsKeyFilterHeaderState, self._filterHeader.saveState())
+
+	def setMaxHistoryItems(self, n):
+		return self._history.setMaxItems(n)
+
+	def zoomIn(self):
 		pass
+
+	def zoomOut(self):
+		pass
+
+	def onActionNextTriggered(self):
+		self._history.goForward()
+		hand = self._history.currentItem()
+		self._handViewer.setHtml('Hand: ' + hand.identifier)
+		self.adjustActions()
 
 	def onActionPreviousTriggered(self):
-		pass
+		self._history.goBack()
+		hand = self._history.currentItem()
+		self._handViewer.setHtml('Hand: ' + hand.identifier)
+		self.adjustActions()
 
-	def onCurrentChanged(self, indexCurrent, indexPrevious):
-		pass
+	def onFilterChanged(self, name):
+		self.filterHands()
+
+	def onItemDoubleClicked(self, index):
+		hand = self._handModel.hand(index.row())
+		if hand._handViewer_review:
+			hand._handViewer_review = ''
+		else:
+			hand._handViewer_review = self.FilterReview
+		self.filterHands()
 
 	def onSelectionChanged(self, selection):
 		#FIX: QTableView row only selection is broken on Qt4. only available workaround
@@ -520,23 +616,8 @@ class FrameHandViewer(QtGui.QFrame):
 		row = indexes[0].row()
 		hand = self._handModel.hand(row)
 		self._handViewer.setHtml('Hand: ' + hand.identifier)
-
-	def onItemDoubleClicked(self, index):
-		hand = self._handModel.hand(index.row())
-		if hand._handViewer_review:
-			hand._handViewer_review = ''
-		else:
-			hand._handViewer_review = self.FilterReview
-		self.filterHands()
-
-	def zoomIn(self):
-		pass
-
-	def zoomOut(self):
-		pass
-
-	def onFilterChanged(self, name):
-		self.filterHands()
+		self._history.addItem(hand)
+		self.adjustActions()
 
 #************************************************************************************
 # test code
