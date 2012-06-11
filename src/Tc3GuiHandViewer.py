@@ -425,7 +425,7 @@ class FrameHandViewer(QtGui.QFrame):
 		self._handViewer = QtWebKit.QWebView(self)
 		self._handViewer.setHtml('')
 
-		# actions
+		# setup actions
 		action = QtGui.QAction(self)
 		action.setText('Back')
 		keySequence = QtGui.QKeySequence(QtGui.QKeySequence.Back)
@@ -476,6 +476,7 @@ class FrameHandViewer(QtGui.QFrame):
 		self._tableHands.selectionModel().selectionChanged.connect(self.onSelectionChanged)
 		self._filterHeader.filterChanged.connect(self.onFilterChanged)
 
+		# init gui
 		self.adjustActions()
 
 	def addHand(self, hand):
