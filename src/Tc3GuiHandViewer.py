@@ -356,7 +356,7 @@ class History(object):
 		if self._currentItem is not None:
 			if self._currentItem not in self._items:
 				if self._items:
-					self._currentItem = self._items[-1]
+					self._currentItem = self._items[0]
 				else:
 					self._currentItem = None
 
@@ -565,7 +565,8 @@ class FrameHandViewer(QtGui.QFrame):
 		qSettings.setValue(self.SettingsKeyFilterHeaderState, self._filterHeader.saveState())
 
 	def setMaxHistoryItems(self, n):
-		return self._history.setMaxItems(n)
+		self._history.setMaxItems(n)
+		self.adjustActions()
 
 	def zoomIn(self):
 		pass
