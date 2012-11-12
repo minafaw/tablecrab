@@ -564,6 +564,9 @@ class FrameHandViewer(QtGui.QFrame):
 		qSettings.setValue(self.SettingsKeySplitterState, self._splitter.saveState())
 		qSettings.setValue(self.SettingsKeyFilterHeaderState, self._filterHeader.saveState())
 
+	def setHand(self, hand):
+		self._handViewer.setHtml('Hand: ' + hand.identifier)
+
 	def setMaxHistoryItems(self, n):
 		self._history.setMaxItems(n)
 		self.adjustActions()
@@ -577,13 +580,13 @@ class FrameHandViewer(QtGui.QFrame):
 	def onActionNextTriggered(self):
 		self._history.goForward()
 		hand = self._history.currentItem()
-		self._handViewer.setHtml('Hand: ' + hand.identifier)
+		self.setHand(hand)
 		self.adjustActions()
 
 	def onActionPreviousTriggered(self):
 		self._history.goBack()
 		hand = self._history.currentItem()
-		self._handViewer.setHtml('Hand: ' + hand.identifier)
+		self.setHand(hand)
 		self.adjustActions()
 
 	def onFilterChanged(self, name):
@@ -617,7 +620,7 @@ class FrameHandViewer(QtGui.QFrame):
 			return
 		row = indexes[0].row()
 		hand = self._handModel.hand(row)
-		self._handViewer.setHtml('Hand: ' + hand.identifier)
+		self.setHand(hand)
 		self._history.addItem(hand)
 		self.adjustActions()
 
