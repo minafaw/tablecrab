@@ -118,7 +118,6 @@ class FrameHelp(QtGui.QFrame):
 	def onGlobalObjectInitSettingsFinished(self, globalObject):
 		self.tree.setUpdatesEnabled(False)
 
-		self.browser.setUrl(QtCore.QUrl(''))
 		#
 		lastTopic = Tc2Config.settingsValue(self.SettingsKeyHelpTopic, '').toString()
 		topicsCollapsed = Tc2Config.settingsValue(self.SettingsKeyTopicsCollapsed, []).toStringList()
