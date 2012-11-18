@@ -11,7 +11,7 @@ class RawNetworkReply(QtNetwork.QNetworkReply):
 	def __init__(self, parent=None):
 		QtNetwork.QNetworkReply.__init__(self, parent)
 		self._data = None
-		self._dataPos = 0
+		self._offset = 0
 		self.open(self.ReadOnly | self.Unbuffered)
 		self.timer = QtCore.QTimer(self)
 		self.timer.setSingleShot(True)
@@ -24,7 +24,7 @@ class RawNetworkReply(QtNetwork.QNetworkReply):
 	def abort(self):	pass
 	def bytesAvailable(self):
 		if self._data is not None:
-			return len(self._data) - self._dataPos
+			return len(self._data) - self._offset
 		return 0
 	def isSequential(self): return True
 	def readData(self, maxSize):
@@ -32,11 +32,11 @@ class RawNetworkReply(QtNetwork.QNetworkReply):
 		# maybe i am getting wrong what it is supposed to do?
 		#self.finished.emit()
 		#NOTE: we can not return -1 here. no idea how this is handled in PyQt
-		stop = self._dataPos + maxSize
+		stop = self._offset + maxSize
 		if stop >= len(self._data):
 			stop = len(self._data)
-		data =  self._data[self._dataPos:stop]
-		self._dataPos = stop
+		data =  self._data[self._offset:stop]
+		self._offset = stop
 		arr = QtCore.QByteArray()
 		arr += data
 		return arr.data()
