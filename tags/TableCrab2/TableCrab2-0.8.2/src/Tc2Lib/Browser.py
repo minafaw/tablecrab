@@ -8,6 +8,7 @@ from PyQt4 import QtCore, QtGui, QtNetwork, QtWebKit
 #************************************************************************************
 class RawNetworkReply(QtNetwork.QNetworkReply):
 	# this thingy will hand out everything you throw at it via setData()
+	#FIXME: for some unknown reason WebKit does not always read all available data.  
 	def __init__(self, parent=None):
 		QtNetwork.QNetworkReply.__init__(self, parent)
 		self._data = None
