@@ -249,12 +249,14 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 				)
 		if fileName is None:
 			return
+		fileName = unicode(fileName.toUtf8(), 'utf-8')
 		fp = None
 		try:
 			fp = codecs.open(fileName, 'w', encoding='utf-8')
-			fp.write( unicode(self._browser.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
 		except Exception, d:
-			Tc2Config.msgWarning(self, 'Could Not Save Nash Calculations\n\n%s' % d)
+			Tc2Config.msgWarning(self, 'Could Not Save Nash Calculations\n\n%s' % d)	
+		try:
+			fp.write( unicode(self._browser.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
 		finally:
 			if fp is not None: fp.close()
 		#TODO: can we rename hand in cache? i font think so. no way to inform WebKit
@@ -465,12 +467,14 @@ td{text-align: center;vertical-align: text-top;}
 				)
 		if fileName is None:
 			return
+		fileName = unicode(fileName.toUtf8(), 'utf-8')
 		fp = None
 		try:
 			fp = codecs.open(fileName, 'w', encoding='utf-8')
-			fp.write( unicode(self._browser.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
 		except Exception, d:
 			Tc2Config.msgWarning(self, 'Could Not Save ICM tax calculations\n\n%s' % d)
+		try:	
+			fp.write( unicode(self._browser.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
 		finally:
 			if fp is not None: fp.close()
 		#TODO: can we rename hand in cache? i font think so. no way to inform WebKit
@@ -700,12 +704,14 @@ class FrameHandViewer(QtGui.QFrame):
 				)
 		if fileName is None:
 			return
+		fileName = unicode(fileName.toUtf8(), 'utf-8')
 		fp = None
 		try:
 			fp = codecs.open(fileName, 'w', encoding='utf-8')
-			fp.write( unicode(self._browser.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
 		except Exception, d:
-			Tc2Config.msgWarning(self, 'Could Not Save Hand\n\n%s' % d)
+			Tc2Config.msgWarning(self, 'Could Not Save Hand\n\n%s' % d)	
+		try:	
+			fp.write( unicode(self._browser.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
 		finally:
 			if fp is not None: fp.close()
 		#TODO: can we rename hand in cache? i font think so. no way to inform WebKit
