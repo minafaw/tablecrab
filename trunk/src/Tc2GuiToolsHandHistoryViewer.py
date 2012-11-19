@@ -194,12 +194,15 @@ class FrameTool(QtGui.QFrame):
 				)
 		if fileName is None:
 			return
+		fileName = unicode(fileName.toUtf8(), 'utf-8')
 		fp = None
 		try:
 			fp = codecs.open(fileName, 'w', encoding='utf-8')
-			fp.write(self.handHistoryFile.raw())
 		except Exception, d:
-			Tc2Config.msgWarning(self, 'Could Not Save Hand history\n\n%s' % d)
+			Tc2Config.msgWarning(self, 'Could not open file\n%s' % d)
+			return
+		try:
+			fp.write(self.handHistoryFile.raw())
 		finally:
 			if fp is not None: fp.close()
 
@@ -215,12 +218,14 @@ class FrameTool(QtGui.QFrame):
 				)
 		if fileName is None:
 			return
+		fileName = unicode(fileName.toUtf8(), 'utf-8')
 		fp = None
 		try:
 			fp = codecs.open(fileName, 'w', encoding='utf-8')
-			fp.write( unicode(self._browser.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
 		except Exception, d:
 			Tc2Config.msgWarning(self, 'Could Not Save Hand\n\n%s' % d)
+		try:
+			fp.write( unicode(self._browser.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
 		finally:
 			if fp is not None: fp.close()
 
