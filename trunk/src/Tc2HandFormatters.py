@@ -460,6 +460,11 @@ class HandFormatterHtmlTabular(object):
 		# dump html to file
 		p << '</table>'
 		p | '<pre class="handSource">%s</pre>' % self.htmlEscapeString(hand.handHistory, spaces=False)
+		#FIX: for bug [https://bugreports.qt-project.org/browse/QTBUG-27469]. Qt does not query
+		# last 512 bytes via QNetworkReply in custom protocols
+		p | '<div class="WorkaroundForQtBug27469" style="visibility:hidden">%s</div></body></html>' % ('x'*429)
+		#/FIX:
+		p | '<div style="visibility:hidden">foo</div>'
 		p << '</body>'
 		p << '</html>'
 		return p.data.encode('utf-8')
