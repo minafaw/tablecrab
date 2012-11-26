@@ -102,7 +102,6 @@ from Tc2Res import Pixmaps, HtmlPages, StyleSheets
 QtCore.QLocale.setDefault(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates) )
 locale = QtCore.QLocale()
 
-
 SingleApplicationMagicString = '73524668475460800279396959888864133024'
 SingleApplicationScopeDefault = Tc2Win32.SingleApplication.ScopeSession
 

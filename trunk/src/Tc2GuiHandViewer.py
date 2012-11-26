@@ -254,7 +254,7 @@ class BrowserSideBarNashCalculations(QtGui.QFrame):
 		try:
 			fp = codecs.open(fileName, 'w', encoding='utf-8')
 		except Exception, d:
-			Tc2Config.msgWarning(self, 'Could Not Save Nash Calculations\n\n%s' % d)	
+			Tc2Config.msgWarning(self, 'Could Not Save Nash Calculations\n\n%s' % d)
 		try:
 			fp.write( unicode(self._browser.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
 		finally:
@@ -473,7 +473,7 @@ td{text-align: center;vertical-align: text-top;}
 			fp = codecs.open(fileName, 'w', encoding='utf-8')
 		except Exception, d:
 			Tc2Config.msgWarning(self, 'Could Not Save ICM tax calculations\n\n%s' % d)
-		try:	
+		try:
 			fp.write( unicode(self._browser.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
 		finally:
 			if fp is not None: fp.close()
@@ -709,8 +709,8 @@ class FrameHandViewer(QtGui.QFrame):
 		try:
 			fp = codecs.open(fileName, 'w', encoding='utf-8')
 		except Exception, d:
-			Tc2Config.msgWarning(self, 'Could Not Save Hand\n\n%s' % d)	
-		try:	
+			Tc2Config.msgWarning(self, 'Could Not Save Hand\n\n%s' % d)
+		try:
 			fp.write( unicode(self._browser.page().mainFrame().toHtml().toUtf8(), 'utf-8')  )
 		finally:
 			if fp is not None: fp.close()
@@ -763,7 +763,7 @@ class FrameHandViewer(QtGui.QFrame):
 		data = self._handCache.get(url.toString(), None)
 		if data is None:
 			return
-		networkReply.setData(data,  'text/html; charset=utf-8')
+		networkReply.setData(data,  'text/html; charset=utf-8;')
 		# give feedback
 		if url.scheme() == 'file':
 			fileName = url.path()[1:]
