@@ -369,9 +369,7 @@ class HandFormatterHtmlTabular(object):
 	#------------------------------------------
 
 	def formatNum(self, hand, num):
-		if not num:
-			result = ''
-		elif hand.hasCents:
+		if hand.hasCents:
 			if self.noFloatingPoint():
 				result = Tc2Config.locale.toString( int(num*100) )
 			else:
@@ -444,7 +442,7 @@ class HandFormatterHtmlTabular(object):
 		p << '</head>'
 		p >> '<body class="handBody">'
 		p >> '<table class="handTable">'
-		p | '<tr><td class="gameName" colspan="99">%s</td></tr>' % hand.gameName
+		p | '<tr><td class="gameName" colspan="99">%s / rake: %s</td></tr>' % (hand.gameName, self.formatNum(hand, hand.rake))
 
 		if hand.gameType & hand.GameTypeHoldem or hand.gameType & hand.GameTypeOmaha:
 			self.formattHandHoldem(p, hand)

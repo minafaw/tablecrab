@@ -360,6 +360,13 @@ class HandParser(object):
 			hand.playerFromName(result.group('player')).cards = self.stringToCards(result.group('cards'))
 		return result is not None
 
+	PatternRake = re.compile('^Total\s pot .* \s\|\s Rake\s [%s]? (?P<amount>[0-9\.\,]+ )' % Currencies, re.X)
+	def matchRake(self, hand, streetCurrent, line):
+		result = self.PatternRake.match(line)
+		if result is not None:
+			hand.rake = self.stringToFloat(result.group('amount'))
+		return result is not None
+
 	PatternDiscardCards = re.compile('^(?P<player>.+?) \:\s discards \s (?P<n>\d) \s card(s)?', re.X)
 	def matchDiscardCards(self, hand, streetCurrent, line):
 		result = self.PatternDiscardCards.match(line)
@@ -500,6 +507,7 @@ class HandParser(object):
 				if self.matchBoardCards(hand, streetCurrent, line): continue
 				if self.matchShowedCards(hand, streetCurrent, line): continue
 				if self.matchMuckedCards(hand, streetCurrent, line): continue
+				if self.matchRake(hand, streetCurrent, line): continue
 			else:
 				if self.matchBringsIn(hand, streetCurrent, line): continue
 				if self.matchDealtTo(hand, streetCurrent, line): continue
