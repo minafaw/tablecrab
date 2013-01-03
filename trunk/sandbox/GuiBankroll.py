@@ -126,7 +126,7 @@ ApplicationName = 'Bankroll'
 ApplicationTitle = '%s-%s' % (ApplicationName, Version)
 
 UrlopenTimeout = 3	# in seconds
-Debug = True
+Debug = False
 
 
 def fetchBTC():
