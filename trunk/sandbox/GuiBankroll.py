@@ -1,29 +1,29 @@
-'''
-Copyright (c) 20012 Juergen Urner
+#************************************************************************************
+# MIT License - Copyright (c) 20012 Juergen Urner
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this
+# software and associated documentation files (the "Software"), to deal in the Software
+# without restriction, including without limitation the rights to use, copy, modify,
+# merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to the following
+# conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies
+# or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+# CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+# OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#************************************************************************************
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-and associated documentation files (the "Software"), to deal in the Software without restriction,
-including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
-OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
-
--------------------------------------------------------------------------------------
+'''-------------------------------------------------------------------------------------
 Bankroll.py - a Gui for keeping track of your sessions
 -------------------------------------------------------------------------------------
 
 WARNING: this Gui is highly experimental and very bare bones. so use at your own risk.
-
-
 
 the Gui runs on linux only. the following packages should be installed on your machine:
 - PyQt4
@@ -31,12 +31,10 @@ the Gui runs on linux only. the following packages should be installed on your m
 
 on ubuntu you install these by running the following command in your terminal:
 
-
 sudo apt-get install python-qt4 python-qwt5-qt4
 
 
 then start the Gui by running the following command:
-
 
 python -B /path/to/bankroll.py
 
@@ -82,14 +80,13 @@ MyHomeGame Tourney $4 | USD | 10.03.2012-20:35 | -4.00
 ## the following lines are commented in again
 MyHomeGame Tourney $4 | USD | 09.03.2012-20:35 | +12
 
-
 that's it.
 
 ---------
 Notes:
 ---------
 
-the Gui automatically creates backups of every file you open (20). they are stored in
+the Gui automatically creates backups of every file you open (32). they are stored in
 a folder <YourFileName.txt.bck> in the directory the file resides. make shure nothing
 evil can happen, you are on your own here.
 
@@ -106,10 +103,9 @@ to retrieve exchange rates the Gui queries the following sites on every startup:
   so don't push too hard, otherwise you may get banned.
 
 - https://rate-exchange.appspot.com/currency?from=USD&to=EUR
-  for US dollar echange rate
+  US dollar echange rate.
 
 '''
-
 from __future__ import with_statement
 import os, calendar, operator, sys, codecs, re, json, shutil, time
 from PyQt4 import QtCore, QtGui
@@ -188,7 +184,7 @@ def getCurrentExchangeRates():
 
 
 #NOTE: this thingy is dangerous!
-def backupFile(fileName, n=20):
+def backupFile(fileName, n=32):
 	fileName = os.path.realpath(fileName)
 	directory, name = os.path.split(fileName)
 	directory = os.path.join(directory, name + '.bck')
@@ -277,6 +273,8 @@ class SessionTypesWidget(QtGui.QTreeWidget):
 				item.setText(2, '(%s)' % sessionType['sessions'])
 				self._itemSetBallance(item, amount)
 				sessionType['item'] = item
+			# add blank item + item for total
+			item = QtGui.QTreeWidgetItem(self)
 			self._itemTotal = QtGui.QTreeWidgetItem(self)
 			self._itemTotal.setText(0, '#Total')
 		finally:
@@ -356,10 +354,13 @@ class SessionTypesWidget(QtGui.QTreeWidget):
 		self.sessionTypesChanged.emit(self)
 
 	def onItemDoubleclicked(self, item, i):
-		if item.checkState(0) == QtCore.Qt.Checked:
-			item.setCheckState(0, QtCore.Qt.Unchecked)
-		else:
-			item.setCheckState(0, QtCore.Qt.Checked)
+		for sessionType in self._sessionTypes:
+			if sessionType['item'] is item:
+				if item.checkState(0) == QtCore.Qt.Checked:
+					item.setCheckState(0, QtCore.Qt.Unchecked)
+				else:
+					item.setCheckState(0, QtCore.Qt.Checked)
+				break
 
 #************************************************************************************
 #
@@ -476,6 +477,7 @@ class FrameBankroll(QtGui.QFrame):
 
 	SettingsKeyCurrency = 'Gui/Curreny'
 	SettingsKeyDlgOpenFileNameState = 'Gui/DlgOpenFileNameState'
+	SettingsKeyDlgHelpGeometry = 'Gui/DlgHelpGeometry'
 	SettingsKeyFileName = 'Gui/FileName'
 	SettingsKeySessionStates = 'Gui/SessionStates'
 	SettingsKeySessionTypesHeaderState = 'Gui/SessionTypesHeaderState'
@@ -513,14 +515,14 @@ class FrameBankroll(QtGui.QFrame):
 		self._actionSelectNone.triggered.connect(self.selectNoneSessionTypes)
 		self._toolBar.addAction(self._actionSelectNone)
 
-		self._labelCurrency = QtGui.QLabel('Currency:', self)
-		self._toolBar.addWidget(self._labelCurrency)
+		#self._labelCurrency = QtGui.QLabel('Currency:', self)
+		#self._toolBar.addWidget(self._labelCurrency)
 
 		self.comboCurrency = QtGui.QComboBox(self)
 		self._toolBar.addWidget(self.comboCurrency)
 
-		self._labelFileName = QtGui.QLabel('File:', self)
-		self._toolBar.addWidget(self._labelFileName)
+		#self._labelFileName = QtGui.QLabel('File:', self)
+		#self._toolBar.addWidget(self._labelFileName)
 
 		self._editFileName = QtGui.QLineEdit(self)
 		self._toolBar.addWidget(self._editFileName)
@@ -531,8 +533,16 @@ class FrameBankroll(QtGui.QFrame):
 		self._actionSelectFileName.triggered.connect(self.onSelectFileName)
 		self._toolBar.addAction(self._actionSelectFileName)
 
+		self._actionHelp = QtGui.QAction(self)
+		self._actionHelp.setText('Help')
+		self._actionHelp.triggered.connect(self.onHelp)
+		self._toolBar.addAction(self._actionHelp)
+
+		self._statusBar = QtGui.QStatusBar(self)
 		self._labelStatus = QtGui.QLabel('#Ready', self)
+		self._statusBar.addWidget(self._labelStatus)
 		self._labelInfo = QtGui.QLabel('Info', self)
+		self._statusBar.addWidget(self._labelInfo)
 
 		self._settings = None
 		self._sessions = []
@@ -540,27 +550,24 @@ class FrameBankroll(QtGui.QFrame):
 		self._exchangeRatesError = ''
 		self._fileName = ''
 		self._sessionStates = {}
-		self._editIsDirty = False
 
 	def layout(self):
 
 		self.setContentsMargins(0, 0, 0, 0)
 
 		box0 = QtGui.QVBoxLayout(self)
-		box0.addWidget(self._splitterV)
-
-		self._splitterV.addWidget(self._edit)
-		self._splitterV.addWidget(self._splitterH)
+		box0.addWidget(self._splitterH)
 
 		self._splitterH.addWidget(self._sessionTypesWidget)
-		self._splitterH.addWidget(self._graphWidget)
+		self._splitterH.addWidget(self._splitterV)
+
+		self._splitterV.addWidget(self._graphWidget)
+		self._splitterV.addWidget(self._edit)
 
 		box0.addWidget(self._toolBar)
+		box0.addWidget(self._statusBar)
 
-		box2 = QtGui.QHBoxLayout()
-		box0.addLayout(box2)
-		box2.addWidget(self._labelStatus)
-		box2.addWidget(self._labelInfo)
+		box0.setStretch(0, 99)
 
 	def currency(self):
 		return str(self.comboCurrency.currentText())
@@ -660,7 +667,7 @@ class FrameBankroll(QtGui.QFrame):
 			#NOTE: have to use a timer here, otherwise syntax highlighter does not work
 			ErrorLinenoTimer(self._edit, errors[0])
 		else:
-			self.feedbackMessage('#Ready: %s' % os.path.basename(self._fileName))
+			self.feedbackStatus('#Ready: %s' % os.path.basename(self._fileName))
 
 		# finally
 		self._sessions.sort(key=operator.itemgetter('date'))
@@ -672,7 +679,7 @@ class FrameBankroll(QtGui.QFrame):
 			with codecs.open(fileName, 'r', 'UTF-8') as fp:
 				self._edit.setPlainText(fp.read())
 				self._edit.setReadOnly(False)
-				self.feedbackMessage('#Ready:')
+				self.feedbackStatus('#Ready:')
 				self.loadSessions()
 				backupFile(fileName)
 		except IOError:
@@ -687,7 +694,7 @@ class FrameBankroll(QtGui.QFrame):
 	def feedbackError(self, msg):
 		self._labelStatus.setText(self.ErrMessage % msg)
 
-	def feedbackMessage(self, msg):
+	def feedbackStatus(self, msg):
 		self._labelStatus.setText(msg)
 
 	def feedbackInfo(self):
@@ -696,13 +703,13 @@ class FrameBankroll(QtGui.QFrame):
 		else:
 			currencyCurrent = str(self.comboCurrency.currentText())
 			rate = self._exchangeRates[currencyCurrent]
-			msg = '1%s=' % currencyCurrent
+			msg = '%s=(' % currencyCurrent
 			for currency in sorted(self._exchangeRates):
 				if currency == currencyCurrent:
 					continue
 				rate2 = self._exchangeRates[currency]
-				msg += '%.2f%s,' % (rate / rate2, currency)
-			msg = msg[:-1]
+				msg += '%.2f%s, ' % (rate / rate2, currency)
+			msg = msg[:-2] + ')'
 		self._labelInfo.setText(msg)
 
 	def refresh(self):
@@ -798,6 +805,21 @@ class FrameBankroll(QtGui.QFrame):
 	def onEditTextChanged(self):
 		with codecs.open(self._fileName, 'w', 'UTF-8') as fp:
 			fp.write(unicode(self._edit.toPlainText().toUtf8(), 'utf-8'))
+
+	def onHelp(self):
+		dlg = QtGui.QDialog(self)
+		dlg.setWindowTitle('%s-Help' % ApplicationName)
+		dlg.edit = QtGui.QPlainTextEdit(dlg)
+		dlg.edit.setPlainText(__doc__)
+		dlg.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self)
+		dlg.buttonBox.accepted.connect(dlg.accept)
+		dlg.layout = QtGui.QVBoxLayout(dlg)
+		dlg.layout.addWidget(dlg.edit)
+		dlg.layout.addWidget(dlg.buttonBox)
+		dlg.restoreGeometry(self._settings.value(self.SettingsKeyDlgHelpGeometry, QtCore.QByteArray()).toByteArray() )
+		dlg.exec_()
+		self._settings.setValue(self.SettingsKeyDlgHelpGeometry, dlg.saveGeometry())
+
 
 	def onSelectFileName(self):
 		dlg = QtGui.QFileDialog(self)
