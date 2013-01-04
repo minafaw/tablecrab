@@ -115,7 +115,7 @@ from urllib2 import urlopen
 #************************************************************************************
 #
 #************************************************************************************
-Debug = False
+Debug = 0
 
 Version = '0.0.1'
 Author = 'JuergenUrner'
@@ -583,7 +583,7 @@ class FrameBankroll(QtGui.QFrame):
 			(?P<hour>\d{1,2})\:
 			(?P<minute>\d{1,2})
 			\s*\|\s*
-			(?P<amount>[\-\+]?[\d\.]+?)
+			(?P<amount>[\-\+]?[\d\.\,]+?)
 			\s*
 			$
 			''' % '|'.join(Currencies.List), re.X|re.I|re.U)
@@ -616,9 +616,20 @@ class FrameBankroll(QtGui.QFrame):
 
 			#TODO: errchecks here
 			date = [int(m.group(i)) for i in ('year','month','day','hour','minute')] + [0, ]
-			date = calendar.timegm(date)
+			try:
+				date = calendar.timegm(date)
+			except ValueError:
+				errors.append(lineno)
+				continue
+			amount = m.group('amount').replace(',', '.')	# allow ',' or '.' as float sep
+			try:
+				amount = float(amount)
+			except ValueError:
+				errors.append(lineno)
+				continue
 			currency = m.group('currency')
-			amount =  float(m.group('amount')) * self._exchangeRates[currency]
+			rate = self._exchangeRates[currency]
+			amount =  amount * rate
 
 			# setup session item
 			session = {
@@ -645,7 +656,7 @@ class FrameBankroll(QtGui.QFrame):
 			sessionType['sessions'] += 1
 
 			# add amount/currency to each item
-			eur = float(m.group('amount')) * self._exchangeRates[currency]
+			eur = amount * rate
 			for currency in sorted(self._exchangeRates):
 				amount = eur / self._exchangeRates[currency]
 				session[currency] = amount
