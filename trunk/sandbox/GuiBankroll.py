@@ -125,7 +125,14 @@ ApplicationName = 'Bankroll'
 ApplicationTitle = '%s-%s' % (ApplicationName, Version)
 
 UrlopenTimeout = 3	# in seconds
-Debug = False
+Debug = True
+
+class Currencies:
+	BTC = 'BTC'
+	EUR = 'EUR'
+	USD = 'USD'
+	List = sorted([i for i in dir() if not i.startswith('_')]); del i
+	Default = EUR
 
 #************************************************************************************
 #
@@ -135,7 +142,10 @@ def fetchBTC():
 	result = 5.5
 	if not Debug:
 		try:
-			p = urlopen('https://mtgox.com/api/1/BTCEUR/ticker', timeout=UrlopenTimeout).read()
+			p = urlopen(
+				'https://mtgox.com/api/1/BTCEUR/ticker',
+				timeout=UrlopenTimeout
+				).read()
 		except IOError:
 			error = 'Could not fetch BTC exchange rate'
 		else:
@@ -151,24 +161,22 @@ def fetchUSD():
 	if not Debug:
 		try:
 			p = urlopen(
-					'https://rate-exchange.appspot.com/currency?from=USD&to=EUR',
-					timeout=UrlopenTimeout
-					).read()
+				'https://rate-exchange.appspot.com/currency?from=USD&to=EUR',
+				timeout=UrlopenTimeout
+				).read()
 		except IOError:
 			error = 'Could not fetch USD exchange rate'
 		else:
 			result = json.loads(p)['rate']
 	return error, result
 
-Currencies = ('BTC', 'EUR', 'USD')
-CurrenciesMapping = (
-		('BTC', fetchBTC),
-		('EUR', fetchEUR),
-		('USD', fetchUSD),
-		)
-CurrencyDefault = 'EUR'
 
 def getCurrentExchangeRates():
+	CurrenciesMapping = (
+		(Currencies.BTC, fetchBTC),
+		(Currencies.EUR, fetchEUR),
+		(Currencies.USD, fetchUSD),
+		)
 	rates = {}
 	error = ''
 	for currency, fetcher in CurrenciesMapping:
@@ -571,7 +579,7 @@ class FrameBankroll(QtGui.QFrame):
 			(?P<amount>[\-\+]?[\d\.]+?)
 			\s*
 			$
-			''' % '|'.join(Currencies), re.X|re.I|re.U)
+			''' % '|'.join(Currencies.List), re.X|re.I|re.U)
 	def loadSessions(self):
 		self._sessions = []
 		sessionTypes = {}
@@ -761,8 +769,8 @@ class FrameBankroll(QtGui.QFrame):
 		self._splitterV.restoreState(qSettings.value(self.SettingsKeySplitterVState).toByteArray())
 		self._splitterH.restoreState(qSettings.value(self.SettingsKeySplitterHState).toByteArray())
 
-		self.comboCurrency.addItems(Currencies)
-		currency = self._settings.value(self.SettingsKeyCurrency, CurrencyDefault).toString()
+		self.comboCurrency.addItems(Currencies.List)
+		currency = self._settings.value(self.SettingsKeyCurrency, Currencies.Default).toString()
 		i = self.comboCurrency.findText(currency)
 		self.comboCurrency.setCurrentIndex(i)
 
@@ -823,7 +831,6 @@ class FrameBankroll(QtGui.QFrame):
 		self.saveSessionStates()
 		self._actionSelectNone.setEnabled(bool(active))
 		self._actionSelectAll.setEnabled(bool(inactive))
-
 
 #************************************************************************************
 #
