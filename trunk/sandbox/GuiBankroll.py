@@ -54,7 +54,7 @@ MyHomeGame | EUR | 12.03.2012-20:35 | +120.50
 1 - the session type
 2 - the currency. supported is USD, EUR, BTC (bitcoin) uppercase!
 3 - date and time of the session (day.month.year-hour:minute). Note that this thingy
-    is very strict, it expects eactly 2 or 4 digits in date/time.
+    expects 4 digits for the year.
 4 - ballance of the session. +amount or -amount
 
 an example of multiple sessions and multiple session types:
@@ -577,11 +577,11 @@ class FrameBankroll(QtGui.QFrame):
 			\s*\|\s*
 			(?P<currency>%s)
 			\s*\|\s*
-			(?P<day>\d\d)\.
-			(?P<month>\d\d)\.
+			(?P<day>\d{1,2})\.
+			(?P<month>\d{1,2})\.
 			(?P<year>\d\d\d\d)\-
-			(?P<hour>\d\d)\:
-			(?P<minute>\d\d)
+			(?P<hour>\d{1,2})\:
+			(?P<minute>\d{1,2})
 			\s*\|\s*
 			(?P<amount>[\-\+]?[\d\.]+?)
 			\s*
