@@ -36,7 +36,7 @@ sudo apt-get install python-qt4 python-qwt5-qt4
 
 then start the Gui by running the following command:
 
-python -B /path/to/bankroll.py
+python -B /path/to/GuiBankroll.py
 
 --------
 Usage:
