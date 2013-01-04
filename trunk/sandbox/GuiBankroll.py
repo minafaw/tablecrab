@@ -117,7 +117,7 @@ from urllib2 import urlopen
 #************************************************************************************
 Debug = 0
 
-Version = '0.0.1'
+Version = '0.0.2'
 Author = 'JuergenUrner'
 ApplicationName = 'Bankroll'
 ApplicationTitle = '%s-%s' % (ApplicationName, Version)
@@ -614,7 +614,7 @@ class FrameBankroll(QtGui.QFrame):
 				errors.append(lineno)
 				continue
 
-			#TODO: errchecks here
+			# errcheck session entries
 			date = [int(m.group(i)) for i in ('year','month','day','hour','minute')] + [0, ]
 			try:
 				date = calendar.timegm(date)
@@ -628,8 +628,6 @@ class FrameBankroll(QtGui.QFrame):
 				errors.append(lineno)
 				continue
 			currency = m.group('currency')
-			rate = self._exchangeRates[currency]
-			amount =  amount * rate
 
 			# setup session item
 			session = {
@@ -656,8 +654,8 @@ class FrameBankroll(QtGui.QFrame):
 			sessionType['sessions'] += 1
 
 			# add amount/currency to each item
-			eur = amount * rate
-			for currency in sorted(self._exchangeRates):
+			eur = amount * self._exchangeRates[currency]
+			for currency in self._exchangeRates:
 				amount = eur / self._exchangeRates[currency]
 				session[currency] = amount
 				if currency not in sessionType:
