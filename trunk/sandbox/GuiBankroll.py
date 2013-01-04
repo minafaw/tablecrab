@@ -119,7 +119,6 @@ from urllib2 import urlopen
 #************************************************************************************
 #
 #************************************************************************************
-
 Version = '0.0.1'
 Author = 'JuergenUrner'
 ApplicationName = 'Bankroll'
@@ -128,7 +127,9 @@ ApplicationTitle = '%s-%s' % (ApplicationName, Version)
 UrlopenTimeout = 3	# in seconds
 Debug = False
 
-
+#************************************************************************************
+#
+#************************************************************************************
 def fetchBTC():
 	error = ''
 	result = 5.5
@@ -159,7 +160,8 @@ def fetchUSD():
 			result = json.loads(p)['rate']
 	return error, result
 
-Currencies = (
+Currencies = ('BTC', 'EUR', 'USD')
+CurrenciesMapping = (
 		('BTC', fetchBTC),
 		('EUR', fetchEUR),
 		('USD', fetchUSD),
@@ -169,13 +171,12 @@ CurrencyDefault = 'EUR'
 def getCurrentExchangeRates():
 	rates = {}
 	error = ''
-	for currency, fetcher in Currencies:
+	for currency, fetcher in CurrenciesMapping:
 		error, rate = fetcher()
 		rates[currency] = rate
 	return error, rates
 
 ##getCurrentExchangeRates()
-class ParseError(Exception): pass
 
 
 #NOTE: this thingy is dangerous!
@@ -199,6 +200,190 @@ def backupFile(fileName, n=20):
 #************************************************************************************
 #
 #************************************************************************************
+class SessionTypesWidget(QtGui.QTreeWidget):
+
+	sessionTypesChanged = QtCore.pyqtSignal(QtGui.QWidget)
+
+	ColorBallancePositive = QtGui.QColor('#3A39E3')
+	ColorBallanceNegative = QtGui.QColor('#FF0000')
+
+	def __init__(self, parent=None):
+		QtGui.QTreeWidget.__init__(self, parent)
+		self.setUniformRowHeights(True)
+		self.setIndentation(0)
+		self.setHeaderLabels(['SessionType', 'Ballance', 'Sessions'])
+		self._sessionTypes = {}
+		self._itemTotal = None
+		self._curency = None
+		self._connectSignals(True)
+
+	def _connectSignals(self, flag):
+		if flag:
+			self.itemChanged.connect(self.onItemChanged)
+			self.itemDoubleClicked.connect(self.onItemDoubleclicked)
+		else:
+			self.itemChanged.disconnect(self.onItemChanged)
+			self.itemDoubleClicked.disconnect(self.onItemDoubleclicked)
+
+	def _itemSetBallance(self, item, amount):
+		if amount >= 0:
+			item.setTextColor(1, self.ColorBallancePositive)
+		else:
+			item.setTextColor(1, self.ColorBallanceNegative)
+		amount = '%.2f' % amount
+		if not amount.startswith('-'):
+			amount = '+' + amount
+		item.setText(1, amount)
+
+	def _adjustTotal(self):
+		self._connectSignals(False)
+		try:
+			total = 0.0
+			sessions = 0
+			for sessionType in self._sessionTypes:
+				item = sessionType['item']
+				if item.checkState(0) == QtCore.Qt.Checked:
+					total += sessionType[self._currency]
+					sessions += sessionType['sessions']
+			self._itemTotal.setText(2, '(%s)' % sessions)
+			self._itemSetBallance(self._itemTotal, total)
+		finally:
+			self._connectSignals(True)
+
+	def setSessionTypes(self, sessionTypes, currency):
+		self._connectSignals(False)
+		try:
+			self.clear()
+			self._sessionTypes = sessionTypes
+			self._currency = currency
+			sessionTypes.sort(key=operator.itemgetter('index'))
+			for sessionType in sessionTypes:
+				item = QtGui.QTreeWidgetItem(self)
+				item.setText(0, sessionType['name'])
+				amount = sessionType[currency]
+				item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+				if sessionType['active']:
+					item.setCheckState(0, QtCore.Qt.Checked)
+				else:
+					item.setCheckState(0, QtCore.Qt.Unchecked)
+				item.setText(2, '(%s)' % sessionType['sessions'])
+				self._itemSetBallance(item, amount)
+				sessionType['item'] = item
+			self._itemTotal = QtGui.QTreeWidgetItem(self)
+			self._itemTotal.setText(0, '#Total')
+		finally:
+			self._connectSignals(True)
+		self._adjustTotal()
+		self.sessionTypesChanged.emit(self)
+
+	def setCurrency(self, currency):
+		self._connectSignals(False)
+		try:
+			self._currency = currency
+			for sessionType in self._sessionTypes:
+				item = sessionType['item']
+				amount = sessionType[currency]
+				self._itemSetBallance(item, amount)
+		finally:
+			self._connectSignals(True)
+		self._adjustTotal()
+		self.sessionTypesChanged.emit(self)
+
+	def sessionNamesActive(self):
+		sessionNames = []
+		for sessionType in self._sessionTypes:
+			if sessionType['item'].checkState(0) == QtCore.Qt.Checked:
+				sessionNames.append(sessionType['name'])
+		return sessionNames
+
+	def setSessionNamesActive(self, sessionNames):
+		self._connectSignals(False)
+		try:
+			stateChanged = False
+			for sessionType in self._sessionTypes:
+				if sessionType['name'] in sessionNames:
+					item = sessionType['item']
+					if item.checkState(0) == QtCore.Qt.Unchecked:
+						item.setCheckState(0, QtCore.Qt.Checked)
+						stateChanged = True
+		finally:
+			self._connectSignals(True)
+		self._adjustTotal()
+		if stateChanged:
+			self.sessionTypesChanged.emit(self)
+
+	def setSessionNamesInactive(self, sessionNames):
+		self._connectSignals(False)
+		try:
+			stateChanged = False
+			for sessionType in self._sessionTypes:
+				if sessionType['name'] in sessionNames:
+					item = sessionType['item']
+					if item.checkState(0) == QtCore.Qt.Checked:
+						item.setCheckState(0, QtCore.Qt.Unchecked)
+						stateChanged = True
+		finally:
+			self._connectSignals(True)
+		self._adjustTotal()
+		if stateChanged:
+			self.sessionTypesChanged.emit(self)
+
+	def sessionNamesInactive(self):
+		sessionNames = []
+		for sessionType in self._sessionTypes:
+			if sessionType['item'].checkState(0) == QtCore.Qt.Unchecked:
+				sessionNames.append(sessionType['name'])
+		return sessionNames
+
+	def headerState(self):
+		return self.header().saveState()
+
+	def restoreHeaderState(self, state):
+		self.header().restoreState(state)
+
+	#NOTE: Qt does not signal check state changes of tree items. use itemChanged()
+	# instead. have to be careful to always disconnect signals accordingly (!!)
+	def onItemChanged(self, item, i):
+		self._adjustTotal()
+		self.sessionTypesChanged.emit(self)
+
+	def onItemDoubleclicked(self, item, i):
+		if item.checkState(0) == QtCore.Qt.Checked:
+			item.setCheckState(0, QtCore.Qt.Unchecked)
+		else:
+			item.setCheckState(0, QtCore.Qt.Checked)
+
+#************************************************************************************
+#
+#************************************************************************************
+class GraphWidget(PyQwt.QwtPlot):
+
+	ColorCurve = QtGui.QColor('#3A39E3')
+	ColorBackground = QtGui.QColor('#FFFFFF')
+
+	def __init__(self, parent=None):
+		PyQwt.QwtPlot.__init__(self, parent)
+		self.setCanvasBackground(self.ColorBackground)
+		grid = PyQwt.QwtPlotGrid()
+		#grid.enableX(False)
+		grid.setMajPen(QtGui.QPen(QtCore.Qt.lightGray, 0, QtCore.Qt.DashLine))
+		grid.attach(self)
+		self._curve = PyQwt.QwtPlotCurve("Curve")
+		self._curve.setRenderHint(self._curve.RenderAntialiased)
+		# try to find reasonable width for the graph line
+		w = QtGui.QFontMetrics(QtGui.QApplication.font()).lineWidth()
+		pen = QtGui.QPen(self.ColorCurve, w)
+		pen.setCosmetic(False)
+		self._curve.setPen(pen)
+		self._curve.attach(self)
+
+	def setPoints(self, xs, ys):
+		self._curve.setData(xs, ys)
+		self.replot()
+
+#************************************************************************************
+#
+#************************************************************************************
 class SyntaxHighlighter(QtGui.QSyntaxHighlighter):
 
 	StateNone = -1
@@ -210,7 +395,7 @@ class SyntaxHighlighter(QtGui.QSyntaxHighlighter):
 
 	def __init__( self, parent):
 		QtGui.QSyntaxHighlighter.__init__( self, parent.document())
-		self.errorLinenos = []
+		self._errorLinenos = []
 
 	def highlightBlock( self, text):
 
@@ -246,232 +431,131 @@ class SyntaxHighlighter(QtGui.QSyntaxHighlighter):
 			return
 
 		# hilight errors
-		if self.currentBlock().firstLineNumber() in self.errorLinenos:
+		if self.currentBlock().firstLineNumber() in self._errorLinenos:
 			fmt = QtGui.QTextCharFormat()
 			fmt.setBackground(self.ColorError)
 			self.setFormat(0, text.length(), fmt)
 
 	def setErrorLinenos(self, linenos):
-		if not self.errorLinenos and not linenos:
+		if not self._errorLinenos and not linenos:
 			return
-		self.errorLinenos = linenos
+		self._errorLinenos = linenos
 		self.setDocument(self.document())
 
+#************************************************************************************
+#
+#************************************************************************************
+class ErrorLinenoTimer(QtCore.QTimer):
 
-class FrameBankroll(QtGui.QFrame):
-
-	SettingsKeySplitterVState = 'Gui/SplitterVState'
-	SettingsKeySplitterHState = 'Gui/SplitterHState'
-
-	SettingsKeyTreeHeaderState = 'Gui/TreeState'
-	SettingsKeySessionNamesUnchecked = 'Gui/SessionNamesUnchecked'
-	SettingsKeyCurrency = 'Gui/Curreny'
-	SettingsKeyFileName = 'Gui/FileName'
-	SettingsKeyDlgOpenFileNameState = 'Gui/DlgOpenFileNameState'
-	SettingsKeySessionStates = 'Gui/SessionStates'
-
-
-	ColorCurve = '#3A39E3'
-	ColorBackground = '#FFFFFF'
-
-	ErrMessage = '<div style="color: red;background-color: white;">%s</div>'
-
-	class ErrorLinenoTimer(QtCore.QTimer):
 		def __init__(self, edit, lineno):
 			QtCore.QTimer.__init__(self, edit)
 			self.setSingleShot(True)
 			self.timeout.connect(self.onTimeout)
-			self.edit = edit
+			self._edit = edit
 			self.lineno = lineno
 			self.start(0)
+
 		def onTimeout(self):
-			cursor = self.edit.textCursor()
+			cursor = self._edit.textCursor()
 			cursor.movePosition(cursor.Down, cursor.MoveAnchor, self.lineno - cursor.blockNumber());
-			self.edit.setTextCursor(cursor)
-			self.edit.ensureCursorVisible()
+			self._edit.setTextCursor(cursor)
+			self._edit.ensureCursorVisible()
 
+#************************************************************************************
+#
+#************************************************************************************
+class FrameBankroll(QtGui.QFrame):
 
-	class TreeWidgetItem(QtGui.QTreeWidgetItem):
+	SettingsKeyCurrency = 'Gui/Curreny'
+	SettingsKeyDlgOpenFileNameState = 'Gui/DlgOpenFileNameState'
+	SettingsKeyFileName = 'Gui/FileName'
+	SettingsKeySessionStates = 'Gui/SessionStates'
+	SettingsKeySessionTypesHeaderState = 'Gui/SessionTypesHeaderState'
+	SettingsKeySplitterVState = 'Gui/SplitterVState'
+	SettingsKeySplitterHState = 'Gui/SplitterHState'
 
-		ColorBallancePositive = '#3A39E3'
-		ColorBallanceNegative = '#FF0000'
-
-		TypeSession = 0
-		TypeTotal = 1
-
-		def __init__(self, parent, name='', type=TypeSession):
-			QtGui.QTreeWidgetItem.__init__(self, parent)
-			self.setText(0, name)
-			self._type = type
-			self._name = name
-			if self._type == self.TypeSession:
-				self.setFlags(self.flags() | QtCore.Qt.ItemIsUserCheckable)
-				self.setCheckState(0, QtCore.Qt.Checked)
-			else:
-				self.setFlags(self.flags() &~QtCore.Qt.ItemIsUserCheckable)
-			self._total = 0.0
-
-		def addToTotal(self, n):
-			self._total += n
-
-		def setTotal(self, n):
-			self._total = n
-			self.setTextColor(1,
-						QtGui.QColor(self.ColorBallanceNegative if self._total < 0 else self.ColorBallancePositive)
-						)
-			text = '%.2f' % n
-			if not text.startswith('-'):
-				text = '+' + text
-			self.setText(1, text)
-
-		def setChecked(self, flag):
-			self.setCheckState(0, QtCore.Qt.Checked if flag else QtCore.Qt.Unchecked)
-
-		def isChecked(self):
-			return self.checkState(0) == QtCore.Qt.Checked
-
-		def total(self):
-			return self._total
-
-		def type(self):
-			return self._type
-
-		def name(self):
-			return self._name
-
+	ErrMessage = '<div style="color: red;background-color: white;">%s</div>'
 
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
-		self.splitterV = QtGui.QSplitter(QtCore.Qt.Vertical, self)
-		self.splitterH = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
+		self._splitterV = QtGui.QSplitter(QtCore.Qt.Vertical, self)
+		self._splitterH = QtGui.QSplitter(QtCore.Qt.Horizontal, self)
 
 		# setup graph pane
-		self.graph = PyQwt.QwtPlot(self)
-		self.graph.setCanvasBackground(QtGui.QColor(self.ColorBackground))
+		self._graphWidget = GraphWidget(self)
+		self._sessionTypesWidget = SessionTypesWidget(self)
+		self._edit = QtGui.QPlainTextEdit(self)
+		self._syntaxHighlighter = SyntaxHighlighter(self._edit)
 
-		grid = PyQwt.QwtPlotGrid()
-		grid.enableX(False)
-		grid.setMajPen(QtGui.QPen(QtCore.Qt.lightGray, 0, QtCore.Qt.DashLine))
-		grid.attach(self.graph)
+		self._toolBar = QtGui.QToolBar(self)
 
-		self.curve = None
-		self.settings = None
+		self._actionRefresh = QtGui.QAction(self)
+		self._actionRefresh.setText('Refresh')
+		self._actionRefresh.triggered.connect(self.refresh)
+		self._toolBar.addAction(self._actionRefresh)
 
-		self.tree = QtGui.QTreeWidget(self)
-		self.tree.setUniformRowHeights(True)
-		self.tree.setIndentation(0)
-		self.tree.setHeaderLabels(['SessionType', 'Ballance'])
+		self._actionSelectAll = QtGui.QAction(self)
+		self._actionSelectAll.setText('SelectAll')
+		self._actionSelectAll.triggered.connect(self.selectAllSessionTypes)
+		self._toolBar.addAction(self._actionSelectAll)
 
-		self.toolBar = QtGui.QToolBar(self)
+		self._actionSelectNone = QtGui.QAction(self)
+		self._actionSelectNone.setText('SelectNone')
+		self._actionSelectNone.triggered.connect(self.selectNoneSessionTypes)
+		self._toolBar.addAction(self._actionSelectNone)
 
-		self.actionRefresh = QtGui.QAction(self)
-		self.actionRefresh.setText('Refresh')
-		self.actionRefresh.triggered.connect(self.refresh)
-		self.toolBar.addAction(self.actionRefresh)
-
-		self.actionSelectAll = QtGui.QAction(self)
-		self.actionSelectAll.setText('SelectAll')
-		self.actionSelectAll.triggered.connect(self.selectAllSessionTypes)
-		self.toolBar.addAction(self.actionSelectAll)
-
-		self.actionSelectNone = QtGui.QAction(self)
-		self.actionSelectNone.setText('SelectNone')
-		self.actionSelectNone.triggered.connect(self.selectNoneSessionTypes)
-		self.toolBar.addAction(self.actionSelectNone)
-
-		self.labelCurrency = QtGui.QLabel('Currency:', self)
-		self.toolBar.addWidget(self.labelCurrency)
+		self._labelCurrency = QtGui.QLabel('Currency:', self)
+		self._toolBar.addWidget(self._labelCurrency)
 
 		self.comboCurrency = QtGui.QComboBox(self)
-		self.toolBar.addWidget(self.comboCurrency)
+		self._toolBar.addWidget(self.comboCurrency)
 
-		self.labelFileName = QtGui.QLabel('File:', self)
-		self.toolBar.addWidget(self.labelFileName)
+		self._labelFileName = QtGui.QLabel('File:', self)
+		self._toolBar.addWidget(self._labelFileName)
 
-		self.editFileName = QtGui.QLineEdit(self)
-		self.toolBar.addWidget(self.editFileName)
-		self.editFileName.returnPressed.connect(self.onEditFileNameReturnPressed)
+		self._editFileName = QtGui.QLineEdit(self)
+		self._toolBar.addWidget(self._editFileName)
+		self._editFileName.returnPressed.connect(self.onEditFileNameReturnPressed)
 
+		self._actionSelectFileName = QtGui.QAction(self)
+		self._actionSelectFileName.setText('..')
+		self._actionSelectFileName.triggered.connect(self.onSelectFileName)
+		self._toolBar.addAction(self._actionSelectFileName)
 
-		self.actionSelectFileName = QtGui.QAction(self)
-		self.actionSelectFileName.setText('..')
-		self.actionSelectFileName.triggered.connect(self.onselectFileName)
-		self.toolBar.addAction(self.actionSelectFileName)
+		self._labelStatus = QtGui.QLabel('#Ready', self)
+		self._labelInfo = QtGui.QLabel('Info', self)
 
-		self.labelStatus = QtGui.QLabel('#Ready', self)
-		self.labelInfo = QtGui.QLabel('Info', self)
-
-		# setup editor pane
-		self.editIsDirty = False
-		self.edit = QtGui.QPlainTextEdit(self)
-		self.syntaxHighlighter = SyntaxHighlighter(self.edit)
-		self.sessions = []
-
-		self.exchangeRates = {}
-		self.exchangeRatesError = ''
-
-		self.fileName = ''
-		self.sessionStates = {}
+		self._settings = None
+		self._sessions = []
+		self._exchangeRates = {}
+		self._exchangeRatesError = ''
+		self._fileName = ''
+		self._sessionStates = {}
+		self._editIsDirty = False
 
 	def layout(self):
 
 		self.setContentsMargins(0, 0, 0, 0)
 
 		box0 = QtGui.QVBoxLayout(self)
-		box0.addWidget(self.splitterV)
+		box0.addWidget(self._splitterV)
 
-		self.splitterV.addWidget(self.edit)
-		self.splitterV.addWidget(self.splitterH)
+		self._splitterV.addWidget(self._edit)
+		self._splitterV.addWidget(self._splitterH)
 
-		self.splitterH.addWidget(self.tree)
-		self.splitterH.addWidget(self.graph)
+		self._splitterH.addWidget(self._sessionTypesWidget)
+		self._splitterH.addWidget(self._graphWidget)
 
-		box0.addWidget(self.toolBar)
+		box0.addWidget(self._toolBar)
 
 		box2 = QtGui.QHBoxLayout()
 		box0.addLayout(box2)
-		box2.addWidget(self.labelStatus)
-		box2.addWidget(self.labelInfo)
+		box2.addWidget(self._labelStatus)
+		box2.addWidget(self._labelInfo)
 
-
-	def connectTreeSignals(self, flag):
-		if flag:
-			self.tree.itemChanged.connect(self.onTreeItemChanged)
-			self.tree.itemDoubleClicked.connect(self.onTreeItemDoubleclicked)
-		else:
-			self.tree.itemChanged.disconnect(self.onTreeItemChanged)
-			self.tree.itemDoubleClicked.disconnect(self.onTreeItemDoubleclicked)
-
-
-	def loadGraph(self):
-		if self.curve is not None:
-			self.curve.detach()
-		currencyCurrent = str(self.comboCurrency.currentText())
-		self.curve = PyQwt.QwtPlotCurve("Curve 2")
-		self.curve.setRenderHint(self.curve.RenderAntialiased)
-		pen = QtGui.QPen(QtGui.QColor(self.ColorCurve), 2)
-		pen.setCosmetic(False)
-		self.curve.setPen(pen)
-		x = 0
-		y = 0
-		xs = [0, ]
-		ys = [0, ]
-
-		root = self.tree.invisibleRootItem()
-		items = [root.child(i) for i in range(root.childCount())]
-		items = [item.name() for item in items if item.type() == item.TypeSession and item.isChecked()]
-		for session in self.sessions:
-			if session['name'] in items:
-				x += 1
-				y += session[currencyCurrent]
-				xs.append(x)
-				ys.append(y)
-		self.curve.setData(xs, ys)
-		self.curve.attach(self.graph)
-		self.graph.replot()
-
-
+	def currency(self):
+		return str(self.comboCurrency.currentText())
 
 	SessionPat = re.compile('''
 			^(?P<name>[^|]+?)
@@ -487,12 +571,15 @@ class FrameBankroll(QtGui.QFrame):
 			(?P<amount>[\-\+]?[\d\.]+?)
 			\s*
 			$
-			''' % '|'.join([i[0] for i in Currencies]), re.X|re.I|re.U)
+			''' % '|'.join(Currencies), re.X|re.I|re.U)
 	def loadSessions(self):
-		self.sessions = []
+		self._sessions = []
+		sessionTypes = {}
+		sessionTypeCount = 0
+		stateInfo = self._sessionStates.get(str(hash(os.path.basename(self._fileName))), [])
 		blockComment = False
 		errors = []
-		text = unicode(self.edit.toPlainText().toUtf8(), 'utf-8')
+		text = unicode(self._edit.toPlainText().toUtf8(), 'utf-8')
 		for lineno, line in enumerate(text.split('\n')):
 			line = line.strip()
 			if not line:
@@ -516,139 +603,112 @@ class FrameBankroll(QtGui.QFrame):
 			date = [int(m.group(i)) for i in ('year','month','day','hour','minute')] + [0, ]
 			date = calendar.timegm(date)
 			currency = m.group('currency')
-			amount =  float(m.group('amount')) * self.exchangeRates[currency]
+			amount =  float(m.group('amount')) * self._exchangeRates[currency]
 
-			data = {
+			# setup session item
+			session = {
 					'date': date,
 					'name': m.group('name'),
 					'amount': amount,
 					'currency': currency
 					}
-			self.sessions.append(data)
-			eur = float(m.group('amount')) * self.exchangeRates[currency]
-			for currency in sorted(self.exchangeRates):
-				amount = eur / self.exchangeRates[currency]
-				data[currency] = amount
 
-		self.syntaxHighlighter.setErrorLinenos(errors)
+			# setup session type item
+			# NOTE: we setup these items here, not in SessionTypesWidget because we'd
+			# have to iterate multiple times over our session items. uglier but faster
+			# as is.
+			sessionType = sessionTypes.get(session['name'], None)
+			if sessionType is None:
+				sessionType = {
+						'name': session['name'],
+						'index': sessionTypeCount,
+						'active': hash(session['name']) not in stateInfo,
+						'sessions': 0,
+						}
+				sessionTypes[session['name']] = sessionType
+				sessionTypeCount += 1
+			sessionType['sessions'] += 1
+
+			# add amount/currency to each item
+			eur = float(m.group('amount')) * self._exchangeRates[currency]
+			for currency in sorted(self._exchangeRates):
+				amount = eur / self._exchangeRates[currency]
+				session[currency] = amount
+				if currency not in sessionType:
+					sessionType[currency] = 0.0
+				sessionType[currency] += amount
+			self._sessions.append(session)
+
+		# errorcheck
+		self._syntaxHighlighter.setErrorLinenos(errors)
 		if errors:
+			self._sessions = []
 			if len(errors) == 1:
 				msg = '#Error: 1 invalid session entry'
 			else:
 				msg = '#Error: %s invalid session entries' % len(errors)
 			self.feedbackError(msg)
-			self.sessions = []
+			self._sessions = []
 			#NOTE: have to use a timer here, otherwise syntax highlighter does not work
-			self.ErrorLinenoTimer(self.edit, errors[0])
+			ErrorLinenoTimer(self._edit, errors[0])
 		else:
-			self.feedbackMessage('#Ready: %s' % os.path.basename(self.fileName))
-		self.sessions.sort(key=operator.itemgetter('date'))
+			self.feedbackMessage('#Ready: %s' % os.path.basename(self._fileName))
 
-
-		self.connectTreeSignals(False)
-		try:
-			self.tree.clear()
-			sessionNames = {}	# sessionType --> [TreeWidgetItem, ballance]
-			currencyCurrent = str(self.comboCurrency.currentText())
-			state = self.sessionStates.get(str(hash(os.path.basename(self.fileName))), [])
-
-			# fill tree with session names
-			for session in self.sessions:
-				item = sessionNames.get(session['name'], None)
-				if item is None:
-					item = self.TreeWidgetItem(self.tree, name=session['name'], type=self.TreeWidgetItem.TypeSession)
-					#
-					if hash(item.name()) in state:
-						item.setCheckState(0, QtCore.Qt.Unchecked)
-					else:
-						item.setCheckState(0, QtCore.Qt.Checked)
-					sessionNames[session['name']] = item
-				item.addToTotal(session[currencyCurrent])
-
-			for item in sessionNames.values():
-				item.setTotal(item.total())
-
-			if self.sessions:
-				# add item to display total
-				item = self.TreeWidgetItem(self.tree, name='#Total', type=self.TreeWidgetItem.TypeTotal)
-				self.adjustTreeTotal()
-			self.loadGraph()
-		except ParseError, d:
-			QtGui.QMessageBox.critical(self, 'ParseError', d.message)
-
-		finally:
-			self.connectTreeSignals(True)
-
+		# finally
+		self._sessions.sort(key=operator.itemgetter('date'))
+		self._sessionTypesWidget.setSessionTypes(sessionTypes.values(), self.currency())
 
 	def loadSessionsFile(self, fileName):
-		self.edit.textChanged.disconnect(self.onEditTextChanged)
+		self._edit.textChanged.disconnect(self.onEditTextChanged)
 		try:
 			with codecs.open(fileName, 'r', 'UTF-8') as fp:
-				self.edit.setPlainText(fp.read())
-				self.edit.setReadOnly(False)
+				self._edit.setPlainText(fp.read())
+				self._edit.setReadOnly(False)
 				self.feedbackMessage('#Ready:')
 				self.loadSessions()
 				backupFile(fileName)
 		except IOError:
-			self.edit.setPlainText('')
-			self.edit.setReadOnly(True)
-			self.sessions = []
+			self._edit.setPlainText('')
+			self._edit.setReadOnly(True)
+			self._sessions = []
 			self.loadSessions()
 			self.feedbackError('#Error: could not load sessions file')
 		finally:
-			self.edit.textChanged.connect(self.onEditTextChanged)
-
+			self._edit.textChanged.connect(self.onEditTextChanged)
 
 	def feedbackError(self, msg):
-		self.labelStatus.setText(self.ErrMessage % msg)
+		self._labelStatus.setText(self.ErrMessage % msg)
 
 	def feedbackMessage(self, msg):
-		self.labelStatus.setText(msg)
+		self._labelStatus.setText(msg)
 
-
-	def setFeedbackInfo(self):
-		if self.exchangeRatesError:
-			msg = 'Error: %s' % self.exchangeRatesError
+	def feedbackInfo(self):
+		if self._exchangeRatesError:
+			msg = 'Error: %s' % self._exchangeRatesError
 		else:
 			currencyCurrent = str(self.comboCurrency.currentText())
-			rate = self.exchangeRates[currencyCurrent]
+			rate = self._exchangeRates[currencyCurrent]
 			msg = '1%s=' % currencyCurrent
-			for currency in sorted(self.exchangeRates):
+			for currency in sorted(self._exchangeRates):
 				if currency == currencyCurrent:
 					continue
-				rate2 = self.exchangeRates[currency]
+				rate2 = self._exchangeRates[currency]
 				msg += '%.2f%s,' % (rate / rate2, currency)
 			msg = msg[:-1]
-		self.labelInfo.setText(msg)
-
+		self._labelInfo.setText(msg)
 
 	def refresh(self):
 		self.loadSessions()
 
-
 	def selectAllSessionTypes(self):
-		self.connectTreeSignals(False)
-		for i in xrange(self.tree.topLevelItemCount()):
-			item = self.tree.topLevelItem(i)
-			if item.flags() & QtCore.Qt.ItemIsUserCheckable:
-				item.setCheckState(0, QtCore.Qt.Checked)
-		#self.saveSessionNamesState()
-		self.loadGraph()
+		inactive = self._sessionTypesWidget.sessionNamesInactive()
+		self._sessionTypesWidget.setSessionNamesActive(inactive)
 		self.saveSessionStates()
-		self.connectTreeSignals(True)
-
 
 	def selectNoneSessionTypes(self):
-		self.connectTreeSignals(False)
-		for i in xrange(self.tree.topLevelItemCount()):
-			item = self.tree.topLevelItem(i)
-			if item.flags() & QtCore.Qt.ItemIsUserCheckable:
-				item.setCheckState(0, QtCore.Qt.Unchecked)
-		#self.saveSessionNamesState()
-		self.loadGraph()
+		active = self._sessionTypesWidget.sessionNamesActive()
+		self._sessionTypesWidget.setSessionNamesInactive(active)
 		self.saveSessionStates()
-		self.connectTreeSignals(True)
-
 
 	#NOTE: this is a pretty crappy impl of associating state info to a file
 	# main point is: i want to avoid using a database at any cost. so we associate
@@ -665,35 +725,73 @@ class FrameBankroll(QtGui.QFrame):
 	MaxSessionStates = 64
 
 	def loadSessionStates(self):
-		# load sessions state
-		p = str(self.settings.value(self.SettingsKeySessionStates, '').toString())
+		p = str(self._settings.value(self.SettingsKeySessionStates, '').toString())
 		try:
-			self.sessionStates = json.loads(p)
+			self._sessionStates = json.loads(p)
 		except ValueError:
-			self.sessionStates = {}
-
+			self._sessionStates = {}
 
 	def saveSessionStates(self):
-		root = self.tree.invisibleRootItem()
-		items = [root.child(i) for i in range(root.childCount())]
-		items = [hash(item.name()) for item in items if item.type() == item.TypeSession and not item.isChecked()]
-		key = str(hash(os.path.basename(self.fileName)))
-		self.sessionStates[key] = items + [str(time.time())]
-
-		if len(self.sessionStates) > self.MaxSessionStates:
+		key = str(hash(os.path.basename(self._fileName)))
+		inactive = self._sessionTypesWidget.sessionNamesInactive()
+		self._sessionStates[key] = [hash(i) for i in inactive] + [str(time.time())]
+		if len(self._sessionStates) > self.MaxSessionStates:
 			remove = []
-			for key, values in self.sessionStates.items():
+			for key, values in self._sessionStates.items():
 				t = float(values[-1])
 				remove.append((t, key))
 			remove.sort()
 			while len(remove) > self.MaxSessionStates:
 				t, key = remove.pop(0)
-				del self.sessionStates[key]
+				del self._sessionStates[key]
+		self._settings.setValue(self.SettingsKeySessionStates, json.dumps(self._sessionStates))
 
-		self.settings.setValue(self.SettingsKeySessionStates, json.dumps(self.sessionStates))
+	def saveSettings(self):
+		self._settings.setValue(self.SettingsKeySplitterVState, self._splitterV.saveState())
+		self._settings.setValue(self.SettingsKeySplitterHState, self._splitterH.saveState())
+		self._settings.setValue(self.SettingsKeySessionTypesHeaderState, self._sessionTypesWidget.headerState())
 
+	def restoreSettings(self, qSettings):
+		self._settings = qSettings
 
-	def onselectFileName(self):
+		self._exchangeRatesError, self._exchangeRates = getCurrentExchangeRates()
+		self._fileName = unicode(self._settings.value(self.SettingsKeyFileName).toString().toUtf8(), 'utf8')
+
+		self._sessionTypesWidget.restoreHeaderState(self._settings.value(self.SettingsKeySessionTypesHeaderState).toByteArray())
+		self._splitterV.restoreState(qSettings.value(self.SettingsKeySplitterVState).toByteArray())
+		self._splitterH.restoreState(qSettings.value(self.SettingsKeySplitterHState).toByteArray())
+
+		self.comboCurrency.addItems(Currencies)
+		currency = self._settings.value(self.SettingsKeyCurrency, CurrencyDefault).toString()
+		i = self.comboCurrency.findText(currency)
+		self.comboCurrency.setCurrentIndex(i)
+
+		# connect signals
+		self._edit.textChanged.connect(self.onEditTextChanged)
+		self.comboCurrency.currentIndexChanged.connect(self.onComboCurrencyCurentIndexChanged)
+		self._sessionTypesWidget.sessionTypesChanged.connect(self.onSessionTypesChanged)
+
+		self._editFileName.setText(self._fileName)
+		self.loadSessionStates()
+		self.loadSessionsFile(self._fileName)
+		self.feedbackInfo()
+
+	def onComboCurrencyCurentIndexChanged(self, i):
+		currency = self.currency()
+		self._settings.setValue(self.SettingsKeyCurrency, currency)
+		self._sessionTypesWidget.setCurrency(currency)
+		self.feedbackInfo()
+
+	def onEditFileNameReturnPressed(self):
+		self._fileName = unicode(self._editFileName.text().toUtf8(), 'utf-8')
+		self._settings.setValue(self.SettingsKeyFileName, self._fileName)
+		self.loadSessionsFile(self._fileName)
+
+	def onEditTextChanged(self):
+		with codecs.open(self._fileName, 'w', 'UTF-8') as fp:
+			fp.write(unicode(self._edit.toPlainText().toUtf8(), 'utf-8'))
+
+	def onSelectFileName(self):
 		dlg = QtGui.QFileDialog(self)
 		dlg.setAcceptMode(dlg.AcceptOpen)
 		dlg.setWindowTitle('%s: Open sessions file' % ApplicationName)
@@ -701,102 +799,35 @@ class FrameBankroll(QtGui.QFrame):
 		for i in ('text Files (*.txt)', 'All Files (*)'):
 			p << i
 		dlg.setNameFilters(p)
-		dlg.restoreState(self.settings.value(self.SettingsKeyDlgOpenFileNameState, QtCore.QByteArray()).toByteArray() )
+		dlg.restoreState(self._settings.value(self.SettingsKeyDlgOpenFileNameState, QtCore.QByteArray()).toByteArray() )
 		result = dlg.exec_()
 		if result == dlg.Accepted:
-			self.settings.setValue(self.SettingsKeyDlgOpenFileNameState, dlg.saveState())
-			self.fileName = unicode(dlg.selectedFiles()[0].toUtf8(), 'utf-8')
-			self.settings.setValue(self.SettingsKeyFileName, self.fileName)
-			self.editFileName.setText(self.fileName)
-			self.loadSessionsFile(self.fileName)
+			self._settings.setValue(self.SettingsKeyDlgOpenFileNameState, dlg.saveState())
+			self._fileName = unicode(dlg.selectedFiles()[0].toUtf8(), 'utf-8')
+			self._settings.setValue(self.SettingsKeyFileName, self._fileName)
+			self._editFileName.setText(self._fileName)
+			self.loadSessionsFile(self._fileName)
+
+	def onSessionTypesChanged(self, sessionTypesWidget):
+		currency = self.currency()
+		active = sessionTypesWidget.sessionNamesActive()
+		inactive = sessionTypesWidget.sessionNamesInactive()
+		xs = [0, ]
+		ys = [0.0, ]
+		for session in self._sessions:
+			if session['name'] in active:
+				amount = session[currency]
+				ys.append(ys[-1] + amount)
+				xs.append(len(xs))
+		self._graphWidget.setPoints(xs, ys)
+		self.saveSessionStates()
+		self._actionSelectNone.setEnabled(bool(active))
+		self._actionSelectAll.setEnabled(bool(inactive))
 
 
-	def onComboCurrencyCurentIndexChanged(self, i):
-		currency = self.comboCurrency.currentText()
-		self.settings.setValue(self.SettingsKeyCurrency, currency)
-		self.loadSessions()
-		self.setFeedbackInfo()
-
-
-	def onEditFileNameReturnPressed(self):
-		self.fileName = unicode(self.editFileName.text().toUtf8(), 'utf-8')
-		self.settings.setValue(self.SettingsKeyFileName, self.fileName)
-		self.loadSessionsFile(self.fileName)
-
-
-	def adjustTreeTotal(self):
-		root = self.tree.invisibleRootItem()
-		n = root.childCount()
-		if n <= 0:
-			return
-		items = [root.child(i) for i in range(n)]
-		itemTotal = [item for item in items if item.type() == item.TypeTotal][0]
-		items = [item for item in items if item.type() == item.TypeSession]
-		itemTotal.setTotal(0.0)
-		for item in items:
-			if item.isChecked():
-				itemTotal.addToTotal(item.total())
-		itemTotal.setTotal(itemTotal.total())
-
-
-	#NOTE: Qt does not signal check state changes of tree items. use itemChanged() instead
-	#      + have to be careful here.
-	def onTreeItemChanged(self, item, i):
-		self.connectTreeSignals(False)
-		try:
-			self.loadGraph()
-			self.adjustTreeTotal()
-			self.saveSessionStates()
-		finally:
-				self.connectTreeSignals(True)
-
-
-	def onTreeItemDoubleclicked(self, item, i):
-		if item.checkState(0) == QtCore.Qt.Checked:
-			item.setCheckState(0, QtCore.Qt.Unchecked)
-		else:
-			item.setCheckState(0, QtCore.Qt.Checked)
-
-
-	def onEditTextChanged(self):
-		self.editIsDirty = True
-		with codecs.open(self.fileName, 'w', 'UTF-8') as fp:
-			fp.write(unicode(self.edit.toPlainText().toUtf8(), 'utf-8'))
-
-
-	def saveSettings(self):
-		self.settings.setValue(self.SettingsKeySplitterVState, self.splitterV.saveState())
-		self.settings.setValue(self.SettingsKeySplitterHState, self.splitterH.saveState())
-		self.settings.setValue(self.SettingsKeyTreeHeaderState, self.tree.header().saveState())
-
-
-	def restoreSettings(self, qSettings):
-		self.settings = qSettings
-		self.tree.resizeColumnToContents(0)
-		self.tree.header().restoreState(self.settings.value(self.SettingsKeyTreeHeaderState).toByteArray())
-
-		self.comboCurrency.addItems(sorted([i[0] for i in Currencies]))
-		currency = self.settings.value(self.SettingsKeyCurrency, CurrencyDefault).toString()
-		i = self.comboCurrency.findText(currency)
-		self.comboCurrency.setCurrentIndex(i)
-		self.comboCurrency.currentIndexChanged.connect(self.onComboCurrencyCurentIndexChanged)
-
-		self.exchangeRatesError, self.exchangeRates = getCurrentExchangeRates()
-		self.connectTreeSignals(True)
-
-		self.loadSessionStates()
-		self.edit.textChanged.connect(self.onEditTextChanged)
-		self.fileName = unicode(self.settings.value(self.SettingsKeyFileName).toString().toUtf8(), 'utf8')
-		self.editFileName.setText(self.fileName)
-		self.loadSessionsFile(self.fileName)
-
-		self.setFeedbackInfo()
-		self.splitterV.restoreState(qSettings.value(self.SettingsKeySplitterVState).toByteArray())
-		self.splitterH.restoreState(qSettings.value(self.SettingsKeySplitterHState).toByteArray())
-
-
-
-
+#************************************************************************************
+#
+#************************************************************************************
 class BankrollWidget(QtGui.QMainWindow):
 
 	SettingsKeyGeometry = 'Gui/Geometry'
@@ -804,20 +835,20 @@ class BankrollWidget(QtGui.QMainWindow):
 
 	def __init__(self, parent=None):
 		QtGui.QMainWindow.__init__(self, parent)
-		self.frameBankroll = FrameBankroll(self)
-		self.setCentralWidget(self.frameBankroll)
+		self._frameBankroll = FrameBankroll(self)
+		self.setCentralWidget(self._frameBankroll)
 		self.setWindowTitle(ApplicationTitle)
-		self.settings = QtCore.QSettings(Author, ApplicationName)
+		self._settings = QtCore.QSettings(Author, ApplicationName)
 
-		self.frameBankroll.layout()
-		self.frameBankroll.restoreSettings(self.settings)
-		self.restoreState(self.settings.value(self.SettingsKeyState).toByteArray())
-		self.restoreGeometry(self.settings.value(self.SettingsKeyGeometry).toByteArray())
+		self._frameBankroll.layout()
+		self._frameBankroll.restoreSettings(self._settings)
+		self.restoreState(self._settings.value(self.SettingsKeyState).toByteArray())
+		self.restoreGeometry(self._settings.value(self.SettingsKeyGeometry).toByteArray())
 
 	def closeEvent(self, event):
-		self.settings.setValue(self.SettingsKeyState, self.saveState())
-		self.settings.setValue(self.SettingsKeyGeometry, self.saveGeometry())
-		self.frameBankroll.saveSettings()
+		self._settings.setValue(self.SettingsKeyState, self.saveState())
+		self._settings.setValue(self.SettingsKeyGeometry, self.saveGeometry())
+		self._frameBankroll.saveSettings()
 		return QtGui.QMainWindow.closeEvent(self, event)
 
 #************************************************************************************
