@@ -119,13 +119,13 @@ from urllib2 import urlopen
 #************************************************************************************
 #
 #************************************************************************************
+Debug = False
+
 Version = '0.0.1'
 Author = 'JuergenUrner'
 ApplicationName = 'Bankroll'
 ApplicationTitle = '%s-%s' % (ApplicationName, Version)
-
 UrlopenTimeout = 3	# in seconds
-Debug = False
 
 class Currencies:
 	BTC = 'BTC'
