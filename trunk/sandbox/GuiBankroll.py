@@ -52,7 +52,7 @@ MyHomeGame | EUR | 12.03.2012-20:35 | +120.50
 
 ..that is 4 parameters, separated by vertical bars
 1 - the session type
-2 - the currency. supported is USD, EUR, BTC (bitcoin) uppercase!
+2 - the currency. supported is USD, EUR, BTC (bitcoin)
 3 - date and time of the session (day.month.year-hour:minute). Note that this thingy
     expects 4 digits for the year.
 4 - ballance of the session. +amount or -amount
@@ -117,7 +117,7 @@ from urllib2 import urlopen
 #************************************************************************************
 Debug = 0
 
-Version = '0.0.2'
+Version = '0.0.3'
 Author = 'JuergenUrner'
 ApplicationName = 'Bankroll'
 ApplicationTitle = '%s-%s' % (ApplicationName, Version)
@@ -388,6 +388,10 @@ class GraphWidget(PyQwt.QwtPlot):
 
 	def setPoints(self, xs, ys):
 		self._curve.setData(xs, ys)
+		self.replot()
+
+	def clear(self):
+		self._curve.setData([], [])
 		self.replot()
 
 #************************************************************************************
@@ -683,6 +687,15 @@ class FrameBankroll(QtGui.QFrame):
 		self._sessionTypesWidget.setSessionTypes(sessionTypes.values(), self.currency())
 
 	def loadSessionsFile(self, fileName):
+
+		if not fileName:
+			self._edit.setReadOnly(True)
+			self._edit.setPlainText('')
+			self._sessionTypesWidget.clear()
+			self._graphWidget.clear()
+			self.feedbackStatus('#Ready:')
+			return
+
 		self._edit.textChanged.disconnect(self.onEditTextChanged)
 		try:
 			with codecs.open(fileName, 'r', 'UTF-8') as fp:
@@ -795,8 +808,8 @@ class FrameBankroll(QtGui.QFrame):
 		self.comboCurrency.currentIndexChanged.connect(self.onComboCurrencyCurentIndexChanged)
 		self._sessionTypesWidget.sessionTypesChanged.connect(self.onSessionTypesChanged)
 
-		self._editFileName.setText(self._fileName)
 		self.loadSessionStates()
+		self._editFileName.setText(self._fileName)
 		self.loadSessionsFile(self._fileName)
 		self.feedbackInfo()
 
@@ -807,13 +820,15 @@ class FrameBankroll(QtGui.QFrame):
 		self.feedbackInfo()
 
 	def onEditFileNameReturnPressed(self):
-		self._fileName = unicode(self._editFileName.text().toUtf8(), 'utf-8')
-		self._settings.setValue(self.SettingsKeyFileName, self._fileName)
-		self.loadSessionsFile(self._fileName)
+		if self._fileName:
+			self._fileName = unicode(self._editFileName.text().toUtf8(), 'utf-8')
+			self._settings.setValue(self.SettingsKeyFileName, self._fileName)
+			self.loadSessionsFile(self._fileName)
 
 	def onEditTextChanged(self):
-		with codecs.open(self._fileName, 'w', 'UTF-8') as fp:
-			fp.write(unicode(self._edit.toPlainText().toUtf8(), 'utf-8'))
+		if self._fileName:
+			with codecs.open(self._fileName, 'w', 'UTF-8') as fp:
+				fp.write(unicode(self._edit.toPlainText().toUtf8(), 'utf-8'))
 
 	def onHelp(self):
 		dlg = QtGui.QDialog(self)
