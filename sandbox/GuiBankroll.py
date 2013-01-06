@@ -1,5 +1,5 @@
 #************************************************************************************
-# MIT License - Copyright (c) 20012 Juergen Urner
+# MIT License - Copyright (c) 20012-2013 Juergen Urner
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this
 # software and associated documentation files (the "Software"), to deal in the Software
@@ -117,7 +117,7 @@ from urllib2 import urlopen
 #************************************************************************************
 Debug = 0
 
-Version = '0.0.3'
+Version = '0.0.4'
 Author = 'JuergenUrner'
 ApplicationName = 'Bankroll'
 ApplicationTitle = '%s-%s' % (ApplicationName, Version)
@@ -127,7 +127,7 @@ class Currencies:
 	BTC = 'BTC'
 	EUR = 'EUR'
 	USD = 'USD'
-	List = sorted([i for i in dir() if not i.startswith('_')]); del i
+	All = sorted([i for i in dir() if not i.startswith('_')]); del i
 	Default = EUR
 
 #************************************************************************************
@@ -560,6 +560,7 @@ class FrameBankroll(QtGui.QFrame):
 		self.setContentsMargins(0, 0, 0, 0)
 
 		box0 = QtGui.QVBoxLayout(self)
+
 		box0.addWidget(self._splitterH)
 
 		self._splitterH.addWidget(self._sessionTypesWidget)
@@ -590,7 +591,7 @@ class FrameBankroll(QtGui.QFrame):
 			(?P<amount>[\-\+]?[\d\.\,]+?)
 			\s*
 			$
-			''' % '|'.join(Currencies.List), re.X|re.I|re.U)
+			''' % '|'.join(Currencies.All), re.X|re.I|re.U)
 	def loadSessions(self):
 		self._sessions = []
 		sessionTypes = {}
@@ -798,7 +799,7 @@ class FrameBankroll(QtGui.QFrame):
 		self._splitterV.restoreState(qSettings.value(self.SettingsKeySplitterVState).toByteArray())
 		self._splitterH.restoreState(qSettings.value(self.SettingsKeySplitterHState).toByteArray())
 
-		self.comboCurrency.addItems(Currencies.List)
+		self.comboCurrency.addItems(Currencies.All)
 		currency = self._settings.value(self.SettingsKeyCurrency, Currencies.Default).toString()
 		i = self.comboCurrency.findText(currency)
 		self.comboCurrency.setCurrentIndex(i)
@@ -843,7 +844,6 @@ class FrameBankroll(QtGui.QFrame):
 		dlg.restoreGeometry(self._settings.value(self.SettingsKeyDlgHelpGeometry, QtCore.QByteArray()).toByteArray() )
 		dlg.exec_()
 		self._settings.setValue(self.SettingsKeyDlgHelpGeometry, dlg.saveGeometry())
-
 
 	def onSelectFileName(self):
 		dlg = QtGui.QFileDialog(self)
