@@ -54,8 +54,6 @@ class FrameTool(QtGui.QFrame):
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
-		self.label = QtGui.QLabel('FPP calculator', self)
-
 		self.labelVIPStatus = QtGui.QLabel('VIP status:', self)
 		self.comboVIPStatus = QtGui.QComboBox(self)
 		for vipStatus, multiplier in VIPLevels:
@@ -137,12 +135,6 @@ class FrameTool(QtGui.QFrame):
 
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
-		grid.col(Tc2Config.HLine(self), colspan=3)
-		grid.row()
-		grid.col(self.label, colspan=3)
-		grid.row()
-		grid.col(Tc2Config.HLine(self), colspan=3)
-		grid.row()
 		grid.col(self.labelVIPStatus).col(self.comboVIPStatus).col(Tc2Config.HStretch())
 		grid.row()
 		grid.col(self.labelGameType).col(self.comboGameType).col(Tc2Config.HStretch())
