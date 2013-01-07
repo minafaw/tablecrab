@@ -57,7 +57,8 @@ class FrameTools(QtGui.QFrame):
 	def onToolSelected(self, i):
 		self.stack.setCurrentIndex(i)
 		tool = self.stack.currentWidget()
-		tool.handleSetCurrent()
+		if tool is not None:
+			tool.handleSetCurrent()
 
 	def onCloseEvent(self, event):
 		Tc2Config.settingsSetValue(self.SettingsKeyCurrentToolIndex, self.stack.currentIndex())
