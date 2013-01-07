@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#TODO: we may have to use QDir for file operations (unicode issues). 
+#TODO: we may have to use QDir for file operations (unicode issues).
 
 from __future__ import with_statement
 
@@ -16,21 +16,19 @@ class FrameTool(QtGui.QFrame):
 	SettingsKeyBase = 'Gui/Tools/PokerStars/IniDecrypter'
 	SettingsKeyDialogDecryptState = SettingsKeyBase + '/DialogDecryptState'
 	SettingsKeyDialogEncryptState = SettingsKeyBase + '/DialogEncryptState'
-		
+
 	Magic = '-Tc2'
-	
+
 	def __init__(self, parent=None):
 		QtGui.QFrame.__init__(self, parent)
 
 		self.lastDirectory = None
-		
-		self.label = QtGui.QLabel('PokerStars ini decrypter', self)
-		
+
 		self.edit = QtGui.QPlainTextEdit(self)
 		self.edit.setReadOnly(True)
 
 		self.buttonBox = QtGui.QDialogButtonBox(self)
-		
+
 		self.buttonDecrypt = QtGui.QPushButton('Decrypt directory..', self)
 		self.buttonDecrypt.setToolTip('Decrypt directory (Ctrl+D)')
 		self.buttonDecrypt.clicked.connect(self.onDecrypt)
@@ -48,7 +46,7 @@ class FrameTool(QtGui.QFrame):
 		self.actionEncrypt.setShortcut(QtGui.QKeySequence('Ctrl+E') )
 		self.actionEncrypt.triggered.connect(self.onEncrypt)
 		self.addAction(self.actionEncrypt)
-				
+
 		self.buttonEncryptDirectory = QtGui.QPushButton('Encrypt directory..', self)
 		self.buttonEncryptDirectory.setToolTip('Encrypt directory (Ctrl+R)')
 		self.buttonEncryptDirectory.clicked.connect(self.onEncryptDirectory)
@@ -57,38 +55,34 @@ class FrameTool(QtGui.QFrame):
 		action.setShortcut(QtGui.QKeySequence('Ctrl+R') )
 		action.triggered.connect(self.onEncryptDirectory)
 		self.addAction(action)
-		
+
 		self.buttonHelp = QtGui.QPushButton('Help', self)
 		self.buttonHelp.setToolTip('Help (F1)')
 		self.buttonHelp.clicked.connect(self.onHelp)
 		self.buttonBox.addButton(self.buttonHelp, self.buttonBox.HelpRole)
-		
+
 		action = QtGui.QAction(self)
 		action.setShortcut(QtGui.QKeySequence('F1') )
 		action.triggered.connect(self.onHelp)
 		self.addAction(action)
-				
+
 		self.layout()
 		self.adjustActions()
-	
-	
+
+
 	def adjustActions(self):
 		self.buttonEncrypt.setEnabled(self.lastDirectory is not None)
 		self.actionEncrypt.setEnabled(self.lastDirectory is not None)
-		
-	
+
+
 	def layout(self):
 		grid = Tc2Config.GridBox(self)
-		grid.col(self.label)
-		grid.row()
-		grid.col(Tc2Config.HLine(self))
-		grid.row()
 		grid.col(self.buttonBox)
 		grid.row()
 		grid.col(Tc2Config.HLine(self))
 		grid.row()
 		grid.col(self.edit)
-	
+
 	def toolTip(self):
 		return 'PokerStars ini decrypter'
 
@@ -100,9 +94,9 @@ class FrameTool(QtGui.QFrame):
 
 	def onHelp(self):
 		Tc2GuiHelp.dialogHelp('toolsPokerStarsIniDecrypter', parent=self)
-	
+
 	def onDecrypt(self, checked):
-		
+
 		dlg = QtGui.QFileDialog(self)
 		dlg.setWindowTitle('Chosse directory to decrypt ini files..')
 		dlg.setFileMode(dlg.Directory)
@@ -113,7 +107,7 @@ class FrameTool(QtGui.QFrame):
 		directory = dlg.directory().canonicalPath()
 		directory = directory.toUtf8()
 		directory = unicode(directory, 'utf-8')
-			
+
 		self.edit.setPlainText('')
 		self.edit.insertPlainText('Decrypting ini files\n')
 		self.edit.insertPlainText('------------------------------\n')
@@ -123,7 +117,7 @@ class FrameTool(QtGui.QFrame):
 				myName, ext = os.path.splitext(name)
 				if ext.lower() != '.ini': continue
 				if myName.endswith(self.Magic): continue
-								
+
 				fileName = os.path.join(root, name)
 				with open(fileName, 'rb') as fp:
 					data = fp.read()
@@ -132,7 +126,7 @@ class FrameTool(QtGui.QFrame):
 					except PokerStarsIniDecrypter.Error, d:
 						self.edit.insertPlainText('Error: could not decrypt: %s\n' % name)
 						continue
-				
+
 				print '\r\n' in data
 				myName = myName + self.Magic + ext
 				fileName = os.path.join(root, myName)
@@ -142,12 +136,12 @@ class FrameTool(QtGui.QFrame):
 		self.edit.insertPlainText('Done\n')
 		self.lastDirectory = directory
 		self.adjustActions()
-					
-							
+
+
 	def onEncrypt(self, checked=False):
 		if self.lastDirectory is None:
 			return
-			
+
 		self.edit.setPlainText('')
 		self.edit.insertPlainText('Encrypting ini files\n')
 		self.edit.insertPlainText('------------------------------\n')
@@ -157,7 +151,7 @@ class FrameTool(QtGui.QFrame):
 				myName, ext = os.path.splitext(name)
 				if ext.lower() != '.ini': continue
 				if not myName.endswith(self.Magic): continue
-								
+
 				fileName = os.path.join(root, name)
 				with open(fileName, 'r') as fp:
 					data = fp.read()
@@ -166,14 +160,14 @@ class FrameTool(QtGui.QFrame):
 					except PokerStarsIniDecrypter.Error, d:
 						self.edit.insertPlainText('Error: could not encrypt: %s\n' % name)
 						continue
-				
+
 				myName = myName[:len(myName)-len(self.Magic)] + ext
 				fileName = os.path.join(root, myName)
 				with open(fileName, 'wb') as fp:
 					fp.write(data)
 				self.edit.insertPlainText('Encrypted: %s --> %s\n' % (name, myName) )
 		self.edit.insertPlainText('Done\n')
-									
+
 	def onEncryptDirectory(self, checked=False):
 		dlg = QtGui.QFileDialog(self)
 		dlg.setWindowTitle('Chosse directory to enecrypt ini files..')
@@ -182,36 +176,36 @@ class FrameTool(QtGui.QFrame):
 		if dlg.exec_() == dlg.Rejected:
 			return
 		Tc2Config.settingsSetValue(self.SettingsKeyDialogEncryptState, dlg.saveState() )
-		
+
 		directory = dlg.directory().canonicalPath()
 		directory = directory.toUtf8()
 		directory = unicode(directory, 'utf-8')
 		self.lastDirectory = directory
 		self.onEncrypt()
 		self.adjustActions()
-					
+
 #************************************************************************************
 #
-#************************************************************************************				
+#************************************************************************************
 if __name__ == '__main__':
 	import sys
 	application = QtGui.QApplication(sys.argv)
 	gui = FrameTool()
 	gui.show()
 	application.exec_()
-	
-					
-				
-				
-				
-				
-				
-			
-			
-		
-		
-		
-		
-		
-		
-	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
