@@ -8,6 +8,7 @@ import Tc2GuiToolsHoldemTrivia
 import Tc2GuiToolsFlopEval
 import Tc2GuiToolsFlopster
 import Tc2GuiToolsPokerStarsIniDecrypter
+import Tc2GuiToolsSessionEditor
 
 from PyQt4 import QtCore, QtGui
 
@@ -26,7 +27,8 @@ class FrameTools(QtGui.QFrame):
 			Tc2GuiToolsHoldemTrivia.FrameTool,
 			Tc2GuiToolsFlopEval.FrameTool,
 			Tc2GuiToolsFlopster.FrameTool,
-			 Tc2GuiToolsPokerStarsIniDecrypter.FrameTool,
+			Tc2GuiToolsPokerStarsIniDecrypter.FrameTool,
+			Tc2GuiToolsSessionEditor.FrameTool,
 			)
 
 
