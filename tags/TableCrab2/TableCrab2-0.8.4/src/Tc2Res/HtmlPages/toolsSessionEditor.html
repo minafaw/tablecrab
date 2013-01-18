@@ -1,0 +1,64 @@
+<html>
+<head>
+<LINK REL=StyleSheet HREF="default.css" TYPE="text/css" MEDIA=screen>
+</head>
+<body>
+
+<div class="textBox">
+	<div class="headerBox">Session editor</div>
+
+	tool to record sessions and display results in a nice graph.
+	<br>
+	<br>
+	on the bottom right pane you will find an editor where you can enter sessions.
+	the tool parses the file as soon as youhit <b>refresh</b> and displays rsults in
+	a graph.
+	<br>
+	<br>
+	each session musthave the following format:
+
+	<pre>
+	MyHomeGame | EUR | 12.03.2012-20:35 | +120.50
+	</pre>
+
+	..that is 4 parameters, separated by vertical bars
+	<ol>
+		<li>the session type
+		<li>the currency. supported is USD, EUR, BTC (bitcoin)</li>
+		<li>date and time of the session (day.month.year-hour:minute). Note that this thingy expects 4 digits for the year</li>
+		<li>ballance of the session. +amount or -amount</li>
+	</ol>
+
+	an example of multiple sessions and multiple session types:
+
+
+	<pre>
+	MyHomeGame Tourney $4 | USD | 12.03.2012-20:35 | +120.50
+	MyHomeGame Tourney $4 | USD | 11.03.2012-20:35 | -4
+	MyHomeGame Tourney $4 | USD | 10.03.2012-20:35 | -4.00
+	MyHomeGame Tourney $4 | USD | 09.03.2012-20:35 | +12
+	MyHomeGame CashGame $2/4 | USD | 10.03.2012-20:35 | -65.00
+	MyHomeGame CashGame $2/4 | USD | 09.03.2012-20:35 | +96.50
+	</pre>
+
+	you may comment out single sessions by putting a hash char atthe beginning of a line (#)
+	or you may comment out multiple lines at one by placing a double hash at the beginning
+	(##). in this case all lines up to the next double hash will be commented out.
+
+
+	<div class="noteBox">
+		<ul>
+			<li>to retrieve exchange rates the Gui queries the following sites on every startup:
+				<ul>
+					<li>https://mtgox.com/api/1/BTCEUR/ticker (for bitcoin exchange rate. NOTE: mount gox
+					     has a limit of one query per 15 seconds. so don't push too hard, otherwise you may get banned)
+					<li>https://rate-exchange.appspot.com/currency?from=USD&to=EUR (US dollar echange rate)
+				</ul>
+			</li>
+		</ul>
+	</div>
+
+
+
+
+</body></html>
