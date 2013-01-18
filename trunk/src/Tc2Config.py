@@ -6,7 +6,7 @@
 # project consts
 #************************************************************************************
 ApplicationName = 'TableCrab2'
-Version = '0.8.3'
+Version = '0.8.4'
 ReleaseName = '%s-%s' % (ApplicationName, Version)
 Author = 'JuergenUrner'
 ErrorLogName = ApplicationName + '-Error.log'
@@ -259,6 +259,7 @@ HelpTopics = [
 				('toolsFlopEval', 'Flop evaluator'),
 				('toolsFlopster', 'Flopster'),
 				('toolsPokerStarsIniDecrypter', 'PokerStars ini decrypter'),
+				('toolsSessionEditor', 'Session editor'),
 				],
 			('developement', 'Developement'), [
 				('ocrEditor', 'Ocr Editor'),
