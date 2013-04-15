@@ -629,7 +629,7 @@ class HandHistoryFile(object):
 			data = fp.read()
 			#NOTE: remove BOM if present
 			if data.startswith(unicode(codecs.BOM_UTF8, 'utf-8')):
-				data = data[len(codecs.BOM_UTF8):]
+				data = data[len(unicode(codecs.BOM_UTF8, 'utf-8')):]
 			return data
 		except UnicodeDecodeError:	pass
 		finally:
@@ -644,3 +644,10 @@ class HandHistoryFile(object):
 	def __getitem__(self, i): return self._handHistories[i]
 	def __iter__(self): return iter(self._handHistories)
 	def raw(self): return self._data
+
+
+
+
+
+
+
