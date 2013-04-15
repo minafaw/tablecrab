@@ -46,14 +46,13 @@ class CardProtector(QtGui.QWidget):
 
 	def setVisible(self, flag):
 		QtGui.QWidget.setVisible(self, flag)
-		if not flag or self._isInited:
-			return
-		self._isInited = True
-		hwnd = self.effectiveWinId()
-		if hwnd is None:
-			raise RuntimeError('main window has no valid hwnd')
-		hwnd = int(hwnd)
-		Tc2Win32.windowSetTopmost(hwnd)
+		if not self._isInited:
+			self._isInited = True
+			hwnd = self.effectiveWinId()
+			if hwnd is None:
+				raise RuntimeError('main window has no valid hwnd')
+			hwnd = int(hwnd)
+			Tc2Win32.windowSetTopmost(hwnd)
 
 	def setBackgroundColor(self, color):
 		if color.isValid():
