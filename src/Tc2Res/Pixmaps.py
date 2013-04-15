@@ -9,6 +9,14 @@ def magnifierMinus():
 		px.loadFromData(arr, "PNG")
 		_cache["magnifierMinus"] = px
 	return px
+def stars():
+	px = _cache.get("stars", None)
+	if px is None:
+		arr = QtCore.QByteArray.fromBase64("iVBORw0KGgoAAAANSUhEUgAAACYAAAAmCAIAAAAnX375AAAAA3NCSVQICAjb4U/gAAAACXBIWXMAAAsTAAALEwEAmpwYAAABM0lEQVRYhe2WzQ6CMBCEpyUcPKq8/xP6kxhvIvXQhCBst7OLGA9OOJCy9OvsLi3AX5soON654JhvDjh/Azny3FQbcsbzUeNK3i0kcVwR67I6L++VQpI+SGodacobQ60grXViqIb2mWqfTqVH1VVqSIdF5sUi0s2rSq6lzhuzeg2dElYqKotUiqfgRaqQWNGibohZk4YsSadeQtsjzQel1c8TW+2apRtrRd9cOro08yJSQnouXIqybQVLi3kkYoj0EeHZfa6hy9dI7dE0CBGBKacZOa3ceL/DvQcaoCFmeEvGyh2nBR5IywTPOsi5rYt6cOX8JBLAQMSYv0urKt+lGKEEHHDW49k9VplFfFSKt50kWaW/5Om4PmhGmtbBa23HOtrNhhQBOyPSkFjd0E//rf+1kV43fmgiujJ2kwAAAABJRU5ErkJggg==")
+		px = QtGui.QPixmap()
+		px.loadFromData(arr, "PNG")
+		_cache["stars"] = px
+	return px
 def tableCrab():
 	px = _cache.get("tableCrab", None)
 	if px is None:
@@ -24,12 +32,4 @@ def magnifierPlus():
 		px = QtGui.QPixmap()
 		px.loadFromData(arr, "PNG")
 		_cache["magnifierPlus"] = px
-	return px
-def stars():
-	px = _cache.get("stars", None)
-	if px is None:
-		arr = QtCore.QByteArray.fromBase64("iVBORw0KGgoAAAANSUhEUgAAACYAAAAmCAIAAAAnX375AAAAA3NCSVQICAjb4U/gAAAACXBIWXMAAAsTAAALEwEAmpwYAAABM0lEQVRYhe2WzQ6CMBCEpyUcPKq8/xP6kxhvIvXQhCBst7OLGA9OOJCy9OvsLi3AX5soON654JhvDjh/Azny3FQbcsbzUeNK3i0kcVwR67I6L++VQpI+SGodacobQ60grXViqIb2mWqfTqVH1VVqSIdF5sUi0s2rSq6lzhuzeg2dElYqKotUiqfgRaqQWNGibohZk4YsSadeQtsjzQel1c8TW+2apRtrRd9cOro08yJSQnouXIqybQVLi3kkYoj0EeHZfa6hy9dI7dE0CBGBKacZOa3ceL/DvQcaoCFmeEvGyh2nBR5IywTPOsi5rYt6cOX8JBLAQMSYv0urKt+lGKEEHHDW49k9VplFfFSKt50kWaW/5Om4PmhGmtbBa23HOtrNhhQBOyPSkFjd0E//rf+1kV43fmgiujJ2kwAAAABJRU5ErkJggg==")
-		px = QtGui.QPixmap()
-		px.loadFromData(arr, "PNG")
-		_cache["stars"] = px
 	return px
