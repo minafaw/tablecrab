@@ -164,7 +164,7 @@ def fetchUSD():
 		except IOError:
 			error = 'Could not fetch USD exchange rate'
 		else:
-			result = json.loads(p)['rate']
+			result = float(json.loads(p)['rate'])
 	return error, result
 
 
@@ -181,7 +181,7 @@ def getCurrentExchangeRates():
 		rates[currency] = rate
 	return error, rates
 
-##getCurrentExchangeRates()
+##print getCurrentExchangeRates()
 
 
 #NOTE: this thingy is dangerous!
