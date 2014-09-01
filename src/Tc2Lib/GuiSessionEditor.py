@@ -98,8 +98,8 @@ unique name.
 
 to retrieve exchange rates the Gui queries the following sites on every startup:
 
-- https://mtgox.com/api/1/BTCEUR/ticker
-  for bitcoin exchange rate. NOTE: mount gox has a limit of one query per 15 seconds.
+- http://api.bitcoincharts.com/v1/weighted_prices.json
+  for bitcoin exchange rate. NOTE: the site has a limit of one query per 15 seconds.
   so don't push too hard, otherwise you may get banned.
 
 - https://rate-exchange.appspot.com/currency?from=USD&to=EUR
@@ -140,13 +140,13 @@ def fetchBTC():
 	if not Debug:
 		try:
 			p = urlopen(
-				'https://mtgox.com/api/1/BTCEUR/ticker',
+				'http://api.bitcoincharts.com/v1/weighted_prices.json',
 				timeout=UrlopenTimeout
 				).read()
 		except IOError:
 			error = 'Could not fetch BTC exchange rate'
 		else:
-			result = float(json.loads(p)['return']['high']['value'])
+			result = float(json.loads(p)['EUR']['30d'])
 	return error, result
 
 def fetchEUR():
