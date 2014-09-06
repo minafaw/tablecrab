@@ -492,6 +492,13 @@ class FrameSessionEditor(QtGui.QFrame):
 
 	ErrMessage = '<div style="color: red;background-color: white;">%s</div>'
 
+
+	CURRENCIES_FMT = {
+			Currencies.BTC: '%.4f',
+			Currencies.EUR: '%.2f',
+			Currencies.USD: '%.2f',
+			}
+
 	def __init__(self, parent=None, backupSessionsFile=True):
 		QtGui.QFrame.__init__(self, parent)
 
@@ -735,7 +742,8 @@ class FrameSessionEditor(QtGui.QFrame):
 				if currency == currencyCurrent:
 					continue
 				rate2 = self._exchangeRates[currency]
-				msg += '%.2f%s, ' % (rate / rate2, currency.lower())
+				msg += self.CURRENCIES_FMT[currency] % (rate / rate2)
+				msg += currency.lower()
 			msg = msg[:-2]
 		self._labelInfo.setText(msg)
 
