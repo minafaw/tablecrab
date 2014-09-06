@@ -553,9 +553,9 @@ class FrameSessionEditor(QtGui.QFrame):
 
 		self._statusBar = QtGui.QStatusBar(self)
 		self._labelStatus = QtGui.QLabel('#Ready', self)
-		self._statusBar.addWidget(self._labelStatus, 99)
+		self._statusBar.addWidget(self._labelStatus, 50)
 		self._labelInfo = QtGui.QLabel('Info', self)
-		self._statusBar.addWidget(self._labelInfo)
+		self._statusBar.addWidget(self._labelInfo, 50)
 
 		self._settings = None
 		self._sessions = []
